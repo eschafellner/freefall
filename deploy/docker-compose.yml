@@ -1,0 +1,33 @@
+name: freefall
+
+services:
+  game:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: game
+    image: freefall-game:latest
+    container_name: freefall-game
+    restart: unless-stopped
+    init: true
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: web
+      args:
+        VITE_FREEFALL_SERVER: ${PUBLIC_URL:?set PUBLIC_URL in .env}
+    image: freefall-web:latest
+    container_name: freefall-web
+    restart: unless-stopped
+    depends_on: [game]
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.0
+    container_name: freefall-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env}
+    depends_on: [web]
