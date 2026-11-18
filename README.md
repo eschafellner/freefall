@@ -1,0 +1,84 @@
+# FREEFALL
+
+Serverautoritatives Third-Person-Koop-Spiel für bis zu vier Personen im Desktop-Browser. **Operation Bodenbruch** führt den Trupp durch Schwarmgebiet zu zwei Kommunikationsanlagen und zur Extraktion. **Boreal Relay** ist die Testarena mit einstellbarer Hordengröße bis 1.000.
+
+## Lokal starten
+
+Voraussetzungen sind Node.js 24 oder neuer, npm und ein Desktop-Browser mit WebGL 2 und Pointer Lock.
+
+```bash
+npm ci
+npm run dev
+```
+
+Öffne die [Einsatzleitstelle](http://127.0.0.1:5173/) und erstelle einen Raum für **Operation Bodenbruch**. Mit **Carrier betreten** erfasst du die Maus. Geh zum holografischen Tisch in der Mitte der Messe und öffne ihn mit **E**. Wähle als Host **Dev’ Ault**, **Operation Bodenbruch** und eine der sieben Schwierigkeiten. Gib das Boarding frei. Geht gemeinsam durch die vordere Luftschleuse in den Albatross 02 und bestätigt jeweils mit **E**.
+
+Nach der Landung aktiviert ihr die Relais Alpha und Bravo. Danach stehen Albatross und Extraktionsballon zur Wahl. Der Einsatz endet mit erfolgreicher Extraktion oder vollständigem Teamwipe. **Esc** gibt die Maus frei und öffnet das Menü. **Boreal Relay** bietet weiterhin **Arena betreten** und die Hordensteuerung.
+
+Server und Client lassen sich auch in zwei Terminals starten.
+
+```bash
+npm run dev:server   # Colyseus auf 127.0.0.1:2567
+npm run dev:client   # Vite auf 127.0.0.1:5173
+```
+
+| Eingabe | Aktion |
+| --- | --- |
+| WASD | Bewegen |
+| Maus | Kamera und Ziel ausrichten |
+| Shift | Sprinten |
+| Rechte Maustaste halten | Über die Schulter zielen |
+| Linke Maustaste halten | Automatisch feuern |
+| R | Nachladen |
+| E | Konsole öffnen, Bereitschaft melden, Relais aktivieren oder Extraktion sichern |
+| 1 / 2 | Kestrel / P-01 auswählen |
+| G / H | Sprenggranate werfen / persönlichen Heilstim anwenden |
+| B | Extraktionsballon nach den Hauptzielen aktivieren |
+| Esc | Maus freigeben und Menü öffnen |
+| F2 | Live-Telemetrie ein- oder ausblenden |
+
+Treffer erzeugen einen sichtbaren Einschlag und ändern das Fadenkreuz. In Boreal Relay setzt der Server ausgeschaltete Spieler nach drei Simulationssekunden zurück. Bei einem vollständigen Truppausfall endet Bodenbruch. Bereits erfüllte Hauptziele sichern die Basis-EP.
+
+## Vier Spieler testen
+
+1. Erstelle im ersten Browserfenster einen Raum und kopiere dessen Raumcode oder Einladungslink.
+2. Öffne drei weitere Fenster oder Tabs mit derselben Client-Adresse. Gib überall denselben Raumcode ein und wähle **Beitreten**. Ein Einladungslink füllt das Feld aus.
+3. Prüfe die vier Spielerslots im HUD. Betretet jeweils den Carrier. Der Host gibt das Boarding an der Konsole frei. Jeder Operator meldet sich mit **E** im Schiff bereit. In Boreal Relay wählt jeder Spieler **Arena betreten**. Das aktive Fenster steuert die Maus.
+4. Prüfe in Operation Bodenbruch den gemeinsamen Relais- und Extraktionsfortschritt. Wähle für den Arena-Lasttest im Host-Menü **1.000** und öffne mit **F2** die Telemetrie.
+5. Ein fünfter Beitritt per Raumcode wird abgewiesen. Wenn der Host geht, übernimmt der verbleibende Spieler mit der längsten Zugehörigkeit die Host-Rolle.
+
+## Prüfung und Benchmark
+
+```bash
+npm run typecheck
+npm run build
+npm test
+npm run benchmark
+npm run benchmark -- 3600 421337
+npm run benchmark -- 5400 421337 1 burst
+npm run benchmark -- mission 1800 421337 4
+```
+
+Der Multiplayer-Test startet automatisch einen Colyseus-Server auf einem freien Loopback-Port. Der Benchmark misst Arena-Hordengrößen oder Missionsszenarien in einem Node-Prozess. Im HUD zeigt **F2** die Live-Telemetrie inklusive FPS, Draw Calls und Server-Ticks.
+
+Der Registry-Audit meldete einen offenen `picomatch`-Befund in Vites Entwicklungsabhängigkeiten. `npm audit --omit=dev` meldete zum Prüfzeitpunkt keine Befunde.
+
+## Gebauten Prototyp starten
+
+```bash
+npm run build
+npm run start:server
+```
+
+Starte in einem zweiten Terminal `npm run preview -w @freefall/client` und öffne [die Build-Vorschau](http://127.0.0.1:4173/). Das Client-Artefakt liegt in `apps/client/dist`. Der Gameserver liest optional `FREEFALL_HOST` und `FREEFALL_PORT`. Mit `VITE_FREEFALL_SERVER` lässt sich die Server-URL beim Start von Vite oder beim Bauen des Clients festlegen.
+
+Der Prototyp ist für lokale Tests ausgelegt. Fortschritt, Inventar, Accounts, Schiffsupgrades, Persistenz und mobile Steuerung sind spätere Meilensteine.
+
+[Architektur](docs/ARCHITECTURE.md) · [Performance und Messprotokoll](docs/PERFORMANCE.md) · [Boreal Relay und Rendering](docs/VISUAL_STYLE.md) · [Spielercharakter](docs/CHARACTER_SYSTEM.md) · [Fraktionen](docs/FACTIONS.md) · [Missionssystem](docs/MISSION_SYSTEM.md) · [Operation Bodenbruch](docs/MISSIONS/OPERATION_BODENBRUCH.md)
+
+[Skyfall Carrier](docs/SKYFALL_CARRIER.md) · [Game Flow](docs/GAME_FLOW.md) · [Extraktion](docs/EXTRACTION_SYSTEM.md) · [Missionsbelohnungen](docs/MISSION_REWARDS.md)
+
+## Milestone 6
+
+Der Playtest-Build umfasst Kestrel, P-01, zwei Sprenggranaten und fünf persönliche Heilstims. Der technische Prüfbericht enthält Laufzeitbilder, Animationsvergleich, Multiplayer-Nachweise und Servermessungen. [Playtest-Bericht](docs/PLAYTEST_READINESS.md) · [Ausrüstungsregeln](docs/EQUIPMENT_SYSTEM.md)
+# freefall
