@@ -1,4 +1,5 @@
-import { FRAG, NET, PLAYER, STIM, WEAPONS } from '@freefall/shared';
+import { bindings } from '../input/Bindings.ts';
+import { BASE_LOADOUT, FRAG, MELEE, NET, PLAYER, STIM } from '@freefall/shared';
 import type { PlayerState } from '@freefall/shared';
 
 export function VitalSigns({ player, tick }: { player: PlayerState; tick: number }) {
@@ -10,7 +11,7 @@ export function VitalSigns({ player, tick }: { player: PlayerState; tick: number
     <div className="vital-heading"><strong>{player.hp}<small> HP</small></strong>
       <span>{player.hp <= 0 ? 'Gefallen' : critical ? 'Kritisch' : 'Einsatzfähig'}</span></div>
     <meter aria-label="Gesundheit" min={0} max={PLAYER.health} value={player.hp}/>
-    {gear && <div className="kit-line"><span><kbd>H</kbd> Heilstim</span><b>{gear.stims}/{STIM.capacity}</b></div>}
+    {gear && <div className="kit-line"><span><kbd>{bindings.label('USE_STIM')}</kbd> {STIM.displayName}</span><b>{gear.stims}/{STIM.maxCharges}</b></div>}
     {applying && <ActionProgress label="Stim anwenden" remaining={gear.until - tick} ticks={gear.until - gear.started}/>}
     {!applying && recent && <small role="status">{gear.stimResult === 'completed' ? 'Heilung bestätigt' : 'Anwendung abgebrochen'}</small>}
   </section>;
@@ -21,21 +22,44 @@ function ActionProgress({ label, remaining, ticks }: { label: string; remaining:
     <progress aria-label={label} max={ticks} value={Math.max(0, Math.min(ticks, ticks - remaining))}/></div>;
 }
 
+const RELOAD_LABEL = {
+  RELOAD_START: 'Nachladen', MAGAZINE_REMOVAL: 'Magazinwechsel', MAGAZINE_INSERTION: 'Magazin eingesetzt',
+  RELOAD_COMPLETE: 'Durchladen', RELOAD_INTERRUPTED: 'Nachladen abgebrochen', READY: '',
+} as const;
+
 export function WeaponReadout({ player, tick }: { player: PlayerState; tick: number }) {
   const gear = player.equipment;
   const slot = gear?.slot ?? 'primary';
   const other = slot === 'primary' ? 'secondary' : 'primary';
-  const weapon = WEAPONS[slot];
+  const weapon = BASE_LOADOUT.weapons[slot];
+  const spare = BASE_LOADOUT.weapons[other];
   const switching = gear?.action === 'primary' || gear?.action === 'secondary';
+  const reload = player.reload;
+  const reloading = reload && reload.phase !== 'READY' && reload.phase !== 'RELOAD_INTERRUPTED';
+  const interrupted = reload?.phase === 'RELOAD_INTERRUPTED' && tick - reload.at < NET.tickHz;
+  const mags = gear?.magazines[slot] ?? 0;
+  const ammo = player.ammo ?? 0;
+  const dry = !reloading && !mags && ammo <= weapon.magazineSize * .25;
+  const meleeLeft = gear ? gear.meleeReadyAt - tick : 0;
+  const grounded = player.posture?.current === 'PRONE' || player.posture?.current === 'SUPINE';
+  const actionLabel = switching ? 'Waffenwechsel' : gear?.action === 'grenade' ? 'Granatenwurf'
+    : gear?.action === 'melee' ? MELEE.displayName : gear?.action === 'resupply' ? 'Nachschub aufnehmen' : '';
   return <section className="weapon readout" aria-label="Bewaffnung">
-    <span><kbd>{slot === 'primary' ? '1' : '2'}</kbd> {weapon.name}</span>
-    <strong>{player.ammo ?? '–'} <small>/ {slot === 'primary' ? '∞' : gear?.pistolReserve} Reserve</small></strong>
+    <span><kbd>{bindings.label(slot === 'primary' ? 'SWITCH_PRIMARY' : 'SWITCH_SECONDARY')}</kbd> {weapon.displayName}</span>
+    <strong className={`ammo ${ammo === 0 ? 'empty' : ''}`} aria-label={`${ammo} von ${weapon.magazineSize} Schuss, ${mags} Reservemagazine`}>
+      {player.ammo ?? '–'}<small> / {weapon.magazineSize}</small><em> | {mags} MAG</em>
+    </strong>
+    {grounded && <div className="kit-line"><span>{player.posture?.current === 'PRONE' ? 'Bauchlage' : 'Rückenlage'}</span> <span><kbd>{bindings.label('STAND_UP')}</kbd> Aufstehen</span></div>}
+    {reloading && <ActionProgress label={RELOAD_LABEL[reload.phase]} remaining={reload.until - tick} ticks={reload.until - reload.started}/>}
+    {interrupted && <small className="kit-note" role="status">{RELOAD_LABEL.RELOAD_INTERRUPTED}</small>}
+    {dry && <small className="kit-note warn" role="status">Keine Reservemagazine</small>}
     {gear && <>
-      <div className="kit-line"><span><kbd>{other === 'primary' ? '1' : '2'}</kbd> {WEAPONS[other].name}</span><b>{gear.inactiveAmmo}</b></div>
-      <div className="kit-line"><span><kbd>G</kbd> Sprenggranate</span><b>{gear.grenades}/{FRAG.capacity}</b></div>
-      {(switching || gear.action === 'grenade') && <ActionProgress label={switching ? 'Waffenwechsel' : 'Granatenwurf'}
-        remaining={gear.until - tick} ticks={gear.until - gear.started}/>}
+      <div className="kit-line"><span><kbd>{bindings.label(other === 'primary' ? 'SWITCH_PRIMARY' : 'SWITCH_SECONDARY')}</kbd> {spare.displayName}</span>
+        <b>{gear.inactiveAmmo}/{spare.magazineSize} · {gear.magazines[other]} MAG</b></div>
+      <div className="kit-line"><span><kbd>{bindings.label('THROW_GRENADE')}</kbd> {FRAG.displayName}</span><b>{gear.grenades}/{FRAG.capacity}</b></div>
+      <div className={`kit-line ${meleeLeft > 0 ? 'cooling' : ''}`}><span><kbd>{bindings.label('MELEE')}</kbd> {MELEE.displayName}</span>
+        <b>{meleeLeft > 0 ? `${(meleeLeft / NET.tickHz).toFixed(1)} s` : 'bereit'}</b></div>
+      {actionLabel && <ActionProgress label={actionLabel} remaining={gear.until - tick} ticks={gear.until - gear.started}/>}
     </>}
-    {!!player.reloadUntil && <ActionProgress label="Nachladen" remaining={player.reloadUntil - tick} ticks={Math.ceil(weapon.reloadSeconds * NET.tickHz)}/>}
   </section>;
 }

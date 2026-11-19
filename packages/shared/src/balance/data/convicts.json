@@ -1,0 +1,18 @@
+{
+  "squad": {
+    "size": 4,
+    "moveSpeed": 5.1,
+    "engageRange": 37,
+    "idleRescanTicks": 5,
+    "reloadWeaponId": "kestrel-ar-01"
+  },
+  "kits": [
+    { "id": "security-surplus", "weaponVariantId": "kestrel-service", "maxHealth": 150, "armor": 5, "damage": 24, "roundsPerSecond": 7, "magazineSize": 28 },
+    { "id": "field-standard", "weaponVariantId": "kestrel-standard", "maxHealth": 132, "armor": 4, "damage": 22, "roundsPerSecond": 6.7, "magazineSize": 26 },
+    { "id": "light-webbing", "weaponVariantId": "kestrel-reserve", "maxHealth": 118, "armor": 3, "damage": 20, "roundsPerSecond": 6.2, "magazineSize": 24 },
+    { "id": "aged-infantry", "weaponVariantId": "kestrel-legacy", "maxHealth": 106, "armor": 2, "damage": 18, "roundsPerSecond": 5.8, "magazineSize": 22 },
+    { "id": "worn-reserve", "weaponVariantId": "kestrel-worn", "maxHealth": 96, "armor": 1, "damage": 16, "roundsPerSecond": 5.4, "magazineSize": 19 },
+    { "id": "restricted-issue", "weaponVariantId": "kestrel-restricted", "maxHealth": 84, "armor": 0, "damage": 14, "roundsPerSecond": 5, "magazineSize": 16 },
+    { "id": "minimum-issue", "weaponVariantId": "kestrel-minimum", "maxHealth": 72, "armor": 0, "damage": 12, "roundsPerSecond": 4.5, "magazineSize": 12 }
+  ]
+}

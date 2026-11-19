@@ -27,8 +27,9 @@ export function constrainTether(position: PositionXZ, anchor: PositionXZ, radius
 }
 
 export function movePlayer(position: PositionXZ, input: PlayerInput, dt: number, world?: WorldDefinition,
-  boundary?: MovementBoundary): void {
-  const distance = dt * (input.sprint ? PLAYER.sprintSpeed : PLAYER.walkSpeed);
+  boundary?: MovementBoundary, speeds: Pick<typeof PLAYER, 'walkSpeed' | 'sprintSpeed'> = PLAYER,
+  radius = .42, sprintAllowed = true): void {
+  const distance = dt * (input.sprint && sprintAllowed ? speeds.sprintSpeed : speeds.walkSpeed);
   const scale = distance / Math.max(1, Math.hypot(input.forward, input.strafe));
   const sin = Math.sin(input.yaw);
   const cos = Math.cos(input.yaw);
@@ -38,12 +39,12 @@ export function movePlayer(position: PositionXZ, input: PlayerInput, dt: number,
     const candidate = { x, z };
     constrainTether(candidate, boundary, boundary.radius);
     const startX = position.x, startZ = position.z;
-    moveOnGround(position, candidate.x, candidate.z, world, .42);
+    moveOnGround(position, candidate.x, candidate.z, world, radius);
     if (distanceSquared(position, boundary) > boundary.radius ** 2 + 1e-7) {
       position.x = startX;
       position.z = startZ;
     }
-  } else if (world) moveOnGround(position, x, z, world, .42);
+  } else if (world) moveOnGround(position, x, z, world, radius);
   else {
     position.x = clampToArena(x);
     position.z = clampToArena(z);
@@ -67,7 +68,7 @@ export interface AimRay {
   dz: number;
 }
 
-export function aimRay(ray: AimRay, position: PositionXZ, yaw: number, pitch: number): void {
+export function aimRay(ray: AimRay, position: PositionXZ, yaw: number, pitch: number, lookHeight = LOOK_HEIGHT, elevation = 0): void {
   const sy = Math.sin(yaw);
   const cy = Math.cos(yaw);
   const cp = Math.cos(pitch);
@@ -75,6 +76,6 @@ export function aimRay(ray: AimRay, position: PositionXZ, yaw: number, pitch: nu
   ray.dy = Math.sin(pitch);
   ray.dz = -cy * cp;
   ray.x = position.x + cy * CAMERA_SHOULDER - ray.dx * CAMERA_BACK;
-  ray.y = Math.max(0.19, LOOK_HEIGHT + CAMERA_LIFT - ray.dy * CAMERA_BACK);
+  ray.y = Math.max(0.19, elevation + lookHeight + CAMERA_LIFT - ray.dy * CAMERA_BACK);
   ray.z = position.z + sy * CAMERA_SHOULDER - ray.dz * CAMERA_BACK;
 }

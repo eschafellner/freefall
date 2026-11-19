@@ -13,7 +13,9 @@
     "build": "npm run build -w @freefall/shared && npm run build -w @freefall/server && npm run build -w @freefall/client",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "node --conditions=development --test --test-isolation=none apps/server/test/*.test.ts apps/client/test/*.test.ts",
-    "benchmark": "node --conditions=development apps/server/src/benchmark.ts"
+    "benchmark": "node --conditions=development apps/server/src/benchmark.ts",
+    "balance:check": "node --conditions=development scripts/balance-check.ts",
+    "balance:trace": "node --conditions=development apps/server/test/support/balance-trace.ts"
   },
   "devDependencies": {
     "@types/node": "^24",

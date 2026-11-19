@@ -1,24 +1,28 @@
 import { randomUUID } from 'node:crypto';
 import {
-  ALBATROSS, BOARDING_TICKS, CARRIER_CONSOLE, CARRIER_SHIP, CARRIER_SPAWN, CARRIER_WORLD, DEPLOYMENT_PHASES,
-  DIFFICULTY_REGISTRY, FRAG, MISSION_REWARDS, NET, PLANET_REGISTRY, RESULT_TICKS,
-  distanceSquared, inAlbatross, isCarrierScene, landingShip, missionGround,
+  ALBATROSS, BALANCE, BOARDING_TICKS, CARRIER_CONSOLE, CARRIER_SHIP, CARRIER_SPAWN, CARRIER_WORLD, DEPLOYMENT_PHASES,
+  MISSION_REWARDS, NET, PLANET_REGISTRY, RESULT_TICKS,
+  distanceSquared, inAlbatross, isCarrierScene, landingShip, missionGround, newPosture, resolveMissionBalance,
 } from '@freefall/shared';
 import type {
-  DeploymentPhase, GrenadeState, MissionDefinition, MissionEvent, MissionResult, MissionSelection, MissionSnapshot, MissionState,
-  PositionXZ, ShotEvent, WorldDefinition,
+  BalanceRegistry, DeploymentPhase, EffectiveGrenade, GrenadeState, MissionBalance, MissionDefinition, MissionEvent, MissionResult,
+  MissionSelection, MissionSnapshot, MissionState, PositionXZ, ShotEvent, WorldDefinition,
 } from '@freefall/shared';
 import { idleInput } from '../networking/input.ts';
 import { Battlefield } from '../simulation/Battlefield.ts';
-import { cancelEquipment, clearMoves, freshEquipment, respawnPlayer } from '../simulation/Player.ts';
+import { cancelEquipment, clearMoves, refillPlayer, respawnPlayer } from '../simulation/Player.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
-import { blastDamage } from '../systems/grenades.ts';
-import type { MeleeObject } from '../systems/combat.ts';
+import { structureBlastDamage } from '../systems/grenades.ts';
+import type { AllyTarget, MeleeObject } from '../systems/combat.ts';
+import type { ResupplyHooks } from '../systems/equipment.ts';
 import { Albatross } from './Albatross.ts';
+import { ResupplySystem } from './Resupply.ts';
 import { Convicts } from './Convicts.ts';
 import { EncounterDirector } from './EncounterDirector.ts';
 import { ExtractionSystem } from './ExtractionSystem.ts';
 import { ObjectiveManager } from './ObjectiveManager.ts';
+
+const DEFAULT_DIFFICULTY = 'normal';
 
 const transitions: Readonly<Record<MissionState, readonly MissionState[]>> = {
   CARRIER_HUB: ['MISSION_SELECTION'],
@@ -53,18 +57,26 @@ export class MissionInstance extends Battlefield {
   private readonly roster = new Set<string>();
   private albatross?: Albatross;
   private convicts?: Convicts;
+  private supply?: ResupplySystem;
+  /** Interaction feedback per operator, drained by the room (`mission-feedback`). */
+  private feedback: { id: string; code: string }[] = [];
   private extraction = new ExtractionSystem();
   private readonly lastInteraction = new WeakMap<SimPlayer, number>();
   private readonly surface: WorldDefinition;
   private objectives: ObjectiveManager;
   private pendingEvents: MissionEvent[] = [];
+  /** Balance shown in the carrier before a run starts (default difficulty). */
+  private readonly lobbyBalance: MissionBalance;
+  /** Fixed balance snapshot of the current run. Set once at mission start, cleared on return to the carrier. */
+  private missionBalance?: MissionBalance;
   director: EncounterDirector;
 
   readonly definition: MissionDefinition;
 
-  constructor(seed: number, definition: MissionDefinition) {
-    super(seed, definition.world);
+  constructor(seed: number, definition: MissionDefinition, registry: BalanceRegistry = BALANCE) {
+    super(seed, definition.world, registry);
     this.definition = definition;
+    this.lobbyBalance = resolveMissionBalance(registry, DEFAULT_DIFFICULTY);
     this.surface = missionGround(definition.world);
     this.objectives = new ObjectiveManager(definition.objectives, this.emit);
     this.director = this.createDirector();
@@ -82,13 +94,15 @@ export class MissionInstance extends Battlefield {
 
   private readonly emit = (event: MissionEvent): void => { this.pendingEvents.push(event); };
   get state(): MissionState { return this.stateValue; }
-  get difficulty() { return DIFFICULTY_REGISTRY.get(this.selection?.difficultyId ?? 'normal')!; }
+  get difficulty() { return this.registry.difficulty(this.selection?.difficultyId ?? DEFAULT_DIFFICULTY); }
+  /** Effective balance of the current run. Immutable for the whole mission, even if the registry is replaced. */
+  get balance(): MissionBalance { return this.missionBalance ?? this.lobbyBalance; }
   get acceptsNewOperators(): boolean {
     return this.state === 'CARRIER_HUB' || this.state === 'MISSION_SELECTION' || this.state === 'BOARDING';
   }
 
   private createDirector(): EncounterDirector {
-    return new EncounterDirector({ ...this.definition, world: this.surface }, this.horde, this.players, this.difficulty, this.random, this.emit);
+    return new EncounterDirector({ ...this.definition, world: this.surface }, this.horde, this.players, this.balance, this.random, this.emit);
   }
 
   private transition(next: MissionState): void {
@@ -107,7 +121,8 @@ export class MissionInstance extends Battlefield {
 
   private place(player: SimPlayer, x: number, z: number, yaw: number): void {
     player.life++;
-    player.x = x; player.z = z; player.yaw = yaw;
+    player.x = x; player.y = 0; player.z = z; player.yaw = yaw;
+    player.posture = newPosture(yaw);
     player.input = { ...idleInput(), seq: player.input.seq, yaw };
     player.activeInput = false;
     player.inputTick = -Infinity;
@@ -121,7 +136,7 @@ export class MissionInstance extends Battlefield {
   private placeAtLanding(player: SimPlayer): void {
     const ship = this.albatross!.position;
     this.place(player, ship.x + (player.slot % 2 ? .9 : -.9), ship.z + 2 + 1.4 * Math.floor(player.slot / 2), Math.PI);
-    player.protectedUntil = this.tick + 6 * NET.tickHz;
+    player.protectedUntil = this.tick + this.registry.operator.landingProtectionSeconds * NET.tickHz;
   }
 
   addPlayer(id: string): SimPlayer {
@@ -164,7 +179,7 @@ export class MissionInstance extends Battlefield {
         distanceSquared(player, CARRIER_CONSOLE) > CARRIER_CONSOLE.radius ** 2 || !payload || typeof payload !== 'object') return false;
     const { planetId, missionId, difficultyId } = payload as Partial<MissionSelection>;
     if (typeof planetId !== 'string' || missionId !== this.definition.id || typeof difficultyId !== 'string' ||
-        !PLANET_REGISTRY.get(planetId)?.missions.includes(missionId) || !DIFFICULTY_REGISTRY.has(difficultyId)) return false;
+        !PLANET_REGISTRY.get(planetId)?.missions.includes(missionId) || !this.registry.difficultyById.has(difficultyId)) return false;
     this.selection = { planetId, missionId, difficultyId };
     if (this.state === 'CARRIER_HUB') this.transition('MISSION_SELECTION');
     return true;
@@ -176,9 +191,16 @@ export class MissionInstance extends Battlefield {
         distanceSquared(player, CARRIER_CONSOLE) > CARRIER_CONSOLE.radius ** 2) return false;
     this.transition('BOARDING');
     this.instanceId = randomUUID();
-    for (const p of this.players) if (p) p.equipment = freshEquipment();
+    // Freeze the balance of this run. Later registry changes cannot reach a running mission.
+    this.missionBalance = resolveMissionBalance(this.registry, this.selection.difficultyId);
+    this.enemyStats = this.missionBalance.enemies;
+    this.director = this.createDirector();
+    this.combatTargets = this.director.nests;
+    for (const p of this.players) if (p) refillPlayer(p);
+    this.stats.reset();
     this.albatross = new Albatross(landingShip(this.definition.world.deployment), this.instanceId, this.emit);
-    this.convicts = new Convicts(this.albatross.position, this.instanceId, this.difficulty.level);
+    this.convicts = new Convicts(this.albatross.position, this.instanceId, this.balance.convicts);
+    this.supply = new ResupplySystem(this.albatross, this.balance.resupply, this.combatEvents, this.stats);
     this.phase = 'BOARDING';
     this.phaseAt = this.tick;
     return true;
@@ -188,7 +210,7 @@ export class MissionInstance extends Battlefield {
     this.transition('DEPLOYMENT');
     this.boardingUntil = 0;
     for (const player of this.connected) this.roster.add(player.id);
-    this.emit({ type: 'MissionStarted', tick: this.tick, missionId: this.definition.id, difficultyId: this.difficulty.id });
+    this.emit({ type: 'MissionStarted', tick: this.tick, missionId: this.definition.id, difficultyId: this.difficulty.id, balanceHash: this.balance.configHash });
     this.nextDeploymentPhase();
   }
 
@@ -205,7 +227,7 @@ export class MissionInstance extends Battlefield {
         if (!this.roster.has(player.id)) player.hp = 0;
       }
       const ship = this.albatross!;
-      this.director.deploy(this.difficulty, this.tick);
+      this.director.deploy(this.tick);
       this.director.touchdown(ship.position, this.tick);
       this.emit({ type: 'AlbatrossTouchdown', tick: this.tick, entityId: ship.id, position: ship.position });
     }
@@ -247,6 +269,17 @@ export class MissionInstance extends Battlefield {
     if (!player || player.hp <= 0 || (this.lastInteraction.get(player) ?? 0) > this.tick) return false;
     this.lastInteraction.set(player, this.tick + 6);
     if (this.state === 'BOARDING') return this.action(id, 'ready');
+    const container = this.simulatesCombat && this.canMove(player) ? this.supply?.reachable(player) : undefined;
+    if (container) {
+      // Validated again on the tick the action starts and on the tick it completes.
+      const blocked = this.supply!.blocker(player, container.id) ?? (player.equipment.action ? 'resupply-busy' : undefined);
+      if (blocked) {
+        this.feedback.push({ id, code: blocked });
+        return false;
+      }
+      player.pendingResupply = container.id;
+      return true;
+    }
     if (this.state === 'ACTIVE_MISSION') return this.objectives.interact(player, this.tick);
     if (this.state === 'EXTRACTION_AVAILABLE') return this.action(id, 'albatross');
     return this.action(id, 'secure');
@@ -254,6 +287,7 @@ export class MissionInstance extends Battlefield {
 
   protected get respawns(): boolean { return false; }
   protected get simulatesMovement(): boolean { return this.acceptsNewOperators || this.simulatesCombat; }
+  override get movementBalance() { return this.balance.movement; }
   protected get movementWorld(): WorldDefinition { return this.acceptsNewOperators ? CARRIER_WORLD : this.surface; }
   protected get simulatesCombat(): boolean {
     return this.state === 'ACTIVE_MISSION' || this.state === 'OBJECTIVES_COMPLETED' ||
@@ -266,12 +300,24 @@ export class MissionInstance extends Battlefield {
   }
 
   protected movementBoundary(player: SimPlayer) { return this.extraction.tether(player); }
+  protected override allies(): readonly AllyTarget[] { return this.convicts?.deployed ? this.convicts.members : []; }
+  protected override get resupply(): ResupplyHooks | undefined { return this.supply; }
+
+  drainFeedback(): { id: string; code: string }[] {
+    const feedback = this.feedback;
+    this.feedback = [];
+    return feedback;
+  }
   protected updateTargets(): void {}
 
-  protected onBlast(g: GrenadeState, owner: string): void {
+  protected onBlast(g: GrenadeState, owner: string, grenade: EffectiveGrenade): void {
+    const structure = this.balance.nest.id;
     for (const nest of this.director.nests.active.values()) {
-      const damage = blastDamage(g, nest.x, .5, nest.z, this.surface);
-      if (damage) this.director.nests.hit(nest.id, Math.round(damage * FRAG.nestMultiplier), this.tick, owner);
+      if (nest.state === 'EMERGING') continue;
+      const damage = structureBlastDamage(g, structure, nest.x, nest.z, this.surface, grenade, this.loadout.damagePolicy);
+      if (damage === undefined) continue;
+      this.stats.data.grenadeDamageNests += Math.min(nest.hp, damage);
+      this.director.nests.hit(nest.id, damage, this.tick, owner);
     }
     this.reportNoise(g, 'explosion');
   }
@@ -314,7 +360,8 @@ export class MissionInstance extends Battlefield {
     const extractionBonusExperience = extracted.length ? Math.round(baseExperience * MISSION_REWARDS.extractionBonusRate) : 0;
     this.result = {
       id: this.instanceId + '/result', missionInstanceId: this.instanceId,
-      missionId: this.definition.id, difficultyId: this.difficulty.id, primaryObjectivesCompleted: this.primaryCompleted,
+      missionId: this.definition.id, difficultyId: this.difficulty.id, balanceHash: this.balance.configHash,
+      primaryObjectivesCompleted: this.primaryCompleted,
       extractionAttempted: !!this.extraction.attempted, extractionMethod: this.extraction.attempted ?? 'none',
       extractionSucceeded: extracted.length > 0, extractedOperatorIds: extracted,
       convictsDeployed: this.convicts?.deployed ? this.convicts.members.length : 0,
@@ -325,7 +372,10 @@ export class MissionInstance extends Battlefield {
         const bonus = extracted.includes(operatorId) ? extractionBonusExperience : 0;
         return { operatorId, baseExperience, extractionBonusExperience: bonus, totalExperience: baseExperience + bonus };
       }),
+      combat: this.stats.snapshot(),
     };
+    if (!process.env.NODE_TEST_CONTEXT) console.info('[combat-telemetry] %s', JSON.stringify({ missionId: this.definition.id, difficultyId: this.difficulty.id,
+      balanceHash: this.balance.configHash, combat: this.result.combat }));
     this.grenades.clear();
     for (const p of this.players) if (p) cancelEquipment(p, this.tick);
     this.resultUntil = this.tick + RESULT_TICKS;
@@ -338,7 +388,9 @@ export class MissionInstance extends Battlefield {
   private reset(): void {
     this.grenades.clear();
     while (this.horde.count) this.horde.despawn(this.horde.active[this.horde.count - 1]);
-    this.selection = this.instanceId = this.result = this.albatross = this.convicts = undefined;
+    this.selection = this.instanceId = this.result = this.albatross = this.convicts = this.supply = this.missionBalance = undefined;
+    this.feedback = [];
+    this.enemyStats = this.lobbyBalance.enemies;
     this.phase = 'DOCKED'; this.phaseIndex = -1;
     this.phaseAt = this.phaseUntil = this.boardingUntil = this.resultUntil = this.returnUntil = 0;
     this.primaryCompleted = false;
@@ -455,6 +507,7 @@ export class MissionInstance extends Battlefield {
       return this.albatross!.damage(ALBATROSS.thrusterHealth / 2, this.tick, index);
     }
     if (action === 'destroy-albatross') return this.albatross!.damage(ALBATROSS.hullHealth, this.tick);
+    if (action === 'destroy-supply') return this.supply!.containers.some(({ id }) => this.supply!.destroy(id, this.tick));
     if (action === 'balloon') return this.action(id, 'balloon');
     if (action === 'fighter' && this.extraction.current?.method === 'balloon' && this.extraction.current.phase === 'COUNTDOWN') {
       this.extraction.current.endsAt = this.tick + 1;
@@ -472,16 +525,22 @@ export class MissionInstance extends Battlefield {
   snapshot(debug = false): MissionSnapshot {
     const aboardCarrier = isCarrierScene(this.state, this.phase);
     const ship = this.albatross?.snapshot();
+    if (ship && this.supply) ship.supply = this.supply.snapshot();
     const convicts = this.convicts?.snapshot() ?? [];
     if (ship && aboardCarrier) {
       for (const convict of convicts) {
         convict.x += CARRIER_SHIP.x - ship.x;
         convict.z += CARRIER_SHIP.z - ship.z;
       }
+      for (const container of ship.supply ?? []) {
+        container.x += CARRIER_SHIP.x - ship.x;
+        container.z += CARRIER_SHIP.z - ship.z;
+      }
       Object.assign(ship, CARRIER_SHIP);
     }
     return {
       tick: this.tick, missionId: this.definition.id, difficultyId: this.difficulty.id, state: this.state,
+      balance: { release: this.balance.release, hash: this.balance.configHash },
       selection: this.selection, instanceId: this.instanceId, phase: this.phase, phaseAt: this.phaseAt,
       phaseUntil: this.phaseUntil, boardingUntil: this.boardingUntil, primaryObjectivesCompleted: this.primaryCompleted,
       resultUntil: this.resultUntil, objectives: this.objectives.snapshot(), result: this.result,

@@ -88,6 +88,7 @@ export function benchmarkMission(ticks: number, seed: number, playerCount: numbe
       if (measured) {
         if (events.length) bytes += Buffer.byteLength(JSON.stringify(events));
         for (const shot of instance.shots) bytes += Buffer.byteLength(JSON.stringify(shot));
+        if (instance.combatEvents.length) bytes += Buffer.byteLength(JSON.stringify(instance.combatEvents));
       }
     }
     const sim = timingStats(timings);

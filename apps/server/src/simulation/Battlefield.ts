@@ -1,17 +1,23 @@
-import { MAX_PLAYERS, MOVEMENT_INPUT, NET, movePlayer } from '@freefall/shared';
-import type { GrenadeState, MovementBoundary, ShotEvent, WorldDefinition } from '@freefall/shared';
+import { BALANCE, ENEMY_TYPES, MAX_PLAYERS, MOVEMENT_INPUT, NET, advancePosture, applyPostureInput, resolveLoadout } from '@freefall/shared';
+import type {
+  BalanceRegistry, CombatEvent, EffectiveGrenade, EffectiveLoadout, EnemyGameplay, GrenadeState, MovementDefinition, MovementBoundary, ShotEvent,
+  WorldDefinition,
+} from '@freefall/shared';
 import { HordeManager } from '../ecs/HordeManager.ts';
+import { StaggerComponent } from '../ecs/StaggerComponent.ts';
 import { UniformGrid } from '../ecs/UniformGrid.ts';
 import { validateInput } from '../networking/input.ts';
 import { movementSystem, steeringSystem, targetingSystem } from '../systems/horde.ts';
 import type { EnemyDestination } from '../systems/horde.ts';
-import { fireWeapon, meleeSystem, updateReload } from '../systems/combat.ts';
-import type { CombatTargets, SecondaryTarget } from '../systems/combat.ts';
+import { fireWeapon, interruptReload, meleeStrike, meleeSystem, switchWeaponState, updateReload } from '../systems/combat.ts';
+import type { AllyTarget, CombatContext, CombatTargets, SecondaryTarget } from '../systems/combat.ts';
 import { createPlayer, respawnPlayer } from './Player.ts';
 import type { SimPlayer } from './Player.ts';
 
 import { updateEquipment } from '../systems/equipment.ts';
+import type { EquipmentHooks, ResupplyHooks } from '../systems/equipment.ts';
 import { Grenades } from '../systems/grenades.ts';
+import { CombatStats } from '../systems/telemetry.ts';
 
 export function seededRandom(seed: number): () => number {
   return () => {
@@ -22,9 +28,15 @@ export function seededRandom(seed: number): () => number {
 
 export class Battlefield {
   readonly horde = new HordeManager();
+  /** Melee stagger per horde slot (separate component, the HordeManager is part of the Schabe baseline). */
+  readonly stagger = new StaggerComponent();
   readonly players: (SimPlayer | undefined)[] = Array.from({ length: MAX_PLAYERS });
   readonly grenades = new Grenades();
   readonly shots: ShotEvent[] = [];
+  /** Combat events of the current tick (melee, friendly fire, reload, resupply, blasts). */
+  readonly combatEvents: CombatEvent[] = [];
+  /** Aggregated combat telemetry. Plain counters, see systems/telemetry.ts. */
+  readonly stats = new CombatStats();
   protected readonly random: () => number;
   protected destination?: EnemyDestination;
   protected combatTargets?: CombatTargets;
@@ -34,17 +46,46 @@ export class Battlefield {
   tick = 0;
 
   readonly world?: WorldDefinition;
+  /** Validated, immutable balance data. Loaded once at server start. */
+  readonly registry: BalanceRegistry;
+  /** Effective operator loadout, resolved once when the battlefield is configured. */
+  readonly loadout: EffectiveLoadout;
+  /** Effective enemy gameplay by wire type. Missions replace it with their difficulty-resolved snapshot. */
+  protected enemyStats: readonly EnemyGameplay[] = ENEMY_TYPES;
 
-  constructor(seed: number, world?: WorldDefinition) {
+  constructor(seed: number, world?: WorldDefinition, registry: BalanceRegistry = BALANCE) {
     this.world = world;
+    this.registry = registry;
+    this.loadout = resolveLoadout(registry);
     this.random = seededRandom(seed);
     this.grid = new UniformGrid(world?.half);
+    this.combat = {
+      players: this.players, allies: () => this.allies(), random: this.random, stats: this.stats, events: this.combatEvents,
+      respawns: true, grid: this.grid, stagger: this.stagger, policy: this.loadout.damagePolicy,
+    };
+    this.hooks = {
+      launch: (p) => this.grenades.launch(p, this.tick, this.combat, this.movementBalance),
+      strike: (p) => {
+        const event = meleeStrike(this.horde, p, this.tick, this.movementWorld, this.combat, this.movementBalance);
+        if (event) this.combatEvents.push(event);
+      },
+      interruptReload: (p) => interruptReload(p, this.tick, this.combat),
+      switched: (p) => switchWeaponState(p),
+    };
   }
+
+  /** Shared combat services for hitscan, melee and grenades. Built once, never per tick. */
+  protected readonly combat: CombatContext;
+  private readonly hooks: EquipmentHooks;
+  /** Allied non-operator targets reachable by friendly fire (convicts in missions). */
+  protected allies(): readonly AllyTarget[] { return []; }
+  /** Albatross resupply. Only missions provide containers. */
+  protected get resupply(): ResupplyHooks | undefined { return undefined; }
 
   addPlayer(id: string): SimPlayer {
     const slot = this.players.indexOf(undefined);
     if (slot === -1) throw new Error('Battlefield is full');
-    const player = createPlayer(id, slot, this.tick);
+    const player = createPlayer(id, slot, this.tick, this.loadout);
     this.players[slot] = player;
     return player;
   }
@@ -73,11 +114,12 @@ export class Battlefield {
   protected get respawns(): boolean { return true; }
   protected get simulatesCombat(): boolean { return true; }
   protected get simulatesMovement(): boolean { return this.simulatesCombat; }
+  get movementBalance(): MovementDefinition { return this.registry.movement; }
   protected get movementWorld(): WorldDefinition | undefined { return this.world; }
   protected canMove(_player: SimPlayer): boolean { return true; }
   protected movementBoundary(_player: SimPlayer): MovementBoundary | undefined { return; }
   protected prepareTick(): void {}
-  protected onBlast(_g: GrenadeState, _owner: string): void {}
+  protected onBlast(_g: GrenadeState, _owner: string, _grenade: EffectiveGrenade): void {}
   protected onShot(_shot: ShotEvent): void {}
   protected finishTick(): void {}
   protected updateTargets(): void { targetingSystem(this.horde, this.players, this.tick); }
@@ -121,17 +163,21 @@ export class Battlefield {
       consumed++;
       player.ack = move.seq;
       if (player.hp > 0 && this.canMove(player)) {
-        movePlayer(player, move, 1 / NET.tickHz, this.movementWorld, this.movementBoundary(player));
+        const input = move.posture && move.life !== player.life ? { ...move, posture: undefined } : move;
+        applyPostureInput(player, player.posture, input, this.tick, this.movementBalance,
+          this.movementWorld, this.movementBoundary(player), this.registry.operator);
       }
     }
   }
 
-  private readonly launch = (p: SimPlayer) => this.grenades.launch(p, this.tick);
-  private readonly blast = (g: GrenadeState, owner: string) => this.onBlast(g, owner);
+  private readonly blast = (g: GrenadeState, owner: string, grenade: EffectiveGrenade) => this.onBlast(g, owner, grenade);
 
   step(): void {
     this.tick++;
     this.shots.length = 0;
+    this.combatEvents.length = 0;
+    this.combat.respawns = this.respawns;
+    this.hooks.resupply = this.resupply;
     this.prepareTick();
     if (this.simulatesMovement) {
       for (const player of this.players) {
@@ -142,28 +188,30 @@ export class Battlefield {
           player.yaw = player.input.yaw;
           player.pitch = player.input.pitch;
         }
+        if (player.hp > 0) advancePosture(player, player.posture, this.tick, this.movementBalance,
+          this.movementWorld, this.movementBoundary(player), this.canMove(player));
         this.consumeMoves(player);
       }
     }
     if (this.simulatesCombat) {
       this.updateTargets();
-      steeringSystem(this.horde, this.grid, this.players, this.tick, this.destination);
-      movementSystem(this.horde, this.movementWorld);
+      steeringSystem(this.horde, this.grid, this.players, this.tick, this.destination, this.stagger);
+      movementSystem(this.horde, this.movementWorld, this.tick, this.stagger);
       for (const player of this.players) {
         if (!player) continue;
         if (!this.canMove(player)) {
           player.activeInput = false;
           player.pendingEquipment = undefined;
         }
-        updateEquipment(player, this.tick, this.launch);
-        updateReload(player, this.tick);
-        const shot = fireWeapon(this.horde, player, this.ray, this.tick, this.movementWorld, this.combatTargets);
+        updateEquipment(player, this.tick, this.hooks, this.movementBalance);
+        updateReload(player, this.tick, this.combat, this.movementBalance);
+        const shot = fireWeapon(this.horde, player, this.ray, this.tick, this.movementWorld, this.combatTargets, this.combat, this.movementBalance);
         if (!shot) continue;
         this.shots.push(shot);
         this.onShot(shot);
       }
-      this.grenades.update(this.tick, this.horde, this.grid, this.movementWorld, this.players, this.blast);
-      meleeSystem(this.horde, this.players, this.tick, this.movementWorld, this.respawns, this.secondaryTarget);
+      this.grenades.update(this.tick, this.horde, this.grid, this.movementWorld, this.players, this.blast, this.combat, this.movementBalance);
+      meleeSystem(this.horde, this.players, this.tick, this.movementWorld, this.respawns, this.secondaryTarget, this.enemyStats, this.stagger, this.movementBalance);
     }
     this.finishTick();
   }

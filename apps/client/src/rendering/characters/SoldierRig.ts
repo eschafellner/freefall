@@ -172,9 +172,11 @@ export class SoldierRig {
   private readonly bone = new T.Vector3();
   private readonly joint = new T.Vector3();
   private readonly axis = new T.Vector3();
+  private readonly barrel = new T.Vector3();
   private readonly aimTarget = new T.Vector3();
   private readonly look = new T.Matrix4();
   private readonly desired = new T.Quaternion();
+  private readonly axisRotation = new T.Quaternion();
   private readonly teamMaterial: T.MeshStandardMaterial;
 
   constructor(parts: ReturnType<typeof createSoldierParts>, team: number, weapon: WeaponVisualController, operator = true) {
@@ -232,27 +234,35 @@ export class SoldierRig {
     limb.far.quaternion.setFromUnitVectors(negY, this.bone.subVectors(limb.end.position, this.joint).normalize());
   }
 
-  pose(state: CharacterAnimation, weapon: WeaponVisualController, targetWorld: T.Vector3, pitch: number, now: number): void {
+  pose(state: CharacterAnimation, weapon: WeaponVisualController, targetWorld: T.Vector3, pitch: number, now: number, muzzleWorld?: T.Vector3): void {
     const { aim, sprint, phase, kick, reload, flinch } = state;
+    const { crouch, prone, supine, roll, tuck } = state.tactical;
+    const low = Math.min(1, prone + supine);
     const gait = Math.min(1, state.speed / 5.8);
     const fall = T.MathUtils.smoothstep(state.fall, 0, 1);
     const handling = T.MathUtils.smoothstep(reload, 0, .19) * (1 - T.MathUtils.smoothstep(reload, .81, 1));
     const breathe = Math.sin(now / 430) * .003 * (1 - fall);
     this.root.position.y = pelvisHeight - .023 - gait * (.066 + Math.cos(phase * 2) * .019) + breathe - fall * .69;
     this.root.position.x = Math.sin(phase) * gait * .024;
-    this.root.rotation.set(gait * .025 + sprint * .06 - fall * 1.22, fall * .31, fall * -.54);
+    this.root.position.y = T.MathUtils.lerp(this.root.position.y - .32 * crouch, .29 + .08 * supine + .12 * tuck, low);
+    this.root.rotation.set(gait * .025 + sprint * .06 - fall * 1.22 + .14 * crouch - prone * 1.44 + supine * 1.44,
+      fall * .31, fall * -.54 + roll);
     this.torso.rotation.set(-state.lean * .105 - sprint * .10 + aim * (pitch * .32 - .038) + kick * .033 - flinch * .15 + handling * .11,
       -.16 - state.turn * .20 + aim * .13 + Math.sin(phase) * gait * .077 - handling * .21,
       Math.cos(phase) * gait * .038 + flinch * .065);
-    this.head.rotation.set(-this.torso.rotation.x * .55, -this.torso.rotation.y * .65, -this.torso.rotation.z * .55);
+    this.head.rotation.set(-this.torso.rotation.x * .55 + .61 * prone - .34 * supine, -this.torso.rotation.y * .65, -this.torso.rotation.z * .55);
     this.injector.visible = state.inject > .08;
     this.frag.visible = state.holdingGrenade;
     const gun = weapon.root;
-    gun.position.set(.182 - aim * .018 - handling * .026, .213 + aim * .028 - sprint * .103 - handling * .108 - state.lower * .12,
-      -.175 + kick * .043 + handling * .044);
-    gun.rotation.set(-.20 - state.lower * .84 - sprint * .38 - handling * .24 + kick * .10, .065 + sprint * .23 - handling * .36,
+    // Melee thrust: the weapon drives forward and up (stock/muzzle strike), the torso leans into it.
+    const strike = state.melee;
+    gun.position.set(.182 - aim * .018 - handling * .026 - strike * .05, .213 + aim * .028 - sprint * .103 - handling * .108 - state.lower * .12 + Math.max(0, strike) * .06,
+      -.175 + kick * .043 + handling * .044 - strike * .26);
+    gun.rotation.set(-.20 - state.lower * .84 - sprint * .38 - handling * .24 + kick * .10 + strike * .42, .065 + sprint * .23 - handling * .36 - strike * .25,
       .055 - sprint * .18 + handling * .59);
-    if (aim > .001) {
+    this.torso.rotation.x -= strike * .12;
+    this.torso.rotation.y += strike * .18;
+    if (aim > .001 && Math.abs(strike) < .05) {
       this.aimTarget.copy(targetWorld);
       this.torso.worldToLocal(this.aimTarget);
       this.aimTarget.y -= weapon.sockets.Muzzle.position.y;
@@ -260,6 +270,20 @@ export class SoldierRig {
       this.desired.setFromRotationMatrix(this.look);
       gun.quaternion.slerp(this.desired, aim);
       gun.rotateX(kick * .042);
+    }
+    if (muzzleWorld && state.lower < .8) {
+      this.barrel.copy(muzzleWorld);
+      this.torso.worldToLocal(this.barrel);
+      this.aimTarget.copy(targetWorld);
+      this.torso.worldToLocal(this.aimTarget);
+      this.look.lookAt(this.barrel, this.aimTarget, up);
+      this.desired.setFromRotationMatrix(this.look);
+      this.desired.multiply(this.axisRotation.setFromAxisAngle(negY, .42 * handling));
+      gun.quaternion.slerp(this.desired, 1 - .55 * handling - .65 * state.lower);
+      this.aimTarget.copy(weapon.sockets.Muzzle.position).applyQuaternion(gun.quaternion);
+      this.barrel.sub(this.aimTarget);
+      this.barrel.y += .08 * handling + .028 * kick;
+      gun.position.lerp(this.barrel, 1 - .62 * state.lower);
     }
     gun.updateMatrix();
     weapon.reload(reload);
@@ -272,7 +296,7 @@ export class SoldierRig {
       else weapon.grip(this.target);
       if (i === 0 && state.inject > 0) this.target.lerp(this.aimTarget.set(-.12, .13, -.235), state.inject);
       if (i === 0 && state.throwing > 0) this.target.lerp(this.aimTarget.set(-.33, .40, state.holdingGrenade ? .09 : -.40), state.throwing);
-      this.pole.set(side * .83, -1, .36);
+      this.pole.set(side * .83, -1 + 1.4 * supine, .36);
       this.bend(arm, upperArm, forearm);
       arm.end.quaternion.copy(gun.quaternion);
       arm.end.rotateZ(side * .19);
@@ -289,6 +313,14 @@ export class SoldierRig {
       this.origin.set(side * hip, 0, 0);
       this.target.set(side * (hip + .015) + step * state.strafe - this.root.position.x, .099 - this.root.position.y + lift - fall * .52,
         -step * state.forward + side * pivot * travel * .073 + .026 - fall * .08);
+      this.target.z -= .19 * crouch;
+      if (low > .001 && this.root.parent) {
+        const direction = prone > supine ? 1 : -1;
+        this.aimTarget.set(side * (.19 + .10 * tuck) + state.strafe * step, .09 + .12 * tuck + lift * .25,
+          direction * (.74 - .19 * tuck - step * state.forward * .6));
+        this.root.worldToLocal(this.root.parent.localToWorld(this.aimTarget));
+        this.target.lerp(this.aimTarget, low);
+      }
       this.pole.set(side * .16 + state.strafe * .29, 0, -1);
       this.bend(leg, thigh, calf);
       leg.end.rotation.set(Math.sin(swing * Math.PI * 2) * gait * .23, -side * .085, 0);

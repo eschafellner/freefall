@@ -1,17 +1,16 @@
-import { ENEMY_TYPES, NET, clampToArena, moveOnGround } from '@freefall/shared';
+import { BALANCE, ENEMY_TYPES, NET, clampToArena, moveOnGround } from '@freefall/shared';
 import type { PositionXZ, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
+import type { StaggerComponent } from '../ecs/StaggerComponent.ts';
 import type { UniformGrid } from '../ecs/UniformGrid.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
 import { ARENA_REINFORCEMENTS, ARENA_SPAWN_TYPE } from '../simulation/ArenaEncounter.ts';
 
-export const AI = {
-  targetTicks: 6,
-  steeringTicks: 2,
-  separationRadius: 1.65,
-  neighborsPerCell: 12,
+/** Horde scheduling and separation. Values live in `balance/data/swarm.json` (`hordeAi`, `arena.refillTicks`). */
+export const AI = Object.freeze({
+  ...BALANCE.swarm.hordeAi,
   refillTicks: ARENA_REINFORCEMENTS.refillTicks,
-} as const;
+});
 
 export function spawnSystem(h: HordeManager, desired: number, random: () => number): void {
   while (h.count < desired) {
@@ -51,12 +50,12 @@ export type EnemyDestination = (slot: number, output: PositionXZ) => number;
 const steeringGoal = { x: 0, z: 0 };
 
 export function steeringSystem(h: HordeManager, grid: UniformGrid, players: readonly (SimPlayer | undefined)[], tick: number,
-  destination?: EnemyDestination): void {
+  destination?: EnemyDestination, stagger?: StaggerComponent): void {
   grid.rebuild(h);
   const radius = AI.separationRadius;
   for (let index = 0; index < h.count; index++) {
     const i = h.active[index];
-    if ((tick + i) % AI.steeringTicks !== 0) continue;
+    if ((tick + i) % AI.steeringTicks !== 0 || (stagger && tick < stagger.active(h, i))) continue;
     const x = h.x[i];
     const z = h.z[i];
     const col = grid.cell(x);
@@ -105,10 +104,20 @@ export function steeringSystem(h: HordeManager, grid: UniformGrid, players: read
   }
 }
 
-export function movementSystem(h: HordeManager, world?: WorldDefinition): void {
+/**
+ * Integrates enemy velocity with ground collision. During a melee stagger the velocity is the knockback impulse,
+ * which decays linearly to zero by the end of the stagger. Collision (`moveOnGround`) keeps it out of walls.
+ */
+export function movementSystem(h: HordeManager, world?: WorldDefinition, tick = 0, staggers?: StaggerComponent): void {
   const position = { x: 0, z: 0 };
   for (let index = 0; index < h.count; index++) {
     const i = h.active[index];
+    const stagger = staggers ? staggers.active(h, i) : 0;
+    if (stagger && tick >= stagger) {
+      staggers!.end(i);
+      h.vx[i] = h.vz[i] = 0;
+      continue;
+    }
     const x = h.x[i] + h.vx[i] / NET.tickHz;
     const z = h.z[i] + h.vz[i] / NET.tickHz;
     if (world) {
@@ -120,6 +129,12 @@ export function movementSystem(h: HordeManager, world?: WorldDefinition): void {
     } else {
       h.x[i] = clampToArena(x);
       h.z[i] = clampToArena(z);
+    }
+    if (stagger) {
+      const remaining = stagger - tick;
+      const scale = remaining > 1 ? (remaining - 1) / remaining : 0;
+      h.vx[i] *= scale;
+      h.vz[i] *= scale;
     }
   }
 }

@@ -4,11 +4,11 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
-import type { HordeFrame, MissionDefinition, MissionSnapshot, PlayersSnapshot, PositionXZ, ShotEvent } from '@freefall/shared';
+import type { HordeFrame, MissionDefinition, MissionSnapshot, OperatorPosition, PlayerState, PlayersSnapshot, PositionXZ, PostureState, ShotEvent } from '@freefall/shared';
 import { MissionEnvironment } from './mission/MissionEnvironment.ts';
 import { MissionMarkers } from './mission/MissionMarkers.ts';
 import { SwarmBreachController } from './mission/SwarmBreachController.ts';
-import { CARRIER_WORLD, isCarrierScene, landingShip, missionGround } from '@freefall/shared';
+import { CARRIER_WORLD, WEAPONS, allowsPostureAction, isCarrierScene, landingShip, missionGround, newPosture, postureCollider } from '@freefall/shared';
 import { AlbatrossView } from './mission/AlbatrossView.ts';
 import { Carrier } from './mission/Carrier.ts';
 import { ConvictView } from './mission/ConvictView.ts';
@@ -41,6 +41,9 @@ export class ArenaView {
   private readonly scene = new T.Scene();
   private readonly grenades = new GrenadeView(this.scene);
   private readonly reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  private recoilPitch = 0;
+  private recoilYaw = 0;
+  private readonly staggered = new Map<number, number>();
   private readonly cameraRig = new ThirdPersonCamera();
   private readonly camera = this.cameraRig.camera;
   private readonly players: PlayerView;
@@ -71,7 +74,7 @@ export class ArenaView {
   private ownId = '';
   private readonly overview = { x: -1.8, z: 7.7 };
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
-  private debugMarkers?: { server: T.Mesh; predicted: T.Mesh };
+  private debugMarkers?: { server: T.Mesh; predicted: T.Mesh; collider: T.LineSegments };
   private post?: { composer: EffectComposer; render: RenderPass; output: OutputPass; fxaa: ShaderPass };
 
   private readonly container: HTMLElement;
@@ -212,11 +215,27 @@ export class ArenaView {
   };
 
   blast(distance: number): void {
-    if (!this.reducedMotion.matches && distance < 16) this.cameraRig.fire(1 - distance / 16);
+    if (!this.reducedMotion.matches && distance < 22) this.cameraRig.blast(1 - distance / 22);
   }
 
+  /** Authoritative explosion event: pooled flash, pressure wave, smoke, dust, debris and scorch mark. */
+  explosion(id: number, x: number, y: number, z: number, radius: number): void {
+    this.grenades.explode(id, x, y, z, radius, performance.now());
+  }
+
+  /** Predicted gameplay recoil of the local weapon. Moves the camera (and crosshair) onto the server's shot line. */
+  setRecoil(pitch: number, yaw: number): void {
+    this.recoilPitch = pitch;
+    this.recoilYaw = yaw;
+  }
+
+  /** Keeps the approved hit reaction of a staggered enemy active for the stagger duration (no new animation). */
+  stagger(id: number, until: number): void { if (id) this.staggered.set(id, until); }
+
   shot(event: ShotEvent, now: number): void {
-    if (!this.reducedMotion.matches && this.ownId === event.shooter) this.cameraRig.fire();
+    if (!this.reducedMotion.matches && this.ownId === event.shooter) {
+      this.cameraRig.fire(WEAPONS[event.slot ?? 'primary'].recoil.cameraKick / .63);
+    }
     this.effects.add(event, now, this.horde.hit(event.enemy, now, event.eliminated), this.operation?.convicts.shot(event) ?? this.players.shotOrigin(event));
   }
 
@@ -226,14 +245,16 @@ export class ArenaView {
     this.players.clear();
     this.horde.clear();
     this.effects.clear();
+    this.grenades.clear();
+    this.staggered.clear();
     this.setMission();
   }
 
-  draw(now: number, dt: number, position: PositionXZ, yaw: number, pitch: number, own: string, alive: boolean,
+  draw(now: number, dt: number, position: OperatorPosition, yaw: number, pitch: number, own: string, alive: boolean,
     p1: PlayersSnapshot | undefined, p2: PlayersSnapshot | undefined, pAlpha: number,
     h1: HordeFrame | undefined, h2: HordeFrame | undefined, hAlpha: number,
     aim = false, sprint = false, latest?: PlayersSnapshot,
-    state?: MissionSnapshot, missionTick = 0, showMarkers = false, debug = false,
+    state?: MissionSnapshot, missionTick = 0, showMarkers = false, debug = false, posture?: PostureState, poseTick = missionTick,
   ): void {
     this.ownId = own;
     this.contact.begin();
@@ -256,16 +277,19 @@ export class ArenaView {
     if (mission) mission.environment.root.visible = !renderCarrier;
     if (operation) operation.carrier.root.visible = carrier && !flying;
     const world = carrier ? CARRIER_WORLD : mission?.surface;
-    this.players.draw(p1, p2, pAlpha, own, position, yaw, pitch, aim, sprint, now, dt, this.contact, latest, missionTick);
-    this.cameraRig.update(own ? position : this.overview, own ? yaw : .19, own ? pitch : -.12,
-      Boolean(own && alive && aim), this.players.localSprint, dt, world);
+    const aiming = aim && (!posture || allowsPostureAction(posture, 'aim'));
+    const sprinting = sprint && (!posture || allowsPostureAction(posture, 'sprint'));
+    this.players.draw(p1, p2, pAlpha, own, position, yaw, pitch, aiming, sprinting, now, dt, this.contact, latest, missionTick, posture, poseTick);
+    this.cameraRig.update(own ? position : this.overview, own ? yaw + this.recoilYaw : .19, own ? pitch + this.recoilPitch : -.12,
+      Boolean(own && alive && aiming), this.players.localSprint, dt, world, own ? position.y : 0,
+      own && alive && posture ? postureCollider(posture, poseTick).lookHeight : undefined);
     const low = this.quality === GRAPHICS_QUALITY.low;
     if (operation) {
       operation.descent.update(flying && state ? state : undefined, missionTick, low, this.scene, groundBelow);
       PlayerRigBatches.setTransport(this.scene, undefined);
       if (mission && state) {
         operation.carrier.update(now, state, low);
-        operation.ship.update(state, missionTick, low);
+        operation.ship.update(state, missionTick, low, latest);
         operation.recovery.update(state.result || state.state === 'RETURN_TO_CARRIER' ? undefined : state.extraction,
           missionTick, dt, latest, own, position);
         const ship = operation.ship.root;
@@ -310,7 +334,11 @@ export class ArenaView {
       } else operation.convicts.draw([], missionTick, now, dt, this.camera, true);
     }
     // Player snapshots may be extrapolated a little (alpha > 1); grenades follow a ballistic arc and do not.
-    this.grenades.draw(p1, p2, Math.min(1, pAlpha), this.camera, low);
+    this.grenades.draw(p1, p2, Math.min(1, pAlpha), this.camera, low, now);
+    for (const [id, until] of this.staggered) {
+      if (now >= until) this.staggered.delete(id);
+      else this.horde.hit(id, now, false);
+    }
     this.players.drawBatches(this.camera);
     if (!mission) this.details.update(this.camera, this.quality.gravelDistance, this.quality.brushDistance);
     this.horde.draw(this.camera, carrier ? undefined : h1, carrier ? undefined : h2, hAlpha, now, this.quality, this.contact);
@@ -335,9 +363,9 @@ export class ArenaView {
    * Telemetry overlay: orange ring at the last authoritative server position, cyan ring at the
    * simulated client prediction. The rendered operator is drawn between them. Without arguments hidden.
    */
-  debugPositions(server?: PositionXZ, predicted?: PositionXZ): void {
+  debugPositions(server?: PlayerState, predicted?: OperatorPosition, tick = 0): void {
     if (!server && !predicted) {
-      if (this.debugMarkers) this.debugMarkers.server.visible = this.debugMarkers.predicted.visible = false;
+      if (this.debugMarkers) this.debugMarkers.server.visible = this.debugMarkers.predicted.visible = this.debugMarkers.collider.visible = false;
       return;
     }
     if (!this.debugMarkers) {
@@ -349,13 +377,27 @@ export class ArenaView {
         this.scene.add(mesh);
         return mesh;
       };
-      this.debugMarkers = { server: marker(0xff8a3d, .55), predicted: marker(0x5fe3ff, .42) };
+      const unit = new T.BoxGeometry(1, 1, 1);
+      const collider = new T.LineSegments(new T.EdgesGeometry(unit),
+        new T.LineBasicMaterial({ color: 0xff8a3d, depthTest: false, transparent: true, opacity: .7, toneMapped: false }));
+      unit.dispose();
+      collider.renderOrder = 10;
+      this.scene.add(collider);
+      this.debugMarkers = { server: marker(0xff8a3d, .55), predicted: marker(0x5fe3ff, .42), collider };
     }
-    const { server: s, predicted: p } = this.debugMarkers;
+    const { server: s, predicted: p, collider } = this.debugMarkers;
     s.visible = !!server;
     p.visible = !!predicted;
-    if (server) s.position.set(server.x, .04, server.z);
-    if (predicted) p.position.set(predicted.x, .05, predicted.z);
+    collider.visible = !!server && server.hp > 0;
+    if (server) {
+      const posture = server.posture ?? newPosture(server.yaw);
+      const shape = postureCollider(posture, tick);
+      s.position.set(server.x, (server.y ?? 0) + .04, server.z);
+      collider.position.set(server.x, (server.y ?? 0) + shape.height / 2, server.z);
+      collider.scale.set(shape.radius * 2, shape.height, shape.halfLength * 2);
+      collider.rotation.y = posture.current === 'STANDING' || posture.current === 'CROUCHING' ? 0 : -posture.yaw;
+    }
+    if (predicted) p.position.set(predicted.x, predicted.y + .05, predicted.z);
   }
 
   metrics() {
@@ -393,6 +435,12 @@ export class ArenaView {
     this.players.dispose();
     this.operation?.convicts.dispose();
     PlayerRigBatches.setTransport(this.scene, undefined);
+    if (this.debugMarkers) {
+      for (const marker of Object.values(this.debugMarkers)) {
+        marker.geometry.dispose();
+        (marker.material as T.Material).dispose();
+      }
+    }
     this.assets.dispose();
     this.gpuTimer.dispose();
     const geometries = new Set<T.BufferGeometry>();

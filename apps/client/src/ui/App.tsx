@@ -11,6 +11,9 @@ import { MissionHud, seconds } from './MissionHud.tsx';
 import { CarrierConsole, OperatorManifest } from './CarrierConsole.tsx';
 import type { GameMode, JoinMode } from '../networking/Match.ts';
 
+import { ControlSettings } from './ControlSettings.tsx';
+import { bindings } from '../input/Bindings.ts';
+
 const decimal = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 });
 const number = new Intl.NumberFormat('de-DE');
 const roomFromUrl = new URLSearchParams(location.search).get('room') ?? '';
@@ -54,6 +57,11 @@ function Metrics({ status }: { status: GameStatus }) {
         <dt>Durchbrüche aktiv / gesamt</dt><dd>{status.mission.activeBreaches} / {status.mission.breachCount}</dd>
       </>}
     </dl>
+    {server?.combat && <CombatMetrics combat={server.combat}/>}
+    <div className="metrics-divider">AUDIO <span>{status.audio.voices} Stimmen</span></div>
+    <dl className="metrics">
+      <dt>Stimmen Spitze / verworfen</dt><dd>{status.audio.peak} <span>/ {status.audio.dropped}</span></dd>
+    </dl>
   </aside>
   {motion && <aside className="telemetry motion-telemetry" aria-label="Bewegungstelemetrie">
       <div className="panel-title"><span className="signal" /> Bewegung <kbd>{motion.animState}</kbd></div>
@@ -66,10 +74,47 @@ function Metrics({ status }: { status: GameStatus }) {
         <dt>Korrekturen/s / letzte</dt><dd>{motion.correctionsPerSecond.toFixed(1)} <span>/ {motion.lastCorrectionCm.toFixed(1)} cm</span></dd>
         <dt>Korr. max / Snaps</dt><dd>{motion.maxCorrectionCm.toFixed(1)} <span>/ {motion.snaps}</span></dd>
         <dt>Unbestätigte Eingaben</dt><dd>{motion.unacknowledged}</dd>
+        <dt>Haltung / Zielhaltung</dt><dd>{motion.posture} <span>/ {motion.requestedPosture}</span></dd>
+        <dt>Hechtsprung / Cooldown</dt><dd>{motion.dive}</dd>
+        <dt>Kollider / Bodenkontakt</dt><dd>{motion.collider} <span>m · {motion.grounded ? 'ja' : 'nein'}</span></dd>
+        <dt>Erlaubte Aktionen</dt><dd>{motion.actions || '–'}</dd>
+        <dt>Serverposition</dt><dd>{motion.serverPosition}</dd>
+        <dt>Sichtbare Position</dt><dd>{motion.visualPosition}</dd>
         <dt>Tempo Lauf / Anim.</dt><dd>{motion.moveSpeed.toFixed(1)} <span>/ {motion.animSpeed.toFixed(1)} m/s</span></dd>
       </dl>
   </aside>}
   </>;
+}
+
+function CombatMetrics({ combat }: { combat: NonNullable<GameStatus['metrics']>['combat'] & object }) {
+  const accuracy = (slot: 'primary' | 'secondary') => combat.shots[slot] ? Math.round(combat.hits[slot] / combat.shots[slot] * 100) : 0;
+  const ff = combat.friendlyFireDamage;
+  return <>
+    <div className="metrics-divider">KAMPF <span>Einsatz</span></div>
+    <dl className="metrics">
+      <dt>AR Schüsse / Treffer</dt><dd>{combat.shots.primary} <span>/ {combat.hits.primary} ({accuracy('primary')} %)</span></dd>
+      <dt>P-01 Schüsse / Treffer</dt><dd>{combat.shots.secondary} <span>/ {combat.hits.secondary} ({accuracy('secondary')} %)</span></dd>
+      <dt>Schaden AR / P-01</dt><dd>{number.format(combat.damage.primary)} <span>/ {number.format(combat.damage.secondary)}</span></dd>
+      <dt>Magazine / verworfen</dt><dd>{combat.magazinesUsed.primary + combat.magazinesUsed.secondary} <span>/ {combat.roundsDiscarded.primary + combat.roundsDiscarded.secondary} Schuss</span></dd>
+      <dt>Granaten / Gegner / Nester</dt><dd>{combat.grenadesThrown} <span>/ {number.format(combat.grenadeDamageEnemies)} / {number.format(combat.grenadeDamageNests)}</span></dd>
+      <dt>Nahkampf Treffer / Stagger</dt><dd>{combat.meleeHits} <span>/ {combat.staggers}</span></dd>
+      <dt>Eigenbeschuss / selbst</dt><dd>{ff.bullet + ff.explosion + ff.melee} <span>/ {combat.selfDamage}</span></dd>
+      <dt>Nachschub / Explosion max</dt><dd>{combat.resupplyUses} <span>/ {combat.blastQueryMsMax.toFixed(3)} ms</span></dd>
+    </dl>
+  </>;
+}
+
+function AudioSettings({ game }: { game: Game | null }) {
+  const [, refresh] = useState(0);
+  const settings = game?.audio.settings;
+  if (!game || !settings) return null;
+  const channels = [['master', 'Master'], ['weapons', 'Waffen / SFX'], ['environment', 'Umgebung'], ['ui', 'Interface']] as const;
+  return <fieldset className="audio-settings"><legend>Audio</legend>
+    {channels.map(([channel, label]) => <label key={channel}>{label}
+      <input type="range" min={0} max={100} value={Math.round(settings[channel] * 100)} aria-label={`Lautstärke ${label}`}
+        onChange={(event) => { game.setVolume(channel, Number(event.target.value) / 100); refresh((n) => n + 1); }}/>
+      <span>{Math.round(settings[channel] * 100)}</span></label>)}
+  </fieldset>;
 }
 
 export function App() {
@@ -82,6 +127,7 @@ export function App() {
   const [fatal, setFatal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [code, setCode] = useState(roomFromUrl);
+  const [, refreshBindings] = useState(0);
   const [telemetry, setTelemetry] = useState(false);
   const [mode, setMode] = useState<GameMode>('mission');
   useEffect(() => { game.current?.setTelemetry(telemetry); }, [telemetry]);
@@ -248,10 +294,15 @@ export function App() {
           <option value="high">High</option>
         </select>
       </label>
+      <ControlSettings onChange={() => refreshBindings((n) => n + 1)}/>
+      <AudioSettings game={game.current}/>
       {fault && <div className="fault" role="alert">{fault}</div>}
     </section>}
 
-    {status.locked && !inCarrier && !cinematic && own && own.hp > 0 && <div className={`reticle ${status.hit ? 'hit' : ''} ${status.eliminated ? 'kill' : ''}`} aria-hidden="true"><i/><i/><i/><i/></div>}
+    {status.locked && !inCarrier && !cinematic && own && own.hp > 0 && <div className={`reticle ${status.hit ? 'hit' : ''} ${status.eliminated ? 'kill' : ''} ${status.allyHit ? 'ally' : ''}`} aria-hidden="true"><i/><i/><i/><i/></div>}
+    {status.locked && status.friendlyNotice && <div className="friendly-notice" role="status">{status.friendlyNotice}</div>}
+    {status.locked && !cinematic && own && own.hp > 0 && own.posture?.standBlockedAt !== undefined &&
+      status.serverTick - own.posture.standBlockedAt < 30 && <div className="posture-notice" role="status">Kein Platz zum Aufstehen</div>}
     {active && status.respawn > 0 && <div className="respawn" role="status"><strong>Außer Gefecht</strong><span>Respawn in {status.respawn.toFixed(1)} s</span></div>}
 
     <footer className="bottom">
@@ -273,7 +324,10 @@ export function App() {
         })}
       </div></div>}
       {!status.locked && !cinematic && <div className="controls">
-        <span><kbd>WASD</kbd> Bewegen</span><span><kbd>Shift</kbd> Sprinten</span><span><kbd>RMB</kbd> Zielen</span><span><kbd>LMB</kbd> Feuern</span><span><kbd>R</kbd> Nachladen</span>{status.missionRoom && <span><kbd>E</kbd> Interagieren</span>}<span><kbd>Esc</kbd> Menü</span>
+        <span><kbd>{(['MOVE_FORWARD', 'MOVE_LEFT', 'MOVE_BACKWARD', 'MOVE_RIGHT'] as const).map((action) => bindings.label(action)).join(' ')}</kbd> Bewegen</span>
+        <span><kbd>{bindings.label('CROUCH')}</kbd> Ducken</span><span><kbd>{bindings.label('DIVE')}</kbd> Hechtsprung</span>
+        <span><kbd>{bindings.label('STAND_UP')}</kbd> Aufstehen</span><span><kbd>{bindings.label('AIM')}</kbd> Zielen</span>
+        <span><kbd>{bindings.label('FIRE')}</kbd> Feuern</span><span><kbd>Esc</kbd> Menü</span>
       </div>}
       {active && own && status.locked && !inCarrier && !cinematic && <WeaponReadout player={own} tick={status.serverTick}/>}
     </footer>

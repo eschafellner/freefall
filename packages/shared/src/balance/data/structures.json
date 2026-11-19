@@ -1,0 +1,55 @@
+{
+  "nests": [
+    {
+      "id": "structure.swarm_nest",
+      "factionId": "swarm",
+      "spawnArchetypeId": "swarm.schabe",
+      "maxHealth": 360,
+      "spawnIntervalSeconds": 5.6,
+      "breachEmergeSeconds": 6.4,
+      "minSpawnIntervalTicks": 7,
+      "blockedSpawnRetryTicks": 9,
+      "reinforcementBoostRate": 1.85,
+      "hitRadius": 3.8,
+      "hitHeight": 1.55,
+      "exits": 3,
+      "exitRadius": 4.8,
+      "collapseTicks": 64,
+      "garrison": {
+        "routeRadius": 13,
+        "routePoints": 8,
+        "regroupDistance": 24,
+        "playerClearance": 7
+      }
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "vehicle.albatross_02",
+      "displayName": "Albatross-02",
+      "hullHealth": 1700,
+      "thrusterHealth": 330,
+      "disabledThrusters": 2,
+      "supplyContainers": [
+        {
+          "id": "supply.port",
+          "side": "left",
+          "serial": "SUP-02-L",
+          "x": -3.32,
+          "z": 0,
+          "charges": 4,
+          "health": 420
+        },
+        {
+          "id": "supply.starboard",
+          "side": "right",
+          "serial": "SUP-02-R",
+          "x": 3.32,
+          "z": 0,
+          "charges": 4,
+          "health": 420
+        }
+      ]
+    }
+  ]
+}

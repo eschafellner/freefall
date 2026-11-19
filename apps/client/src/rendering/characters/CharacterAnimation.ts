@@ -1,16 +1,19 @@
 import { NET, TEST_RIFLE } from '@freefall/shared';
 import * as T from 'three';
+import { TacticalAnimation } from './TacticalAnimation.ts';
+import type { TacticalClip } from './TacticalAnimation.ts';
 
 export type Locomotion = 'idle' | 'walk' | 'run' | 'sprint' | 'strafeLeft' | 'strafeRight' | 'backward';
 export type Combat = 'ready' | 'aim' | 'fire' | 'reload';
 export type Reaction = 'none' | 'hit' | 'death';
-export type CharacterClip = Locomotion | Exclude<Combat, 'ready'> | Exclude<Reaction, 'none'>;
+export type CharacterClip = Locomotion | Exclude<Combat, 'ready'> | Exclude<Reaction, 'none'> | TacticalClip;
 
 const clamp = T.MathUtils.clamp;
 const damp = T.MathUtils.damp;
 
 
 export class CharacterAnimation {
+  readonly tactical = new TacticalAnimation();
   locomotion: Locomotion = 'idle';
   combat: Combat = 'ready';
   reaction: Reaction = 'none';
@@ -31,17 +34,20 @@ export class CharacterAnimation {
   lower = 0;
   inject = 0;
   throwing = 0;
+  /** Melee strike: negative = wind-up, 1 = full thrust at the impact frame. */
+  melee = 0;
   holdingGrenade = false;
   private velocityForward = 0;
   private velocityStrafe = 0;
 
   reset(): void {
+    this.tactical.reset();
     this.locomotion = 'idle';
     this.combat = 'ready';
     this.reaction = 'none';
     this.speed = this.forward = this.strafe = this.phase = this.aim = this.sprint = this.kick = this.flinch = this.fall = 0;
     this.holdingGrenade = false;
-    this.lower = this.inject = this.throwing = 0;
+    this.lower = this.inject = this.throwing = this.melee = 0;
     this.stride = this.turn = this.lean = 0;
     this.reload = -1;
     this.velocityForward = this.velocityStrafe = 0;

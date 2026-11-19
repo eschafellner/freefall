@@ -8,7 +8,9 @@ export interface SwarmBreachRegion extends Circle { id: string }
 export interface Obstacle extends PositionXZ {
   halfX: number;
   halfZ: number;
+  /** Top elevation. Solids start at ground level unless bottom is set. */
   height: number;
+  bottom?: number;
   kind: 'rock' | 'bunker' | 'barrier' | 'container';
 }
 export interface WorldDefinition {

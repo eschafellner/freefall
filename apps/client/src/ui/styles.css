@@ -260,3 +260,28 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
   .in-game .topbar { display: none; }
   .in-game .field-objectives li, .in-game .field-heading { padding-block: 3px; }
 }
+
+/* 7.2B combat HUD: magazine counter, reload state, melee cooldown, friendly fire and supply. */
+.weapon.readout > strong.ammo em { font: 600 13px var(--mono); font-style: normal; color: #b9c2a6; margin-left: 2px; }
+.weapon.readout > strong.ammo.empty { color: #f0a175; }
+.kit-note { display: block; font: 11px/1.4 var(--mono); color: #c8ccbe; }
+.kit-note.warn { color: #f0a175; }
+.kit-line.cooling b { color: #8e9483; }
+.reticle.ally { color: #7fc8ff; transform: translate(-50%, -50%) scale(.85); }
+.friendly-notice { position: absolute; left: 50%; top: calc(50% + 34px); transform: translateX(-50%); font: 11px/1 var(--mono);
+  letter-spacing: .04em; color: #9fd3ff; background: #0d1418b8; padding: 4px 8px; pointer-events: none; }
+.audio-settings { display: grid; gap: 4px; margin-top: 10px; font: 12px var(--mono); }
+.audio-settings label { display: grid; grid-template-columns: 7.5em 1fr 2.5em; align-items: center; gap: 8px; }
+.audio-settings input[type="range"] { width: 100%; }
+
+.control-settings { margin-top: 12px; border-top: 1px solid #ffffff29; padding-top: 10px; }
+.control-settings summary { cursor: pointer; font-size: 13px; }
+.binding-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin: 10px 0; }
+.binding-button { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 4px;
+  border: 1px solid #ffffff29; padding: 5px; background: #152326; color: inherit; font: inherit; font-size: 11px; cursor: pointer; }
+.binding-button[aria-pressed="true"] { border-color: var(--accent); }
+.binding-button kbd { font-size: 10px; white-space: nowrap; }
+.control-settings p { font-size: 12px; margin: 8px 0; }
+
+.posture-notice { position: absolute; bottom: 24%; left: 50%; transform: translateX(-50%);
+  padding: 6px 10px; background: #152326e8; color: #e2ebe5; font: 12px var(--mono); pointer-events: none; }

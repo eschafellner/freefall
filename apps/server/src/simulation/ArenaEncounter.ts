@@ -1,10 +1,13 @@
-import { ARENA_HALF, ENEMY_ARCHETYPES, SCHABE_ARCHETYPE_ID } from '@freefall/shared';
+import { ARENA_HALF, BALANCE } from '@freefall/shared';
 
-export const ARENA_REINFORCEMENTS = {
-  archetypeId: SCHABE_ARCHETYPE_ID,
-  outerRadius: ARENA_HALF - 5,
-  ringWidth: 11,
-  refillTicks: 9,
-} as const;
+const arena = BALANCE.swarm.arena;
 
-export const ARENA_SPAWN_TYPE = ENEMY_ARCHETYPES[ARENA_REINFORCEMENTS.archetypeId].wireType;
+/** Arena reinforcement ring. Values live in `balance/data/swarm.json` (`arena`). */
+export const ARENA_REINFORCEMENTS = Object.freeze({
+  archetypeId: arena.archetypeId,
+  outerRadius: ARENA_HALF - arena.outerRadiusInset,
+  ringWidth: arena.ringWidth,
+  refillTicks: arena.refillTicks,
+});
+
+export const ARENA_SPAWN_TYPE = BALANCE.enemy(ARENA_REINFORCEMENTS.archetypeId).wireType;

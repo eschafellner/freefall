@@ -1,28 +1,14 @@
 import type { MissionSnapshot } from '@freefall/shared';
+import type { AudioEngine } from '../../audio/AudioEngine.ts';
 
-/** Small Web Audio fallback until authored ship audio is available. */
+/** Small Web Audio fallback until authored ship audio is available. Routed through the environment bus. */
 export class FlightAudio {
-  private context?: AudioContext;
+  private readonly engine: AudioEngine;
   private cue = '';
 
-  resume(): void {
-    if (!window.AudioContext) return;
-    this.context ??= new AudioContext();
-    void this.context.resume().catch(() => {});
-  }
+  constructor(engine: AudioEngine) { this.engine = engine; }
 
-  combat(cue: 'rifle' | 'pistol' | 'blast', distance: number): void {
-    if (!this.context || this.context.state !== 'running' || distance > 48) return;
-    const volume = .14 / (1 + distance * .14);
-    if (cue === 'blast') {
-      this.tone('sawtooth', 89, 27, .33, volume);
-      this.tone('triangle', 163, 45, .17, volume * .65);
-    } else {
-      this.tone('triangle', cue === 'rifle' ? 184 : 243, 42, cue === 'rifle' ? .09 : .075, volume);
-    }
-  }
-
-  close(): void { void this.context?.close(); }
+  private get context(): AudioContext | undefined { return this.engine.context; }
 
   update(state?: MissionSnapshot): void {
     const cue = state?.result ? '' : state?.extraction ? state.extraction.method + state.extraction.phase : state?.phase ?? '';
@@ -57,7 +43,7 @@ export class FlightAudio {
     gain.gain.setValueAtTime(.001, at);
     gain.gain.exponentialRampToValueAtTime(volume, at + Math.min(.16, duration / 3));
     gain.gain.exponentialRampToValueAtTime(.001, at + duration);
-    oscillator.connect(gain).connect(context.destination);
+    oscillator.connect(gain).connect(this.engine.bus('environment') ?? context.destination);
     oscillator.start(at);
     oscillator.stop(at + duration + .04);
     oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };

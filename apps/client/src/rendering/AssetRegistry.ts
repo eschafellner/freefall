@@ -29,4 +29,4 @@ export const ASSETS: { soldier?: SoldierAsset; weapons: typeof weapons; ktx2Tran
 
 export const SCHABE_VISUAL = ENEMY_ARCHETYPES[SCHABE_ARCHETYPE_ID].visualAssetId;
 export const ENEMY_VISUALS = { [SCHABE_VISUAL]: EnemyVisualLOD } as const;
-export const PRIMARY_WEAPON_ASSET = TEST_RIFLE.visualAssetId;
+export const PRIMARY_WEAPON_ASSET = TEST_RIFLE.assets.visual;

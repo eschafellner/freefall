@@ -29,15 +29,16 @@ npm run dev:client   # Vite auf 127.0.0.1:5173
 | Shift | Sprinten |
 | Rechte Maustaste halten | Über die Schulter zielen |
 | Linke Maustaste halten | Automatisch feuern |
-| R | Nachladen |
-| E | Konsole öffnen, Bereitschaft melden, Relais aktivieren oder Extraktion sichern |
+| R | Nachladen (taktisch: Restmunition des Magazins wird verworfen) |
+| V | Nahkampf (Kolbenstoß) |
+| E | Konsole öffnen, Bereitschaft melden, Relais aktivieren, Nachschub am Albatross-Container aufnehmen oder Extraktion sichern |
 | 1 / 2 | Kestrel / P-01 auswählen |
 | G / H | Sprenggranate werfen / persönlichen Heilstim anwenden |
 | B | Extraktionsballon nach den Hauptzielen aktivieren |
 | Esc | Maus freigeben und Menü öffnen |
 | F2 | Live-Telemetrie ein- oder ausblenden |
 
-Treffer erzeugen einen sichtbaren Einschlag und ändern das Fadenkreuz. In Boreal Relay setzt der Server ausgeschaltete Spieler nach drei Simulationssekunden zurück. Bei einem vollständigen Truppausfall endet Bodenbruch. Bereits erfüllte Hauptziele sichern die Basis-EP.
+Treffer erzeugen einen sichtbaren Einschlag und ändern das Fadenkreuz. Friendly Fire ist mit 30 % Schaden aktiv (blaues Fadenkreuz bei Eigenbeschuss). Kampfsystem und Werte: [Combat Balance 7.2B](docs/COMBAT_BALANCE_7_2B.md). In Boreal Relay setzt der Server ausgeschaltete Spieler nach drei Simulationssekunden zurück. Bei einem vollständigen Truppausfall endet Bodenbruch. Bereits erfüllte Hauptziele sichern die Basis-EP.
 
 ## Vier Spieler testen
 
@@ -53,6 +54,7 @@ Treffer erzeugen einen sichtbaren Einschlag und ändern das Fadenkreuz. In Borea
 npm run typecheck
 npm run build
 npm test
+npm run balance:check
 npm run benchmark
 npm run benchmark -- 3600 421337
 npm run benchmark -- 5400 421337 1 burst
@@ -80,6 +82,10 @@ Der Prototyp ist für lokale Tests ausgelegt. Fortschritt, Inventar, Accounts, S
 [Architektur](docs/ARCHITECTURE.md) · [Performance und Messprotokoll](docs/PERFORMANCE.md) · [Boreal Relay und Rendering](docs/VISUAL_STYLE.md) · [Spielercharakter](docs/CHARACTER_SYSTEM.md) · [Fraktionen](docs/FACTIONS.md) · [Missionssystem](docs/MISSION_SYSTEM.md) · [Operation Bodenbruch](docs/MISSIONS/OPERATION_BODENBRUCH.md)
 
 [Skyfall Carrier](docs/SKYFALL_CARRIER.md) · [Game Flow](docs/GAME_FLOW.md) · [Extraktion](docs/EXTRACTION_SYSTEM.md) · [Missionsbelohnungen](docs/MISSION_REWARDS.md)
+
+## Milestone 7.2A
+
+Alle wichtigen Gameplay-Werte liegen zentral, validiert und versioniert in `packages/shared/src/balance/data/`. Jede Mission läuft mit einem festen Balance-Snapshot. Die Migration ist wertgleich: Simulations-Fingerabdrücke aller sieben Stufen und der 1.000-Gegner-Arena sind bitgenau unverändert. [Balance-Architektur](docs/BALANCE_ARCHITECTURE.md) · [Katalog](docs/BALANCE_CATALOG.md) · [Workflow](docs/BALANCE_WORKFLOW.md)
 
 ## Milestone 7.1
 

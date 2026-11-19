@@ -92,9 +92,16 @@ export class Carrier {
     for (const wall of CARRIER_WORLD.obstacles) {
       const { x, z, halfX, halfZ, height } = wall;
       if (z < -25 || (x === 0 && z === 0) || CARRIER_BENCHES.includes(wall)) continue;
-      const furniture = height < 2;
+      if (wall.bottom !== undefined) {
+        panel(frame, x, (wall.bottom + height) / 2, z, halfX * 2, height - wall.bottom, halfZ * 2);
+        for (const side of [-1, 1]) {
+          detail(yellow, x, wall.bottom + .05, z + side * halfZ, halfX * 2, .10, .025);
+        }
+        continue;
+      }
+      const furniture = height < 2 && halfX >= .5;
       panel(furniture ? equipment : armor, x, height * .5, z, halfX * 2, height, halfZ * 2);
-      if (!furniture && halfX < 1) {
+      if (!furniture && halfX < 1 && height >= 2) {
         detail(frame, x, .18, z, halfX * 2 + .16, .34, halfZ * 2);
         detail(equipment, x, 3.86, z, halfX * 2 + .08, .29, halfZ * 2);
       } else if (furniture) {

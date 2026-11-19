@@ -28,15 +28,25 @@ test('reload uses server ticks, publishes the timeline and latches a tap between
   assert.equal(s.pitch, base.pitch);
   assert.equal(s.motion, PLAYER_MOTION.sprint | PLAYER_MOTION.aim);
   assert.equal(s.reloadUntil, until);
+  assert.equal(s.reload?.phase, 'RELOAD_START');
   assert.equal(s.ammo, TEST_RIFLE.magazineSize - 1);
   assert.equal(arena.shots.length, 0);
+  // The magazine transaction happens on the insertion tick; the weapon is ready on the last tick.
+  while (arena.tick < p.reload.insertAt - 1) arena.step();
+  assert.equal(p.ammo, TEST_RIFLE.magazineSize - 1);
+  assert.equal(p.equipment.magazines.primary, TEST_RIFLE.reserveMagazines);
+  arena.step();
+  assert.equal(p.reload.phase, 'MAGAZINE_INSERTION');
+  assert.equal(p.ammo, TEST_RIFLE.magazineSize);
+  assert.equal(p.equipment.magazines.primary, TEST_RIFLE.reserveMagazines - 1);
   while (arena.tick < until - 1) arena.step();
   s = playerSnapshot(arena, p.id).players[0];
   assert.equal(s.motion, 0);
-  assert.equal(s.ammo, TEST_RIFLE.magazineSize - 1);
+  assert.equal(s.reload?.phase, 'RELOAD_COMPLETE');
   arena.step();
   assert.equal(p.ammo, TEST_RIFLE.magazineSize);
   assert.equal(p.reloadUntil, 0);
+  assert.equal(p.reload.phase, 'READY');
 });
 
 test('empty magazines auto-reload on held fire and death discards a pending reload', () => {
@@ -107,7 +117,8 @@ test('slot transactions preserve ammo, cancel reload and reject stale life and s
   arena.step();
   while (p.reloadUntil) arena.step();
   assert.equal(p.ammo, 12);
-  assert.equal(p.equipment.pistolReserve, 47);
+  // The partial magazine (11 rounds) was discarded; exactly one of four spare magazines was used.
+  assert.equal(p.equipment.magazines.secondary, 3);
 });
 
 test('empty consumables stay empty and cancelling a stim before the end tick preserves the charge', () => {

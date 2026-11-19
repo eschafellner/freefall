@@ -1,4 +1,6 @@
 import { NET } from '../config/arena.ts';
+import { BALANCE } from '../balance/defaults.ts';
+import { ALBATROSS_VEHICLE_ID } from '../balance/registry.ts';
 import type { PositionXZ } from '../config/movement.ts';
 import { BODENBRUCH } from './missions.ts';
 import type { Obstacle, WorldDefinition } from './missions.ts';
@@ -19,8 +21,11 @@ export const CARRIER_ROOMS = [
   { x: -19, z: -9, label: 'RÜSTUNG' }, { x: 19, z: -9, label: 'FORSCHUNG' },
 ] as const;
 
+const albatross = BALANCE.vehicle(ALBATROSS_VEHICLE_ID);
+
+/** Geometry is defined here. Hull, thruster health and the grounding rule come from `balance/data/structures.json`. */
 export const ALBATROSS = {
-  hullHealth: 1700, thrusterHealth: 330, disabledThrusters: 2,
+  hullHealth: albatross.hullHealth, thrusterHealth: albatross.thrusterHealth, disabledThrusters: albatross.disabledThrusters,
   halfWidth: 2.55, halfLength: 5.2, boardingWidth: 2.08, boardingLength: 4.65,
   launchTicks: NET.tickHz * 4, thrusters: [
     { x: -4.35, z: -2.9 }, { x: -4.35, z: 2.9 }, { x: 4.35, z: -2.9 }, { x: 4.35, z: 2.9 },
@@ -61,6 +66,9 @@ export function albatrossCollision(ship: PositionXZ): Obstacle[] {
   ];
 }
 
+// Service frame beside the mess, outside the deployment route.
+const serviceFrame = { ...block(-6.5, 12.4, 1.4, .42, 1.64), bottom: 1.37 };
+
 export const CARRIER_WORLD: WorldDefinition = {
   id: 'world.skyfall_carrier', half: 42, deployment: CARRIER_SPAWN,
   patrolRegions: [], breachRegions: [], initialNests: [],
@@ -69,6 +77,8 @@ export const CARRIER_WORLD: WorldDefinition = {
     block(-3.1, -21.4, .25, 4.5), block(3.1, -21.4, .25, 4.5),
     block(0, 0, 1.58, 1.58, 1.06),
     ...CARRIER_BENCHES,
+    serviceFrame,
+    ...[-1, 1].map((side) => block(serviceFrame.x + side * 1.4, serviceFrame.z, .13, .37, serviceFrame.bottom)),
     ...[-1, 1].flatMap((side) => [
       ...[-15, 0, 15].map((z) => block(side * 12, z, .3, z === 0 ? 5.8 : 2)),
       ...[-9, 9].flatMap((z) => [

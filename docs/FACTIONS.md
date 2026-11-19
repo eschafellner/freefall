@@ -10,7 +10,7 @@ Die **Schabe ist das freigegebene Basisdesign** der Fraktion „Der Schwarm“. 
 
 | Ebene | Ort und Aufgabe |
 | --- | --- |
-| Fraktion und Archetyp | `packages/shared/src/definitions/enemies.ts` verknüpft stabile IDs, Anzeigenamen und die numerische Netzwerk-ID. |
+| Fraktion und Archetyp | `packages/shared/src/balance/data/enemies.json` verknüpft stabile IDs, Anzeigenamen, Werte und die numerische Netzwerk-ID. `definitions/enemies.ts` stellt die bisherigen Aliase bereit. |
 | Gameplay | Das unveränderliche `gameplay`-Objekt gehört zum Archetyp. `ENEMY_TYPES` leitet seine nach Netzwerk-ID indizierte Tabelle daraus ab. Das ECS greift in den inneren Schleifen direkt auf diese Tabelle zu. |
 | Darstellung | `apps/client/src/rendering/AssetRegistry.ts` ordnet der visuellen Asset-ID den vorhandenen Instancing-Renderer zu. Shared und Server kennen nur die Asset-ID als Zeichenkette. |
 | Spawn | `apps/server/src/simulation/ArenaEncounter.ts` wählt den Archetyp und beschreibt Spawn-Ring und Wiederauffüllung der Testarena. |

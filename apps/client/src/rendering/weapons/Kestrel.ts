@@ -58,11 +58,13 @@ export function createKestrel() {
   const sidearm = new ModelParts();
   sidearm.box(0x434941, 0, -.018, .016, .044, .112, .06, .008, -.19);
   sidearm.box(phosphate, 0, .041, -.051, .043, .037, .185, .006);
-  sidearm.box(0x66706d, 0, .066, -.056, .038, .036, .194, .005);
+  // The slide is a separate part so it can cycle on every shot.
+  const slide = new ModelParts();
+  slide.box(0x66706d, 0, .066, -.056, .038, .036, .194, .005);
   sidearm.box(rubber, 0, -.012, -.034, .017, .012, .056, .003);
   sidearm.box(phosphate, 0, .004, -.06, .018, .036, .012, .002);
   for (const side of [-1, 1]) {
-    for (let i = 0; i < 4; i++) sidearm.box(phosphate, side * .019, .064, .013 - i * .008, .003, .026, .003);
+    for (let i = 0; i < 4; i++) slide.box(phosphate, side * .019, .064, .013 - i * .008, .003, .026, .003);
   }
   const sight = new ModelParts();
   sight.box(steel, 0, .004, -.135, .007, .008, .011);
@@ -70,6 +72,6 @@ export function createKestrel() {
   const base = new ModelParts();
   base.box(rubber, 0, -.06, .014, .05, .015, .066, .003);
   const pistol = { body: sidearm.mesh(finish).geometry, optic: sight.mesh(finish).geometry,
-    magazine: base.mesh(finish).geometry, finish };
+    magazine: base.mesh(finish).geometry, slide: slide.mesh(finish).geometry as T.BufferGeometry | undefined, finish };
   return { pistol, finish, body: bodyMesh.geometry, optic: opticMesh.geometry, magazine: magazineMesh.geometry };
 }

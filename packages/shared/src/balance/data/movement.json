@@ -1,0 +1,37 @@
+{
+  "crouchSpeedMultiplier": 0.55,
+  "proneSpeedMultiplier": 0.25,
+  "supineSpeedMultiplier": 0.2,
+  "crouchSeconds": 0.2,
+  "diveDistance": 5,
+  "diveSeconds": 0.75,
+  "diveCooldownSeconds": 1.2,
+  "divePrepSeconds": 0.09,
+  "diveArcHeight": 0.62,
+  "noDirection": "forward",
+  "backwardDotThreshold": -0.000001,
+  "proneGetUpSeconds": 0.8,
+  "supineGetUpSeconds": 1,
+  "groundTurnRadiansPerSecond": 5,
+  "proneMinPitch": -0.48,
+  "supineMinPitch": -0.27,
+  "groundAimHalfArc": 1.0471975512,
+  "cameraDamping": 12,
+  "enemyAttackHalfHeight": 0.25,
+  "operatorMeleeHeight": 0.95,
+  "colliders": {
+    "STANDING": { "radius": 0.42, "halfLength": 0.42, "height": 1.78, "lookHeight": 1.34, "muzzleHeight": 1.24 },
+    "CROUCHING": { "radius": 0.42, "halfLength": 0.42, "height": 1.18, "lookHeight": 0.92, "muzzleHeight": 0.85 },
+    "DIVING": { "radius": 0.42, "halfLength": 0.94, "height": 0.72, "lookHeight": 0.84, "muzzleHeight": 0.62 },
+    "PRONE": { "radius": 0.40, "halfLength": 0.96, "height": 0.49, "lookHeight": 0.43, "muzzleHeight": 0.36 },
+    "SUPINE": { "radius": 0.43, "halfLength": 0.98, "height": 0.55, "lookHeight": 0.48, "muzzleHeight": 0.48 }
+  },
+  "actions": {
+    "STANDING":   { "sprint": true,  "aim": true,  "fire": true,  "reload": true,  "stim": true,  "switch": true,  "grenade": true,  "melee": true,  "resupply": true },
+    "CROUCHING":  { "sprint": false, "aim": true,  "fire": true,  "reload": true,  "stim": true,  "switch": true,  "grenade": true,  "melee": true,  "resupply": true },
+    "DIVING":     { "sprint": false, "aim": false, "fire": false, "reload": false, "stim": false, "switch": false, "grenade": false, "melee": false, "resupply": false },
+    "PRONE":      { "sprint": false, "aim": true,  "fire": true,  "reload": true,  "stim": true,  "switch": true,  "grenade": false, "melee": false, "resupply": true },
+    "SUPINE":     { "sprint": false, "aim": true,  "fire": true,  "reload": true,  "stim": true,  "switch": true,  "grenade": false, "melee": false, "resupply": true },
+    "GETTING_UP": { "sprint": false, "aim": false, "fire": false, "reload": false, "stim": false, "switch": false, "grenade": false, "melee": false, "resupply": false }
+  }
+}

@@ -1,3 +1,4 @@
+import { bindings } from '../input/Bindings.ts';
 import { BALLOON, DIFFICULTY_REGISTRY, MISSION_REGISTRY, NET, PLANET_REGISTRY, distanceSquared, isCarrierScene } from '@freefall/shared';
 import type { DeploymentPhase, MissionSnapshot } from '@freefall/shared';
 import type { GameStatus } from '../game/Game.ts';
@@ -30,8 +31,8 @@ export function MissionHud({ mission, status }: { mission: MissionSnapshot; stat
   return <>
     {carrier && !deployment && <aside className="field-orders carrier-orders">
       <div className="field-heading"><strong>Skyfall Carrier</strong><span>Deck 03</span></div>
-      <p>{mission.state === 'BOARDING' ? 'Vorn durch die Luftschleuse zum Albatross 02. An Bord mit E bereit melden.'
-        : 'Missionskonsole in der Mitte der Messe. Mit E öffnen.'}</p>
+      <p>{mission.state === 'BOARDING' ? `Vorn durch die Luftschleuse zum Albatross 02. An Bord mit ${bindings.label('INTERACT')} bereit melden.`
+        : `Missionskonsole in der Mitte der Messe. Mit ${bindings.label('INTERACT')} öffnen.`}</p>
       {selection && <div className="field-counter"><span>{PLANET_REGISTRY.get(selection.planetId)?.displayName}</span>
         <strong>{definition.displayName} · {difficulty?.displayName}</strong></div>}
       <OperatorManifest mission={mission} status={status}/>
@@ -71,7 +72,7 @@ export function MissionHud({ mission, status }: { mission: MissionSnapshot; stat
             <strong>Neuer Anflug · Am Seil sichern</strong>}
           {tethered && own && distanceSquared(extraction, own) >= (extraction.radius - 1.25) ** 2 && <strong>Seil gespannt · Zonengrenze</strong>}
         </> : <>
-          <span><kbd>B</kbd> Extraktionsballon einsetzen</span>
+          <span><kbd>{bindings.label('BALLOON')}</kbd> Extraktionsballon einsetzen</span>
         </>}
       </div>}
     </aside>}
@@ -79,7 +80,7 @@ export function MissionHud({ mission, status }: { mission: MissionSnapshot; stat
       {mission.activeBreaches > 0 && <div className="breach-warning">Schwarmdurchbruch entdeckt {mission.activeBreaches > 1 && `× ${mission.activeBreaches}`}</div>}
       {status.notice && <div>{status.notice}</div>}
     </div>
-    {status.interaction && !deployment && <div className="interact-hint"><kbd>E</kbd> {status.interaction}</div>}
+    {status.interaction && !deployment && <div className="interact-hint"><kbd>{bindings.label('INTERACT')}</kbd> {status.interaction}</div>}
     {own?.hp === 0 && <div className="respawn" role="status"><strong>Außer Gefecht</strong><span>Der Einsatztrupp bleibt im Feld.</span></div>}
   </>;
 }

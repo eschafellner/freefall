@@ -1,7 +1,8 @@
 import * as T from 'three';
 import { ALBATROSS, CARRIER_SHIP } from '@freefall/shared';
-import type { MissionSnapshot } from '@freefall/shared';
+import type { MissionSnapshot, PlayersSnapshot } from '@freefall/shared';
 import { PanelBatch, emitter, metal, plate, stencil } from './ShipParts.ts';
+import { SupplyContainerView } from './SupplyContainerView.ts';
 
 const unit = new T.Object3D();
 const timeProgress = (tick: number, start: number, end: number) => T.MathUtils.clamp((tick - start) / Math.max(1, end - start), 0, 1);
@@ -17,6 +18,8 @@ export class AlbatrossView {
   private readonly detail = new T.Group();
   private readonly wreck = new T.Group();
   private readonly hull = metal(0x575d52);
+  private readonly supply = new SupplyContainerView();
+  private lastTick = 0;
 
   constructor() {
     const steel = this.hull;
@@ -113,11 +116,13 @@ export class AlbatrossView {
     extraParts.finish(this.detail);
     this.dust = new T.InstancedMesh(new T.IcosahedronGeometry(1, 0), this.dustMaterial, 32);
     this.dust.frustumCulled = false;
-    this.root.add(this.detail, this.dust, this.wreck);
+    this.root.add(this.detail, this.dust, this.wreck, this.supply.root);
   }
 
-  update(state: MissionSnapshot, tick: number, low: boolean): void {
+  update(state: MissionSnapshot, tick: number, low: boolean, players?: PlayersSnapshot): void {
     const { albatross, phase, phaseAt, phaseUntil, extraction } = state;
+    this.supply.update(albatross?.supply, tick, Math.max(0, Math.min(.1, (tick - this.lastTick) / 30)), players);
+    this.lastTick = tick;
     const flight = phase === 'DROPPING' || phase === 'ATMOSPHERIC_ENTRY' || phase === 'BRAKING';
     const elapsed = timeProgress(tick, phaseAt, phaseUntil);
     const lift = extraction?.method === 'albatross' && extraction.phase === 'LIFT';

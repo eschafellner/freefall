@@ -93,6 +93,21 @@ test('four real connections share state, reject a fifth, and transfer host on di
     const restored = await waitFor<PlayersSnapshot>(replacement, 'players', (p) => p.players.length === 4);
     assert.equal(restored.host, rooms[1].sessionId);
     assert.ok(restored.players.some((p) => p.id === replacement.sessionId && p.slot === firstHost.slot));
+
+    const activeRooms = [...rooms.slice(1, 4), replacement];
+    const airborne = waitFor<PlayersSnapshot>(activeRooms[1], 'players', (s) =>
+      s.players.length === 4 && s.players.every((p) => p.posture?.current === 'DIVING' && (p.y ?? 0) > 0));
+    const landed = activeRooms.map((room) => waitFor<PlayersSnapshot>(room, 'players', (s) =>
+      s.players.length === 4 && s.players.every((p) => p.posture?.current === (p.slot % 2 ? 'SUPINE' : 'PRONE'))));
+    for (const room of activeRooms) {
+      const { life, slot } = restored.players.find((p) => p.id === room.sessionId)!;
+      room.send('input', { seq: 13, life, posture: 'dive', yaw: 0, forward: slot % 2 ? -1 : 1, strafe: slot * .27,
+        pitch: 0, sprint: false, fire: false });
+    }
+    const inFlight = await airborne;
+    assert.equal(new Set(inFlight.players.map((p) => p.posture?.dive?.x)).size, 4);
+    for (const ground of await Promise.all(landed)) assert.ok(ground.players.every((p) => (p.y ?? 0) === 0));
+
   } finally {
     await Promise.allSettled(rooms.map((room) => room.leave()));
     await server.gracefullyShutdown(false);
@@ -186,6 +201,13 @@ test('four networked operators share mission selection, deployment and a reconne
     guest.send('mission-action', 'secure');
     await states(host, (s) => s.extraction?.securedIds.includes(guest.sessionId) ?? false);
 
+    const guestLanded = waitFor<PlayersSnapshot>(host, 'players', ({ players }) =>
+      players.some((p) => p.id === guest.sessionId && p.posture?.current === 'SUPINE'));
+    const guestLife = loadouts.players.find((p) => p.id === guest.sessionId)!.life;
+    guest.send('input', { seq: 2, life: guestLife, posture: 'dive', yaw: 0, forward: -1, strafe: 0,
+      pitch: 0, sprint: false, fire: false });
+    await guestLanded;
+
     const token = guest.reconnectionToken;
     await guest.leave(false);
     await states(host, (s) => s.operators.some(({ id, connected }) => id === guest.sessionId && !connected));
@@ -193,7 +215,7 @@ test('four networked operators share mission selection, deployment and a reconne
     const restored = await states(rejoined, (s) => s.extraction?.method === 'balloon');
     assert.equal(rejoined.sessionId, guest.sessionId);
     await waitFor<PlayersSnapshot>(rejoined, 'players', (s) =>
-      s.players.some((p) => p.id === guest.sessionId && p.equipment?.slot === 'secondary' && p.ammo === 12));
+      s.players.some((p) => p.id === guest.sessionId && p.equipment?.slot === 'secondary' && p.ammo === 12 && p.posture?.current === 'SUPINE'));
     assert.ok(restored.primaryObjectivesCompleted);
     assert.equal(restored.instanceId, active.instanceId);
     assert.deepEqual(restored.convicts.map(({ id }) => id), active.convicts.map(({ id }) => id));

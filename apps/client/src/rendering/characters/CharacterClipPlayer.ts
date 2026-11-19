@@ -2,12 +2,15 @@ import * as T from 'three';
 import type { SoldierAsset } from '../AssetRegistry.ts';
 import type { CharacterAnimation, CharacterClip, Locomotion } from './CharacterAnimation.ts';
 
-const LOOP_STATES = ['idle', 'walk', 'run', 'sprint', 'strafeLeft', 'strafeRight', 'backward', 'aim'] as const;
+import { TACTICAL_LOOPS, TACTICAL_ONCE } from './TacticalAnimation.ts';
+import type { TacticalClip } from './TacticalAnimation.ts';
+
+const LOOP_STATES = ['idle', 'walk', 'run', 'sprint', 'strafeLeft', 'strafeRight', 'backward', 'aim', ...TACTICAL_LOOPS] as const;
 const GAITS = new Set<CharacterClip>(['walk', 'run', 'sprint', 'strafeLeft', 'strafeRight', 'backward']);
 const FADE = .15;
 /** Gait-to-gait blends keep the foot phase and may be a little longer without looking late. */
 const GAIT_FADE = .22;
-const ONE_SHOTS = ['fire', 'reload', 'hit', 'death'] as const;
+const ONE_SHOTS = ['fire', 'reload', 'hit', 'death', ...TACTICAL_ONCE] as const;
 const LOCOMOTION_FALLBACK: Record<Locomotion, readonly CharacterClip[]> = {
   idle: [],
   walk: ['run'],
@@ -51,7 +54,7 @@ export class CharacterClipPlayer {
       const clip = clips.find((item) => item.name.toLowerCase() === name);
       if (!clip || !Number.isFinite(clip.duration) || clip.duration <= 0 || !clip.tracks.length || !clip.validate()) continue;
       const action = this.mixer.clipAction(inPlace(clip, asset.motionRoot));
-      if (state === 'fire' || state === 'reload' || state === 'death' || state === 'hit') {
+      if ((ONE_SHOTS as readonly CharacterClip[]).includes(state)) {
         action.setLoop(T.LoopOnce, 1);
         action.clampWhenFinished = true;
       }
@@ -66,7 +69,17 @@ export class CharacterClipPlayer {
 
   get hasDeath(): boolean { return this.actions.has('death'); }
 
-  fire(): void { this.restart('fire'); }
+  tacticalClip(clip: TacticalClip): TacticalClip | undefined {
+    if (this.actions.has(clip)) return clip;
+    if (!clip.startsWith('dive')) return;
+    const fallback = clip.includes('Backward') ? 'diveBackward' : clip.includes('Forward') ? 'diveForward' : clip;
+    return this.actions.has(fallback) ? fallback : undefined;
+  }
+
+  fire(): void {
+    const active = this.active && this.states.get(this.active);
+    this.restart(active === 'proneFire' || active === 'supineFire' ? active : 'fire');
+  }
   hit(): void { this.restart('hit'); }
 
   private restart(clip: CharacterClip): void {
@@ -86,6 +99,8 @@ export class CharacterClipPlayer {
     else if (state.reaction === 'hit' && this.actions.has('hit')) next = this.actions.get('hit');
     else if (state.combat === 'fire') next = this.actions.get('fire') ?? next;
     else if (state.combat === 'aim' && state.locomotion === 'idle') next = this.actions.get('aim') ?? next;
+    const tactical = state.tactical.clip && this.tacticalClip(state.tactical.clip);
+    if (tactical && state.reaction !== 'death') next = this.actions.get(tactical);
     if (next !== this.active) {
       const from = this.active;
       const fromState = from && this.states.get(from);
@@ -104,7 +119,11 @@ export class CharacterClipPlayer {
     const clip = next && this.states.get(next);
     const authored = clip && clip !== 'idle' && GAITS.has(clip) ? this.speeds?.[clip as Exclude<CharacterClip, 'idle'>] : undefined;
     if (next && authored) next.timeScale = T.MathUtils.clamp(state.speed / authored, .6, 1.6);
-    if (state.reload >= 0 && next && next === this.actions.get('reload')) {
+    if (next && tactical && state.tactical.progress !== undefined && next === this.actions.get(tactical)) {
+      next.paused = true;
+      next.time = state.tactical.progress * next.getClip().duration;
+    }
+    if (state.reload >= 0 && next && (clip === 'reload' || clip === 'proneReload' || clip === 'supineReload')) {
       // Evaluate at server progress regardless of the authored clip length.
       next.paused = true;
       next.time = state.reload * next.getClip().duration;

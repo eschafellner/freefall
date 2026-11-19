@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  ALBATROSS, BALLOON, FRAG, BOARDING_TICKS, BODENBRUCH, CARRIER_ROOMS, CARRIER_SHIP, DIFFICULTIES, LANDING_STAGE_TICKS, HordeFrame, MAX_ENEMIES, NET, SCHABE_TYPE, WIDE_POSITION_SCALE, decodeHorde,
-  distanceSquared, inAlbatross, missionGround, openGround,
+  ALBATROSS, BALANCE, BALLOON, FRAG, BOARDING_TICKS, BODENBRUCH, CARRIER_ROOMS, CARRIER_SHIP, DIFFICULTIES, LANDING_STAGE_TICKS, HordeFrame, MAX_ENEMIES, NET, SCHABE_TYPE, WIDE_POSITION_SCALE, decodeHorde,
+  distanceSquared, inAlbatross, missionGround, openGround, resolveMissionBalance,
 } from '@freefall/shared';
 import type { DifficultyDefinition, MissionDefinition, MissionEvent, PatrolRegion, PositionXZ } from '@freefall/shared';
 import { GroundNavigation } from '../src/mission/GroundNavigation.ts';
@@ -11,7 +11,7 @@ import { PatrolManager } from '../src/mission/PatrolManager.ts';
 import { HordeManager } from '../src/ecs/HordeManager.ts';
 import { createPlayer } from '../src/simulation/Player.ts';
 import { damageEnemy } from '../src/systems/combat.ts';
-import { encodeHorde } from '../src/networking/snapshots.ts';
+import { encodeHorde, playerSnapshot } from '../src/networking/snapshots.ts';
 
 const alpha = BODENBRUCH.objectives[0];
 const bravo = BODENBRUCH.objectives[1];
@@ -74,6 +74,28 @@ test('each side room can be entered and left through its doorway with regular in
   }
 });
 
+test('the carrier service frame blocks standing and permits crouching underneath', () => {
+  const mission = new MissionInstance(10, BODENBRUCH);
+  const p = mission.addPlayer('test');
+  Object.assign(p, { x: -6.5, z: 14.3 });
+  let seq = 0;
+  const step = (posture?: 'crouch' | 'stand', forward = 1) => {
+    assert.ok(mission.receiveInput(p.id, { seq: ++seq, life: p.life, posture, forward,
+      strafe: 0, yaw: 0, pitch: 0, sprint: false, fire: false }));
+    mission.step();
+  };
+  for (let i = 0; i < 30; i++) step();
+  assert.ok(p.z >= 13.2);
+  step('crouch');
+  while (p.z > 12.45 && seq < 60) step();
+  assert.ok(p.z < 12.45);
+  step('stand', 0);
+  assert.equal(p.posture.current, 'CROUCHING');
+  for (let i = 0; i < 26; i++) step();
+  step('stand');
+  assert.equal(p.posture.current, 'STANDING');
+});
+
 test('one to four operators require host selection and complete the same deployment once', () => {
   for (let count = 1; count <= 4; count++) {
     const mission = new MissionInstance(91245, BODENBRUCH);
@@ -126,6 +148,24 @@ test('disconnect and leaving the boarding footprint clear readiness without bloc
   mission.reconnect('wing');
   assert.equal(wing.hp, 0);
   assert.equal(mission.snapshot().operators[1].connected, true);
+});
+
+test('a mission reconnect restores an airborne dive, which lands without a second request', () => {
+  const { mission, player } = deployed('easy');
+  assert.ok(mission.receiveInput(player.id, { seq: player.input.seq + 1, life: player.life,
+    forward: -1, strafe: .19, yaw: 0, pitch: 0, sprint: false, fire: false, posture: 'dive' }));
+  advance(mission, 6);
+  const started = player.posture.started;
+  assert.equal(player.posture.current, 'DIVING');
+  mission.disconnect(player.id);
+  advance(mission, 5);
+  mission.reconnect(player.id);
+  const rejoined = playerSnapshot(mission, player.id).players[0];
+  assert.equal(rejoined.posture?.current, 'DIVING');
+  assert.equal(rejoined.posture?.started, started);
+  assert.ok(rejoined.y! > 0);
+  advance(mission, 30);
+  assert.equal(playerSnapshot(mission, player.id).players[0].posture?.current, 'SUPINE');
 });
 
 test('Alpha gates Bravo and an Albatross departure rewards only secured living passengers', () => {
@@ -310,7 +350,7 @@ test('group perception reacts to sound through walls, confirms sight and interru
     ...BODENBRUCH.world,
     obstacles: [{ x: 0, z: 0, halfX: 4, halfZ: 1, height: 3, kind: 'barrier' as const }],
   };
-  const patrols = new PatrolManager(world, horde, () => .5, (event) => events.push(event));
+  const patrols = new PatrolManager(world, horde, () => .5, (event) => events.push(event), resolveMissionBalance(BALANCE, DIFFICULTIES[1].id));
   const region: PatrolRegion = { id: 'test', x: 0, z: 10, radius: 20, route: { waypoints: [{ x: 0, z: 10 }, { x: 0, z: -25 }] } };
   const group = patrols.create(region, 0);
   const caller = horde.spawn(0, 10, SCHABE_TYPE);
@@ -325,7 +365,7 @@ test('group perception reacts to sound through walls, confirms sight and interru
     return { breachId: 123 };
   };
   const run = (begin: number, end: number) => {
-    for (let tick = begin; tick <= end; tick++) patrols.update([player], tick, DIFFICULTIES[1], true, request);
+    for (let tick = begin; tick <= end; tick++) patrols.update([player], tick, true, request);
   };
   run(1, 10);
   assert.equal(group.state, 'PATROLLING');
@@ -592,7 +632,7 @@ test('three synchronized throws destroy a normal nest once and stop its spawn bu
   advance(mission, flight[0].detonates - mission.tick - 1);
   const landed = mission.grenades.snapshot()![0];
   assert.ok(landed.y < .11 && landed.z < 89);
-  const nest = mission.director.nests.create(landed, mission.tick, DIFFICULTIES[1]);
+  const nest = mission.director.nests.create(landed, mission.tick);
   mission.step();
   assert.equal(nest.state, 'DESTROYING');
   assert.equal(nest.hp, 0);

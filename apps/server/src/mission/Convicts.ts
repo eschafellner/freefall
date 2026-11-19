@@ -1,20 +1,10 @@
-import { NET, TEST_RIFLE, clearGroundLine, distanceSquared, moveOnGround } from '@freefall/shared';
-import type { ConvictSnapshot, PositionXZ, ShotEvent, WorldDefinition } from '@freefall/shared';
+import { NET, clearGroundLine, distanceSquared, moveOnGround } from '@freefall/shared';
+import type { ConvictSnapshot, MissionBalance, PositionXZ, ShotEvent, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import { damageEnemy } from '../systems/combat.ts';
 import type { MeleeObject } from '../systems/combat.ts';
 
-const kits = [
-  ['security-surplus', 'kestrel-service', 150, 5, 24, 7, 28],
-  ['field-standard', 'kestrel-standard', 132, 4, 22, 6.7, 26],
-  ['light-webbing', 'kestrel-reserve', 118, 3, 20, 6.2, 24],
-  ['aged-infantry', 'kestrel-legacy', 106, 2, 18, 5.8, 22],
-  ['worn-reserve', 'kestrel-worn', 96, 1, 16, 5.4, 19],
-  ['restricted-issue', 'kestrel-restricted', 84, 0, 14, 5, 16],
-  ['minimum-issue', 'kestrel-minimum', 72, 0, 12, 4.5, 12],
-] as const;
-
-type Kit = typeof kits[number];
+// Kits, squad size, speed and range live in `balance/data/convicts.json`. The difficulty selects the kit.
 type Convict = ConvictSnapshot & MeleeObject & {
   fireAt: number; ammo: number; exit: PositionXZ; post: PositionXZ; nearExit: boolean;
 };
@@ -22,12 +12,12 @@ type Convict = ConvictSnapshot & MeleeObject & {
 export class Convicts {
   readonly members: Convict[];
   deployed = false;
-  private readonly kit: Kit;
+  private readonly config: MissionBalance['convicts'];
 
-  constructor(ship: PositionXZ, instanceId: string, difficultyLevel: number) {
-    this.kit = kits[difficultyLevel - 1];
-    const [equipmentId, weaponId, maxHp, armor, , , magazine] = this.kit;
-    this.members = Array.from({ length: 4 }, (_, slot) => {
+  constructor(ship: PositionXZ, instanceId: string, config: MissionBalance['convicts']) {
+    this.config = config;
+    const { id: equipmentId, weaponVariantId: weaponId, maxHealth: maxHp, armor, magazineSize: magazine } = config.kit;
+    this.members = Array.from({ length: config.squad.size }, (_, slot) => {
       const side = slot % 2 ? 1 : -1;
       const row = slot < 2 ? 0 : 1;
       const member: Convict = {
@@ -55,7 +45,8 @@ export class Convicts {
   }
 
   update(tick: number, horde: HordeManager, world: WorldDefinition, shots: ShotEvent[]): void {
-    const [, , , , damage, rate, magazine] = this.kit;
+    const { damage, roundsPerSecond: rate, magazineSize: magazine } = this.config.kit;
+    const { moveSpeed, engageRange, idleRescanTicks } = this.config.squad;
     for (const member of this.members) {
       if (!member.hp || member.state === 'ABOARD') continue;
       if (member.state === 'MOVING') {
@@ -67,7 +58,7 @@ export class Convicts {
           if (!member.nearExit) member.nearExit = true;
           else member.state = 'DEFENDING';
         } else {
-          const stride = Math.min(distance, 5.1 / NET.tickHz);
+          const stride = Math.min(distance, moveSpeed / NET.tickHz);
           member.yaw = Math.atan2(dx, -dz);
           moveOnGround(member, member.x + dx / distance * stride, member.z + dz / distance * stride, world, .35);
         }
@@ -80,11 +71,11 @@ export class Convicts {
       if (member.reloadUntil || tick < member.fireAt) continue;
       if (!member.ammo) {
         member.state = 'DEFENDING';
-        member.reloadUntil = tick + Math.ceil(NET.tickHz * TEST_RIFLE.reloadSeconds);
+        member.reloadUntil = tick + this.config.reloadTicks;
         continue;
       }
       let closest = -1;
-      let best = 37 ** 2;
+      let best = engageRange ** 2;
       for (let index = 0; index < horde.count; index++) {
         const slot = horde.active[index];
         const dx = horde.x[slot] - member.x;
@@ -96,7 +87,7 @@ export class Convicts {
       }
       if (closest < 0) {
         member.state = 'DEFENDING';
-        member.fireAt = tick + 5;
+        member.fireAt = tick + idleRescanTicks;
         continue;
       }
       member.state = 'FIRING';

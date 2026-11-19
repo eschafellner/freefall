@@ -1,6 +1,6 @@
 # Schwierigkeit
 
-`DIFFICULTIES` definiert die Namen, Spawn- und Rufbudgets zentral im Shared-Paket. Der Server akzeptiert nur registrierte IDs vom aktuellen Host an der Carrier-Konsole. Beim Übergang ins Boarding wird die Auswahl fixiert. Die Standardstufe ist Normal. Die Arena behält ihre frei einstellbare Hordengröße.
+Die sieben Stufen stehen in `packages/shared/src/balance/data/difficulty.json` und werden über die [Balance-Registry](BALANCE_ARCHITECTURE.md) validiert und bei Missionsstart einmal aufgelöst. `DIFFICULTIES` ist der Alias darauf. Der Server akzeptiert nur registrierte IDs vom aktuellen Host an der Carrier-Konsole. Beim Übergang ins Boarding wird die Auswahl fixiert. Die Standardstufe ist Normal. Die Arena behält ihre frei einstellbare Hordengröße.
 
 | Stufe | Name | Gegnerlimit | Startgruppen | Schaben je Startgruppe | Max. Nester | Max. entstehende Nester | Verstärkungseffekte | Spawns je Tick |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |

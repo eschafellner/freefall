@@ -65,10 +65,10 @@ test('new life and large desync snap to the authoritative position', () => {
   frames(60, 30, prediction);
   prediction.confirm(state(20, 20, 999, 2));
   prediction.sample(1 / 60, .5);
-  assert.deepEqual(prediction.rendered, { x: 20, z: 20 });
+  assert.deepEqual(prediction.rendered, { x: 20, y: 0, z: 20 });
   prediction.confirm(state(-20, 20, 999, 2));
   prediction.sample(1 / 60, .5);
-  assert.deepEqual(prediction.rendered, { x: -20, z: 20 });
+  assert.deepEqual(prediction.rendered, { x: -20, y: 0, z: 20 });
   assert.equal(prediction.stats.snaps, 1);
 });
 

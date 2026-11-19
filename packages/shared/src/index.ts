@@ -9,3 +9,8 @@ export * from './definitions/missions.ts';
 export * from './contracts/mission.ts';
 export * from './config/worldGeometry.ts';
 export * from './definitions/deployment.ts';
+export * from './config/limits.ts';
+export * from './balance/index.ts';
+export * from './combat/handling.ts';
+export * from './config/posture.ts';
+export * from './config/postureGeometry.ts';

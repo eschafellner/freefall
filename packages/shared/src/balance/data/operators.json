@@ -1,0 +1,12 @@
+{
+  "operator": {
+    "id": "operator.standard",
+    "loadoutId": "loadout.operator_standard",
+    "maxHealth": 100,
+    "walkSpeed": 5.8,
+    "sprintSpeed": 9.2,
+    "respawnSeconds": 3,
+    "respawnProtectionSeconds": 2,
+    "landingProtectionSeconds": 6
+  }
+}

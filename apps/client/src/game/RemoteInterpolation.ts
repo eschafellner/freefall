@@ -1,11 +1,15 @@
-import { NET, PLAYER, lerpAngle } from '@freefall/shared';
-import type { PlayerState, PlayersSnapshot } from '@freefall/shared';
+import { BALANCE, NET, PLAYER, lerpAngle } from '@freefall/shared';
+import type { PlayerState, PlayersSnapshot, PostureState } from '@freefall/shared';
 
 /** Faster than any legal movement between two snapshots: treated as a teleport, never interpolated. */
-const TELEPORT_SPEED = PLAYER.sprintSpeed * 2 / NET.tickHz;
+const TELEPORT_SPEED = Math.max(PLAYER.sprintSpeed * 2,
+  1.35 * BALANCE.movement.diveDistance / (BALANCE.movement.diveSeconds - BALANCE.movement.divePrepSeconds)) / NET.tickHz;
 
 export interface RemotePose {
   x: number;
+  y?: number;
+  posture?: PostureState;
+  state?: PlayerState;
   z: number;
   yaw: number;
   pitch: number;
@@ -29,6 +33,19 @@ export function remotePose(player: PlayerState, a: PlayersSnapshot, b: PlayersSn
   const angle = Math.min(1, t);
   out.x = player.x + (to.x - player.x) * t;
   out.z = player.z + (to.z - player.z) * t;
+  const tick = a.tick + (b.tick - a.tick) * alpha;
+  const edge = to.posture && to.posture.current !== player.posture?.current
+    ? Math.max(a.tick, Math.min(b.tick, to.posture.started)) : b.tick;
+  const beforeY = player.y ?? 0, afterY = to.y ?? 0;
+  let heightAlpha = angle;
+  if (continuous && player.posture?.current === 'DIVING' && to.posture?.current !== 'DIVING') {
+    heightAlpha = Math.min(1, Math.max(0, (tick - a.tick) / Math.max(1e-6, edge - a.tick)));
+  } else if (continuous && player.posture?.current !== 'DIVING' && to.posture?.current === 'DIVING') {
+    heightAlpha = Math.min(1, Math.max(0, (tick - edge) / Math.max(1e-6, b.tick - edge)));
+  }
+  out.y = beforeY + (afterY - beforeY) * heightAlpha;
+  out.state = continuous ? tick >= edge ? to : player : t === 1 ? to : player;
+  out.posture = out.state.posture;
   out.yaw = lerpAngle(player.yaw, to.yaw, angle);
   out.pitch = (player.pitch ?? 0) + ((to.pitch ?? player.pitch ?? 0) - (player.pitch ?? 0)) * angle;
   out.tick = a.tick + (b.tick - a.tick) * alpha;

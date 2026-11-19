@@ -1,7 +1,7 @@
 import {
-  CAMERA_BACK, NET, NEST_COLLAPSE_TICKS, NEST_EXITS, NEST_EXIT_RADIUS, NEST_HIT_HEIGHT, NEST_RADIUS, SWARM_FACTION_ID,
+  CAMERA_BACK, NEST_COLLAPSE_TICKS, NEST_EXITS, NEST_EXIT_RADIUS, NEST_HIT_HEIGHT, NEST_RADIUS, SWARM_FACTION_ID,
 } from '@freefall/shared';
-import type { AimRay, DifficultyDefinition, MissionEvent, NestSnapshot, PositionXZ } from '@freefall/shared';
+import type { AimRay, MissionBalance, MissionEvent, NestSnapshot, PositionXZ } from '@freefall/shared';
 import type { CombatTargets } from '../systems/combat.ts';
 
 export interface SwarmNest extends NestSnapshot {
@@ -9,13 +9,8 @@ export interface SwarmNest extends NestSnapshot {
   spawnInterval: number;
   spawnCooldown: number;
   spawnBudget: number;
-  difficultyModifier: number;
   boostUntil: number;
 }
-
-const NEST_HP = 360;
-const BASE_INTERVAL = 5.6 * NET.tickHz;
-const BREACH_TICKS = Math.round(6.4 * NET.tickHz);
 
 export class SwarmNestManager implements CombatTargets {
   readonly active = new Map<number, SwarmNest>();
@@ -24,22 +19,24 @@ export class SwarmNestManager implements CombatTargets {
   destroyed = 0;
   private readonly emit: (event: MissionEvent) => void;
   private readonly random: () => number;
+  /** Static nest definition of this mission run (`structures.json`, resolved for the difficulty). */
+  private readonly config: MissionBalance['nest'];
 
-  constructor(emit: (event: MissionEvent) => void, random: () => number) {
+  constructor(emit: (event: MissionEvent) => void, random: () => number, balance: MissionBalance) {
     this.emit = emit;
     this.random = random;
+    this.config = balance.nest;
   }
 
-  create(position: PositionXZ, tick: number, difficulty: DifficultyDefinition, breachId = 0): SwarmNest {
-    const maxHp = Math.round(NEST_HP * difficulty.nestHealthMultiplier);
-    const opensAt = tick + (breachId ? BREACH_TICKS : 0);
-    const spawnInterval = Math.round(BASE_INTERVAL * difficulty.nestSpawnIntervalMultiplier);
+  /** Static values come from the mission's balance snapshot. Only the live state belongs to the nest. */
+  create(position: PositionXZ, tick: number, breachId = 0): SwarmNest {
+    const { maxHealth: maxHp, spawnIntervalTicks: spawnInterval, breachTicks } = this.config;
+    const opensAt = tick + (breachId ? breachTicks : 0);
     const nest: SwarmNest = {
       id: ++this.serial, factionId: SWARM_FACTION_ID, x: position.x, z: position.z, rotation: this.random() * Math.PI * 2,
       hp: maxHp, maxHp, state: breachId ? 'EMERGING' : 'ACTIVE', breachId, startedAt: tick, opensAt,
       destroyedAt: 0, lastHitAt: -1000, lastSpawnAt: -1000, exit: NEST_EXITS - 1,
-      spawnInterval, spawnCooldown: opensAt + spawnInterval, spawnBudget: 1,
-      difficultyModifier: difficulty.nestSpawnIntervalMultiplier, boostUntil: 0,
+      spawnInterval, spawnCooldown: opensAt + spawnInterval, spawnBudget: 1, boostUntil: 0,
     };
     this.active.set(nest.id, nest);
     if (breachId) {
@@ -50,7 +47,7 @@ export class SwarmNestManager implements CombatTargets {
     return nest;
   }
 
-  intersect(ray: AimRay, max: number): { nestId: number; distance: number } | undefined {
+  intersect(ray: AimRay, max: number, min = CAMERA_BACK): { nestId: number; distance: number } | undefined {
     let nearest = max;
     let nestId = 0;
     // The mound is a low ellipsoid, so shots above it can still hit a Schabe.
@@ -67,8 +64,8 @@ export class SwarmNestManager implements CombatTargets {
       const disc = b * b - a * c;
       if (disc < 0) continue;
       const root = Math.sqrt(disc);
-      if ((-b + root) / a < CAMERA_BACK) continue;
-      const distance = Math.max(CAMERA_BACK, (-b - root) / a);
+      if ((-b + root) / a < min) continue;
+      const distance = Math.max(min, (-b - root) / a);
       if (distance >= nearest) continue;
       nearest = distance;
       nestId = nest.id;
@@ -114,18 +111,19 @@ export class SwarmNestManager implements CombatTargets {
         this.emit({ type: 'SwarmNestCreated', nestId: nest.id, breachId: nest.breachId, tick });
       }
       if (tick < nest.spawnCooldown || !nest.spawnBudget) continue;
+      const config = this.config;
       const exitIndex = (nest.exit + 1) % NEST_EXITS;
       const angle = nest.rotation + exitIndex * Math.PI * 2 / NEST_EXITS;
       if (!spawn(nest, { x: nest.x + Math.sin(angle) * NEST_EXIT_RADIUS, z: nest.z + Math.cos(angle) * NEST_EXIT_RADIUS })) {
         // Hold a single due spawn and retry. No backlog of overdue spawn times.
-        nest.spawnCooldown = tick + 9;
+        nest.spawnCooldown = tick + config.blockedSpawnRetryTicks;
         continue;
       }
       nest.spawnBudget--;
       nest.exit = exitIndex;
       nest.lastSpawnAt = tick;
-      const rate = (tick < nest.boostUntil ? 1.85 : 1) * pressure;
-      nest.spawnCooldown = tick + Math.max(7, Math.round(nest.spawnInterval / rate));
+      const rate = (tick < nest.boostUntil ? config.reinforcementBoostRate : 1) * pressure;
+      nest.spawnCooldown = tick + Math.max(config.minSpawnIntervalTicks, Math.round(nest.spawnInterval / rate));
       nest.spawnBudget = 1;
     }
   }

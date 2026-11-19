@@ -1,4 +1,6 @@
 import type { PositionXZ } from '../config/movement.ts';
+import type { CombatTelemetry } from './messages.ts';
+import { BALANCE } from '../balance/defaults.ts';
 
 export type MissionState = 'CARRIER_HUB' | 'MISSION_SELECTION' | 'BOARDING' | 'DEPLOYMENT' |
   'ACTIVE_MISSION' | 'OBJECTIVES_COMPLETED' | 'EXTRACTION_AVAILABLE' | 'EXTRACTION_IN_PROGRESS' |
@@ -26,6 +28,22 @@ export interface AlbatrossSnapshot extends PositionXZ {
   lifecycleState: 'OPERATIONAL' | 'DAMAGED' | 'DISABLED' | 'DESTROYED';
   extractionAvailable: boolean;
   thrusters: { health: number; maxHealth: number; state: ThrusterState; lastHitAt: number }[];
+  lastHitAt: number;
+  /** Resupply containers mounted on the hull. Optional for older servers. */
+  supply?: SupplyContainerSnapshot[];
+}
+
+export interface SupplyContainerSnapshot extends PositionXZ {
+  id: string;
+  side: 'left' | 'right';
+  serial: string;
+  charges: number;
+  maxCharges: number;
+  health: number;
+  maxHealth: number;
+  /** READY: usable. EMPTY: no charges left. OFFLINE: vehicle state forbids use. DESTROYED: container destroyed. */
+  state: 'READY' | 'EMPTY' | 'OFFLINE' | 'DESTROYED';
+  lastUsedAt: number;
   lastHitAt: number;
 }
 
@@ -87,11 +105,12 @@ export interface NestSnapshot extends PositionXZ {
   exit: number;
 }
 
-export const NEST_RADIUS = 3.8;
-export const NEST_HIT_HEIGHT = 1.55;
-export const NEST_EXIT_RADIUS = 4.8;
-export const NEST_EXITS = 3;
-export const NEST_COLLAPSE_TICKS = 64;
+// Nest geometry and timing aliases. Values live in `balance/data/structures.json`.
+export const NEST_RADIUS = BALANCE.primaryNest.hitRadius;
+export const NEST_HIT_HEIGHT = BALANCE.primaryNest.hitHeight;
+export const NEST_EXIT_RADIUS = BALANCE.primaryNest.exitRadius;
+export const NEST_EXITS = BALANCE.primaryNest.exits;
+export const NEST_COLLAPSE_TICKS = BALANCE.primaryNest.collapseTicks;
 
 export interface AlarmSnapshot { groupId: number; enemyId: number; startedAt: number; endsAt: number }
 export interface MissionResult {
@@ -99,6 +118,8 @@ export interface MissionResult {
   missionInstanceId: string;
   missionId: string;
   difficultyId: string;
+  /** Balance configuration hash the run was simulated with. */
+  balanceHash?: string;
   primaryObjectivesCompleted: boolean;
   extractionAttempted: boolean;
   extractionSucceeded: boolean;
@@ -110,12 +131,16 @@ export interface MissionResult {
   baseExperience: number;
   extractionBonusExperience: number;
   rewards: { operatorId: string; baseExperience: number; extractionBonusExperience: number; totalExperience: number }[];
+  /** Aggregated combat telemetry of the run (playtest evaluation). */
+  combat?: CombatTelemetry;
 }
 
 export interface MissionSnapshot {
   tick: number;
   missionId: string;
   difficultyId: string;
+  /** Balance configuration of the current run (carrier: default difficulty). Optional for older servers. */
+  balance?: { release: string; hash: string };
   state: MissionState;
   instanceId?: string;
   selection?: MissionSelection;
@@ -143,7 +168,7 @@ export interface MissionSnapshot {
 }
 
 interface MissionEventData {
-  MissionStarted: { missionId: string; difficultyId: string };
+  MissionStarted: { missionId: string; difficultyId: string; balanceHash?: string };
   ObjectiveUpdated: ObjectiveSnapshot;
   PatrolAlerted: { groupId: number };
   ReinforcementCallStarted: AlarmSnapshot;
@@ -166,4 +191,4 @@ export type MissionEvent = {
 
 export type MissionDebugAction = 'patrol' | 'alert' | 'breach' | 'nest' | 'destroy-nest' | 'objectives' |
   'carrier' | 'board' | 'deploy' | 'land' | 'damage-thruster' | 'destroy-albatross' |
-  'balloon' | 'fighter';
+  'balloon' | 'fighter' | 'destroy-supply';

@@ -1,0 +1,504 @@
+/**
+ * Schemas and types of all balance data files in `balance/data/`. The TypeScript types are inferred from the
+ * schemas, so a field is described exactly once.
+ */
+import { MAX_ENEMIES, SIMULATION_HZ } from '../config/limits.ts';
+import {
+  arr, bool, count, id, nonNegative, num, obj, oneOf, positive, record, reserved, str,
+} from './schema.ts';
+import type { Infer } from './schema.ts';
+
+const MOVEMENT_7_2B = 'waffenabhängige Laufgeschwindigkeit ist noch nicht in Server und Prediction verdrahtet';
+
+export const manifestSchema = obj({
+  schemaVersion: oneOf([2] as const),
+  release: str(),
+  description: str(),
+});
+
+export const weaponSchema = obj({
+  id: id(),
+  displayName: str(),
+  category: oneOf(['assault-rifle', 'pistol'] as const),
+  slot: oneOf(['primary', 'secondary'] as const),
+  damage: positive(),
+  /** Shots per second. One shot per tick at most. */
+  roundsPerSecond: positive({ max: SIMULATION_HZ }),
+  magazineSize: count({ min: 1, max: 500 }),
+  /** Full spare magazines at mission start. Partially used magazines are discarded on reload. */
+  reserveMagazines: count({ max: 50 }),
+  /** Carry capacity for spare magazines. Resupply never exceeds it. */
+  maxReserveMagazines: count({ max: 50 }),
+  reloadSeconds: positive({ max: 30 }),
+  /**
+   * Reload state machine as fractions of `reloadSeconds`: the old magazine leaves the weapon at `removalAt`; the
+   * ammunition transaction (one spare magazine → full magazine, rest discarded) happens atomically at `insertionAt`.
+   */
+  reloadTimeline: obj({ removalAt: num({ min: 0, max: 1 }), insertionAt: num({ above: 0, max: 1 }) }),
+  effectiveRange: positive({ max: 1000 }),
+  recoil: obj({
+    /** Base vertical climb per shot in degrees, before `verticalMultiplier`. */
+    pitchPerShot: nonNegative({ max: 10 }),
+    /** Base horizontal deflection per shot in degrees (deterministic pattern), before `horizontalMultiplier`. */
+    yawPerShot: nonNegative({ max: 10 }),
+    verticalMultiplier: positive({ max: 5 }),
+    horizontalMultiplier: positive({ max: 5 }),
+    /** Each consecutive shot without recovery increases the kick by this fraction … */
+    sustainedGrowthPerShot: nonNegative({ max: 1 }),
+    /** … up to this multiplier. Sustained fire becomes harder to control than bursts. */
+    maxSustainedMultiplier: num({ min: 1, max: 5 }),
+    /** Upper bound of the accumulated climb in degrees. */
+    maxClimbDegrees: nonNegative({ max: 30 }),
+    /** Recovery starts this long after the last shot. */
+    recoveryDelaySeconds: nonNegative({ max: 5 }),
+    /** Degrees per second the accumulated recoil returns to the point of aim. */
+    recoveryPerSecond: nonNegative({ max: 200 }),
+    /** Presentation only: scales the weapon model kick on the client. */
+    visualKick: nonNegative({ max: 5 }),
+    /** Presentation only: field-of-view punch of the camera in degrees. */
+    cameraKick: nonNegative({ max: 5 }),
+  }),
+  spread: obj({
+    /** Cone half-angle in degrees from the hip. */
+    hipDegrees: nonNegative({ max: 20 }),
+    /** Cone half-angle in degrees while aiming down the sights. */
+    aimDegrees: nonNegative({ max: 20 }),
+    movingMultiplier: num({ min: 1, max: 10 }),
+    /** Additional cone per shot (bloom) in degrees, recovered at `bloomRecoveryPerSecond`. */
+    bloomPerShot: nonNegative({ max: 10 }),
+    maxBloomDegrees: nonNegative({ max: 30 }),
+    bloomRecoveryPerSecond: nonNegative({ max: 200 }),
+  }),
+  movement: obj({
+    walkSpeedMultiplier: reserved(1, MOVEMENT_7_2B),
+    sprintSpeedMultiplier: reserved(1, MOVEMENT_7_2B),
+  }),
+  assets: obj({ visual: id() }),
+  /** Audio cue IDs. Each cue needs a profile in `combat.json › audio.weapons`. */
+  sounds: obj({ fire: oneOf(['rifle', 'pistol'] as const) }),
+  attachmentSlots: arr(id()),
+});
+
+export const grenadeSchema = obj({
+  id: id(),
+  displayName: str(),
+  capacity: count({ min: 0, max: 20 }),
+  throwSeconds: positive({ max: 10 }),
+  releaseSeconds: nonNegative({ max: 10 }),
+  fuseSeconds: positive({ max: 30 }),
+  baseDamage: nonNegative(),
+  blastRadius: positive({ max: 100 }),
+  falloff: oneOf(['linear'] as const),
+  /** Keyed by structure definition ID. Structures without an entry take the blast damage unchanged. */
+  structureDamageMultipliers: record(nonNegative({ max: 100 })),
+  throw: obj({
+    speed: positive({ max: 100 }),
+    pitchOffset: num({ min: -1.5, max: 1.5 }),
+    minPitch: num({ min: -1.5, max: 1.5 }),
+    gravity: positive({ max: 100 }),
+    releaseHeight: positive({ max: 5 }),
+  }),
+});
+
+export const medicalSchema = obj({
+  id: id(),
+  displayName: str(),
+  maxCharges: count({ max: 20 }),
+  applicationSeconds: positive({ max: 30 }),
+  healFractionOfMaxHealth: positive({ max: 1 }),
+  cooldownSeconds: reserved(0, 'ein Stim-Cooldown benötigt zusätzlichen Netzwerkzustand'),
+  interruptedBy: obj({ fire: bool(), sprint: bool(), reload: bool(), weaponSwitch: bool(), melee: bool() }),
+});
+
+export const meleeSchema = obj({
+  id: id(),
+  displayName: str(),
+  damage: nonNegative({ max: 10_000 }),
+  /** Reach in meters from the operator to the edge of the target's hit radius. */
+  range: positive({ max: 10 }),
+  /** Full width of the frontal hit cone in degrees. */
+  arcDegrees: positive({ max: 360 }),
+  /** Time from input to the impact frame. The hit is resolved on this tick. */
+  windupSeconds: nonNegative({ max: 5 }),
+  /** Whole action, after which other actions are possible again. */
+  actionSeconds: positive({ max: 5 }),
+  /** Time from one strike to the next. */
+  cooldownSeconds: positive({ max: 30 }),
+  staggerSeconds: nonNegative({ max: 5 }),
+  /** After a stagger ends, the same enemy cannot be staggered again for this long (no stun-lock chains). */
+  staggerImmunitySeconds: nonNegative({ max: 30 }),
+  /** Maximum knockback travel in meters. Movement uses the regular collision, so walls stop it. */
+  knockbackDistance: nonNegative({ max: 5 }),
+});
+
+export const loadoutSchema = obj({
+  id: id(),
+  primaryWeaponId: id(),
+  secondaryWeaponId: id(),
+  grenadeId: id(),
+  medicalId: id(),
+  meleeId: id(),
+  weaponSwitchSeconds: positive({ max: 10 }),
+});
+
+export const resupplySchema = obj({
+  onMissionStart: oneOf(['full'] as const),
+  onRespawn: oneOf(['full'] as const),
+  /** Albatross supply containers (`structures.json › vehicles[].supplyContainers`). */
+  supplyCrates: oneOf(['albatross'] as const),
+  interactionSeconds: positive({ max: 30 }),
+  /** Distance from the container center to the operator. */
+  interactionRange: positive({ max: 10 }),
+  /** Granted per container charge, each capped at the carry capacity. */
+  perUse: obj({
+    primaryMagazines: count({ max: 50 }),
+    secondaryMagazines: count({ max: 50 }),
+    grenades: count({ max: 20 }),
+    stims: count({ max: 20 }),
+  }),
+  /** Vehicle lifecycle states in which intact containers can be used. */
+  availableWhen: obj({ vehicleDamaged: bool(), vehicleDisabled: bool(), vehicleDestroyed: bool() }),
+});
+
+export const operatorSchema = obj({
+  id: id(),
+  loadoutId: id(),
+  maxHealth: positive({ max: 10_000, integer: true }),
+  walkSpeed: positive({ max: 50 }),
+  sprintSpeed: positive({ max: 50 }),
+  respawnSeconds: nonNegative({ max: 120 }),
+  respawnProtectionSeconds: nonNegative({ max: 60 }),
+  landingProtectionSeconds: nonNegative({ max: 60 }),
+});
+
+export const factionSchema = obj({ id: id(), displayName: str() });
+
+export const enemyGameplaySchema = obj({
+  health: positive({ max: 100_000 }),
+  speed: positive({ max: 50 }),
+  hitRadius: positive({ max: 20 }),
+  hitHeight: nonNegative({ max: 20 }),
+  meleeRange: positive({ max: 50 }),
+  meleeDamage: nonNegative({ max: 10_000 }),
+  /** Seconds between melee attacks. Attack rate = 1 / meleeCooldown. */
+  meleeCooldown: positive({ max: 60 }),
+});
+
+export const enemySchema = obj({
+  id: id(),
+  factionId: id(),
+  displayName: str(),
+  /** Approved designs. Changes require an explicit request and must keep the regression tests green. */
+  protected: bool(),
+  /** Network and ECS type byte. Never renumber an existing archetype. */
+  wireType: count({ max: 255 }),
+  visualAssetId: id(),
+  gameplay: enemyGameplaySchema,
+  resistances: obj({
+    armor: reserved(0, 'Gegnerpanzerung wird bisher nicht in der Schadensberechnung berücksichtigt'),
+    bulletMultiplier: reserved(1, 'Gegnerresistenzen werden bisher nicht berücksichtigt'),
+    explosiveMultiplier: reserved(1, 'Gegnerresistenzen werden bisher nicht berücksichtigt'),
+  }),
+  ai: obj({ detectionRange: positive({ max: 500 }) }),
+});
+
+export const nestSchema = obj({
+  id: id(),
+  factionId: id(),
+  spawnArchetypeId: id(),
+  maxHealth: positive({ max: 1_000_000 }),
+  spawnIntervalSeconds: positive({ max: 600 }),
+  breachEmergeSeconds: nonNegative({ max: 120 }),
+  minSpawnIntervalTicks: count({ min: 1, max: 3600 }),
+  blockedSpawnRetryTicks: count({ min: 1, max: 3600 }),
+  reinforcementBoostRate: positive({ max: 20 }),
+  hitRadius: positive({ max: 50 }),
+  hitHeight: nonNegative({ max: 50 }),
+  exits: count({ min: 1, max: 16 }),
+  exitRadius: positive({ max: 50 }),
+  collapseTicks: count({ max: 3600 }),
+  garrison: obj({
+    routeRadius: positive({ max: 200 }),
+    routePoints: count({ min: 1, max: 32 }),
+    regroupDistance: positive({ max: 500 }),
+    playerClearance: nonNegative({ max: 200 }),
+  }),
+});
+
+export const supplyContainerSchema = obj({
+  id: id(),
+  side: oneOf(['left', 'right'] as const),
+  /** Stenciled serial number. */
+  serial: str(),
+  /** Mount point relative to the vehicle center. */
+  x: num({ min: -20, max: 20 }),
+  z: num({ min: -20, max: 20 }),
+  /** Shared charges per mission, used by all operators. */
+  charges: count({ max: 100 }),
+  health: positive({ max: 1_000_000 }),
+});
+
+export const vehicleSchema = obj({
+  id: id(),
+  displayName: str(),
+  hullHealth: positive({ max: 1_000_000 }),
+  thrusterHealth: positive({ max: 1_000_000 }),
+  /** Destroyed thrusters that ground the ship. */
+  disabledThrusters: count({ min: 1, max: 4 }),
+  supplyContainers: arr(supplyContainerSchema),
+});
+
+const weaponAudioSchema = obj({
+  gain: nonNegative({ max: 4 }),
+  /** Center of the sharp transient (crack) layer in Hz. */
+  transientHz: positive({ max: 20_000 }),
+  /** Fundamental of the low-frequency pressure layer in Hz. */
+  bodyHz: positive({ max: 1000 }),
+  bodyGain: nonNegative({ max: 4 }),
+  mechanicalGain: nonNegative({ max: 4 }),
+  tailGain: nonNegative({ max: 4 }),
+  /** Random pitch and level variation per shot (fraction). */
+  variation: nonNegative({ max: 0.5 }),
+});
+
+const environmentAudioSchema = obj({
+  reverbSeconds: positive({ max: 10 }),
+  reverbWet: nonNegative({ max: 1 }),
+  echoDelaySeconds: nonNegative({ max: 2 }),
+  echoFeedback: nonNegative({ max: 0.9 }),
+  /** 0 = natural, 1 = strong metallic resonances. */
+  metallic: nonNegative({ max: 1 }),
+});
+
+export const combatSchema = obj({
+  /**
+   * Relation multipliers of the central damage resolver. Each is applied exactly once per damage event, after the
+   * base damage and structure multipliers, before target-side armor and protection windows.
+   */
+  damagePolicy: obj({
+    operatorToOperator: nonNegative({ max: 1 }),
+    selfDamage: nonNegative({ max: 1 }),
+    operatorToConvict: nonNegative({ max: 1 }),
+    explosionsDamageOperators: bool(),
+  }),
+  /** Vertical cylinder used for friendly-fire hitscan and melee against operators. */
+  operatorHitbox: obj({ radius: positive({ max: 3 }), height: positive({ max: 4 }) }),
+  /** Client presentation. Part of the hash so all clients hear the same mix. */
+  audio: obj({
+    maxVoices: count({ min: 1, max: 128 }),
+    maxVoicesPerShooter: count({ min: 1, max: 32 }),
+    audibleDistance: positive({ max: 2000 }),
+    distantBlendStart: nonNegative({ max: 2000 }),
+    distantBlendEnd: positive({ max: 2000 }),
+    speedOfSound: positive({ max: 2000 }),
+    limiterThresholdDb: num({ min: -40, max: 0 }),
+    weapons: obj({ rifle: weaponAudioSchema, pistol: weaponAudioSchema }),
+    explosion: obj({ gain: nonNegative({ max: 4 }), bodyHz: positive({ max: 1000 }), tailGain: nonNegative({ max: 4 }) }),
+    environments: obj({ carrier: environmentAudioSchema, 'open-field': environmentAudioSchema, outpost: environmentAudioSchema }),
+  }),
+});
+
+export const swarmSchema = obj({
+  hordeAi: obj({
+    targetTicks: count({ min: 1, max: 300 }),
+    steeringTicks: count({ min: 1, max: 300 }),
+    separationRadius: positive({ max: 20 }),
+    neighborsPerCell: count({ min: 1, max: 1000 }),
+  }),
+  arena: obj({
+    archetypeId: id(),
+    outerRadiusInset: nonNegative({ max: 50 }),
+    ringWidth: positive({ max: 50 }),
+    refillTicks: count({ max: 3600 }),
+  }),
+  patrols: obj({
+    archetypeId: id(),
+    perceptionPeriodTicks: count({ min: 1, max: 300 }),
+    closeAwarenessRange: nonNegative({ max: 500 }),
+    fieldOfViewDot: num({ min: -1, max: 1 }),
+    contactMemorySeconds: positive({ max: 600 }),
+    alertDelayTicks: count({ max: 3600 }),
+    suspiciousDelayTicks: count({ max: 3600 }),
+    investigateSeconds: positive({ max: 600 }),
+    searchSeconds: positive({ max: 600 }),
+    lostContactSearchSeconds: positive({ max: 600 }),
+    /** After touchdown, shots near the landing zone stay unnoticed for this long. */
+    landingGraceSeconds: nonNegative({ max: 600 }),
+    routeSpeedScale: positive({ max: 2 }),
+    suspiciousSpeedScale: positive({ max: 2 }),
+    noiseRadius: obj({ shot: nonNegative(), explosion: nonNegative(), landing: nonNegative(), beacon: nonNegative() }),
+    noiseLifetimeTicks: obj({ shot: count(), explosion: count(), landing: count(), beacon: count() }),
+    maxRememberedNoises: count({ min: 1, max: 1000 }),
+    /** Patrol members do not spawn closer than this to a living operator. */
+    seedPlayerClearance: nonNegative({ max: 500 }),
+  }),
+  reinforcements: obj({
+    callSeconds: positive({ max: 60 }),
+    callCooldownSeconds: nonNegative({ max: 600 }),
+    globalCooldownSeconds: nonNegative({ max: 600 }),
+    regionCooldownSeconds: nonNegative({ max: 600 }),
+    nestBoostSeconds: nonNegative({ max: 600 }),
+    boostSearchRadius: positive({ max: 1000 }),
+    breachSearchRadius: positive({ max: 1000 }),
+    breachAttemptsPerRegion: count({ min: 1, max: 100 }),
+    playerClearance: nonNegative({ max: 500 }),
+    nestSpacing: nonNegative({ max: 500 }),
+    deploymentClearance: nonNegative({ max: 500 }),
+    serviceApronClearance: nonNegative({ max: 500 }),
+    objectiveClearance: nonNegative({ max: 500 }),
+  }),
+  threat: obj({
+    base: nonNegative({ max: 100 }),
+    perDifficultyLevel: nonNegative({ max: 100 }),
+    perActiveNest: nonNegative({ max: 100 }),
+    defending: nonNegative({ max: 100 }),
+    extracting: nonNegative({ max: 100 }),
+    /** Threat that adds +100 % nest production (`1 + threat / divisor`). */
+    nestPressureThreatDivisor: positive(),
+    extractionNestPressure: nonNegative({ max: 10 }),
+    alertHeat: obj({
+      max: nonNegative({ max: 100 }),
+      perReinforcement: nonNegative({ max: 100 }),
+      decayPerTick: nonNegative({ max: 10 }),
+      touchdownBase: nonNegative({ max: 100 }),
+      touchdownPerLevel: nonNegative({ max: 100 }),
+      beaconBase: nonNegative({ max: 100 }),
+      beaconPerLevel: nonNegative({ max: 100 }),
+    }),
+  }),
+  extraction: obj({
+    initialPressureSeconds: nonNegative({ max: 600 }),
+    pressureIntervalSeconds: positive({ max: 600 }),
+  }),
+});
+
+export const convictSquadSchema = obj({
+  size: count({ min: 0, max: 4 }),
+  moveSpeed: positive({ max: 50 }),
+  engageRange: positive({ max: 500 }),
+  idleRescanTicks: count({ min: 1, max: 300 }),
+  /** Convicts reload with the reload duration of this registered weapon. */
+  reloadWeaponId: id(),
+});
+
+export const convictKitSchema = obj({
+  /** Also the wire `equipmentId` of a convict. */
+  id: id(),
+  weaponVariantId: id(),
+  maxHealth: positive({ max: 10_000, integer: true }),
+  /** Flat reduction per hit. A hit always deals at least 1 damage. */
+  armor: nonNegative({ max: 1000 }),
+  damage: positive({ max: 10_000 }),
+  roundsPerSecond: positive({ max: SIMULATION_HZ }),
+  magazineSize: count({ min: 1, max: 500 }),
+});
+
+export const difficultySchema = obj({
+  id: id(),
+  level: count({ min: 1 }),
+  displayName: str(),
+  maxActiveEnemies: count({ min: 1, max: MAX_ENEMIES }),
+  maxActiveNests: count({ max: 64 }),
+  patrolGroupCount: count({ max: 200 }),
+  patrolMinSize: count({ min: 1, max: MAX_ENEMIES }),
+  patrolMaxSize: count({ min: 1, max: MAX_ENEMIES }),
+  detectionRangeMultiplier: positive({ max: 10 }),
+  reinforcementCooldownMultiplier: positive({ max: 10 }),
+  nestSpawnIntervalMultiplier: positive({ max: 10 }),
+  nestHealthMultiplier: positive({ max: 10 }),
+  extractionThreatMultiplier: positive({ max: 10 }),
+  maxConcurrentBreaches: count({ max: 64 }),
+  reinforcementBudget: count({ max: 1000 }),
+  maxSpawnsPerTick: count({ min: 1, max: MAX_ENEMIES }),
+  enemyHealthMultiplier: positive({ max: 10 }),
+  enemyDamageMultiplier: nonNegative({ max: 10 }),
+  convictKitId: id(),
+});
+
+const postureColliderSchema = obj({
+  radius: positive({ max: 2 }), halfLength: positive({ max: 2 }), height: positive({ max: 3 }),
+  lookHeight: positive({ max: 3 }), muzzleHeight: positive({ max: 3 }),
+});
+
+const postureActionsSchema = obj({
+  sprint: bool(), aim: bool(), fire: bool(), reload: bool(), stim: bool(),
+  switch: bool(), grenade: bool(), melee: bool(), resupply: bool(),
+});
+
+export const movementSchema = obj({
+  crouchSpeedMultiplier: positive({ max: 1 }), proneSpeedMultiplier: positive({ max: 1 }),
+  supineSpeedMultiplier: positive({ max: 1 }), crouchSeconds: positive({ max: 3 }),
+  diveDistance: positive({ max: 12 }), diveSeconds: num({ min: .2, max: 3 }),
+  diveCooldownSeconds: nonNegative({ max: 15 }), divePrepSeconds: nonNegative({ max: 2 }),
+  diveArcHeight: positive({ max: 2 }), noDirection: oneOf(['forward', 'reject'] as const),
+  backwardDotThreshold: num({ min: -.5, max: 0 }), proneGetUpSeconds: positive({ max: 5 }),
+  supineGetUpSeconds: positive({ max: 5 }), groundTurnRadiansPerSecond: positive({ max: 12 }),
+  proneMinPitch: num({ min: -.69, max: 0 }), supineMinPitch: num({ min: -.69, max: 0 }),
+  groundAimHalfArc: positive({ max: Math.PI / 2 }),
+  cameraDamping: positive({ max: 60 }), enemyAttackHalfHeight: positive({ max: 2 }),
+  operatorMeleeHeight: positive({ max: 3 }),
+  colliders: obj({
+    STANDING: postureColliderSchema, CROUCHING: postureColliderSchema, DIVING: postureColliderSchema,
+    PRONE: postureColliderSchema, SUPINE: postureColliderSchema,
+  }),
+  actions: obj({
+    STANDING: postureActionsSchema, CROUCHING: postureActionsSchema, DIVING: postureActionsSchema,
+    PRONE: postureActionsSchema, SUPINE: postureActionsSchema, GETTING_UP: postureActionsSchema,
+  }),
+});
+
+/** One schema per data file. */
+export const SOURCE_SCHEMAS = {
+  manifest: manifestSchema,
+  weapons: obj({ weapons: arr(weaponSchema, { min: 1 }) }),
+  equipment: obj({
+    grenades: arr(grenadeSchema, { min: 1 }),
+    medical: arr(medicalSchema, { min: 1 }),
+    melee: arr(meleeSchema, { min: 1 }),
+    loadouts: arr(loadoutSchema, { min: 1 }),
+    resupply: resupplySchema,
+  }),
+  operators: obj({ operator: operatorSchema }),
+  enemies: obj({ factions: arr(factionSchema, { min: 1 }), archetypes: arr(enemySchema, { min: 1 }) }),
+  structures: obj({ nests: arr(nestSchema, { min: 1 }), vehicles: arr(vehicleSchema, { min: 1 }) }),
+  swarm: swarmSchema,
+  convicts: obj({ squad: convictSquadSchema, kits: arr(convictKitSchema, { min: 1 }) }),
+  difficulty: obj({ difficulties: arr(difficultySchema, { min: 1 }) }),
+  combat: combatSchema,
+  movement: movementSchema,
+} as const;
+
+export type BalanceManifest = Infer<typeof manifestSchema>;
+export type WeaponDefinition = Infer<typeof weaponSchema>;
+export type GrenadeDefinition = Infer<typeof grenadeSchema>;
+export type MedicalDefinition = Infer<typeof medicalSchema>;
+export type MeleeDefinition = Infer<typeof meleeSchema>;
+export type SupplyContainerDefinition = Infer<typeof supplyContainerSchema>;
+export type MovementDefinition = Infer<typeof movementSchema>;
+export type PostureCollider = Infer<typeof postureColliderSchema>;
+export type CombatDefinition = Infer<typeof combatSchema>;
+export type DamagePolicy = CombatDefinition['damagePolicy'];
+export type WeaponAudioProfile = CombatDefinition['audio']['weapons']['rifle'];
+export type EnvironmentAudioProfile = CombatDefinition['audio']['environments']['carrier'];
+export type AudioEnvironmentId = keyof CombatDefinition['audio']['environments'];
+export type LoadoutDefinition = Infer<typeof loadoutSchema>;
+export type ResupplyRules = Infer<typeof resupplySchema>;
+export type OperatorDefinition = Infer<typeof operatorSchema>;
+export type FactionDefinition = Infer<typeof factionSchema>;
+export type EnemyGameplay = Infer<typeof enemyGameplaySchema>;
+export type EnemyArchetype = Infer<typeof enemySchema>;
+export type NestDefinition = Infer<typeof nestSchema>;
+export type VehicleDefinition = Infer<typeof vehicleSchema>;
+export type SwarmDefinition = Infer<typeof swarmSchema>;
+export type ConvictSquadDefinition = Infer<typeof convictSquadSchema>;
+export type ConvictKitDefinition = Infer<typeof convictKitSchema>;
+export type DifficultyDefinition = Infer<typeof difficultySchema>;
+export type BalanceSources = { readonly [K in keyof typeof SOURCE_SCHEMAS]: Infer<(typeof SOURCE_SCHEMAS)[K]> };
+export type WeaponSlot = WeaponDefinition['slot'];
+
+/** File name of each source, used in error messages. */
+export const SOURCE_FILES: Readonly<Record<keyof typeof SOURCE_SCHEMAS, string>> = {
+  manifest: 'manifest.json', weapons: 'weapons.json', equipment: 'equipment.json', operators: 'operators.json',
+  enemies: 'enemies.json', structures: 'structures.json', swarm: 'swarm.json', convicts: 'convicts.json',
+  difficulty: 'difficulty.json', combat: 'combat.json', movement: 'movement.json',
+};

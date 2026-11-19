@@ -1,4 +1,4 @@
-import { FRAG, NET, WEAPONS, aimRay, wrapAngle } from '@freefall/shared';
+import { BASE_LOADOUT, FRAG, NET, WEAPONS, aimRay, postureCollider, postureYaw, tacticalAimPitch, tacticalAimYaw, tacticalMuzzle, wrapAngle } from '@freefall/shared';
 import * as T from 'three';
 import { EQUIPMENT_SLOTS } from '../AssetRegistry.ts';
 import type { EquipmentSlot, SoldierAsset } from '../AssetRegistry.ts';
@@ -9,7 +9,7 @@ import { CharacterClipPlayer } from './CharacterClipPlayer.ts';
 import { SoldierRig } from './SoldierRig.ts';
 import type { createSoldierParts } from './SoldierRig.ts';
 
-import type { EquipmentState } from '@freefall/shared';
+import type { EquipmentState, PostureState } from '@freefall/shared';
 
 const NEUTRAL = new T.Vector3(0, 1, 0);
 
@@ -23,6 +23,8 @@ export class PlayerVisualController {
   private readonly rig: SoldierRig;
   private readonly importedStage = new T.Group();
   private imported?: CharacterClipPlayer;
+  private importedMount?: T.Object3D;
+  private readonly muzzleWorld = new T.Vector3();
   private readonly ray = { x: 0, y: 0, z: 0, dx: 0, dy: 0, dz: 0 };
   private readonly target = new T.Vector3();
   private readonly look = new T.Matrix4();
@@ -65,6 +67,7 @@ export class PlayerVisualController {
     this.imported?.dispose();
     this.importedStage.clear();
     this.imported = mixer;
+    this.importedMount = mount;
     this.importedStage.add(model);
     this.rig.root.visible = false;
     mount.add(this.weapon.root, this.sidearm.root);
@@ -83,12 +86,13 @@ export class PlayerVisualController {
   }
 
   draw(id: string, life: number, hp: number, x: number, z: number, yaw: number, pitch: number,
-    aim: boolean, sprint: boolean, reloadUntil: number, tick: number, now: number, dt: number, local: boolean, gear?: EquipmentState): void {
+    aim: boolean, sprint: boolean, reloadUntil: number, tick: number, now: number, dt: number, local: boolean, gear?: EquipmentState, posture?: PostureState, y = 0): void {
+    const bodyYaw = posture ? postureYaw(posture, yaw) : yaw;
     const fresh = this.id !== id || this.life !== life;
     if (fresh) {
       this.animation.reset();
       this.imported?.reset();
-      this.heading = yaw;
+      this.heading = bodyYaw;
     } else if (hp > 0 && hp < this.hp) {
       this.animation.hit();
       this.imported?.hit();
@@ -97,8 +101,8 @@ export class PlayerVisualController {
     this.life = life;
     this.hp = hp;
     this.root.visible = true;
-    this.root.position.set(x, 0, z);
-    const rotation = hp > 0 ? wrapAngle(yaw - this.heading) * (1 - Math.exp(-dt * (local ? 18 : 15))) : 0;
+    this.root.position.set(x, y, z);
+    const rotation = hp > 0 ? wrapAngle(bodyYaw - this.heading) * (1 - Math.exp(-dt * (local ? 18 : 15))) : 0;
     this.heading += rotation;
     this.root.rotation.y = -this.heading;
 
@@ -118,17 +122,34 @@ export class PlayerVisualController {
     this.animation.inject = action === 'stim' ? handling : 0;
     this.animation.throwing = action === 'grenade' ? handling : 0;
     this.animation.holdingGrenade = action === 'grenade' && !!gear && tick < gear.started + Math.ceil(FRAG.releaseSeconds * NET.tickHz);
+    // Melee: short wind-up, thrust peaking on the server impact tick, recovery. Fallback until a clip exists.
+    const melee = BASE_LOADOUT.melee;
+    const impact = melee.windupTicks / melee.actionTicks;
+    this.animation.melee = action !== 'melee' ? 0 : progress < impact
+      ? -.35 * T.MathUtils.smoothstep(progress, 0, impact) : (1 - T.MathUtils.smoothstep(progress, impact, 1)) ** 1.4;
     this.animation.lower = switching ? handling : .7 * Math.max(this.animation.inject, this.animation.throwing);
     this.animation.update(dt, dx * sin - dz * cos, dx * cos + dz * sin, sprint, aim && !action, hp > 0, reloadUntil, tick, rotation / Math.max(.001, dt), WEAPONS[slot].reloadSeconds);
-    if (this.animation.aim > .001) {
-      aimRay(this.ray, this.root.position, yaw, pitch);
+    this.animation.tactical.update(hp > 0 ? posture : undefined, tick, dt, this.animation);
+    const tactical = posture && (posture.current === 'PRONE' || posture.current === 'SUPINE' || posture.current === 'CROUCHING');
+    if (this.animation.aim > .001 || tactical) {
+      const aimYaw = tactical ? tacticalAimYaw(posture, yaw) : yaw;
+      const shape = tactical ? postureCollider(posture, tick) : undefined;
+      aimRay(this.ray, this.root.position, aimYaw, tactical ? tacticalAimPitch(posture, pitch) : pitch, shape?.lookHeight, y);
+      if (shape && posture) tacticalMuzzle(this.muzzleWorld, this.root.position, posture, aimYaw, shape);
       const { x: ox, y: oy, z: oz, dx: vx, dy: vy, dz: vz } = this.ray;
       const distance = vy < 0 ? Math.min(22, -oy / vy) : 22;
       this.target.set(ox + vx * distance, oy + vy * distance, oz + vz * distance);
     }
 
-    if (this.imported) this.poseImported(dt);
-    else this.rig.pose(this.animation, this.activeWeapon, this.target, pitch, now);
+    const clip = this.animation.tactical.clip;
+    const imported = this.imported && this.importedMount && (!clip || this.imported.tacticalClip(clip));
+    const mount = imported ? this.importedMount! : this.rig.torso;
+    if (this.weapon.root.parent !== mount) mount.add(this.weapon.root, this.sidearm.root);
+    this.rig.root.visible = !imported;
+    this.importedStage.visible = Boolean(imported);
+    if (imported) this.poseImported(dt);
+    else this.rig.pose(this.animation, this.activeWeapon, this.target, pitch, now, tactical ? this.muzzleWorld : undefined);
+    this.sidearm.update(dt);
   }
 
   private get activeWeapon() { return this.sidearm.root.visible ? this.sidearm : this.weapon; }
@@ -142,8 +163,9 @@ export class PlayerVisualController {
     const { aim, kick, reload, sprint } = this.animation;
     const gun = this.activeWeapon.root;
     const handling = T.MathUtils.smoothstep(reload, 0, .22) * (1 - T.MathUtils.smoothstep(reload, .8, 1));
-    gun.position.set(0, -handling * .06 - this.animation.lower * .11, kick * .043);
-    gun.rotation.set(-handling * .36 - this.animation.lower * .84 - sprint * .22 + kick * .07, 0, handling * .42);
+    const strike = this.animation.melee;
+    gun.position.set(0, -handling * .06 - this.animation.lower * .11 + Math.max(0, strike) * .05, kick * .043 - strike * .24);
+    gun.rotation.set(-handling * .36 - this.animation.lower * .84 - sprint * .22 + kick * .07 + strike * .5, 0, handling * .42 - strike * .2);
     if (aim > .001 && gun.parent) {
       gun.parent.worldToLocal(this.target);
       this.target.y -= this.activeWeapon.sockets.Muzzle.position.y;
@@ -158,7 +180,10 @@ export class PlayerVisualController {
     if (!this.root.visible || this.id !== id || this.hp <= 0) return;
     this.animation.fire();
     this.imported?.fire();
-    if (this.sidearm.root.visible) this.animation.kick *= 1.35;
+    if (this.sidearm.root.visible) {
+      this.animation.kick *= WEAPONS.secondary.recoil.visualKick;
+      this.sidearm.cycle();
+    }
     return this.activeWeapon.muzzle(target);
   }
 

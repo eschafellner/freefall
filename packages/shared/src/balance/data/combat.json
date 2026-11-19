@@ -1,0 +1,28 @@
+{
+  "damagePolicy": {
+    "operatorToOperator": 0.3,
+    "selfDamage": 0.3,
+    "operatorToConvict": 0.3,
+    "explosionsDamageOperators": true
+  },
+  "operatorHitbox": { "radius": 0.42, "height": 1.85 },
+  "audio": {
+    "maxVoices": 28,
+    "maxVoicesPerShooter": 4,
+    "audibleDistance": 150,
+    "distantBlendStart": 22,
+    "distantBlendEnd": 95,
+    "speedOfSound": 343,
+    "limiterThresholdDb": -6,
+    "weapons": {
+      "rifle": { "gain": 1, "transientHz": 2600, "bodyHz": 105, "bodyGain": 0.9, "mechanicalGain": 0.35, "tailGain": 0.55, "variation": 0.07 },
+      "pistol": { "gain": 0.85, "transientHz": 3600, "bodyHz": 150, "bodyGain": 0.55, "mechanicalGain": 0.5, "tailGain": 0.4, "variation": 0.06 }
+    },
+    "explosion": { "gain": 1.5, "bodyHz": 52, "tailGain": 0.8 },
+    "environments": {
+      "carrier": { "reverbSeconds": 0.9, "reverbWet": 0.3, "echoDelaySeconds": 0.045, "echoFeedback": 0.32, "metallic": 0.65 },
+      "open-field": { "reverbSeconds": 2.4, "reverbWet": 0.16, "echoDelaySeconds": 0.42, "echoFeedback": 0.22, "metallic": 0 },
+      "outpost": { "reverbSeconds": 1.3, "reverbWet": 0.2, "echoDelaySeconds": 0.18, "echoFeedback": 0.25, "metallic": 0.25 }
+    }
+  }
+}

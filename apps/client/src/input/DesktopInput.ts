@@ -1,13 +1,22 @@
 import { MAX_PITCH, wrapAngle } from '@freefall/shared';
-import type { EquipmentCommand, PlayerInput } from '@freefall/shared';
+import type { EquipmentCommand, PlayerInput, PostureCommand } from '@freefall/shared';
+
+import { bindings, keyboardCode } from './Bindings.ts';
+import type { InputAction } from './Bindings.ts';
+
+const EQUIPMENT = {
+  SWITCH_PRIMARY: 'primary', SWITCH_SECONDARY: 'secondary', THROW_GRENADE: 'grenade', USE_STIM: 'stim', MELEE: 'melee',
+} as const;
+const POSTURE = { CROUCH: 'crouch', DIVE: 'dive', STAND_UP: 'stand' } as const;
 
 export class DesktopInput {
   yaw = 0;
   pitch = -0.12;
-  private firing = false;
+  private posture?: PostureCommand;
+  private diveIntent?: Pick<PlayerInput, 'forward' | 'strafe' | 'yaw'>;
   private acquiredAt = -Infinity;
   private expectingFirstMotion = true;
-  private aiming = false;
+
   private equipment?: EquipmentCommand;
   private reloadPressed = false;
   private readonly keys = new Set<string>();
@@ -20,7 +29,9 @@ export class DesktopInput {
     const clear = () => {
       this.keys.clear();
       this.equipment = undefined;
-      this.firing = this.aiming = this.reloadPressed = false;
+      this.posture = undefined;
+      this.diveIntent = undefined;
+      this.reloadPressed = false;
       onIdle();
     };
     document.addEventListener('pointerlockchange', () => {
@@ -36,32 +47,37 @@ export class DesktopInput {
       if (document.hidden) clear();
     }, options);
     window.addEventListener('blur', clear, options);
+    const press = (code: string) => {
+      if (!this.locked) return false;
+      const down = this.keys.has(code);
+      this.keys.add(code);
+      if (!down) {
+        if (code === bindings.code('INTERACT')) onInteract();
+        if (code === bindings.code('BALLOON')) onBalloon();
+        if (code === bindings.code('RELOAD')) this.reloadPressed = true;
+        for (const command of Object.keys(EQUIPMENT) as (keyof typeof EQUIPMENT)[]) {
+          if (code === bindings.code(command)) this.equipment = EQUIPMENT[command];
+        }
+        for (const command of Object.keys(POSTURE) as (keyof typeof POSTURE)[]) {
+          if (code !== bindings.code(command)) continue;
+          this.posture = POSTURE[command];
+          if (this.posture === 'dive') this.diveIntent = { forward: this.forward(), strafe: this.strafe(), yaw: this.yaw };
+        }
+      }
+      return true;
+    };
     window.addEventListener('keydown', (event) => {
       if (!this.locked) return;
-      this.keys.add(event.code);
-      if (event.code === 'KeyE' && !event.repeat) onInteract();
-      if (event.code === 'KeyB' && !event.repeat) onBalloon();
-      if (!event.repeat) {
-        if (event.code === 'Digit1') this.equipment = 'primary';
-        if (event.code === 'Digit2') this.equipment = 'secondary';
-        if (event.code === 'KeyG') this.equipment = 'grenade';
-        if (event.code === 'KeyH') this.equipment = 'stim';
-      }
-      if (event.code === 'KeyR' && !event.repeat) this.reloadPressed = true;
-      if (event.code.startsWith('Key') || event.code.startsWith('Shift') || event.code === 'Space') {
-        event.preventDefault();
-      }
+      if (!event.repeat) press(keyboardCode(event.code));
+      if (event.code.startsWith('Key') || event.code !== 'Escape' && this.keys.has(keyboardCode(event.code))) event.preventDefault();
     }, options);
-    window.addEventListener('keyup', (event) => this.keys.delete(event.code), options);
+    window.addEventListener('keyup', (event) => {
+      if (keyboardCode(event.code) !== 'Shift' || !event.shiftKey) this.keys.delete(keyboardCode(event.code));
+    }, options);
     window.addEventListener('mousedown', (event) => {
-      if (!this.locked) return;
-      if (event.button === 0) this.firing = true;
-      if (event.button === 2) this.aiming = true;
+      if (press(`Mouse${event.button}`)) event.preventDefault();
     }, options);
-    window.addEventListener('mouseup', (event) => {
-      if (event.button === 0) this.firing = false;
-      if (event.button === 2) this.aiming = false;
-    }, options);
+    window.addEventListener('mouseup', (event) => this.keys.delete(`Mouse${event.button}`), options);
     canvas.addEventListener('contextmenu', (event) => {
       if (this.locked) event.preventDefault();
     }, options);
@@ -89,28 +105,35 @@ export class DesktopInput {
     result?.catch(() => {});
   }
 
-  get aim(): boolean { return this.locked && this.aiming; }
+  private held(action: InputAction): boolean { return this.keys.has(bindings.code(action)); }
 
-  get sprint(): boolean {
-    return this.locked && (this.keys.has('ShiftLeft') || this.keys.has('ShiftRight'));
-  }
+  private forward(): number { return Number(this.held('MOVE_FORWARD')) - Number(this.held('MOVE_BACKWARD')); }
+  private strafe(): number { return Number(this.held('MOVE_RIGHT')) - Number(this.held('MOVE_LEFT')); }
+
+  get aim(): boolean { return this.locked && this.held('AIM'); }
+  get sprint(): boolean { return this.locked && this.held('SPRINT'); }
 
   sample(seq: number, idle = false, life = 0): PlayerInput {
     const active = this.locked && !idle;
     const reload = active && this.reloadPressed;
     const equipment = active ? this.equipment : undefined;
+    const posture = active ? this.posture : undefined;
+    const intent = posture === 'dive' ? this.diveIntent : undefined;
+    this.posture = undefined;
+    this.diveIntent = undefined;
     this.equipment = undefined;
     this.reloadPressed = false;
     return {
       seq,
-      forward: active ? Number(this.keys.has('KeyW')) - Number(this.keys.has('KeyS')) : 0,
-      strafe: active ? Number(this.keys.has('KeyD')) - Number(this.keys.has('KeyA')) : 0,
+      forward: active ? this.forward() : 0,
+      strafe: active ? this.strafe() : 0,
       yaw: this.yaw,
+      ...intent,
       pitch: this.pitch,
       sprint: active && this.sprint,
-      fire: active && this.firing,
-      aim: active && this.aiming,
-      reload, ...(equipment && { equipment, life }),
+      fire: active && this.held('FIRE'),
+      aim: active && this.held('AIM'),
+      reload, ...(equipment && { equipment }), ...(posture && { posture }), ...((equipment || posture) && { life }),
     };
   }
 

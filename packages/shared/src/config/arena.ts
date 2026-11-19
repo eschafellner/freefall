@@ -1,11 +1,13 @@
+import { MAX_ENEMIES, MAX_PLAYERS, SIMULATION_HZ } from './limits.ts';
+import { BALANCE } from '../balance/defaults.ts';
+
+export { MAX_ENEMIES, MAX_PLAYERS, SIMULATION_HZ };
 export const ARENA_HALF = 56;
-export const MAX_PLAYERS = 4;
-export const MAX_ENEMIES = 1_000;
 export const HORDE_SIZES = [0, 100, 250, 500, 1_000] as const;
 export type HordeSize = (typeof HORDE_SIZES)[number];
 
 export const NET = {
-  tickHz: 30,
+  tickHz: SIMULATION_HZ,
   playerHz: 20,
   hordeHz: 10,
   metricsHz: 2,
@@ -48,13 +50,14 @@ export const INTERPOLATION = {
   windowMs: 3000,
 } as const;
 
-export const PLAYER = {
-  health: 100,
-  walkSpeed: 5.8,
-  sprintSpeed: 9.2,
-  respawnSeconds: 3,
-  protectionSeconds: 2,
-} as const;
+/** Operator base values from the balance registry (`balance/data/operators.json`). */
+export const PLAYER = Object.freeze({
+  health: BALANCE.operator.maxHealth,
+  walkSpeed: BALANCE.operator.walkSpeed,
+  sprintSpeed: BALANCE.operator.sprintSpeed,
+  respawnSeconds: BALANCE.operator.respawnSeconds,
+  protectionSeconds: BALANCE.operator.respawnProtectionSeconds,
+});
 
 export const TEAM_COLORS = [0x73d5e7, 0xf5b65f, 0xaee775, 0xcb9cf3] as const;
 

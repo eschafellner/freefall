@@ -1,6 +1,7 @@
-import { CAMERA_BACK, aimRay, obstacleIntersection } from '@freefall/shared';
+import { BALANCE, CAMERA_BACK, LOOK_HEIGHT, aimRay, obstacleIntersection } from '@freefall/shared';
 import type { PositionXZ, WorldDefinition } from '@freefall/shared';
 import * as T from 'three';
+import { cameraPreferences } from './CameraPreferences.ts';
 
 const HIP_FOV = 62;
 const GROUND_CLEARANCE = .19;
@@ -23,20 +24,33 @@ export const CAMERA_TUNING = {
 export class ThirdPersonCamera {
   readonly camera = new T.PerspectiveCamera(HIP_FOV, 1, .11, 325);
   private readonly ray = { x: 0, y: 0, z: 0, dx: 0, dy: 0, dz: 0 };
+  private lookHeight = LOOK_HEIGHT;
   private aimBlend = 0;
   private sprintBlend = 0;
   private kick = 0;
   private pull = 0;
+  private shake = 0;
+  private shakeTime = 0;
 
+  /** Field-of-view punch per shot. Gameplay recoil moves the view separately (pitch/yaw offset). */
   fire(strength = 1): void { this.kick = Math.max(this.kick, .63 * strength); }
-  reset(): void { this.aimBlend = this.sprintBlend = this.kick = this.pull = 0; }
+  /** Short, light positional shake for nearby explosions (max. 6 cm, decays in ~0.4 s). */
+  blast(strength: number): void {
+    this.fire(strength);
+    this.shake = Math.max(this.shake, Math.min(1, strength));
+  }
+  reset(): void { this.lookHeight = LOOK_HEIGHT; this.aimBlend = this.sprintBlend = this.kick = this.pull = this.shake = 0; }
 
-  update(position: PositionXZ, yaw: number, pitch: number, aim: boolean, sprint: number, dt: number, world?: WorldDefinition): void {
+  update(position: PositionXZ, yaw: number, pitch: number, aim: boolean, sprint: number, dt: number, world?: WorldDefinition, elevation = 0, lookHeight = LOOK_HEIGHT): void {
     const tuning = CAMERA_TUNING;
-    this.aimBlend = T.MathUtils.damp(this.aimBlend, Number(aim), tuning.aimRate, dt);
-    this.sprintBlend = T.MathUtils.damp(this.sprintBlend, aim ? 0 : sprint, tuning.sprintRate, dt);
+    const { smoothing, reducedMotion, shake } = cameraPreferences;
+    this.lookHeight = T.MathUtils.damp(this.lookHeight, lookHeight, BALANCE.movement.cameraDamping / smoothing, dt);
+    this.aimBlend = T.MathUtils.damp(this.aimBlend, Number(aim), tuning.aimRate / smoothing, dt);
+    this.sprintBlend = T.MathUtils.damp(this.sprintBlend, aim || reducedMotion ? 0 : sprint, tuning.sprintRate / smoothing, dt);
     this.kick *= Math.exp(-dt * 19);
-    aimRay(this.ray, position, yaw, pitch);
+    this.shake *= Math.exp(-dt * 8);
+    this.shakeTime += dt;
+    aimRay(this.ray, position, yaw, pitch, this.lookHeight, elevation);
     const { x, y, z, dx, dy, dz } = this.ray;
     let travel = this.aimBlend * tuning.aimTravel - this.sprintBlend * tuning.sprintPullback;
     let required = 0;
@@ -57,8 +71,13 @@ export class ThirdPersonCamera {
     if (y + dy * travel < GROUND_CLEARANCE) travel = (GROUND_CLEARANCE - y) / dy;
     const camera = this.camera;
     camera.position.set(x + dx * travel, y + dy * travel, z + dz * travel);
+    if (!reducedMotion && shake > 0 && this.shake > .01) {
+      const amplitude = this.shake * shake * .06;
+      camera.position.x += Math.sin(this.shakeTime * 71) * amplitude;
+      camera.position.y += Math.sin(this.shakeTime * 53 + 1.3) * amplitude * .7;
+    }
     camera.lookAt(camera.position.x + dx, camera.position.y + dy, camera.position.z + dz);
-    const fov = HIP_FOV - this.aimBlend * tuning.aimFov + this.sprintBlend * tuning.sprintFov + this.kick;
+    const fov = HIP_FOV - this.aimBlend * tuning.aimFov + this.sprintBlend * tuning.sprintFov + (reducedMotion ? 0 : this.kick * shake);
     if (Math.abs(camera.fov - fov) > .015) {
       camera.fov = fov;
       camera.updateProjectionMatrix();

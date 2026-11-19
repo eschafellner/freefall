@@ -1,0 +1,57 @@
+{
+  "hordeAi": { "targetTicks": 6, "steeringTicks": 2, "separationRadius": 1.65, "neighborsPerCell": 12 },
+  "arena": { "archetypeId": "swarm.schabe", "outerRadiusInset": 5, "ringWidth": 11, "refillTicks": 9 },
+  "patrols": {
+    "archetypeId": "swarm.schabe",
+    "perceptionPeriodTicks": 6,
+    "closeAwarenessRange": 9,
+    "fieldOfViewDot": 0.24,
+    "contactMemorySeconds": 6,
+    "alertDelayTicks": 10,
+    "suspiciousDelayTicks": 18,
+    "investigateSeconds": 17,
+    "searchSeconds": 3,
+    "lostContactSearchSeconds": 4,
+    "landingGraceSeconds": 6,
+    "routeSpeedScale": 0.71,
+    "suspiciousSpeedScale": 0.38,
+    "noiseRadius": { "shot": 48, "explosion": 82, "landing": 100, "beacon": 132 },
+    "noiseLifetimeTicks": { "shot": 12, "explosion": 12, "landing": 120, "beacon": 120 },
+    "maxRememberedNoises": 48,
+    "seedPlayerClearance": 14
+  },
+  "reinforcements": {
+    "callSeconds": 3,
+    "callCooldownSeconds": 35,
+    "globalCooldownSeconds": 4,
+    "regionCooldownSeconds": 32,
+    "nestBoostSeconds": 18,
+    "boostSearchRadius": 150,
+    "breachSearchRadius": 125,
+    "breachAttemptsPerRegion": 11,
+    "playerClearance": 27,
+    "nestSpacing": 18,
+    "deploymentClearance": 12,
+    "serviceApronClearance": 9,
+    "objectiveClearance": 12
+  },
+  "threat": {
+    "base": 3,
+    "perDifficultyLevel": 3,
+    "perActiveNest": 5,
+    "defending": 11,
+    "extracting": 13,
+    "nestPressureThreatDivisor": 200,
+    "extractionNestPressure": 0.4,
+    "alertHeat": {
+      "max": 42,
+      "perReinforcement": 12,
+      "decayPerTick": 0.008,
+      "touchdownBase": 4,
+      "touchdownPerLevel": 2,
+      "beaconBase": 8,
+      "beaconPerLevel": 3
+    }
+  },
+  "extraction": { "initialPressureSeconds": 6, "pressureIntervalSeconds": 15 }
+}

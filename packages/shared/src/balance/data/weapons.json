@@ -1,0 +1,82 @@
+{
+  "weapons": [
+    {
+      "id": "kestrel-ar-01",
+      "displayName": "Kestrel AR-01",
+      "category": "assault-rifle",
+      "slot": "primary",
+      "damage": 24,
+      "roundsPerSecond": 10,
+      "magazineSize": 45,
+      "reserveMagazines": 8,
+      "maxReserveMagazines": 8,
+      "reloadSeconds": 2.1,
+      "reloadTimeline": { "removalAt": 0.2, "insertionAt": 0.72 },
+      "effectiveRange": 72,
+      "recoil": {
+        "pitchPerShot": 0.3,
+        "yawPerShot": 0.2,
+        "verticalMultiplier": 1.2,
+        "horizontalMultiplier": 1.1,
+        "sustainedGrowthPerShot": 0.035,
+        "maxSustainedMultiplier": 1.6,
+        "maxClimbDegrees": 7,
+        "recoveryDelaySeconds": 0.12,
+        "recoveryPerSecond": 5,
+        "visualKick": 1,
+        "cameraKick": 0.5
+      },
+      "spread": {
+        "hipDegrees": 0.9,
+        "aimDegrees": 0.22,
+        "movingMultiplier": 1.6,
+        "bloomPerShot": 0.1,
+        "maxBloomDegrees": 1.8,
+        "bloomRecoveryPerSecond": 5
+      },
+      "movement": { "walkSpeedMultiplier": 1, "sprintSpeedMultiplier": 1 },
+      "assets": { "visual": "weapon.kestrel-ar-01" },
+      "sounds": { "fire": "rifle" },
+      "attachmentSlots": []
+    },
+    {
+      "id": "p-01",
+      "displayName": "P-01 Dienstpistole",
+      "category": "pistol",
+      "slot": "secondary",
+      "damage": 21.6,
+      "roundsPerSecond": 4,
+      "magazineSize": 12,
+      "reserveMagazines": 4,
+      "maxReserveMagazines": 4,
+      "reloadSeconds": 1.45,
+      "reloadTimeline": { "removalAt": 0.18, "insertionAt": 0.68 },
+      "effectiveRange": 44,
+      "recoil": {
+        "pitchPerShot": 0.85,
+        "yawPerShot": 0.25,
+        "verticalMultiplier": 1,
+        "horizontalMultiplier": 1,
+        "sustainedGrowthPerShot": 0,
+        "maxSustainedMultiplier": 1,
+        "maxClimbDegrees": 4,
+        "recoveryDelaySeconds": 0.06,
+        "recoveryPerSecond": 9,
+        "visualKick": 1.35,
+        "cameraKick": 0.75
+      },
+      "spread": {
+        "hipDegrees": 0.7,
+        "aimDegrees": 0.18,
+        "movingMultiplier": 1.4,
+        "bloomPerShot": 0.3,
+        "maxBloomDegrees": 1.5,
+        "bloomRecoveryPerSecond": 7
+      },
+      "movement": { "walkSpeedMultiplier": 1, "sprintSpeedMultiplier": 1 },
+      "assets": { "visual": "weapon.p-01" },
+      "sounds": { "fire": "pistol" },
+      "attachmentSlots": []
+    }
+  ]
+}

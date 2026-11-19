@@ -49,10 +49,11 @@ export function obstacleIntersection(
     start = Math.max(start, Math.min(a, b));
     end = Math.min(end, Math.max(a, b));
   }
+  const bottom = obstacle.bottom ?? 0;
   if (Math.abs(dy) < 1e-8) {
-    if (y < 0 || y > obstacle.height) return Infinity;
+    if (y < bottom || y > obstacle.height) return Infinity;
   } else {
-    const a = -y / dy;
+    const a = (bottom - y) / dy;
     const b = (obstacle.height - y) / dy;
     start = Math.max(start, Math.min(a, b));
     end = Math.min(end, Math.max(a, b));

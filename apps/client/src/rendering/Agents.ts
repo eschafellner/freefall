@@ -1,6 +1,6 @@
 import * as T from 'three';
-import { PLAYER_MOTION, TEAM_COLORS } from '@freefall/shared';
-import type { PlayersSnapshot, PositionXZ, ShotEvent } from '@freefall/shared';
+import { PLAYER_MOTION, TEAM_COLORS, isGroundPosture } from '@freefall/shared';
+import type { OperatorPosition, PlayersSnapshot, PostureState, ShotEvent } from '@freefall/shared';
 import { remotePose } from '../game/RemoteInterpolation.ts';
 import type { RemotePose } from '../game/RemoteInterpolation.ts';
 import type { AssetLoader } from './AssetLoader.ts';
@@ -50,8 +50,8 @@ export class PlayerView {
     }
   }
 
-  draw(a: PlayersSnapshot | undefined, b: PlayersSnapshot | undefined, alpha: number, own: string, local: PositionXZ,
-    yaw: number, pitch: number, aim: boolean, sprint: boolean, now: number, dt: number, shadows: ContactShadows, latest?: PlayersSnapshot, currentTick = latest?.tick ?? 0): void {
+  draw(a: PlayersSnapshot | undefined, b: PlayersSnapshot | undefined, alpha: number, own: string, local: OperatorPosition,
+    yaw: number, pitch: number, aim: boolean, sprint: boolean, now: number, dt: number, shadows: ContactShadows, latest?: PlayersSnapshot, currentTick = latest?.tick ?? 0, localPosture?: PostureState, localTick = currentTick): void {
     this.latest = latest ?? b ?? a;
     this.localSprint = 0;
     for (const model of this.models) model.root.visible = false;
@@ -65,21 +65,23 @@ export class PlayerView {
     if (me) {
       const model = this.models[me.slot];
       model.draw(me.id, me.life, me.hp, local.x, local.z, yaw, pitch, aim, sprint, me.reloadUntil ?? 0,
-        currentTick, now, dt, true, me.equipment);
+        localTick, now, dt, true, me.equipment, localPosture, local.y);
       this.localSprint = model.animation.sprint;
-      this.localState = model.animation.locomotion;
+      this.localState = model.animation.tactical.clip ?? model.animation.locomotion;
       this.localSpeed = model.animation.speed;
-      shadows.add(local.x, local.z, -yaw, .95, me.hp ? 1.19 : 1.65);
+      const ground = localPosture && isGroundPosture(localPosture.current);
+      shadows.add(local.x, local.z, -(ground ? localPosture.yaw : yaw), .95, ground || !me.hp ? 1.65 : 1.19);
     }
     if (!a || !b) return;
     for (const player of a.players) {
       if (player.id === own) continue;
       const next = b.players.find((p) => p.id === player.id);
-      const { x, z, yaw: heading, pitch: playerPitch, tick } = remotePose(player, a, b, alpha, next, this.pose);
-      const motion = player.motion ?? 0;
-      this.models[player.slot].draw(player.id, player.life, player.hp, x, z, heading, playerPitch,
-        Boolean(motion & PLAYER_MOTION.aim), Boolean(motion & PLAYER_MOTION.sprint), player.reloadUntil ?? 0, tick, now, dt, false, player.equipment);
-      shadows.add(x, z, -heading, .95, player.hp ? 1.19 : 1.65);
+      const { x, y, z, yaw: heading, pitch: playerPitch, tick, posture, state } = remotePose(player, a, b, alpha, next, this.pose);
+      const frame = state ?? player;
+      const motion = frame.motion ?? 0;
+      this.models[player.slot].draw(frame.id, frame.life, frame.hp, x, z, heading, playerPitch,
+        Boolean(motion & PLAYER_MOTION.aim), Boolean(motion & PLAYER_MOTION.sprint), frame.reloadUntil ?? 0, tick, now, dt, false, frame.equipment, posture, y);
+      shadows.add(x, z, -(posture?.yaw ?? heading), .95, !frame.hp || posture && isGroundPosture(posture.current) ? 1.65 : 1.19);
     }
   }
 
@@ -89,7 +91,7 @@ export class PlayerView {
     const shooter = this.latest?.players.find((p) => p.id === event.shooter);
     if (!shooter) return;
     const muzzle = this.models[shooter.slot].shot(shooter.id, this.muzzle);
-    if (!muzzle || Math.hypot(muzzle.x - event.fromX, muzzle.y - event.fromY, muzzle.z - event.fromZ) > 2) return;
+    if (event.tactical || !muzzle || Math.hypot(muzzle.x - event.fromX, muzzle.y - event.fromY, muzzle.z - event.fromZ) > 2) return;
     return muzzle;
   }
 
@@ -111,6 +113,7 @@ export class PlayerView {
       }
     }
     for (const part of [this.rifle.body, this.rifle.optic, this.rifle.magazine, this.rifle.pistol.body, this.rifle.pistol.optic, this.rifle.pistol.magazine]) part.dispose();
+    this.rifle.pistol.slide?.dispose();
     for (const material of materials) material.dispose();
   }
 }

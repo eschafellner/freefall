@@ -1,14 +1,8 @@
-import { NET, clearGroundLine, distanceSquared, openGround } from '@freefall/shared';
-import type { AlarmSnapshot, DifficultyDefinition, MissionEvent, PatrolRegion, PatrolState, PositionXZ, WorldDefinition } from '@freefall/shared';
+import { clearGroundLine, distanceSquared, openGround } from '@freefall/shared';
+import type { AlarmSnapshot, MissionBalance, MissionEvent, PatrolRegion, PatrolState, PositionXZ, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
 import { GroundNavigation } from './GroundNavigation.ts';
-
-const PERCEPTION_PERIOD = 6;
-const CALL_TICKS = 3 * NET.tickHz;
-const CONTACT_MEMORY = 6 * NET.tickHz;
-const BASE_SIGHT_RANGE = 31;
-const BASE_COOLDOWN = 35 * NET.tickHz;
 
 export interface PatrolGroup {
   readonly id: number;
@@ -46,12 +40,19 @@ export class PatrolManager {
   private readonly horde: HordeManager;
   private readonly random: () => number;
   private readonly emit: Emit;
+  /** Effective patrol and call values of this mission run. Difficulty is already applied. */
+  private readonly config: MissionBalance['patrols'];
+  private readonly calls: MissionBalance['reinforcements'];
+  private readonly limits: MissionBalance['limits'];
 
-  constructor(world: WorldDefinition, horde: HordeManager, random: () => number, emit: Emit) {
+  constructor(world: WorldDefinition, horde: HordeManager, random: () => number, emit: Emit, balance: MissionBalance) {
     this.world = world;
     this.horde = horde;
     this.random = random;
     this.emit = emit;
+    this.config = balance.patrols;
+    this.calls = balance.reinforcements;
+    this.limits = balance.limits;
     this.nav = new GroundNavigation(world);
     this.activeIds = new Uint32Array(horde.id.length);
     this.offsetX = new Float32Array(horde.x.length);
@@ -87,8 +88,8 @@ export class PatrolManager {
 
   reportNoise(position: PositionXZ, kind: 'shot' | 'explosion' | 'landing' | 'beacon', tick: number): void {
     if ((kind === 'shot' || kind === 'explosion') && tick < this.landingContactAt && distanceSquared(position, this.world.deployment) < this.world.deployment.radius ** 2) return;
-    if (this.noises.length >= 48) this.noises.shift();
-    this.noises.push({ x: position.x, z: position.z, radius: { shot: 48, explosion: 82, landing: 100, beacon: 132 }[kind], expires: tick + (kind === 'landing' || kind === 'beacon' ? 4 * NET.tickHz : 12) });
+    if (this.noises.length >= this.config.maxRememberedNoises) this.noises.shift();
+    this.noises.push({ x: position.x, z: position.z, radius: this.config.noiseRadius[kind], expires: tick + this.config.noiseLifetimeTicks[kind] });
   }
 
   canPursueSecondary(slot: number): boolean {
@@ -120,7 +121,7 @@ export class PatrolManager {
       output.z = goal.z;
     }
     this.steer(slot, output);
-    return movingOnRoute ? .71 : group.state === 'SUSPICIOUS' ? .38 : 1;
+    return movingOnRoute ? this.config.routeSpeedScale : group.state === 'SUSPICIOUS' ? this.config.suspiciousSpeedScale : 1;
   };
 
   private contact(group: PatrolGroup, players: readonly (SimPlayer | undefined)[], range: number, tick: number): SimPlayer | undefined {
@@ -132,9 +133,9 @@ export class PatrolManager {
       if (!player || player.hp <= 0 || (tick < this.landingContactAt && distanceSquared(player, this.world.deployment) < this.world.deployment.radius ** 2)) continue;
       const d2 = distanceSquared(player, group.position);
       if (d2 > nearest) continue;
-      if (!wary && d2 > 9 ** 2) {
+      if (!wary && d2 > this.config.closeAwarenessRange ** 2) {
         const dot = (player.x - x) * Math.sin(group.facing) - (player.z - z) * Math.cos(group.facing);
-        if (dot < Math.sqrt(d2) * .24) continue;
+        if (dot < Math.sqrt(d2) * this.config.fieldOfViewDot) continue;
       }
       if (!clearGroundLine(this.world, x, z, player.x, player.z)) continue;
       seen = player;
@@ -147,7 +148,7 @@ export class PatrolManager {
     if (group.alarm || !group.members.size) return;
     this.remember(group, player, tick);
     group.state = 'ALERTED';
-    group.until = tick + 10;
+    group.until = tick + this.config.alertDelayTicks;
     this.emit({ type: 'PatrolAlerted', groupId: group.id, tick });
   }
 
@@ -166,8 +167,8 @@ export class PatrolManager {
     group.state = 'RETURNING';
   }
 
-  private perceive(group: PatrolGroup, players: readonly (SimPlayer | undefined)[], tick: number, difficulty: DifficultyDefinition): void {
-    const seen = this.contact(group, players, BASE_SIGHT_RANGE * difficulty.detectionRangeMultiplier, tick);
+  private perceive(group: PatrolGroup, players: readonly (SimPlayer | undefined)[], tick: number): void {
+    const seen = this.contact(group, players, this.config.sightRange, tick);
     if (seen) {
       if (group.state === 'PATROLLING' || group.state === 'RETURNING' ||
           group.state === 'INVESTIGATING' || group.state === 'SUSPICIOUS') this.forceAlert(group, seen, tick);
@@ -184,12 +185,12 @@ export class PatrolManager {
         group.lastKnown.x = noise.x;
         group.lastKnown.z = noise.z;
         group.state = 'SUSPICIOUS';
-        group.until = tick + 18;
+        group.until = tick + this.config.suspiciousDelayTicks;
       }
     }
   }
 
-  private advance(group: PatrolGroup, tick: number, difficulty: DifficultyDefinition, canCall: boolean): void {
+  private advance(group: PatrolGroup, tick: number, canCall: boolean): void {
     const waypoint = group.region.route.waypoints[group.waypoint];
     switch (group.state) {
       case 'PATROLLING':
@@ -201,14 +202,14 @@ export class PatrolManager {
         break;
       case 'SUSPICIOUS':
         if (tick >= group.until) {
-          group.until = tick + 17 * NET.tickHz;
+          group.until = tick + this.config.investigateTicks;
           group.state = 'INVESTIGATING';
         }
         break;
       case 'INVESTIGATING':
         if (tick >= group.until || distanceSquared(group.position, group.lastKnown) < 4 ** 2) {
           group.state = 'SEARCHING';
-          group.until = tick + 3 * NET.tickHz;
+          group.until = tick + this.config.searchTicks;
         }
         break;
       case 'ALERTED':
@@ -218,18 +219,18 @@ export class PatrolManager {
         for (const [slot, id] of group.members) {
           if (!this.living(slot, id)) continue;
           group.caller = slot;
-          group.alarm = { groupId: group.id, enemyId: id, startedAt: tick, endsAt: tick + CALL_TICKS };
+          group.alarm = { groupId: group.id, enemyId: id, startedAt: tick, endsAt: tick + this.calls.callTicks };
           group.state = 'CALLING_REINFORCEMENTS';
-          group.nextCall = tick + Math.ceil(BASE_COOLDOWN * difficulty.reinforcementCooldownMultiplier);
+          group.nextCall = tick + this.calls.callCooldownTicks;
           this.emit({ type: 'ReinforcementCallStarted', ...group.alarm, tick });
           break;
         }
         break;
       case 'ENGAGING':
-        if (group.lastSeen + CONTACT_MEMORY <= tick) {
+        if (group.lastSeen + this.config.contactMemoryTicks <= tick) {
           group.target = -1;
           group.state = 'SEARCHING';
-          group.until = tick + 4 * NET.tickHz;
+          group.until = tick + this.config.lostContactSearchTicks;
         }
         break;
       case 'SEARCHING':
@@ -255,8 +256,7 @@ export class PatrolManager {
     group.state = 'ENGAGING';
   }
 
-  update(players: readonly (SimPlayer | undefined)[], tick: number, difficulty: DifficultyDefinition,
-    canCall: boolean, request: Reinforce): void {
+  update(players: readonly (SimPlayer | undefined)[], tick: number, canCall: boolean, request: Reinforce): void {
     this.activeIds.fill(0);
     for (let i = 0; i < this.horde.count; i++) {
       const slot = this.horde.active[i];
@@ -264,13 +264,13 @@ export class PatrolManager {
     }
     let ongoing = 0;
     for (const group of this.groups.values()) if (group.alarm) ongoing++;
-    const callLimit = difficulty.maxConcurrentBreaches + 1;
+    const callLimit = this.limits.maxConcurrentBreaches + 1;
     for (let i = this.noises.length - 1; i >= 0; i--) if (this.noises[i].expires < tick) this.noises.splice(i, 1);
     for (const group of this.groups.values()) {
       const hadAlarm = Boolean(group.alarm);
       this.finishCall(group, tick, request);
       if (hadAlarm && !group.alarm) ongoing--;
-      if ((tick + group.id) % PERCEPTION_PERIOD !== 0) continue;
+      if ((tick + group.id) % this.config.perceptionPeriodTicks !== 0) continue;
       let x = 0;
       let z = 0;
       for (const [slot, id] of group.members) {
@@ -295,9 +295,9 @@ export class PatrolManager {
       }
       group.position.x = x;
       group.position.z = z;
-      this.perceive(group, players, tick, difficulty);
+      this.perceive(group, players, tick);
       const stillCalling = Boolean(group.alarm);
-      this.advance(group, tick, difficulty, canCall && ongoing < callLimit);
+      this.advance(group, tick, canCall && ongoing < callLimit);
       if (!stillCalling && group.alarm) ongoing++;
       for (const slot of group.members.keys()) {
         this.horde.target[slot] = group.caller === slot ? -1 : group.target;

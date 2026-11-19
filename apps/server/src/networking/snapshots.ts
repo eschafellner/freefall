@@ -1,4 +1,4 @@
-import { ENEMY_BYTES, HORDE_HEADER, PLAYER_MOTION, POSITION_SCALE } from '@freefall/shared';
+import { ENEMY_BYTES, HORDE_HEADER, NET, PLAYER_MOTION, POSITION_SCALE, allowsPostureAction, copyPosture } from '@freefall/shared';
 import type { PlayersSnapshot } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import type { Battlefield } from '../simulation/Battlefield.ts';
@@ -23,11 +23,21 @@ export function playerSnapshot(arena: Battlefield, host: string): PlayersSnapsho
   const players: PlayersSnapshot['players'] = [];
   for (const p of arena.players) {
     if (!p) continue;
-    const { id, slot, x, z, yaw, hp, ack, life, respawnTick, kills, pitch, ammo, reloadUntil } = p;
+    const { id, slot, x, z, yaw, hp, ack, life, respawnTick, kills, pitch, ammo, reloadUntil, reload } = p;
+    const stance = p.posture;
+    const balance = arena.movementBalance;
     const motion = p.activeInput && hp > 0
-      ? (p.input.aim ? PLAYER_MOTION.aim : 0) | (p.input.sprint ? PLAYER_MOTION.sprint : 0)
+      ? (p.input.aim && allowsPostureAction(stance, 'aim', balance) ? PLAYER_MOTION.aim : 0) | (p.input.sprint && allowsPostureAction(stance, 'sprint', balance) ? PLAYER_MOTION.sprint : 0)
       : 0;
-    players.push({ id, slot, x, z, yaw, hp, ack, life, respawnTick, kills, pitch, motion, ammo, reloadUntil, equipment: { ...p.equipment } });
+    // The reload state travels only while it matters (running, or interrupted within the last second).
+    const recent = reload.phase !== 'READY' && (reload.phase !== 'RELOAD_INTERRUPTED' || arena.tick - reload.at < NET.tickHz);
+    players.push({ id, slot, x, z, yaw, hp, ack, life, respawnTick, kills, pitch, motion, ammo, reloadUntil,
+      ...(p.y > 0 && { y: p.y }),
+      ...((stance.current !== 'STANDING' || stance.until > arena.tick ||
+        (stance.started > 0 && arena.tick - stance.started < Math.ceil(NET.tickHz / NET.playerHz) + 1) ||
+        (stance.lastDive !== undefined && arena.tick < stance.lastDive + Math.ceil(balance.diveCooldownSeconds * NET.tickHz)) ||
+        (stance.standBlockedAt !== undefined && arena.tick - stance.standBlockedAt < NET.tickHz)) && { posture: copyPosture(stance) }),
+      ...(recent && { reload: { ...reload } }), equipment: { ...p.equipment, magazines: { ...p.equipment.magazines } } });
   }
   const grenades = arena.grenades.snapshot();
   return { tick: arena.tick, host, players, ...(grenades && { grenades }) };
