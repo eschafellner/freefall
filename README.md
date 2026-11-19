@@ -57,7 +57,10 @@ npm run benchmark
 npm run benchmark -- 3600 421337
 npm run benchmark -- 5400 421337 1 burst
 npm run benchmark -- mission 1800 421337 4
+node --conditions=development scripts/motion-bench.ts 60,144 lan,wan,jitter
 ```
+
+`scripts/motion-bench.ts` misst die Bewegungsglätte reproduzierbar: lokale Figur, Kamera, Remote-Operator, Korrekturen, Animationstempo und Eingabelatenz. Dafür laufen echte Server-Simulation und Client-Vorhersage gegen simulierte Display-, Server- und Netzwerkuhren. `scripts/perf-browser.mjs` misst Frametimes im gebauten Client mit Chromium und fester Bewegungsfolge. [Messprotokoll 7.1](docs/PERFORMANCE_BASELINE_7_1.md)
 
 Der Multiplayer-Test startet automatisch einen Colyseus-Server auf einem freien Loopback-Port. Der Benchmark misst Arena-Hordengrößen oder Missionsszenarien in einem Node-Prozess. Im HUD zeigt **F2** die Live-Telemetrie inklusive FPS, Draw Calls und Server-Ticks.
 
@@ -77,6 +80,10 @@ Der Prototyp ist für lokale Tests ausgelegt. Fortschritt, Inventar, Accounts, S
 [Architektur](docs/ARCHITECTURE.md) · [Performance und Messprotokoll](docs/PERFORMANCE.md) · [Boreal Relay und Rendering](docs/VISUAL_STYLE.md) · [Spielercharakter](docs/CHARACTER_SYSTEM.md) · [Fraktionen](docs/FACTIONS.md) · [Missionssystem](docs/MISSION_SYSTEM.md) · [Operation Bodenbruch](docs/MISSIONS/OPERATION_BODENBRUCH.md)
 
 [Skyfall Carrier](docs/SKYFALL_CARRIER.md) · [Game Flow](docs/GAME_FLOW.md) · [Extraktion](docs/EXTRACTION_SYSTEM.md) · [Missionsbelohnungen](docs/MISSION_REWARDS.md)
+
+## Milestone 7.1
+
+Bewegung, Kamera und Darstellung laufen jetzt stetig. Die lokale Figur interpoliert zwischen den 30-Hz-Schritten. Der Server verarbeitet jede Eingabe genau einmal, deshalb gibt es keine Reconciliation-Korrekturen mehr. Die Remote-Interpolation passt sich an Jitter an. Die Kamerakollision gibt gedämpft frei. **F2** zeigt zusätzlich das Panel „Bewegung“ und Positionsmarker. [Bewegungsqualität](docs/MOVEMENT_SMOOTHNESS.md) · [Netzwerk](docs/NETWORK_INTERPOLATION.md) · [Kamera](docs/CAMERA_SYSTEM.md)
 
 ## Milestone 6
 

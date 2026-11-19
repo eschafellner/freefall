@@ -6,6 +6,15 @@ export interface SimPlayer extends PlayerState {
   equipment: EquipmentState;
   pendingEquipment?: EquipmentCommand;
   input: PlayerInput;
+  /** Received inputs not yet applied to movement. Each one advances movement exactly once. */
+  moves: PlayerInput[];
+  moveCredit: number;
+  /** Adaptive jitter buffer: inputs held back after a short starvation. */
+  moveCushion: number;
+  moveWaiting: boolean;
+  /** Tick at which the queue ran dry (-1 while inputs flow), and of the last cushion change. */
+  moveStarvedAt: number;
+  moveCushionAt: number;
   inputTick: number;
   fireAt: number;
   protectedUntil: number;
@@ -14,6 +23,14 @@ export interface SimPlayer extends PlayerState {
   reloadUntil: number;
   reloadRequested: boolean;
   pitch: number;
+}
+
+/** Drops queued movement, e.g. on placement or disconnect. Acknowledges everything received so far. */
+export function clearMoves(player: SimPlayer): void {
+  player.moves.length = 0;
+  player.moveWaiting = true;
+  player.moveStarvedAt = -1;
+  player.ack = player.input.seq;
 }
 
 export function freshEquipment(): EquipmentState {
@@ -50,7 +67,7 @@ export function respawnPlayer(player: SimPlayer, tick: number): void {
 export function createPlayer(id: string, slot: number, tick: number): SimPlayer {
   const player: SimPlayer = {
     id, slot, x: 0, z: 0, yaw: 0, hp: 0, ack: 0, life: 0, respawnTick: 0, kills: 0,
-    equipment: freshEquipment(), input: idleInput(), inputTick: -Infinity, fireAt: 0, protectedUntil: 0, activeInput: false,
+    equipment: freshEquipment(), input: idleInput(), moves: [], moveCredit: 0, moveCushion: 0, moveWaiting: true, moveStarvedAt: -1, moveCushionAt: 0, inputTick: -Infinity, fireAt: 0, protectedUntil: 0, activeInput: false,
     ammo: 0, reloadUntil: 0, reloadRequested: false, pitch: 0,
   };
   respawnPlayer(player, tick);

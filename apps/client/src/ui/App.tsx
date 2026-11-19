@@ -28,7 +28,8 @@ function Brand() {
 
 function Metrics({ status }: { status: GameStatus }) {
   const server = status.metrics;
-  return <aside className="telemetry" aria-label="Live-Telemetrie">
+  const motion = status.motion;
+  return <><aside className="telemetry" aria-label="Live-Telemetrie">
     <div className="panel-title"><span className="signal" /> Live-Telemetrie <kbd>F2</kbd></div>
     <dl className="metrics">
       <dt>FPS / Frame</dt><dd>{Math.round(status.fps)} <span>/ {status.frameMs.toFixed(1)} ms</span></dd>
@@ -53,7 +54,22 @@ function Metrics({ status }: { status: GameStatus }) {
         <dt>Durchbrüche aktiv / gesamt</dt><dd>{status.mission.activeBreaches} / {status.mission.breachCount}</dd>
       </>}
     </dl>
-  </aside>;
+  </aside>
+  {motion && <aside className="telemetry motion-telemetry" aria-label="Bewegungstelemetrie">
+      <div className="panel-title"><span className="signal" /> Bewegung <kbd>{motion.animState}</kbd></div>
+      <dl className="metrics">
+        <dt>Frame P95 / P99</dt><dd>{motion.frameP95.toFixed(1)} <span>/ {motion.frameP99.toFixed(1)}</span></dd>
+        <dt>Snapshots / Jitter</dt><dd>{motion.snapshotHz.toFixed(0)} Hz <span>/ {motion.snapshotJitterMs.toFixed(0)} ms</span></dd>
+        <dt>Interp. / Puffer</dt><dd>{motion.interpolationMs.toFixed(0)} <span>/ {motion.bufferedMs.toFixed(0)} ms</span></dd>
+        <dt>Extrapol. / gehalten</dt><dd>{motion.extrapolatedPct.toFixed(1)} <span>/ {motion.heldPct.toFixed(1)} %</span></dd>
+        <dt>Prediction Error</dt><dd>{motion.predictionErrorCm.toFixed(1)} cm</dd>
+        <dt>Korrekturen/s / letzte</dt><dd>{motion.correctionsPerSecond.toFixed(1)} <span>/ {motion.lastCorrectionCm.toFixed(1)} cm</span></dd>
+        <dt>Korr. max / Snaps</dt><dd>{motion.maxCorrectionCm.toFixed(1)} <span>/ {motion.snaps}</span></dd>
+        <dt>Unbestätigte Eingaben</dt><dd>{motion.unacknowledged}</dd>
+        <dt>Tempo Lauf / Anim.</dt><dd>{motion.moveSpeed.toFixed(1)} <span>/ {motion.animSpeed.toFixed(1)} m/s</span></dd>
+      </dl>
+  </aside>}
+  </>;
 }
 
 export function App() {
@@ -68,6 +84,7 @@ export function App() {
   const [code, setCode] = useState(roomFromUrl);
   const [telemetry, setTelemetry] = useState(false);
   const [mode, setMode] = useState<GameMode>('mission');
+  useEffect(() => { game.current?.setTelemetry(telemetry); }, [telemetry]);
   const [copied, setCopied] = useState(false);
   const active = Boolean(status.roomId);
   const mission = status.mission;

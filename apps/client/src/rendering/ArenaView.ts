@@ -32,6 +32,8 @@ import { GroundDetails } from './environment/GroundDetails.ts';
 import { LIGHTING, createLighting } from './environment/Lighting.ts';
 import { createSurfaceMaterials } from './environment/SurfaceMaterials.ts';
 
+const FLIGHT_PHASES = new Set(['DROPPING', 'ATMOSPHERIC_ENTRY', 'BRAKING']);
+
 export class ArenaView {
   readonly canvas: HTMLCanvasElement;
   readonly renderer: T.WebGLRenderer;
@@ -69,6 +71,7 @@ export class ArenaView {
   private ownId = '';
   private readonly overview = { x: -1.8, z: 7.7 };
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
+  private debugMarkers?: { server: T.Mesh; predicted: T.Mesh };
   private post?: { composer: EffectComposer; render: RenderPass; output: OutputPass; fxaa: ShaderPass };
 
   private readonly container: HTMLElement;
@@ -237,7 +240,7 @@ export class ArenaView {
     const mission = this.missionActive ? this.mission : undefined;
     const operation = this.operation;
     const carrier = !!mission && (!state || isCarrierScene(state.state, state.phase));
-    const flying = state?.state === 'DEPLOYMENT' && ['DROPPING', 'ATMOSPHERIC_ENTRY', 'BRAKING'].includes(state.phase);
+    const flying = state?.state === 'DEPLOYMENT' && FLIGHT_PHASES.has(state.phase);
     const braking = state?.phase === 'BRAKING' && Boolean(mission);
     const groundBelow = braking && mission ? landingShip(mission.definition.world.deployment) : undefined;
     const renderCarrier = carrier && !braking;
@@ -306,7 +309,8 @@ export class ArenaView {
         } else this.markers.root.hidden = true;
       } else operation.convicts.draw([], missionTick, now, dt, this.camera, true);
     }
-    this.grenades.draw(p1, p2, pAlpha, this.camera, low);
+    // Player snapshots may be extrapolated a little (alpha > 1); grenades follow a ballistic arc and do not.
+    this.grenades.draw(p1, p2, Math.min(1, pAlpha), this.camera, low);
     this.players.drawBatches(this.camera);
     if (!mission) this.details.update(this.camera, this.quality.gravelDistance, this.quality.brushDistance);
     this.horde.draw(this.camera, carrier ? undefined : h1, carrier ? undefined : h2, hAlpha, now, this.quality, this.contact);
@@ -320,6 +324,38 @@ export class ArenaView {
     } finally {
       this.gpuTimer.end();
     }
+  }
+
+  /** Locomotion state and animation speed of the local operator (telemetry). */
+  localMotion(): { state: string; speed: number } {
+    return { state: this.players.localState, speed: this.players.localSpeed };
+  }
+
+  /**
+   * Telemetry overlay: orange ring at the last authoritative server position, cyan ring at the
+   * simulated client prediction. The rendered operator is drawn between them. Without arguments hidden.
+   */
+  debugPositions(server?: PositionXZ, predicted?: PositionXZ): void {
+    if (!server && !predicted) {
+      if (this.debugMarkers) this.debugMarkers.server.visible = this.debugMarkers.predicted.visible = false;
+      return;
+    }
+    if (!this.debugMarkers) {
+      const marker = (color: number, radius: number) => {
+        const mesh = new T.Mesh(new T.RingGeometry(radius - .045, radius, 40).rotateX(-Math.PI / 2),
+          new T.MeshBasicMaterial({ color, depthTest: false, transparent: true, opacity: .85, toneMapped: false }));
+        mesh.renderOrder = 10;
+        mesh.frustumCulled = false;
+        this.scene.add(mesh);
+        return mesh;
+      };
+      this.debugMarkers = { server: marker(0xff8a3d, .55), predicted: marker(0x5fe3ff, .42) };
+    }
+    const { server: s, predicted: p } = this.debugMarkers;
+    s.visible = !!server;
+    p.visible = !!predicted;
+    if (server) s.position.set(server.x, .04, server.z);
+    if (predicted) p.position.set(predicted.x, .05, predicted.z);
   }
 
   metrics() {

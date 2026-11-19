@@ -12,7 +12,40 @@ export const NET = {
   missionHz: 5,
   catchUpSteps: 4,
   inputTimeoutTicks: 8,
+  /** Default and starting render delay for snapshot interpolation. */
   interpolationTicks: 4,
+} as const;
+
+/**
+ * Server-side movement input buffer. Each received input moves the operator exactly once.
+ * A short backlog absorbs send and network jitter; the budget caps catch-up after a starved tick.
+ */
+export const MOVEMENT_INPUT = {
+  queue: 10,
+  /** Inputs above cushion + backlog are drained with the banked budget. */
+  backlog: 2,
+  budget: 3,
+  /** After a starved tick, movement waits until this many extra inputs are buffered (adaptive). */
+  maxCushion: 3,
+  /** Only gaps up to this many ticks count as jitter. Longer gaps are pauses (hidden tab, menu). */
+  jitterGapTicks: 4,
+  /** Ticks (60 s) without starvation before the cushion shrinks by one input. WAN spikes recur slowly. */
+  cushionDecayTicks: 1800,
+} as const;
+
+/** Client snapshot interpolation. The delay adapts to the measured arrival jitter within these bounds. */
+export const INTERPOLATION = {
+  minTicks: 2.5,
+  maxTicks: 8,
+  marginTicks: .6,
+  /** Remote operators may be extrapolated this far past the newest snapshot before they hold. */
+  extrapolationTicks: 3,
+  /** Playback-rate correction toward the target delay, as a fraction of real time. */
+  maxRateAdjust: .08,
+  /** Larger offsets than this re-anchor the playback clock instead of drifting toward it. */
+  resyncTicks: 6,
+  /** Arrival history used for jitter estimation, in milliseconds. */
+  windowMs: 3000,
 } as const;
 
 export const PLAYER = {

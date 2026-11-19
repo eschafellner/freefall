@@ -1,6 +1,8 @@
 import * as T from 'three';
-import { PLAYER_MOTION, TEAM_COLORS, lerpAngle } from '@freefall/shared';
+import { PLAYER_MOTION, TEAM_COLORS } from '@freefall/shared';
 import type { PlayersSnapshot, PositionXZ, ShotEvent } from '@freefall/shared';
+import { remotePose } from '../game/RemoteInterpolation.ts';
+import type { RemotePose } from '../game/RemoteInterpolation.ts';
 import type { AssetLoader } from './AssetLoader.ts';
 import { ASSETS, PRIMARY_WEAPON_ASSET } from './AssetRegistry.ts';
 import { PlayerRigBatches } from './characters/PlayerRigBatches.ts';
@@ -18,7 +20,10 @@ export class PlayerView {
   private disposed = false;
   private latest?: PlayersSnapshot;
   private readonly muzzle = new T.Vector3();
+  private readonly pose: RemotePose = { x: 0, z: 0, yaw: 0, pitch: 0, tick: 0 };
   localSprint = 0;
+  localState = 'idle';
+  localSpeed = 0;
 
   constructor(scene: T.Scene, assets: AssetLoader) {
     const roots = this.models.map((model) => model.root);
@@ -62,18 +67,15 @@ export class PlayerView {
       model.draw(me.id, me.life, me.hp, local.x, local.z, yaw, pitch, aim, sprint, me.reloadUntil ?? 0,
         currentTick, now, dt, true, me.equipment);
       this.localSprint = model.animation.sprint;
+      this.localState = model.animation.locomotion;
+      this.localSpeed = model.animation.speed;
       shadows.add(local.x, local.z, -yaw, .95, me.hp ? 1.19 : 1.65);
     }
     if (!a || !b) return;
-    const tick = a.tick + (b.tick - a.tick) * alpha;
     for (const player of a.players) {
       if (player.id === own) continue;
       const next = b.players.find((p) => p.id === player.id);
-      const t = next && next.life === player.life ? alpha : 0;
-      const x = player.x + ((next?.x ?? player.x) - player.x) * t;
-      const z = player.z + ((next?.z ?? player.z) - player.z) * t;
-      const heading = lerpAngle(player.yaw, next?.yaw ?? player.yaw, t);
-      const playerPitch = T.MathUtils.lerp(player.pitch ?? 0, next?.pitch ?? player.pitch ?? 0, t);
+      const { x, z, yaw: heading, pitch: playerPitch, tick } = remotePose(player, a, b, alpha, next, this.pose);
       const motion = player.motion ?? 0;
       this.models[player.slot].draw(player.id, player.life, player.hp, x, z, heading, playerPitch,
         Boolean(motion & PLAYER_MOTION.aim), Boolean(motion & PLAYER_MOTION.sprint), player.reloadUntil ?? 0, tick, now, dt, false, player.equipment);

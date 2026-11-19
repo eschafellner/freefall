@@ -15,6 +15,11 @@ export interface SoldierAsset {
   equipmentNodes?: Partial<Record<EquipmentSlot, string>>;
   /** Optional animated root whose horizontal translation and rotations are removed. */
   motionRoot?: string;
+  /**
+   * Ground speed in m/s each locomotion clip was authored for. When set, playback rate follows the
+   * rendered speed so feet stay planted (clamped to 0.6–1.6×). Unset clips play at authored rate.
+   */
+  clipSpeeds?: Partial<Record<Exclude<CharacterClip, 'idle'>, number>>;
 }
 
 export interface WeaponAsset { path: string }

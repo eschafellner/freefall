@@ -1,4 +1,4 @@
-import { MAX_PLAYERS, NET, movePlayer } from '@freefall/shared';
+import { MAX_PLAYERS, MOVEMENT_INPUT, NET, movePlayer } from '@freefall/shared';
 import type { GrenadeState, MovementBoundary, ShotEvent, WorldDefinition } from '@freefall/shared';
 import { HordeManager } from '../ecs/HordeManager.ts';
 import { UniformGrid } from '../ecs/UniformGrid.ts';
@@ -65,6 +65,8 @@ export class Battlefield {
     if (this.simulatesCombat && player.hp > 0 && input.reload && !player.input.reload) player.reloadRequested = true;
     player.input = input;
     player.inputTick = this.tick;
+    player.moves.push(input);
+    if (player.moves.length > MOVEMENT_INPUT.queue) player.moves.shift();
     return true;
   }
 
@@ -80,6 +82,50 @@ export class Battlefield {
   protected finishTick(): void {}
   protected updateTargets(): void { targetingSystem(this.horde, this.players, this.tick); }
 
+  /**
+   * Applies queued movement inputs in order, each exactly once. Prediction replays the same inputs, so the
+   * acknowledged position matches the client unless the world disagrees.
+   *
+   * Steady state is one input per tick, which keeps remote operators uniform. A tick without a queued input
+   * (network or frame jitter) grows a small cushion: movement resumes once that many extra inputs wait, so a
+   * jittery link does not alternate between zero and two steps. The cushion shrinks again after a quiet
+   * period. A backlog above cushion + MOVEMENT_INPUT.backlog drains with the banked budget, which bounds the
+   * average rate to the tick rate.
+   */
+  private consumeMoves(player: SimPlayer): void {
+    player.moveCredit = Math.min(MOVEMENT_INPUT.budget, player.moveCredit + 1);
+    if (!player.moves.length) {
+      if (!player.moveWaiting) player.moveStarvedAt = this.tick;
+      player.moveWaiting = true;
+      return;
+    }
+    if (player.moveWaiting && player.moveStarvedAt >= 0) {
+      // The stream resumed. A short gap was jitter: buffer one more input from now on.
+      if (this.tick - player.moveStarvedAt <= MOVEMENT_INPUT.jitterGapTicks) {
+        player.moveCushion = Math.min(MOVEMENT_INPUT.maxCushion, player.moveCushion + 1);
+        player.moveCushionAt = this.tick;
+      }
+      player.moveStarvedAt = -1;
+    } else if (player.moveCushion && this.tick - player.moveCushionAt > MOVEMENT_INPUT.cushionDecayTicks) {
+      player.moveCushion--;
+      player.moveCushionAt = this.tick;
+    }
+    if (player.moveWaiting && player.moves.length <= player.moveCushion &&
+        this.tick - player.inputTick <= NET.inputTimeoutTicks) return;
+    player.moveWaiting = false;
+    let consumed = 0;
+    while (player.moves.length && player.moveCredit >= 1 &&
+        (!consumed || player.moves.length > player.moveCushion + MOVEMENT_INPUT.backlog)) {
+      const move = player.moves.shift()!;
+      player.moveCredit--;
+      consumed++;
+      player.ack = move.seq;
+      if (player.hp > 0 && this.canMove(player)) {
+        movePlayer(player, move, 1 / NET.tickHz, this.movementWorld, this.movementBoundary(player));
+      }
+    }
+  }
+
   private readonly launch = (p: SimPlayer) => this.grenades.launch(p, this.tick);
   private readonly blast = (g: GrenadeState, owner: string) => this.onBlast(g, owner);
 
@@ -92,14 +138,11 @@ export class Battlefield {
         if (!player) continue;
         if (this.respawns && player.hp <= 0 && this.tick >= player.respawnTick) respawnPlayer(player, this.tick);
         player.activeInput = this.tick - player.inputTick <= NET.inputTimeoutTicks;
-        player.ack = player.input.seq;
         if (player.hp > 0 && player.activeInput) {
           player.yaw = player.input.yaw;
           player.pitch = player.input.pitch;
-          if (this.canMove(player)) {
-            movePlayer(player, player.input, 1 / NET.tickHz, this.movementWorld, this.movementBoundary(player));
-          }
         }
+        this.consumeMoves(player);
       }
     }
     if (this.simulatesCombat) {

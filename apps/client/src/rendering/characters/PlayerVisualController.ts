@@ -102,8 +102,8 @@ export class PlayerVisualController {
     this.heading += rotation;
     this.root.rotation.y = -this.heading;
 
-    const dx = fresh || Math.abs(x - this.lastX) > 1.5 ? 0 : (x - this.lastX) / Math.max(.001, dt);
-    const dz = fresh || Math.abs(z - this.lastZ) > 1.5 ? 0 : (z - this.lastZ) / Math.max(.001, dt);
+    const dx = fresh || Math.abs(x - this.lastX) > 1.5 ? 0 : (x - this.lastX) / Math.max(1e-4, dt);
+    const dz = fresh || Math.abs(z - this.lastZ) > 1.5 ? 0 : (z - this.lastZ) / Math.max(1e-4, dt);
     this.lastX = x;
     this.lastZ = z;
     const sin = Math.sin(this.heading);

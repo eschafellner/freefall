@@ -66,7 +66,8 @@ h1 span { color: var(--accent); }
 .sizes { display: grid; grid-column: span 2; grid-template-columns: repeat(5, 1fr); gap: 5px; }
 .sizes button { font: 600 12px var(--mono); color: #dde7e2; background: #17282de0; border-color: #b0c4be44; padding: 10px 4px; }
 .sizes button:hover:not(:disabled), .sizes button[aria-pressed=true] { color: var(--accent); border-color: var(--accent); }
-.telemetry { position: absolute; right: 26px; top: 91px; width: 242px; background: #101d22e8; border: 1px solid #afc1bd46; font-size: 11px; }
+.telemetry { position: absolute; right: 26px; top: 91px; width: 242px; max-height: calc(100% - 250px); overflow-y: auto; background: #101d22e8; border: 1px solid #afc1bd46; font-size: 11px; }
+.motion-telemetry { right: 276px; }
 .panel-title, .metrics-divider { display: flex; align-items: center; gap: 7px; padding: 9px 11px; text-transform: uppercase; background: #1a2a2e; }
 .panel-title kbd { margin-left: auto; font-size: 9px; }
 .signal { display: inline-block; width: 6px; height: 6px; background: var(--accent); }
@@ -113,6 +114,7 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
   .topbar { padding: 0 14px; grid-template-columns: 1fr auto; height: 55px; }
   .mission-label { display: none; }
   .telemetry { right: 12px; top: 67px; width: 208px; }
+  .motion-telemetry { right: 228px; }
   .in-menu .telemetry { display: none; }
   .operations { width: min(420px, calc(100% - 36px)); left: 18px; }
   .in-menu .vignette { background: #0b171d75; }

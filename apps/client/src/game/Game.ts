@@ -12,6 +12,27 @@ import { ArenaView } from '../rendering/ArenaView.ts';
 import { Prediction } from './Prediction.ts';
 import { MatchTimeline } from './Timeline.ts';
 
+/** Movement and network diagnostics. Only collected while the telemetry panel is open. */
+export interface MotionTelemetry {
+  frameP95: number;
+  frameP99: number;
+  snapshotHz: number;
+  snapshotJitterMs: number;
+  interpolationMs: number;
+  bufferedMs: number;
+  extrapolatedPct: number;
+  heldPct: number;
+  predictionErrorCm: number;
+  correctionsPerSecond: number;
+  lastCorrectionCm: number;
+  maxCorrectionCm: number;
+  snaps: number;
+  unacknowledged: number;
+  animState: string;
+  moveSpeed: number;
+  animSpeed: number;
+}
+
 export interface GameStatus {
   roomId: string;
   ownId: string;
@@ -44,6 +65,7 @@ export interface GameStatus {
   eliminated: boolean;
   hurt: boolean;
   respawn: number;
+  motion?: MotionTelemetry;
 }
 
 const STEP = 1000 / NET.tickHz;
@@ -86,6 +108,14 @@ export class Game {
   private lastLife = 0;
   private readonly sound = new FlightAudio();
   private readonly surface = missionGround(BODENBRUCH.world);
+  private telemetry = false;
+  private readonly frameTimes = new Float32Array(240);
+  private frameIndex = 0;
+  private frameCount = 0;
+  private travel = 0;
+  private readonly lastRendered = { x: 0, z: 0 };
+  private correctionsAt = 0;
+  private timelineFrames = 0;
 
   constructor(container: HTMLElement, publish: (status: GameStatus) => void, error: (message: string) => void, quality: QualityName) {
     this.publish = publish;
@@ -215,6 +245,19 @@ export class Game {
     this.input.lock();
   }
 
+  /** Enables movement diagnostics and the authoritative-position overlay (F2). */
+  setTelemetry(enabled: boolean): void {
+    this.telemetry = enabled;
+    this.frameCount = this.frameIndex = this.travel = this.timelineFrames = 0;
+    this.correctionsAt = this.prediction.stats.corrections;
+    const { players } = this.timeline;
+    players.extrapolatedFrames = players.heldFrames = 0;
+    if (!enabled) {
+      this.status.motion = undefined;
+      this.view.debugPositions();
+    }
+  }
+
   setQuality(quality: QualityName): void {
     this.view.setQuality(quality);
   }
@@ -262,6 +305,7 @@ export class Game {
     this.status = { ...INITIAL_STATUS };
     this.timeline = new MatchTimeline();
     this.prediction = new Prediction();
+    this.correctionsAt = 0;
     this.input.yaw = 0;
     this.input.pitch = -0.12;
     this.seq = 0;
@@ -321,10 +365,26 @@ export class Game {
         this.match.input(input);
       }
     }
-    this.prediction.sample(dt);
+    // Each step moves the operator over the following 33 ms. The visible operator follows that committed
+    // trajectory at frame time (accumulator fraction) instead of jumping once per step.
+    this.prediction.sample(dt, this.elapsed / STEP);
     const { players, horde } = this.timeline;
     players.sample(now);
     horde.sample(now);
+    if (this.telemetry) {
+      this.frameTimes[this.frameIndex] = dt * 1000;
+      this.frameIndex = (this.frameIndex + 1) % this.frameTimes.length;
+      this.frameCount = Math.min(this.frameTimes.length, this.frameCount + 1);
+      const rendered = this.prediction.rendered;
+      const step = Math.hypot(rendered.x - this.lastRendered.x, rendered.z - this.lastRendered.z);
+      if (step < 2) this.travel += step;
+      this.lastRendered.x = rendered.x;
+      this.lastRendered.z = rendered.z;
+      this.timelineFrames++;
+      const own = players.latest?.players.find((player) => player.id === this.status.ownId);
+      if (own) this.view.debugPositions(own, this.prediction.position);
+      else this.view.debugPositions();
+    }
     const mission = this.status.mission;
     const missionTick = Math.max(mission?.tick ?? 0, this.tick + Math.min(3, Math.max(0, (now - this.tickAt) / STEP)));
     this.view.draw(
@@ -360,6 +420,7 @@ export class Game {
       this.status.interaction = this.interaction();
       if (now >= this.noticeUntil) this.status.notice = '';
       this.status.respawn = own && !own.hp ? Math.max(0, (own.respawnTick - this.tick) / NET.tickHz) : 0;
+      if (this.telemetry) this.collectMotion(now - this.sampleAt, own);
       this.sampleAt = now;
       this.frames = 0;
       this.cpuTotal = 0;
@@ -369,6 +430,29 @@ export class Game {
     }
     this.frame = requestAnimationFrame(this.draw);
   };
+
+  private collectMotion(windowMs: number, own: PlayerState | undefined): void {
+    const times = Array.from(this.frameTimes.subarray(0, this.frameCount)).sort((a, b) => a - b);
+    const q = (p: number) => times.length ? times[Math.min(times.length - 1, Math.ceil(times.length * p) - 1)] : 0;
+    const { players } = this.timeline;
+    const stats = this.prediction.stats;
+    const frames = Math.max(1, this.timelineFrames);
+    const local = this.view.localMotion();
+    this.status.motion = {
+      frameP95: q(.95), frameP99: q(.99),
+      snapshotHz: players.rate, snapshotJitterMs: players.jitterTicks * STEP,
+      interpolationMs: players.delayTicks * STEP, bufferedMs: players.bufferedTicks * STEP,
+      extrapolatedPct: players.extrapolatedFrames / frames * 100, heldPct: players.heldFrames / frames * 100,
+      predictionErrorCm: this.prediction.error * 100,
+      correctionsPerSecond: (stats.corrections - this.correctionsAt) * 1000 / Math.max(1, windowMs),
+      lastCorrectionCm: stats.lastCorrection * 100, maxCorrectionCm: stats.maxCorrection * 100, snaps: stats.snaps,
+      unacknowledged: this.prediction.unacknowledged,
+      animState: local.state, moveSpeed: this.travel * 1000 / Math.max(1, windowMs), animSpeed: local.speed,
+    };
+    this.correctionsAt = stats.corrections;
+    this.travel = this.timelineFrames = 0;
+    players.extrapolatedFrames = players.heldFrames = 0;
+  }
 
   dispose(): void {
     this.disposed = true;

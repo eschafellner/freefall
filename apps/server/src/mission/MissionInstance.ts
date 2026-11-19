@@ -10,7 +10,7 @@ import type {
 } from '@freefall/shared';
 import { idleInput } from '../networking/input.ts';
 import { Battlefield } from '../simulation/Battlefield.ts';
-import { cancelEquipment, freshEquipment, respawnPlayer } from '../simulation/Player.ts';
+import { cancelEquipment, clearMoves, freshEquipment, respawnPlayer } from '../simulation/Player.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
 import { blastDamage } from '../systems/grenades.ts';
 import type { MeleeObject } from '../systems/combat.ts';
@@ -111,6 +111,7 @@ export class MissionInstance extends Battlefield {
     player.input = { ...idleInput(), seq: player.input.seq, yaw };
     player.activeInput = false;
     player.inputTick = -Infinity;
+    clearMoves(player);
   }
 
   private placeInCarrier(player: SimPlayer): void {
@@ -138,6 +139,7 @@ export class MissionInstance extends Battlefield {
     player.reloadRequested = false;
     player.activeInput = false;
     player.inputTick = -Infinity;
+    clearMoves(player);
     this.ready.delete(id);
     this.returnVotes.delete(id);
     if (this.extraction.current?.phase !== 'LIFT') this.extraction.release(id);
@@ -407,6 +409,7 @@ export class MissionInstance extends Battlefield {
           player.protectedUntil = extraction.endsAt + 1;
           player.activeInput = false;
           player.inputTick = -Infinity;
+          clearMoves(player);
         }
       }
     }

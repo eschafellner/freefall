@@ -3,6 +3,10 @@ import type { SoldierAsset } from '../AssetRegistry.ts';
 import type { CharacterAnimation, CharacterClip, Locomotion } from './CharacterAnimation.ts';
 
 const LOOP_STATES = ['idle', 'walk', 'run', 'sprint', 'strafeLeft', 'strafeRight', 'backward', 'aim'] as const;
+const GAITS = new Set<CharacterClip>(['walk', 'run', 'sprint', 'strafeLeft', 'strafeRight', 'backward']);
+const FADE = .15;
+/** Gait-to-gait blends keep the foot phase and may be a little longer without looking late. */
+const GAIT_FADE = .22;
 const ONE_SHOTS = ['fire', 'reload', 'hit', 'death'] as const;
 const LOCOMOTION_FALLBACK: Record<Locomotion, readonly CharacterClip[]> = {
   idle: [],
@@ -34,11 +38,14 @@ export class CharacterClipPlayer {
   private readonly model: T.Object3D;
   private readonly mixer: T.AnimationMixer;
   private readonly actions = new Map<CharacterClip, T.AnimationAction>();
+  private readonly states = new Map<T.AnimationAction, CharacterClip>();
+  private readonly speeds: SoldierAsset['clipSpeeds'];
   private active?: T.AnimationAction;
 
   constructor(model: T.Object3D, clips: readonly T.AnimationClip[], asset: SoldierAsset) {
     this.model = model;
     this.mixer = new T.AnimationMixer(model);
+    this.speeds = asset.clipSpeeds;
     for (const state of [...LOOP_STATES, ...ONE_SHOTS]) {
       const name = (asset.clips?.[state] ?? state).toLowerCase();
       const clip = clips.find((item) => item.name.toLowerCase() === name);
@@ -49,6 +56,7 @@ export class CharacterClipPlayer {
         action.clampWhenFinished = true;
       }
       this.actions.set(state, action);
+      this.states.set(action, state);
     }
   }
 
@@ -79,10 +87,23 @@ export class CharacterClipPlayer {
     else if (state.combat === 'fire') next = this.actions.get('fire') ?? next;
     else if (state.combat === 'aim' && state.locomotion === 'idle') next = this.actions.get('aim') ?? next;
     if (next !== this.active) {
-      this.active?.fadeOut(.15);
-      next?.reset().fadeIn(.15).play();
+      const from = this.active;
+      const fromState = from && this.states.get(from);
+      const nextState = next && this.states.get(next);
+      const gait = !!fromState && !!nextState && GAITS.has(fromState) && GAITS.has(nextState);
+      const fade = gait ? GAIT_FADE : FADE;
+      from?.fadeOut(fade);
+      if (next) {
+        next.reset();
+        // Walk → run → sprint and direction changes continue the step cycle instead of restarting it.
+        if (gait && from) next.time = (from.time / from.getClip().duration % 1) * next.getClip().duration;
+        next.fadeIn(fade).play();
+      }
       this.active = next;
     }
+    const clip = next && this.states.get(next);
+    const authored = clip && clip !== 'idle' && GAITS.has(clip) ? this.speeds?.[clip as Exclude<CharacterClip, 'idle'>] : undefined;
+    if (next && authored) next.timeScale = T.MathUtils.clamp(state.speed / authored, .6, 1.6);
     if (state.reload >= 0 && next && next === this.actions.get('reload')) {
       // Evaluate at server progress regardless of the authored clip length.
       next.paused = true;
