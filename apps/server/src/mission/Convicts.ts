@@ -1,4 +1,4 @@
-import { NET, clearGroundLine, distanceSquared, moveOnGround } from '@freefall/shared';
+import { NET, clearGroundLine, distanceSquared, groundHeight, moveOnGround } from '@freefall/shared';
 import type { ConvictSnapshot, MissionBalance, PositionXZ, ShotEvent, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import { damageEnemy } from '../systems/combat.ts';
@@ -91,12 +91,14 @@ export class Convicts {
         continue;
       }
       member.state = 'FIRING';
-      member.fireAt = tick + Math.ceil(NET.tickHz / rate);
+      // Fractional schedule: sustained fire averages exactly `roundsPerSecond` instead of rounding every
+      // interval up to whole ticks. A pause (no target, reload) restarts the schedule at the current tick.
+      member.fireAt = (member.fireAt > tick - 1 ? member.fireAt : tick) + NET.tickHz / rate;
       member.ammo--;
       const toX = horde.x[closest], toZ = horde.z[closest], enemy = horde.id[closest];
       member.yaw = Math.atan2(toX - member.x, member.z - toZ);
-      shots.push({ shooter: member.id, fromX: member.x, fromY: 1.24, fromZ: member.z,
-        toX, toY: .6, toZ, enemy, eliminated: damageEnemy(horde, closest, damage) });
+      shots.push({ shooter: member.id, fromX: member.x, fromY: groundHeight(world, member.x, member.z) + 1.24, fromZ: member.z,
+        toX, toY: groundHeight(world, toX, toZ) + .6, toZ, enemy, impact: { kind: 'enemy' }, eliminated: damageEnemy(horde, closest, damage) });
     }
   }
 

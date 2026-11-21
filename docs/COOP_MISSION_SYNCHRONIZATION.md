@@ -1,0 +1,9 @@
+# Gemeinsame Koop-Mission
+
+Der Colyseus-Room hält bis zu vier Operatoren und eine autoritative MissionInstance. Nur der Host darf am physischen Carrier-Terminal einen Auftrag wählen und starten. Das Startpaket für einen generierten Auftrag referenziert den bereits bestätigten Plan. Die Serverphase sperrt spätere Planänderungen.
+
+`mission-state` repliziert die Referenz `planId` zusammen mit Phase, Zielen, Encounter, Nestern, Nachschub, Extraktion und Ergebnis. Der vorhandene Kanal aktualisiert mit 5 Hz sowie bei Phasenwechseln. Kennt der Client die Referenz noch nicht, fordert er den genau dazugehörigen `mission-plan` einmal an. Bis zur Antwort hält er den jüngsten Snapshot zu dieser Referenz zurück. Der Client verwendet den unveränderten Plan im weiteren Einsatz und bei SDK-Reconnect. Neue Verbindungen können ihn erneut abrufen. Der Client führt keine Generierung durch. Ein zuverlässiger Ereigniskanal liefert diskrete Zustandsänderungen und Fortschrittsfeedback, während die Snapshots den aktuellen Zustand wiederherstellen.
+
+Eine gleichzeitige Relay-Aktivierung wird nacheinander verarbeitet. Die erste setzt den Zielzustand auf `defending` oder `complete`, die zweite sieht den neuen Zustand. Ein Disconnect beendet persönliche Equipmentaktionen und entfernt die aktive Teilnahme an einer Verteidigungszone. Ein freier Reconnect-Slot bleibt 12 Sekunden reserviert. Wiederverbundene Operatoren übernehmen die existierende Session, Einsatz-UUID, Plan-ID und den aktuellen Verteidigungstimer. Neue Operatoren dürfen bis einschließlich Boarding einsteigen. Ab Deployment ist der Trupp geschlossen. Neustart des Raums oder Servers beendet die In-Memory-Instanz.
+
+Das Ergebnis und seine EP folgen der bestehenden Teilnehmerliste. Für spätere dauerhafte Belohnungen stehen die einmalige Ergebnis-ID sowie die bestehenden individuellen Rewards zur Verfügung. Eine persistente Abrechnung braucht eine Account-ID und eine idempotente Resultattransaktion.

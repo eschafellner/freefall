@@ -15,7 +15,8 @@
     "test": "node --conditions=development --test --test-isolation=none apps/server/test/*.test.ts apps/client/test/*.test.ts",
     "benchmark": "node --conditions=development apps/server/src/benchmark.ts",
     "balance:check": "node --conditions=development scripts/balance-check.ts",
-    "balance:trace": "node --conditions=development apps/server/test/support/balance-trace.ts"
+    "balance:trace": "node --conditions=development apps/server/test/support/balance-trace.ts",
+    "assets:check": "node --conditions=development scripts/check-character-asset.ts"
   },
   "devDependencies": {
     "@types/node": "^24",

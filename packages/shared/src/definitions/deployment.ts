@@ -2,6 +2,7 @@ import { NET } from '../config/arena.ts';
 import { BALANCE } from '../balance/defaults.ts';
 import { ALBATROSS_VEHICLE_ID } from '../balance/registry.ts';
 import type { PositionXZ } from '../config/movement.ts';
+import { WORLD_PROFILES } from '../world/PlanetProfiles.ts';
 import { BODENBRUCH } from './missions.ts';
 import type { Obstacle, WorldDefinition } from './missions.ts';
 
@@ -12,7 +13,10 @@ export interface PlanetDefinition {
 }
 
 const devAult: PlanetDefinition = { id: 'dev-ault', displayName: "Dev' Ault", missions: [BODENBRUCH.id] };
-export const PLANET_REGISTRY: ReadonlyMap<string, PlanetDefinition> = new Map([[devAult.id, devAult]]);
+export const PLANET_REGISTRY: ReadonlyMap<string, PlanetDefinition> = new Map([
+  [devAult.id, devAult],
+  ...Array.from(WORLD_PROFILES.values(), ({ id, displayName }): [string, PlanetDefinition] => [id, { id, displayName, missions: [] }]),
+]);
 export const CARRIER_CONSOLE = { x: 0, z: 0, radius: 5 };
 export const CARRIER_SPAWN = { x: 0, z: 12, radius: 4, facing: 0 };
 export const CARRIER_SHIP = { x: 0, z: -31 };
@@ -63,7 +67,7 @@ export function albatrossCollision(ship: PositionXZ): Obstacle[] {
     block(ship.x - ALBATROSS.halfWidth, ship.z, .22, ALBATROSS.halfLength, 3.4),
     block(ship.x + ALBATROSS.halfWidth, ship.z, .22, ALBATROSS.halfLength, 3.4),
     block(ship.x, ship.z - ALBATROSS.halfLength, ALBATROSS.halfWidth, .22, 3.4),
-  ];
+  ].map((obstacle) => ({ ...obstacle, surface: 'metal' }));
 }
 
 // Service frame beside the mess, outside the deployment route.

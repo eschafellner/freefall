@@ -1,0 +1,980 @@
+{
+  "chromium": {
+    "chromium": "153.0.8010.12",
+    "metrics": [
+      {
+        "planet": "ice",
+        "weather": "windy-snow",
+        "rms": [
+          0.0011700664684071488,
+          0.001228653319690899
+        ],
+        "status": "running · 2/28 Stimmen · 65.7 MiB · 0 Fehler"
+      },
+      {
+        "planet": "desert",
+        "weather": "light-dust-gusts",
+        "rms": [
+          0.006418537871574898,
+          0.007766889939213792
+        ],
+        "status": "running · 2/28 Stimmen · 66.6 MiB · 0 Fehler"
+      },
+      {
+        "planet": "green-plains",
+        "weather": "windy",
+        "rms": [
+          0.0017608804769892663,
+          0.0012342344213455813
+        ],
+        "status": "running · 2/28 Stimmen · 65.9 MiB · 0 Fehler"
+      },
+      {
+        "planet": "forest",
+        "weather": "windy-forest",
+        "rms": [
+          0.0014334684282699443,
+          0.0019526587242030492
+        ],
+        "status": "running · 2/28 Stimmen · 70.7 MiB · 0 Fehler"
+      }
+    ],
+    "spatial": {
+      "left": [
+        0.004886974287281622,
+        0.0011536579938885344
+      ],
+      "right": [
+        0.001285012711865652,
+        0.005443401066255985
+      ],
+      "fartherRight": [
+        8.535728588020997e-05,
+        0.0012435365151834078
+      ]
+    },
+    "ducking": true,
+    "stress": "running · 23/28 Stimmen · 978 verworfen",
+    "files": [
+      {
+        "file": "ice-bed.ogg",
+        "seconds": 120,
+        "channels": 2,
+        "peak": 0.5103693008422852,
+        "rms": 0.05134807459776138,
+        "seam": 0.02062668278813362,
+        "localDelta": 0.022114526480436325
+      },
+      {
+        "file": "ice-bed.mp3",
+        "seconds": 120,
+        "channels": 2,
+        "peak": 0.5146171450614929,
+        "rms": 0.05216634897590237,
+        "seam": 0.013426139950752258,
+        "localDelta": 0.024909012019634247
+      },
+      {
+        "file": "ice-wind.ogg",
+        "seconds": 59.5,
+        "channels": 2,
+        "peak": 0.6887959837913513,
+        "rms": 0.03211110703027724,
+        "seam": 0.002563290749094449,
+        "localDelta": 0.005192059092223644
+      },
+      {
+        "file": "ice-wind.mp3",
+        "seconds": 59.5,
+        "channels": 2,
+        "peak": 0.6660271883010864,
+        "rms": 0.032497289254383534,
+        "seam": 0.0026580453559290618,
+        "localDelta": 0.006477058865129948
+      },
+      {
+        "file": "desert-bed.ogg",
+        "seconds": 144.6,
+        "channels": 2,
+        "peak": 0.36925816535949707,
+        "rms": 0.046013400119110016,
+        "seam": 0.010050046257674694,
+        "localDelta": 0.024066951125860214
+      },
+      {
+        "file": "desert-bed.mp3",
+        "seconds": 144.6,
+        "channels": 2,
+        "peak": 0.3796983063220978,
+        "rms": 0.0469150143297333,
+        "seam": 0.010978544130921364,
+        "localDelta": 0.026723138988018036
+      },
+      {
+        "file": "desert-wind.ogg",
+        "seconds": 37.2,
+        "channels": 2,
+        "peak": 0.339470237493515,
+        "rms": 0.04548496425811727,
+        "seam": 0.005748167634010315,
+        "localDelta": 0.03179347515106201
+      },
+      {
+        "file": "desert-wind.mp3",
+        "seconds": 37.2,
+        "channels": 2,
+        "peak": 0.3342905342578888,
+        "rms": 0.046237594118610045,
+        "seam": 0.005084477365016937,
+        "localDelta": 0.030713047832250595
+      },
+      {
+        "file": "plains-bed.ogg",
+        "seconds": 76.2,
+        "channels": 2,
+        "peak": 0.13370510935783386,
+        "rms": 0.010879374111233386,
+        "seam": 0.0021883342415094376,
+        "localDelta": 0.030896770767867565
+      },
+      {
+        "file": "plains-bed.mp3",
+        "seconds": 76.2,
+        "channels": 2,
+        "peak": 0.14712443947792053,
+        "rms": 0.011046642281708168,
+        "seam": 0.005265709012746811,
+        "localDelta": 0.03470011614263058
+      },
+      {
+        "file": "plains-wind.ogg",
+        "seconds": 103.8,
+        "channels": 2,
+        "peak": 0.3492159843444824,
+        "rms": 0.03520728448364631,
+        "seam": 0.027964334934949875,
+        "localDelta": 0.05748069589026272
+      },
+      {
+        "file": "plains-wind.mp3",
+        "seconds": 103.8,
+        "channels": 2,
+        "peak": 0.34306421875953674,
+        "rms": 0.03572134640150902,
+        "seam": 0.030681448988616467,
+        "localDelta": 0.05457037687301636
+      },
+      {
+        "file": "forest-bed.ogg",
+        "seconds": 121.8,
+        "channels": 2,
+        "peak": 0.23371465504169464,
+        "rms": 0.010728070500069853,
+        "seam": 0.0029914136976003647,
+        "localDelta": 0.007176108425483108
+      },
+      {
+        "file": "forest-bed.mp3",
+        "seconds": 121.8,
+        "channels": 2,
+        "peak": 0.2317114919424057,
+        "rms": 0.010948540245022472,
+        "seam": 0.003708089701831341,
+        "localDelta": 0.007485681038815528
+      },
+      {
+        "file": "forest-wind.ogg",
+        "seconds": 71.3,
+        "channels": 2,
+        "peak": 0.39607852697372437,
+        "rms": 0.04155104754115305,
+        "seam": 0.017018934711813927,
+        "localDelta": 0.041481330059468746
+      },
+      {
+        "file": "forest-wind.mp3",
+        "seconds": 71.3,
+        "channels": 2,
+        "peak": 0.4217239022254944,
+        "rms": 0.042242555262783595,
+        "seam": 0.01911444589495659,
+        "localDelta": 0.04095655959099531
+      },
+      {
+        "file": "carrier.ogg",
+        "seconds": 71.7,
+        "channels": 2,
+        "peak": 0.25692906975746155,
+        "rms": 0.0476760143085285,
+        "seam": 0.005395606160163879,
+        "localDelta": 0.011543024331331253
+      },
+      {
+        "file": "carrier.mp3",
+        "seconds": 71.7,
+        "channels": 2,
+        "peak": 0.2503678798675537,
+        "rms": 0.047901110904094824,
+        "seam": 0.008999103680253029,
+        "localDelta": 0.011760089546442032
+      },
+      {
+        "file": "lander.ogg",
+        "seconds": 4.3,
+        "channels": 1,
+        "peak": 0.5512157678604126,
+        "rms": 0.13745768940626304,
+        "seam": 0.017867378890514374,
+        "localDelta": 0.020335853099822998
+      },
+      {
+        "file": "lander.mp3",
+        "seconds": 4.3,
+        "channels": 1,
+        "peak": 0.545389711856842,
+        "rms": 0.13822088155535475,
+        "seam": 0.018353881314396858,
+        "localDelta": 0.020523279905319214
+      },
+      {
+        "file": "recovery.ogg",
+        "seconds": 5.17,
+        "channels": 1,
+        "peak": 0.46390196681022644,
+        "rms": 0.13389327421602315,
+        "seam": 0.04859499633312225,
+        "localDelta": 0.08407719433307648
+      },
+      {
+        "file": "recovery.mp3",
+        "seconds": 5.17,
+        "channels": 1,
+        "peak": 0.4712381660938263,
+        "rms": 0.1353260407328149,
+        "seam": 0.061615169048309326,
+        "localDelta": 0.08718198537826538
+      },
+      {
+        "file": "snow-1.ogg",
+        "seconds": 0.536,
+        "channels": 1,
+        "peak": 0.6480116844177246,
+        "rms": 0.06565088179402655
+      },
+      {
+        "file": "snow-1.mp3",
+        "seconds": 0.54,
+        "channels": 1,
+        "peak": 0.6734124422073364,
+        "rms": 0.06660112955527146
+      },
+      {
+        "file": "snow-2.ogg",
+        "seconds": 0.536,
+        "channels": 1,
+        "peak": 0.6680734157562256,
+        "rms": 0.06593494152939278
+      },
+      {
+        "file": "snow-2.mp3",
+        "seconds": 0.54,
+        "channels": 1,
+        "peak": 0.6651033163070679,
+        "rms": 0.06592711861997747
+      },
+      {
+        "file": "snow-3.ogg",
+        "seconds": 0.536,
+        "channels": 1,
+        "peak": 0.6745507121086121,
+        "rms": 0.044269003430617994
+      },
+      {
+        "file": "snow-3.mp3",
+        "seconds": 0.54,
+        "channels": 1,
+        "peak": 0.666704535484314,
+        "rms": 0.044299965273712535
+      },
+      {
+        "file": "snow-4.ogg",
+        "seconds": 0.536,
+        "channels": 1,
+        "peak": 0.5346112251281738,
+        "rms": 0.08678310632235728
+      },
+      {
+        "file": "snow-4.mp3",
+        "seconds": 0.54,
+        "channels": 1,
+        "peak": 0.5186042785644531,
+        "rms": 0.08628370390391304
+      },
+      {
+        "file": "ice-1.ogg",
+        "seconds": 0.526,
+        "channels": 1,
+        "peak": 0.6320773363113403,
+        "rms": 0.07317909033005884
+      },
+      {
+        "file": "ice-1.mp3",
+        "seconds": 0.53,
+        "channels": 1,
+        "peak": 0.6842414140701294,
+        "rms": 0.07405273433837939
+      },
+      {
+        "file": "ice-2.ogg",
+        "seconds": 0.526,
+        "channels": 1,
+        "peak": 0.5933889150619507,
+        "rms": 0.07174475723588006
+      },
+      {
+        "file": "ice-2.mp3",
+        "seconds": 0.53,
+        "channels": 1,
+        "peak": 0.6220106482505798,
+        "rms": 0.07231031866095868
+      },
+      {
+        "file": "ice-3.ogg",
+        "seconds": 0.526,
+        "channels": 1,
+        "peak": 0.632310688495636,
+        "rms": 0.06704079848284758
+      },
+      {
+        "file": "ice-3.mp3",
+        "seconds": 0.53,
+        "channels": 1,
+        "peak": 0.6778812408447266,
+        "rms": 0.06855840319986514
+      },
+      {
+        "file": "ice-4.ogg",
+        "seconds": 0.526,
+        "channels": 1,
+        "peak": 0.6201346516609192,
+        "rms": 0.07211762142395557
+      },
+      {
+        "file": "ice-4.mp3",
+        "seconds": 0.53,
+        "channels": 1,
+        "peak": 0.5784140229225159,
+        "rms": 0.072190441185862
+      },
+      {
+        "file": "sand-1.ogg",
+        "seconds": 0.486,
+        "channels": 1,
+        "peak": 0.6650470495223999,
+        "rms": 0.018585227606965134
+      },
+      {
+        "file": "sand-1.mp3",
+        "seconds": 0.49,
+        "channels": 1,
+        "peak": 0.667884349822998,
+        "rms": 0.018794029442977582
+      },
+      {
+        "file": "sand-2.ogg",
+        "seconds": 0.486,
+        "channels": 1,
+        "peak": 0.6202260851860046,
+        "rms": 0.04555552643093164
+      },
+      {
+        "file": "sand-2.mp3",
+        "seconds": 0.49,
+        "channels": 1,
+        "peak": 0.6648392081260681,
+        "rms": 0.046746840010269915
+      },
+      {
+        "file": "sand-3.ogg",
+        "seconds": 0.486,
+        "channels": 1,
+        "peak": 0.6469729542732239,
+        "rms": 0.03206428305859139
+      },
+      {
+        "file": "sand-3.mp3",
+        "seconds": 0.49,
+        "channels": 1,
+        "peak": 0.6664329171180725,
+        "rms": 0.03290302571904164
+      },
+      {
+        "file": "sand-4.ogg",
+        "seconds": 0.486,
+        "channels": 1,
+        "peak": 0.6169159412384033,
+        "rms": 0.027699481201262824
+      },
+      {
+        "file": "sand-4.mp3",
+        "seconds": 0.49,
+        "channels": 1,
+        "peak": 0.6681928634643555,
+        "rms": 0.027959034849277878
+      },
+      {
+        "file": "grass-1.ogg",
+        "seconds": 0.526,
+        "channels": 1,
+        "peak": 0.6515664458274841,
+        "rms": 0.06277941798928661
+      },
+      {
+        "file": "grass-1.mp3",
+        "seconds": 0.53,
+        "channels": 1,
+        "peak": 0.6687853336334229,
+        "rms": 0.062329327572336085
+      },
+      {
+        "file": "grass-2.ogg",
+        "seconds": 0.526,
+        "channels": 1,
+        "peak": 0.6675097346305847,
+        "rms": 0.05485924302624974
+      },
+      {
+        "file": "grass-2.mp3",
+        "seconds": 0.53,
+        "channels": 1,
+        "peak": 0.6639770865440369,
+        "rms": 0.05505081268550904
+      },
+      {
+        "file": "grass-3.ogg",
+        "seconds": 0.526,
+        "channels": 1,
+        "peak": 0.6556658148765564,
+        "rms": 0.04730020689779249
+      },
+      {
+        "file": "grass-3.mp3",
+        "seconds": 0.53,
+        "channels": 1,
+        "peak": 0.6691069602966309,
+        "rms": 0.04737159742743117
+      },
+      {
+        "file": "grass-4.ogg",
+        "seconds": 0.526,
+        "channels": 1,
+        "peak": 0.670549213886261,
+        "rms": 0.05680442110804418
+      },
+      {
+        "file": "grass-4.mp3",
+        "seconds": 0.53,
+        "channels": 1,
+        "peak": 0.6871811151504517,
+        "rms": 0.05707743683135566
+      },
+      {
+        "file": "dirt-1.ogg",
+        "seconds": 0.516,
+        "channels": 1,
+        "peak": 0.6641775965690613,
+        "rms": 0.027592339739532876
+      },
+      {
+        "file": "dirt-1.mp3",
+        "seconds": 0.52,
+        "channels": 1,
+        "peak": 0.6659868359565735,
+        "rms": 0.027377882491763234
+      },
+      {
+        "file": "dirt-2.ogg",
+        "seconds": 0.516,
+        "channels": 1,
+        "peak": 0.6609402298927307,
+        "rms": 0.024898327413667064
+      },
+      {
+        "file": "dirt-2.mp3",
+        "seconds": 0.52,
+        "channels": 1,
+        "peak": 0.6670079231262207,
+        "rms": 0.02491766475340133
+      },
+      {
+        "file": "dirt-3.ogg",
+        "seconds": 0.516,
+        "channels": 1,
+        "peak": 0.6603888273239136,
+        "rms": 0.04173123833137135
+      },
+      {
+        "file": "dirt-3.mp3",
+        "seconds": 0.52,
+        "channels": 1,
+        "peak": 0.6688912510871887,
+        "rms": 0.04164969035775371
+      },
+      {
+        "file": "dirt-4.ogg",
+        "seconds": 0.516,
+        "channels": 1,
+        "peak": 0.6816006302833557,
+        "rms": 0.04062465066159069
+      },
+      {
+        "file": "dirt-4.mp3",
+        "seconds": 0.52,
+        "channels": 1,
+        "peak": 0.6676772832870483,
+        "rms": 0.040386777227597905
+      },
+      {
+        "file": "rock-1.ogg",
+        "seconds": 0.506,
+        "channels": 1,
+        "peak": 0.6593029499053955,
+        "rms": 0.04090870202377834
+      },
+      {
+        "file": "rock-1.mp3",
+        "seconds": 0.51,
+        "channels": 1,
+        "peak": 0.6685144305229187,
+        "rms": 0.041316825438935396
+      },
+      {
+        "file": "rock-2.ogg",
+        "seconds": 0.506,
+        "channels": 1,
+        "peak": 0.644121527671814,
+        "rms": 0.03854221164894981
+      },
+      {
+        "file": "rock-2.mp3",
+        "seconds": 0.51,
+        "channels": 1,
+        "peak": 0.6698699593544006,
+        "rms": 0.03862539690870478
+      },
+      {
+        "file": "rock-3.ogg",
+        "seconds": 0.506,
+        "channels": 1,
+        "peak": 0.6633548140525818,
+        "rms": 0.04086322060077917
+      },
+      {
+        "file": "rock-3.mp3",
+        "seconds": 0.51,
+        "channels": 1,
+        "peak": 0.6738516092300415,
+        "rms": 0.041137449935456205
+      },
+      {
+        "file": "rock-4.ogg",
+        "seconds": 0.506,
+        "channels": 1,
+        "peak": 0.6602091193199158,
+        "rms": 0.026210392314070147
+      },
+      {
+        "file": "rock-4.mp3",
+        "seconds": 0.51,
+        "channels": 1,
+        "peak": 0.6588015556335449,
+        "rms": 0.02636276590612344
+      },
+      {
+        "file": "ice-crack-1.ogg",
+        "seconds": 1.4,
+        "channels": 1,
+        "peak": 0.6488128304481506,
+        "rms": 0.013003666957746176
+      },
+      {
+        "file": "ice-crack-1.mp3",
+        "seconds": 1.4,
+        "channels": 1,
+        "peak": 0.6688578724861145,
+        "rms": 0.012610159814693989
+      },
+      {
+        "file": "ice-crack-2.ogg",
+        "seconds": 1.4,
+        "channels": 1,
+        "peak": 0.6538099646568298,
+        "rms": 0.014942767425392332
+      },
+      {
+        "file": "ice-crack-2.mp3",
+        "seconds": 1.4,
+        "channels": 1,
+        "peak": 0.6644845604896545,
+        "rms": 0.015344225971494787
+      },
+      {
+        "file": "ice-crack-3.ogg",
+        "seconds": 1.4,
+        "channels": 1,
+        "peak": 0.6338856816291809,
+        "rms": 0.02337770920180657
+      },
+      {
+        "file": "ice-crack-3.mp3",
+        "seconds": 1.4,
+        "channels": 1,
+        "peak": 0.6631147265434265,
+        "rms": 0.023866606283551473
+      },
+      {
+        "file": "desert-grit-1.ogg",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.63768070936203,
+        "rms": 0.02768839967941937
+      },
+      {
+        "file": "desert-grit-1.mp3",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6700878739356995,
+        "rms": 0.028327579124071824
+      },
+      {
+        "file": "desert-grit-2.ogg",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6768108010292053,
+        "rms": 0.014408261863332258
+      },
+      {
+        "file": "desert-grit-2.mp3",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6673564910888672,
+        "rms": 0.014535052599516578
+      },
+      {
+        "file": "desert-grit-3.ogg",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6177791357040405,
+        "rms": 0.02339168899878772
+      },
+      {
+        "file": "desert-grit-3.mp3",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6677048206329346,
+        "rms": 0.02407465827389757
+      },
+      {
+        "file": "grass-rustle-1.ogg",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.11845128983259201,
+        "rms": 0.009893175735375863
+      },
+      {
+        "file": "grass-rustle-1.mp3",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.1299501210451126,
+        "rms": 0.010106367632105519
+      },
+      {
+        "file": "grass-rustle-2.ogg",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.08943052589893341,
+        "rms": 0.0049596108573320245
+      },
+      {
+        "file": "grass-rustle-2.mp3",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.09317026287317276,
+        "rms": 0.0051372045159493104
+      },
+      {
+        "file": "grass-rustle-3.ogg",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.25257301330566406,
+        "rms": 0.004874043064607303
+      },
+      {
+        "file": "grass-rustle-3.mp3",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.27832409739494324,
+        "rms": 0.0050660243727185215
+      },
+      {
+        "file": "wood-crack-1.ogg",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6396656632423401,
+        "rms": 0.010867303489327193
+      },
+      {
+        "file": "wood-crack-1.mp3",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6613859534263611,
+        "rms": 0.011443730742875058
+      },
+      {
+        "file": "wood-crack-2.ogg",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.60374915599823,
+        "rms": 0.007650871019688708
+      },
+      {
+        "file": "wood-crack-2.mp3",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6503629088401794,
+        "rms": 0.007818439600932304
+      },
+      {
+        "file": "wood-crack-3.ogg",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6588054299354553,
+        "rms": 0.00735320484111037
+      },
+      {
+        "file": "wood-crack-3.mp3",
+        "seconds": 1.3,
+        "channels": 1,
+        "peak": 0.6563318371772766,
+        "rms": 0.0074070850192062025
+      },
+      {
+        "file": "schabe-hiss-1.ogg",
+        "seconds": 0.638,
+        "channels": 1,
+        "peak": 0.6845903396606445,
+        "rms": 0.1084450533938859
+      },
+      {
+        "file": "schabe-hiss-1.mp3",
+        "seconds": 0.64,
+        "channels": 1,
+        "peak": 0.6660333275794983,
+        "rms": 0.11013578457922706
+      },
+      {
+        "file": "schabe-hiss-2.ogg",
+        "seconds": 0.636,
+        "channels": 1,
+        "peak": 0.650455892086029,
+        "rms": 0.12497182791283268
+      },
+      {
+        "file": "schabe-hiss-2.mp3",
+        "seconds": 0.64,
+        "channels": 1,
+        "peak": 0.6635079383850098,
+        "rms": 0.12674707998431783
+      },
+      {
+        "file": "schabe-hiss-3.ogg",
+        "seconds": 0.638,
+        "channels": 1,
+        "peak": 0.6447318196296692,
+        "rms": 0.12741850745245922
+      },
+      {
+        "file": "schabe-hiss-3.mp3",
+        "seconds": 0.64,
+        "channels": 1,
+        "peak": 0.6506915092468262,
+        "rms": 0.12915309200760838
+      },
+      {
+        "file": "radio.ogg",
+        "seconds": 0.5350208333333333,
+        "channels": 1,
+        "peak": 0.3669649660587311,
+        "rms": 0.07460135761006324
+      },
+      {
+        "file": "radio.mp3",
+        "seconds": 0.5390208333333333,
+        "channels": 1,
+        "peak": 0.3659241199493408,
+        "rms": 0.07492796972086951
+      },
+      {
+        "file": "confirm.ogg",
+        "seconds": 0.486,
+        "channels": 1,
+        "peak": 0.3348003625869751,
+        "rms": 0.09603757924059213
+      },
+      {
+        "file": "confirm.mp3",
+        "seconds": 0.49,
+        "channels": 1,
+        "peak": 0.3353089392185211,
+        "rms": 0.095461277698303
+      },
+      {
+        "file": "hull-impact.ogg",
+        "seconds": 0.7727708333333333,
+        "channels": 1,
+        "peak": 0.6742996573448181,
+        "rms": 0.08483006442217841
+      },
+      {
+        "file": "hull-impact.mp3",
+        "seconds": 0.7767708333333333,
+        "channels": 1,
+        "peak": 0.6684048771858215,
+        "rms": 0.08532952017386194
+      },
+      {
+        "file": "schabe-chitter-1.ogg",
+        "seconds": 0.5748958333333334,
+        "channels": 1,
+        "peak": 0.6216608881950378,
+        "rms": 0.03256328572398151
+      },
+      {
+        "file": "schabe-chitter-1.mp3",
+        "seconds": 0.5788958333333334,
+        "channels": 1,
+        "peak": 0.6667328476905823,
+        "rms": 0.03408668592473951
+      },
+      {
+        "file": "schabe-chitter-2.ogg",
+        "seconds": 0.57025,
+        "channels": 1,
+        "peak": 0.6456320881843567,
+        "rms": 0.03246983942894042
+      },
+      {
+        "file": "schabe-chitter-2.mp3",
+        "seconds": 0.57425,
+        "channels": 1,
+        "peak": 0.6594417691230774,
+        "rms": 0.03363194225158056
+      },
+      {
+        "file": "schabe-chitter-3.ogg",
+        "seconds": 0.3497708333333333,
+        "channels": 1,
+        "peak": 0.4922748804092407,
+        "rms": 0.04297589709657965
+      },
+      {
+        "file": "schabe-chitter-3.mp3",
+        "seconds": 0.3537708333333333,
+        "channels": 1,
+        "peak": 0.5575319528579712,
+        "rms": 0.04438871541593131
+      },
+      {
+        "file": "schabe-impact-1.ogg",
+        "seconds": 0.48414583333333333,
+        "channels": 1,
+        "peak": 0.6643800735473633,
+        "rms": 0.04288936972458311
+      },
+      {
+        "file": "schabe-impact-1.mp3",
+        "seconds": 0.48814583333333333,
+        "channels": 1,
+        "peak": 0.6753291487693787,
+        "rms": 0.04471130781413437
+      },
+      {
+        "file": "schabe-impact-2.ogg",
+        "seconds": 0.6826875,
+        "channels": 1,
+        "peak": 0.6176454424858093,
+        "rms": 0.06696769890300253
+      },
+      {
+        "file": "schabe-impact-2.mp3",
+        "seconds": 0.6866875,
+        "channels": 1,
+        "peak": 0.6429247260093689,
+        "rms": 0.06849968030127385
+      },
+      {
+        "file": "forest-floor-1.ogg",
+        "seconds": 0.506,
+        "channels": 1,
+        "peak": 0.4264201819896698,
+        "rms": 0.05079534500126413
+      },
+      {
+        "file": "forest-floor-1.mp3",
+        "seconds": 0.51,
+        "channels": 1,
+        "peak": 0.4497649073600769,
+        "rms": 0.05210667582417749
+      },
+      {
+        "file": "forest-floor-2.ogg",
+        "seconds": 0.506,
+        "channels": 1,
+        "peak": 0.42312297224998474,
+        "rms": 0.04809406209090393
+      },
+      {
+        "file": "forest-floor-2.mp3",
+        "seconds": 0.51,
+        "channels": 1,
+        "peak": 0.43928125500679016,
+        "rms": 0.04948695289703694
+      },
+      {
+        "file": "forest-floor-3.ogg",
+        "seconds": 0.506,
+        "channels": 1,
+        "peak": 0.40622594952583313,
+        "rms": 0.04851795853742231
+      },
+      {
+        "file": "forest-floor-3.mp3",
+        "seconds": 0.51,
+        "channels": 1,
+        "peak": 0.41253775358200073,
+        "rms": 0.04981734526495328
+      },
+      {
+        "file": "forest-floor-4.ogg",
+        "seconds": 0.506,
+        "channels": 1,
+        "peak": 0.6292017102241516,
+        "rms": 0.032419829571282706
+      },
+      {
+        "file": "forest-floor-4.mp3",
+        "seconds": 0.51,
+        "channels": 1,
+        "peak": 0.6461418271064758,
+        "rms": 0.03339432598045191
+      }
+    ],
+    "errors": []
+  },
+  "firefox": {
+    "decoded": 124,
+    "errors": [],
+    "context": "running",
+    "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0"
+  }
+}

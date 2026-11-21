@@ -1,7 +1,8 @@
-import { MAX_ENEMIES, NET, NEST_EXIT_RADIUS, distanceSquared, openGround } from '@freefall/shared';
+import { NET, distanceSquared, openGround } from '@freefall/shared';
 import type {
-  MissionBalance, MissionDefinition, MissionEvent, PatrolRegion, PositionXZ, SwarmBreachRegion,
+  MissionBalance, MissionDefinition, MissionEvent, MissionState, PatrolRegion, PositionXZ, SwarmBreachRegion,
 } from '@freefall/shared';
+import { ENEMY_GROUND_RADIUS } from '../ecs/EnemyNavigation.ts';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
 import { PatrolManager } from './PatrolManager.ts';
@@ -9,23 +10,31 @@ import type { PatrolGroup } from './PatrolManager.ts';
 import { SwarmNestManager } from './SwarmNestManager.ts';
 import type { SwarmNest } from './SwarmNestManager.ts';
 
-const RADIUS_PADDING = NEST_EXIT_RADIUS + 1;
+import { HordeDirector } from './HordeDirector.ts';
+import type { EncounterHold } from './HordeDirector.ts';
+import { SpawnManager, SPAWN_DEFERRED } from './SpawnManager.ts';
+
+import { nestFits } from './MissionLocations.ts';
 
 export class EncounterDirector {
   readonly patrols: PatrolManager;
   readonly nests: SwarmNestManager;
+  readonly initialNests = new Map<number, PositionXZ>();
   threat = 0;
   breachCount = 0;
   reinforcements = 0;
-  private spawnedThisTick = 0;
+  readonly pacing: HordeDirector;
+  readonly spawns: SpawnManager;
+  private lastTick = -1;
+  private lastDestroyed = 0;
   private nextGlobalCall = 0;
   private nextExtractionPressure = 0;
   private extractionFocus?: PositionXZ;
   private alertHeat = 0;
   private readonly regionalCalls = new Map<string, number>();
   private readonly garrisons = new Map<number, PatrolGroup>();
+  private readonly patrolSeeding = new Map<PatrolGroup, { until: number; retryAt: number }>();
   private readonly mission: MissionDefinition;
-  private readonly horde: HordeManager;
   private readonly players: readonly (SimPlayer | undefined)[];
   private readonly random: () => number;
   /** Fixed balance snapshot of this mission run. All difficulty effects are already resolved. */
@@ -34,55 +43,50 @@ export class EncounterDirector {
   private readonly calls: MissionBalance['reinforcements'];
   private readonly threatConfig: MissionBalance['threat'];
   private readonly level: number;
-  private readonly spawnType: number;
 
   constructor(mission: MissionDefinition, horde: HordeManager, players: readonly (SimPlayer | undefined)[],
-    balance: MissionBalance, random: () => number, emit: (event: MissionEvent) => void) {
+    balance: MissionBalance, random: () => number, waveRandom: () => number, emit: (event: MissionEvent) => void) {
     this.mission = mission;
-    this.horde = horde;
     this.players = players;
     this.balance = balance;
     this.limits = balance.limits;
     this.calls = balance.reinforcements;
     this.threatConfig = balance.threat;
     this.level = balance.difficulty.level;
-    this.spawnType = balance.nest.spawnWireType;
     this.random = random;
     this.patrols = new PatrolManager(mission.world, horde, random, emit, balance);
-    this.nests = new SwarmNestManager(emit, random, balance);
+    this.nests = new SwarmNestManager(emit, random, balance, mission.world);
+    this.spawns = new SpawnManager(mission, horde, this.patrols.navigation, players, balance,
+      (position) => this.nests.blocksSpawn(position, ENEMY_GROUND_RADIUS));
+    this.pacing = new HordeDirector(mission.world, balance, horde, this.spawns, this.patrols, waveRandom, emit);
   }
 
   deploy(tick: number): void {
     const regions = this.mission.world.patrolRegions;
     if (regions.length) {
-      for (let i = 0; i < this.limits.patrolGroupCount; i++) this.newPatrol(i);
+      for (let i = 0; i < this.limits.patrolGroupCount; i++) this.newPatrol(i, tick);
     }
     for (const position of this.mission.world.initialNests) {
       if (this.nests.active.size >= this.limits.maxActiveNests) break;
-      if (this.validBreachPosition(position, false)) this.nests.create(position, tick);
+      if (this.validBreachPosition(position, false)) this.initialNests.set(this.nests.create(position, tick).id, position);
     }
     this.updateThreat(false, false);
   }
 
-  newPatrol(index: number): void {
+  private newPatrol(index: number, tick: number): void {
     const regions = this.mission.world.patrolRegions;
-    if (!regions.length || this.patrols.groups.size >= this.limits.patrolGroupCount + this.limits.maxActiveEnemies) return;
+    if (!regions.length || this.patrols.groups.size >= this.limits.patrolGroupCount + this.limits.maxActiveNests) return;
     const region = regions[index % regions.length];
     const waypoint = Math.floor(index / regions.length) % region.route.waypoints.length;
     const { patrolMinSize, patrolMaxSize } = this.limits;
     const size = patrolMinSize + Math.floor(this.random() * (patrolMaxSize - patrolMinSize + 1));
-    this.patrols.create(region, waypoint, size);
+    const group = this.patrols.create(region, waypoint, size);
+    this.patrolSeeding.set(group, { until: tick + this.balance.director.spawn.patrolSeedWindowTicks, retryAt: tick });
   }
 
   validBreachPosition(position: PositionXZ, checkPlayers = true): boolean {
-    const { world, objectives } = this.mission;
-    if (!openGround(world, position.x, position.z, RADIUS_PADDING)) return false;
+    if (!nestFits(this.mission, this.balance, position)) return false;
     const calls = this.calls;
-    if (distanceSquared(position, world.deployment) < (world.deployment.radius + calls.deploymentClearance) ** 2) return false;
-    if (world.serviceApron && distanceSquared(position, world.serviceApron) < (world.serviceApron.radius + calls.serviceApronClearance) ** 2) return false;
-    for (const objective of objectives) {
-      if (objective.kind === 'activate' && distanceSquared(position, objective) < (objective.radius + calls.objectiveClearance) ** 2) return false;
-    }
     if (checkPlayers && this.players.some((player) => player && player.hp > 0 && distanceSquared(player, position) < calls.playerClearance ** 2)) return false;
     for (const nest of this.nests.active.values()) if (distanceSquared(nest, position) < calls.nestSpacing ** 2) return false;
     return true;
@@ -155,42 +159,38 @@ export class EncounterDirector {
     this.nextExtractionPressure = tick + this.balance.extraction.initialPressureTicks;
   }
 
-  private spawn(position: PositionXZ): number {
-    if (this.spawnedThisTick >= this.limits.maxSpawnsPerTick ||
-        this.horde.count >= Math.min(this.limits.maxActiveEnemies, MAX_ENEMIES)) return -1;
-    if (!openGround(this.mission.world, position.x, position.z, .5)) return -1;
-    const slot = this.horde.spawn(position.x, position.z, this.spawnType);
-    if (slot === -1) return slot;
-    this.spawnedThisTick++;
-    // The ECS spawns with base health. Apply the effective health of this mission's balance snapshot.
-    this.horde.hp[slot] = this.balance.enemies[this.spawnType].health;
-    return slot;
-  }
-
-  private seedPatrols(): void {
-    for (const group of this.patrols.groups.values()) {
-      while (group.pendingMembers && this.spawnedThisTick < this.limits.maxSpawnsPerTick) {
+  private seedPatrols(tick: number): void {
+    for (const [group, schedule] of this.patrolSeeding) {
+      if (tick >= schedule.until) {
+        group.pendingMembers = 0;
+        this.patrolSeeding.delete(group);
+        continue;
+      }
+      if (tick < schedule.retryAt) continue;
+      while (group.pendingMembers && this.spawns.canCheckAuthored) {
         const origin = group.position;
         const a = this.random() * Math.PI * 2;
         const r = 1.7 + this.random() * 7;
         const x = origin.x + Math.sin(a) * r;
         const z = origin.z + Math.cos(a) * r;
         const position = openGround(this.mission.world, x, z, .5) ? { x, z } : origin;
-        if (!openGround(this.mission.world, position.x, position.z, .5) ||
-            this.players.some((player) => player && player.hp > 0 && distanceSquared(player, position) < this.balance.patrols.seedPlayerClearance ** 2)) break;
-        const slot = this.spawn(position);
-        if (slot === -1) return;
+        const slot = this.spawns.spawnAuthored('patrol', position, origin, group.region.id);
+        if (slot < 0) {
+          schedule.retryAt = tick + this.balance.patrols.perceptionPeriodTicks;
+          break;
+        }
         this.patrols.attach(group, slot);
         group.pendingMembers--;
       }
+      if (!group.pendingMembers) this.patrolSeeding.delete(group);
     }
   }
 
-  private readonly spawnGarrison = (nest: SwarmNest, exit: PositionXZ): boolean => {
+  private readonly spawnGarrison = (nest: SwarmNest, exit: PositionXZ): boolean | undefined => {
     const garrison = this.balance.nest.garrison;
-    if (this.players.some((player) => player && player.hp > 0 && distanceSquared(player, exit) < garrison.playerClearance ** 2)) return false;
-    const slot = this.spawn(exit);
-    if (slot === -1) return false;
+    const slot = this.spawns.spawnAuthored('nest', exit, nest, 'nest-' + nest.id);
+    if (slot === SPAWN_DEFERRED) return;
+    if (slot < 0) return false;
     let group = this.garrisons.get(nest.id);
     if (!group || group.state === 'ELIMINATED' || group.members.size >= this.limits.patrolMaxSize ||
         distanceSquared(group.position, nest) > garrison.regroupDistance ** 2) {
@@ -216,27 +216,50 @@ export class EncounterDirector {
       (extracting ? t.extractingBonus : 0)));
   }
 
-  update(tick: number, defending: boolean, extracting: boolean): void {
-    this.spawnedThisTick = 0;
+  update(tick: number, state: MissionState, defending: boolean, connected: readonly SimPlayer[], living: readonly SimPlayer[],
+    targetPlayers: readonly (SimPlayer | undefined)[], attacking: number, profileAI: boolean): void {
+    if (tick <= this.lastTick) return;
+    this.lastTick = tick;
+    this.spawns.beginTick(tick, living, profileAI);
     this.alertHeat = Math.max(0, this.alertHeat - this.threatConfig.alertHeat.decayPerTick);
+    const extracting = state === 'EXTRACTION_IN_PROGRESS';
     if (extracting && this.extractionFocus && tick >= this.nextExtractionPressure) {
       this.request(this.extractionFocus, tick);
       this.patrols.reportNoise(this.extractionFocus, 'beacon', tick);
       this.nextExtractionPressure = tick + this.balance.extraction.pressureIntervalTicks;
     }
-    this.patrols.update(this.players, tick, this.reinforcements < this.limits.reinforcementBudget, this.request);
-    this.seedPatrols();
+    this.patrols.update(targetPlayers, tick, this.reinforcements < this.limits.reinforcementBudget, this.request, profileAI);
     this.updateThreat(defending, extracting);
     const pressure = 1 + this.threat / this.threatConfig.nestPressureThreatDivisor + (extracting ? this.threatConfig.extractionNestRate : 0);
     this.nests.update(tick, this.spawnGarrison, pressure);
+    this.seedPatrols(tick);
     for (const id of this.garrisons.keys()) if (!this.nests.active.has(id)) this.garrisons.delete(id);
+
+    let hold: EncounterHold | undefined;
+    if (state !== 'ACTIVE_MISSION') hold = 'mission-phase';
+    else if (defending) hold = 'defense';
+    else if (living.some(({ pendingResupply, equipment }) => pendingResupply || equipment.action === 'resupply')) hold = 'resupply';
+    else if (this.nests.destroyed !== this.lastDestroyed) hold = 'nest-destroyed';
+    else if (this.patrols.activeCalls || this.nests.emergingCount() || tick < this.nextGlobalCall ||
+        this.nests.hasBoost(tick)) hold = 'reinforcement';
+    this.lastDestroyed = this.nests.destroyed;
+    this.pacing.update(tick, connected, living, attacking, hold, profileAI);
+  }
+
+  halt(tick: number): void {
+    this.pacing.stop(tick);
+    this.patrols.halt(tick);
+    this.nests.halt();
+    for (const group of this.patrolSeeding.keys()) group.pendingMembers = 0;
+    this.patrolSeeding.clear();
   }
 
   debug(action: string, player: SimPlayer, tick: number): boolean {
     switch (action) {
+      case 'horde-wave': return this.pacing.cue(tick);
       case 'patrol':
         if (this.patrols.groups.size >= this.limits.patrolGroupCount + this.limits.maxActiveNests) return false;
-        this.newPatrol(tick);
+        this.newPatrol(this.patrols.groups.size, tick);
         return true;
       case 'alert': {
         let nearest: PatrolGroup | undefined;

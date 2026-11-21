@@ -1,11 +1,11 @@
-import { ARENA_HALF } from '@freefall/shared';
+import { ARENA_HALF, ARENA_PAD } from '@freefall/shared';
 
 export const ENVIRONMENT = {
   half: ARENA_HALF,
   // Leave room for the agents' silhouettes and the shoulder camera at the limit.
   perimeter: ARENA_HALF + 6,
   extent: 228,
-  pad: { x: 0, z: 4, radius: 10.4 },
+  pad: ARENA_PAD,
   roadX: 10,
   colors: {
     soil: 0x817057,

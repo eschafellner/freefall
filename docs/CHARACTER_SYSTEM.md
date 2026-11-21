@@ -34,7 +34,7 @@ weapons/assault-rifle/attachments/
 
 - Maßstab Meter. Füße am Modellursprung, +Y oben, −Z vorwärts, +X zur rechten Seite. Modell- und Knotenskalierung vor Export anwenden.
 - Geskinntes Rig mit konsistenten, eindeutigen Bone-Namen. `PrimaryWeapon` muss am Waffenhand-Rig mit Ursprung am Griff und der lokalen Gewehrausrichtung liegen. Weitere Anchor-Namen können in der Registry belegt werden.
-- `Idle` und `Walk` oder `Run` sind Mindestclips. Weitere Clips können im Modell oder als `animationPaths` mit identischer Skeleton-Bindung eingebunden werden. [Animationsvertrag](ANIMATION_SYSTEM.md)
+- `Idle` und `Walk` oder `Run` sind Mindestclips. Weitere Clips können im Modell, als `animationPaths` mit identischer Skeleton-Bindung oder als `animationPacks` mit eigenem Skelett eingebunden werden; Letztere werden retargeted. Humanoid-Zuordnung über `skeleton` (Preset oder Knochenliste). [Animationsvertrag](ANIMATION_SYSTEM.md) · [Asset-Anforderungen](CHARACTER_ASSET_REQUIREMENTS.md)
 - Meshes möglichst nach Material zusammenführen und modulare Teile gezielt dem jeweiligen Anker zuordnen. Für Produktionsassets PBR-Texturen (Base Color, Normal, Roughness/Metallic) mit passenden Farbräumen verwenden. KTX2 setzt die Registrierung eines Transcoderpfads voraus.
 - Für neue Assets Quelle, Urheber, Lizenz, zugelassene Projektverwendung und gegebenenfalls Attributionspflicht im Repository erfassen. Dieser Meilenstein enthält ausschließlich projektinternen prozeduralen Charakter- und Waffencode. Externe Modelldateien und Drittanbieter-Clips wurden nicht eingebunden.
 

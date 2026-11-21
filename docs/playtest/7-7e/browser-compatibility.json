@@ -1,0 +1,76 @@
+{
+  "firefoxIce": [
+    {
+      "version": "159.0.1",
+      "webgl2": true,
+      "pointerLock": false,
+      "world": "world.generated.b9ec957f0a62f9c4",
+      "weather": {
+        "planet": "ice",
+        "profile": "ice.overcast-day.v1",
+        "version": 1,
+        "revision": 2,
+        "current": "windy-snow",
+        "timeOfDay": "dusk",
+        "audio": "ambience.ice.windy-snow",
+        "seed": 1786697896,
+        "startTick": 64,
+        "durationTicks": 0,
+        "progress": 0,
+        "x": 0.7408772911903247,
+        "z": 0.3520933431719414,
+        "direction": 0.4436428366371441,
+        "strength": 0.8202858543870593,
+        "gust": 0.13028585438705934,
+        "turbulence": 0.276,
+        "particles": 176,
+        "cap": 176,
+        "particleMs": 1,
+        "updateMs": 1
+      },
+      "audio": {
+        "voices": 3,
+        "peak": 3,
+        "dropped": 0,
+        "budget": 28,
+        "ambience": 2,
+        "combat": 0,
+        "spatial": 1,
+        "context": "running",
+        "duck": false,
+        "levels": {
+          "master": 0.8,
+          "weapons": 0.9,
+          "environment": 0.8,
+          "ambience": 0.8,
+          "weather": 0.8,
+          "ui": 0.7,
+          "muted": false,
+          "enabled": true
+        },
+        "buffers": 30,
+        "pcmMiB": 70.56841659545898,
+        "loading": 0,
+        "errors": 0,
+        "loadMs": 11,
+        "decodeMs": 204,
+        "planet": "ice",
+        "weather": "windy-snow",
+        "wind": "ice-wind",
+        "rate": 8,
+        "enemyMs": 0,
+        "enemyPeakMs": 0,
+        "updateMs": 0,
+        "windups": 0,
+        "impacts": 0
+      },
+      "errors": []
+    }
+  ],
+  "firefoxAudio": {
+    "decoded": 124,
+    "errors": [],
+    "context": "running",
+    "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0"
+  }
+}

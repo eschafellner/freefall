@@ -209,6 +209,20 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   ref(enemies, data.swarm.arena.archetypeId, 'swarm.json › arena.archetypeId', 'Gegner');
   ref(enemies, data.swarm.patrols.archetypeId, 'swarm.json › patrols.archetypeId', 'Gegner');
   ref(weapons, data.convicts.squad.reloadWeaponId, 'convicts.json › squad.reloadWeaponId', 'Waffen');
+  const { timing, pressure, wave, spawn } = data.swarm.director;
+  if (timing.assaultMinTicks > timing.assaultMaxTicks || timing.peakMinTicks > timing.peakMaxTicks ||
+      timing.recoveryMinTicks > timing.recoveryMaxTicks) {
+    issues.add('swarm.json › director.timing', 'Mindestdauer darf die Höchstdauer nicht überschreiten');
+  }
+  if (pressure.startAtMost >= pressure.pauseAt) {
+    issues.add('swarm.json › director.pressure', 'startAtMost muss kleiner als pauseAt sein');
+  }
+  if (wave.minEnemies > wave.maxEnemies || wave.groupMin > wave.groupMax || wave.groupMax > wave.maxEnemies) {
+    issues.add('swarm.json › director.wave', 'ungültige Wellen- oder Gruppengrenzen');
+  }
+  if (spawn.dynamicChecksPerTick > spawn.maxChecksPerTick) {
+    issues.add('swarm.json › director.spawn', 'dynamicChecksPerTick überschreitet maxChecksPerTick');
+  }
 
   // Difficulty.
   const levels = data.difficulty.difficulties.map((difficulty) => difficulty.level);
@@ -237,7 +251,7 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   for (const [name, shape] of Object.entries(movement.colliders)) {
     if (shape.muzzleHeight > shape.height) issues.add(`movement.json › colliders.${name}`, 'Mündung liegt oberhalb des Kolliders');
   }
-  for (const name of ['CROUCHING', 'PRONE', 'SUPINE'] as const) {
+  for (const name of ['CROUCHING', 'PRONE', 'SUPINE', 'SLIDING'] as const) {
     if (movement.colliders[name].height >= movement.colliders.STANDING.height) {
       issues.add(`movement.json › colliders.${name}`, 'muss niedriger als STANDING sein');
     }

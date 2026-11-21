@@ -4,12 +4,13 @@ import type { createKestrel } from './Kestrel.ts';
 
 export const ATTACHMENT_SLOTS = ['Muzzle', 'Barrel', 'Optic', 'Underbarrel', 'Magazine', 'Stock'] as const;
 export type WeaponAttachmentSlot = (typeof ATTACHMENT_SLOTS)[number];
-export type WeaponSocket = 'Grip' | 'SupportHand' | WeaponAttachmentSlot;
+export type WeaponSocket = 'Grip' | 'SupportHand' | 'EjectionPort' | WeaponAttachmentSlot;
 
 const SOCKETS: Record<WeaponSocket, readonly [number, number, number]> = {
   Grip: [0, 0, 0],
   SupportHand: [-.02, .049, -.292],
   Muzzle: [0, .101, -.597],
+  EjectionPort: [.047, .095, -.106],
   Barrel: [0, .101, -.433],
   Optic: [0, .141, -.134],
   Underbarrel: [0, .036, -.348],
@@ -39,7 +40,7 @@ export class WeaponVisualController {
 
   constructor(parts: Omit<ReturnType<typeof createKestrel>['pistol'], 'slide'> & { slide?: T.BufferGeometry }, pistol = false) {
     this.timeline = (pistol ? SERVICE_PISTOL : TEST_RIFLE).reloadTimeline;
-    this.layout = pistol ? { ...SOCKETS, Muzzle: [0, .064, -.154], SupportHand: [-.028, -.018, -.023],
+    this.layout = pistol ? { ...SOCKETS, Muzzle: [0, .064, -.154], EjectionPort: [.021, .074, -.052], SupportHand: [-.028, -.018, -.023],
       Optic: [0, .085, 0], Magazine: [0, -.016, .008] } : SOCKETS;
     for (const name of Object.keys(SOCKETS) as WeaponSocket[]) {
       const socket = new T.Group();

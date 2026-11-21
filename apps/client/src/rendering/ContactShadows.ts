@@ -2,7 +2,11 @@ import * as T from 'three';
 import { MAX_ENEMIES, MAX_PLAYERS } from '@freefall/shared';
 import { smoothstep } from './environment/noise.ts';
 
+import { groundHeight } from '@freefall/shared';
+import type { WorldDefinition } from '@freefall/shared';
+
 export class ContactShadows {
+  world?: WorldDefinition;
   private readonly mesh: T.InstancedMesh;
   private readonly transform = new T.Object3D();
   private count = 0;
@@ -36,7 +40,7 @@ export class ContactShadows {
   }
 
   add(x: number, z: number, yaw: number, width: number, length: number): void {
-    this.transform.position.set(x, 0.028, z);
+    this.transform.position.set(x, groundHeight(this.world, x, z) + .028, z);
     this.transform.rotation.y = yaw;
     this.transform.scale.set(width, 1, length);
     this.transform.updateMatrix();

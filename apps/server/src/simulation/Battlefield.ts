@@ -1,15 +1,20 @@
-import { BALANCE, ENEMY_TYPES, MAX_PLAYERS, MOVEMENT_INPUT, NET, advancePosture, applyPostureInput, resolveLoadout } from '@freefall/shared';
+import { ARENA_HALF, BALANCE, ENEMY_TYPES, MAX_PLAYERS, MOVEMENT_INPUT, NET, advancePosture, applyPostureInput, resolveLoadout } from '@freefall/shared';
 import type {
-  BalanceRegistry, CombatEvent, EffectiveGrenade, EffectiveLoadout, EnemyGameplay, GrenadeState, MovementDefinition, MovementBoundary, ShotEvent,
+  BalanceRegistry, CombatEvent, EffectiveGrenade, EffectiveLoadout, EnemyGameplay, EnemyAIMetrics, EnemyAISample, GrenadeState, MovementDefinition, MovementBoundary, ShotEvent,
   WorldDefinition,
 } from '@freefall/shared';
+import { EnemyApproach } from '../ecs/EnemyApproach.ts';
+import { EnemyCombat } from '../ecs/EnemyCombat.ts';
+import { ENEMY_EDGE_MARGIN, EnemyNavigation } from '../ecs/EnemyNavigation.ts';
 import { HordeManager } from '../ecs/HordeManager.ts';
 import { StaggerComponent } from '../ecs/StaggerComponent.ts';
 import { UniformGrid } from '../ecs/UniformGrid.ts';
 import { validateInput } from '../networking/input.ts';
-import { movementSystem, steeringSystem, targetingSystem } from '../systems/horde.ts';
-import type { EnemyDestination } from '../systems/horde.ts';
-import { fireWeapon, interruptReload, meleeStrike, meleeSystem, switchWeaponState, updateReload } from '../systems/combat.ts';
+import { movementSystem, steeringSystem } from '../systems/horde.ts';
+import type { EnemyDestination, HordeSteering } from '../systems/horde.ts';
+import { GroundNavigation } from '../mission/GroundNavigation.ts';
+import { ArenaTargeting, validOperator } from '../systems/enemyTargeting.ts';
+import { fireWeapon, interruptReload, meleeStrike, switchWeaponState, updateReload } from '../systems/combat.ts';
 import type { AllyTarget, CombatContext, CombatTargets, SecondaryTarget } from '../systems/combat.ts';
 import { createPlayer, respawnPlayer } from './Player.ts';
 import type { SimPlayer } from './Player.ts';
@@ -28,6 +33,11 @@ export function seededRandom(seed: number): () => number {
 
 export class Battlefield {
   readonly horde = new HordeManager();
+  readonly navigation: EnemyNavigation;
+  readonly enemyCombat: EnemyCombat;
+  profileEnemyAI = false;
+  readonly enemyAITime = { targetMs: 0, navigationMs: 0, attackMs: 0, encounterMs: 0, perceptionMs: 0,
+    steeringMs: 0, neighborMs: 0, collisionMs: 0, fieldMs: 0 };
   /** Melee stagger per horde slot (separate component, the HordeManager is part of the Schabe baseline). */
   readonly stagger = new StaggerComponent();
   readonly players: (SimPlayer | undefined)[] = Array.from({ length: MAX_PLAYERS });
@@ -39,9 +49,14 @@ export class Battlefield {
   readonly stats = new CombatStats();
   protected readonly random: () => number;
   protected destination?: EnemyDestination;
+  protected fallbackDestination?: EnemyDestination;
   protected combatTargets?: CombatTargets;
   protected secondaryTarget?: SecondaryTarget;
-  private readonly grid: UniformGrid;
+  private grid: UniformGrid;
+  private readonly steering: HordeSteering;
+  private planner?: GroundNavigation;
+  private readonly targeting = new ArenaTargeting();
+  private lastEnemyMetrics = { tick: 0, starts: 0, hits: 0 };
   private readonly ray = { x: 0, y: 0, z: 0, dx: 0, dy: 0, dz: 0 };
   tick = 0;
 
@@ -51,7 +66,7 @@ export class Battlefield {
   /** Effective operator loadout, resolved once when the battlefield is configured. */
   readonly loadout: EffectiveLoadout;
   /** Effective enemy gameplay by wire type. Missions replace it with their difficulty-resolved snapshot. */
-  protected enemyStats: readonly EnemyGameplay[] = ENEMY_TYPES;
+  protected enemyStats: readonly EnemyGameplay[];
 
   constructor(seed: number, world?: WorldDefinition, registry: BalanceRegistry = BALANCE) {
     this.world = world;
@@ -59,6 +74,16 @@ export class Battlefield {
     this.loadout = resolveLoadout(registry);
     this.random = seededRandom(seed);
     this.grid = new UniformGrid(world?.half);
+    this.enemyStats = registry.enemiesByWireType.map((entry, type) => entry?.gameplay ?? ENEMY_TYPES[type]);
+    const config = registry.swarm.hordeAi;
+    this.navigation = new EnemyNavigation(config);
+    const approach = new EnemyApproach(config, registry.enemy(registry.swarm.patrols.archetypeId).gameplay.meleeRange);
+    this.enemyCombat = new EnemyCombat(registry.swarm.meleeAttack, approach, this.navigation, this.stagger);
+    this.steering = {
+      config, navigation: this.navigation, stagger: this.stagger,
+      approach, combat: this.enemyCombat,
+      edge: (world?.half ?? ARENA_HALF) - ENEMY_EDGE_MARGIN, stats: this.enemyStats, timing: this.enemyAITime, profile: false,
+    };
     this.combat = {
       players: this.players, allies: () => this.allies(), random: this.random, stats: this.stats, events: this.combatEvents,
       respawns: true, grid: this.grid, stagger: this.stagger, policy: this.loadout.damagePolicy,
@@ -72,6 +97,12 @@ export class Battlefield {
       interruptReload: (p) => interruptReload(p, this.tick, this.combat),
       switched: (p) => switchWeaponState(p),
     };
+  }
+
+  protected setCombatBounds(half: number): void {
+    if (this.steering.edge === half - ENEMY_EDGE_MARGIN) return;
+    this.grid = this.combat.grid = new UniformGrid(half);
+    this.steering.edge = half - ENEMY_EDGE_MARGIN;
   }
 
   /** Shared combat services for hitscan, melee and grenades. Built once, never per tick. */
@@ -98,16 +129,23 @@ export class Battlefield {
   receiveInput(id: string, payload: unknown): boolean {
     const player = this.players.find((entry) => entry?.id === id);
     if (!player) return false;
-    const input = validateInput(payload, player.input.seq);
+    const input = validateInput(payload, player.lastInputSeq);
     if (!input) return false;
-    if (this.simulatesCombat && player.hp > 0 && input.life === player.life && input.equipment) {
-      player.pendingEquipment ??= input.equipment;
+    player.lastInputSeq = input.seq;
+    if (input.life === undefined || input.life === player.life) {
+      if (this.simulatesCombat && player.hp > 0) {
+        if (input.equipment) player.pendingEquipment ??= input.equipment;
+        if (input.reload && !player.input.reload) player.reloadRequested = true;
+      }
+      player.input = input;
+      player.inputTick = this.tick;
     }
-    if (this.simulatesCombat && player.hp > 0 && input.reload && !player.input.reload) player.reloadRequested = true;
-    player.input = input;
-    player.inputTick = this.tick;
     player.moves.push(input);
-    if (player.moves.length > MOVEMENT_INPUT.queue) player.moves.shift();
+    if (player.moves.length > MOVEMENT_INPUT.queue) {
+      // Keep one-shot commands on their original input so a queued dive retains its axes, camera and ID.
+      const expendable = player.moves.findIndex((move, i) => !move.posture && i < player.moves.length - 1);
+      player.moves.splice(expendable < 0 ? 0 : expendable, 1);
+    }
     return true;
   }
 
@@ -116,13 +154,54 @@ export class Battlefield {
   protected get simulatesMovement(): boolean { return this.simulatesCombat; }
   get movementBalance(): MovementDefinition { return this.registry.movement; }
   protected get movementWorld(): WorldDefinition | undefined { return this.world; }
+  protected get groundNavigation(): GroundNavigation | undefined {
+    if (this.world) return this.planner ??= new GroundNavigation(this.world, this.registry.swarm.hordeAi);
+  }
   protected canMove(_player: SimPlayer): boolean { return true; }
   protected movementBoundary(_player: SimPlayer): MovementBoundary | undefined { return; }
   protected prepareTick(): void {}
   protected onBlast(_g: GrenadeState, _owner: string, _grenade: EffectiveGrenade): void {}
   protected onShot(_shot: ShotEvent): void {}
   protected finishTick(): void {}
-  protected updateTargets(): void { targetingSystem(this.horde, this.players, this.tick); }
+  protected readonly targetPlayers: readonly (SimPlayer | undefined)[] = this.players;
+  protected updateTargets(): void { this.targeting.update(this.horde, this.targetPlayers, this.tick, this.registry.swarm.hordeAi); }
+
+  protected enemyState(_slot: number): string | undefined { return undefined; }
+
+  enemyAIMetrics(): EnemyAIMetrics {
+    const horde = this.horde;
+    const samples: EnemyAISample[] = [];
+    for (let i = 0; i < Math.min(4, horde.count); i++) {
+      const slot = horde.active[i];
+      const player = this.targetPlayers[horde.target[slot]];
+      const target = validOperator(player) ? player : this.secondaryTarget?.(slot);
+      const cooldownTicks = Math.max(0, horde.attackAt[slot] - this.tick);
+      const nav = this.navigation.getStatus(horde, slot);
+      const state = this.tick < this.stagger.active(horde, slot) ? 'STAGGERED' :
+        this.enemyState(slot) ?? (target ? (cooldownTicks ? 'COOLDOWN' : 'PURSUING') : 'IDLE');
+      samples.push({
+        id: horde.id[slot], state, target: target ? ('id' in target ? String(target.id) : 'Albatross') : undefined,
+        distance: target ? Math.hypot(horde.x[slot] - target.x, horde.z[slot] - target.z) : undefined,
+        targetValid: !!target && target.hp > 0, cooldownTicks, ...nav,
+        combat: this.enemyCombat.sample(horde, slot, this.tick, this.enemyStats[horde.type[slot]]),
+      });
+    }
+    const planner = this.steering.planner?.metrics;
+    const combat = this.enemyCombat;
+    const rate = NET.tickHz / Math.max(1, this.tick - this.lastEnemyMetrics.tick);
+    const startsPerSecond = (combat.totals.starts - this.lastEnemyMetrics.starts) * rate;
+    const hitsPerSecond = (combat.totals.hits - this.lastEnemyMetrics.hits) * rate;
+    this.lastEnemyMetrics = { tick: this.tick, starts: combat.totals.starts, hits: combat.totals.hits };
+    return {
+      ...this.enemyAITime, samples, stuckEpisodes: this.navigation.stuckEpisodes,
+      attackValidationMs: combat.validationMs,
+      attacks: { windup: combat.windingUp, active: combat.active, recovery: combat.recovering, startsPerSecond, hitsPerSecond },
+      unreachableEpisodes: this.navigation.unreachableEpisodes, recoveries: this.navigation.recoveries,
+      recoveryAttempts: this.navigation.recoveryAttempts, recoverySuccesses: this.navigation.recoverySuccesses,
+      recoveryFallbacks: this.navigation.recoveryFallbacks, pathRequests: planner?.requests ?? 0,
+      fieldBuilds: planner?.builds ?? 0, fieldHits: planner?.hits ?? 0, deferredPaths: planner?.deferred ?? 0,
+    };
+  }
 
   /**
    * Applies queued movement inputs in order, each exactly once. Prediction replays the same inputs, so the
@@ -131,11 +210,15 @@ export class Battlefield {
    * Steady state is one input per tick, which keeps remote operators uniform. A tick without a queued input
    * (network or frame jitter) grows a small cushion: movement resumes once that many extra inputs wait, so a
    * jittery link does not alternate between zero and two steps. The cushion shrinks again after a quiet
-   * period. A backlog above cushion + MOVEMENT_INPUT.backlog drains with the banked budget, which bounds the
-   * average rate to the tick rate.
+   * period. A backlog above cushion + MOVEMENT_INPUT.backlog is drained actively: up to MOVEMENT_INPUT.budget
+   * inputs per tick while banked credit lasts. Credit grows by one per tick (plus a small clock-drift allowance),
+   * which bounds the average rate to the tick rate. Extra inputs of a tick never carry a posture command, so the
+   * posture machine sees at most one command per tick, exactly like the client replay.
+   * Inputs of an earlier life (sent before the client learned about a respawn or placement) are acknowledged
+   * but do not move the operator; the client drops them from its prediction as well.
    */
   private consumeMoves(player: SimPlayer): void {
-    player.moveCredit = Math.min(MOVEMENT_INPUT.budget, player.moveCredit + 1);
+    player.moveCredit = Math.min(MOVEMENT_INPUT.credit, player.moveCredit + 1 + MOVEMENT_INPUT.drift);
     if (!player.moves.length) {
       if (!player.moveWaiting) player.moveStarvedAt = this.tick;
       player.moveWaiting = true;
@@ -156,16 +239,18 @@ export class Battlefield {
         this.tick - player.inputTick <= NET.inputTimeoutTicks) return;
     player.moveWaiting = false;
     let consumed = 0;
-    while (player.moves.length && player.moveCredit >= 1 &&
-        (!consumed || player.moves.length > player.moveCushion + MOVEMENT_INPUT.backlog)) {
+    while (player.moves.length && player.moveCredit >= 1 && consumed < MOVEMENT_INPUT.budget &&
+        (!consumed || (player.moves.length > player.moveCushion + MOVEMENT_INPUT.backlog && !player.moves[0].posture))) {
       const move = player.moves.shift()!;
       player.moveCredit--;
       consumed++;
       player.ack = move.seq;
-      if (player.hp > 0 && this.canMove(player)) {
-        const input = move.posture && move.life !== player.life ? { ...move, posture: undefined } : move;
-        applyPostureInput(player, player.posture, input, this.tick, this.movementBalance,
-          this.movementWorld, this.movementBoundary(player), this.registry.operator);
+      if (player.hp > 0 && this.canMove(player) && (move.life === undefined || move.life === player.life)) {
+        applyPostureInput(player, player.posture, move, this.tick, this.movementBalance,
+          this.movementWorld, this.movementBoundary(player), this.registry.operator, player.loadout.slide);
+        if (player.posture.dive?.id === move.seq && player.posture.started === this.tick) {
+          player.protectedUntil = Math.min(player.protectedUntil, this.tick);
+        }
       }
     }
   }
@@ -193,10 +278,34 @@ export class Battlefield {
         this.consumeMoves(player);
       }
     }
+    if (this.profileEnemyAI) {
+      const time = this.enemyAITime;
+      time.targetMs = time.navigationMs = time.attackMs = time.encounterMs = time.perceptionMs = 0;
+      time.steeringMs = time.neighborMs = time.collisionMs = time.fieldMs = 0;
+    }
     if (this.simulatesCombat) {
+      this.enemyCombat.prune(this.horde, this.tick);
+      const beforeTargets = this.profileEnemyAI ? performance.now() : 0;
       this.updateTargets();
-      steeringSystem(this.horde, this.grid, this.players, this.tick, this.destination, this.stagger);
-      movementSystem(this.horde, this.movementWorld, this.tick, this.stagger);
+      const beforeNavigation = this.profileEnemyAI ? performance.now() : 0;
+      if (this.profileEnemyAI) this.enemyAITime.targetMs = beforeNavigation - beforeTargets;
+      const steering = this.steering;
+      steering.planner = this.horde.count ? this.groundNavigation : undefined;
+      steering.stats = this.enemyStats;
+      steering.destination = this.destination;
+      steering.fallback = this.fallbackDestination;
+      steering.profile = this.profileEnemyAI;
+      steeringSystem(this.horde, this.grid, this.targetPlayers, this.tick, steering);
+      const beforeCollision = this.profileEnemyAI ? performance.now() : 0;
+      movementSystem(this.horde, this.movementWorld, this.tick, this.stagger, this.navigation, this.grid,
+        steering.config, this.enemyCombat, this.enemyStats);
+      if (this.profileEnemyAI) {
+        const afterCollision = performance.now();
+        this.enemyAITime.navigationMs = afterCollision - beforeNavigation;
+        this.enemyAITime.steeringMs = beforeCollision - beforeNavigation;
+        this.enemyAITime.collisionMs = afterCollision - beforeCollision;
+        this.enemyAITime.fieldMs = steering.planner?.fieldMs ?? 0;
+      }
       for (const player of this.players) {
         if (!player) continue;
         if (!this.canMove(player)) {
@@ -211,8 +320,13 @@ export class Battlefield {
         this.onShot(shot);
       }
       this.grenades.update(this.tick, this.horde, this.grid, this.movementWorld, this.players, this.blast, this.combat, this.movementBalance);
-      meleeSystem(this.horde, this.players, this.tick, this.movementWorld, this.respawns, this.secondaryTarget, this.enemyStats, this.stagger, this.movementBalance);
+      const beforeAttacks = this.profileEnemyAI ? performance.now() : 0;
+      this.enemyCombat.update(this.horde, this.targetPlayers, this.tick, this.enemyStats, this.movementBalance,
+        this.movementWorld, this.secondaryTarget, this.combat, this.profileEnemyAI);
+      if (this.profileEnemyAI) this.enemyAITime.attackMs = performance.now() - beforeAttacks;
     }
     this.finishTick();
+    if (this.simulatesCombat) this.enemyCombat.prune(this.horde, this.tick);
+    else this.enemyCombat.clear();
   }
 }

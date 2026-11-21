@@ -1,5 +1,8 @@
 import type { PositionXZ } from '../config/movement.ts';
 import type { CombatTelemetry } from './messages.ts';
+import type { TimeOfDay } from '../world/PlanetWeather.ts';
+import type { MissionPlan } from './missionPlan.ts';
+import { MISSION_REGISTRY } from '../definitions/missions.ts';
 import { BALANCE } from '../balance/defaults.ts';
 
 export type MissionState = 'CARRIER_HUB' | 'MISSION_SELECTION' | 'BOARDING' | 'DEPLOYMENT' |
@@ -78,6 +81,15 @@ export interface MissionSelection {
   difficultyId: string;
 }
 
+export interface MissionGenerationSelection extends MissionSelection {
+  templateId?: string;
+  timeOfDay?: TimeOfDay;
+  seed?: number;
+  worldSeed?: number;
+}
+
+export interface MissionFallback { seed: number; reason: string }
+
 export type MissionAction = 'ready' | 'balloon' | 'secure' | 'albatross' | 'return-vote';
 
 export const isCarrierScene = (state: MissionState, phase: DeploymentPhase): boolean =>
@@ -88,7 +100,7 @@ export type PatrolState = 'PATROLLING' | 'SUSPICIOUS' | 'INVESTIGATING' | 'ALERT
   'CALLING_REINFORCEMENTS' | 'ENGAGING' | 'SEARCHING' | 'RETURNING' | 'ELIMINATED';
 
 export type NestState = 'EMERGING' | 'ACTIVE' | 'DAMAGED' | 'DESTROYING' | 'DESTROYED';
-export type ObjectiveState = 'locked' | 'available' | 'defending' | 'complete';
+export type ObjectiveState = 'locked' | 'available' | 'defending' | 'complete' | 'failed' | 'cancelled';
 export interface ObjectiveSnapshot { id: string; state: ObjectiveState; progress: number; completeAt: number }
 export interface NestSnapshot extends PositionXZ {
   id: number;
@@ -131,8 +143,49 @@ export interface MissionResult {
   baseExperience: number;
   extractionBonusExperience: number;
   rewards: { operatorId: string; baseExperience: number; extractionBonusExperience: number; totalExperience: number }[];
+  /** Generated contract that this result settles. */
+  procedural?: { planId: string; planetId: string; seed: number; templateId: string; generatorVersion: number; world?: MissionPlan['world'] };
+  fallback?: MissionFallback;
+  outcome?: 'extracted' | 'team-lost' | 'objective-unavailable';
+  durationTicks?: number;
+  objectives?: (ObjectiveSnapshot & { optional: boolean })[];
   /** Aggregated combat telemetry of the run (playtest evaluation). */
   combat?: CombatTelemetry;
+}
+
+export type HordeDirectorState = 'CALM' | 'BUILDUP' | 'ASSAULT' | 'PEAK' | 'RECOVERY';
+export type HordeWaveEndReason = 'completed' | 'partial' | 'blocked' | 'pressure' | 'defense' | 'resupply' |
+  'reinforcement' | 'nest-destroyed' | 'team-unavailable' | 'mission-phase' | 'mission-ended';
+
+export interface HordeDirectorSnapshot {
+  state: HordeDirectorState;
+  stateAt: number;
+  waveId?: number;
+}
+
+export interface HordeDirectorMetrics extends HordeDirectorSnapshot {
+  pressure: number;
+  nearby: number;
+  attacking: number;
+  living: number;
+  scale: number;
+  budget: number;
+  remaining: number;
+  reserved: number;
+  queuedGroups: number;
+  cap: number;
+  hold?: HordeWaveEndReason;
+  lastSpawnRegion?: string;
+  lastRegion?: string;
+  lastCandidate?: PositionXZ;
+  lastResult?: string;
+  checksPerSecond: number;
+  waveChecksPerSecond: number;
+  failures: number;
+  throttled: boolean;
+  updateMs: number;
+  validationMs: number;
+  initializationMs: number;
 }
 
 export interface MissionSnapshot {
@@ -143,7 +196,12 @@ export interface MissionSnapshot {
   balance?: { release: string; hash: string };
   state: MissionState;
   instanceId?: string;
+  atmosphereVersion?: number;
   selection?: MissionSelection;
+  /** Plan content is sent separately and joined to this reference by the client. */
+  planId?: string;
+  plan?: MissionPlan;
+  fallback?: MissionFallback;
   operators: OperatorStatus[];
   phase: DeploymentPhase;
   phaseAt: number;
@@ -157,6 +215,7 @@ export interface MissionSnapshot {
   objectives: ObjectiveSnapshot[];
   result?: MissionResult;
   threat: number;
+  encounter?: HordeDirectorSnapshot;
   nests: NestSnapshot[];
   alarms: AlarmSnapshot[];
   groups: number;
@@ -165,6 +224,11 @@ export interface MissionSnapshot {
   breachCount: number;
   nestsDestroyed: number;
   debug: boolean;
+}
+
+export function missionObjectives(snapshot: MissionSnapshot) {
+  return snapshot.plan?.objectives.map(({ definition }) => definition) ??
+    MISSION_REGISTRY.get(snapshot.missionId)?.objectives ?? [];
 }
 
 interface MissionEventData {
@@ -177,18 +241,21 @@ interface MissionEventData {
   SwarmBreachStarted: { id: number; nestId: number; position: PositionXZ; opensAt: number };
   SwarmNestCreated: { nestId: number; breachId: number };
   SwarmNestDamaged: { nestId: number; hp: number; shooter: string };
-  SwarmNestDestroyed: { nestId: number; shooter?: string };
+  SwarmNestDestroyed: { nestId: number; shooter?: string; position?: PositionXZ };
   AlbatrossTouchdown: { entityId: string; position: PositionXZ };
   AlbatrossDamaged: { entityId: string; thruster?: number; amount: number };
   ExtractionBeaconActivated: { position: PositionXZ };
+  ExtractionAvailable: Record<never, never>;
   ExtractionStarted: { method: ExtractionMethod; arrivalAt: number };
+  HordeWaveStarted: { waveId: number; budget: number };
+  HordeWaveEnded: { waveId: number; spawned: number; reason: HordeWaveEndReason };
   MissionCompleted: { result: MissionResult };
 }
 
 export type MissionEvent = {
   [K in keyof MissionEventData]: { type: K; tick: number } & MissionEventData[K]
-}[keyof MissionEventData];
+}[keyof MissionEventData] & { sequence?: number; instanceId?: string };
 
 export type MissionDebugAction = 'patrol' | 'alert' | 'breach' | 'nest' | 'destroy-nest' | 'objectives' |
   'carrier' | 'board' | 'deploy' | 'land' | 'damage-thruster' | 'destroy-albatross' |
-  'balloon' | 'fighter' | 'destroy-supply';
+  'balloon' | 'fighter' | 'destroy-supply' | 'horde-wave' | `weather:${string}`;

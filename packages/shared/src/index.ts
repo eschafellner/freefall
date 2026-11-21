@@ -14,3 +14,14 @@ export * from './balance/index.ts';
 export * from './combat/handling.ts';
 export * from './config/posture.ts';
 export * from './config/postureGeometry.ts';
+export * from './config/dive.ts';
+export * from './contracts/missionPlan.ts';
+export * from './definitions/proceduralMissions.ts';
+
+export * from './world/Terrain.ts';
+export * from './world/WorldGenerator.ts';
+export * from './world/PlanetProfiles.ts';
+export * from './world/PlanetWeather.ts';
+export * from './world/PlanetSurfaces.ts';
+export * from './world/SurfaceNoise.ts';
+export * from './world/ImpactSurfaces.ts';

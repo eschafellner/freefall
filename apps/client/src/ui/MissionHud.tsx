@@ -1,11 +1,11 @@
 import { bindings } from '../input/Bindings.ts';
-import { BALLOON, DIFFICULTY_REGISTRY, MISSION_REGISTRY, NET, PLANET_REGISTRY, distanceSquared, isCarrierScene } from '@freefall/shared';
+import { BALLOON, DIFFICULTY_REGISTRY, MISSION_REGISTRY, NET, PLANET_REGISTRY, distanceSquared, isCarrierScene, isOptionalObjective, missionObjectives } from '@freefall/shared';
 import type { DeploymentPhase, MissionSnapshot } from '@freefall/shared';
 import type { GameStatus } from '../game/Game.ts';
 import { OperatorManifest } from './CarrierConsole.tsx';
 
 const phaseText: Partial<Record<DeploymentPhase, string>> = {
-  LOCKED: 'Rampe verriegelt', DROPPING: 'Fallflug', ATMOSPHERIC_ENTRY: 'Atmosphäreneintritt',
+  DOCKED: 'Am Carrier angedockt', BOARDING: 'Trupp an Bord', LOCKED: 'Rampe verriegelt', DROPPING: 'Fallflug', ATMOSPHERIC_ENTRY: 'Atmosphäreneintritt',
   BRAKING: 'Bremsschub', TOUCHDOWN: 'Aufsetzen',
 };
 
@@ -14,8 +14,9 @@ export function seconds(until: number, status: GameStatus): number {
 }
 
 export function MissionHud({ mission, status }: { mission: MissionSnapshot; status: GameStatus }) {
-  const definition = MISSION_REGISTRY.get(mission.missionId);
-  if (!definition || mission.result) return null;
+  const name = mission.plan?.displayName ?? MISSION_REGISTRY.get(mission.missionId)?.displayName;
+  if (!name || mission.result) return null;
+  const objectives = missionObjectives(mission);
   const difficulty = DIFFICULTY_REGISTRY.get(mission.difficultyId);
   const selection = mission.selection;
   const own = status.players.find((player) => player.id === status.ownId);
@@ -25,8 +26,8 @@ export function MissionHud({ mission, status }: { mission: MissionSnapshot; stat
   const remaining = extraction ? seconds(extraction.endsAt, status) : 0;
   const tethered = extraction?.method === 'balloon' && extraction.securedIds.includes(status.ownId);
   const completed = mission.objectives.filter((obj) => obj.state === 'complete' &&
-    definition.objectives.some((item) => item.id === obj.id && item.kind === 'activate')).length;
-  const total = definition.objectives.filter((item) => item.kind === 'activate').length;
+    objectives.some((item) => item.id === obj.id && !isOptionalObjective(item))).length;
+  const total = objectives.filter((item) => !isOptionalObjective(item)).length;
 
   return <>
     {carrier && !deployment && <aside className="field-orders carrier-orders">
@@ -34,29 +35,34 @@ export function MissionHud({ mission, status }: { mission: MissionSnapshot; stat
       <p>{mission.state === 'BOARDING' ? `Vorn durch die Luftschleuse zum Albatross 02. An Bord mit ${bindings.label('INTERACT')} bereit melden.`
         : `Missionskonsole in der Mitte der Messe. Mit ${bindings.label('INTERACT')} öffnen.`}</p>
       {selection && <div className="field-counter"><span>{PLANET_REGISTRY.get(selection.planetId)?.displayName}</span>
-        <strong>{definition.displayName} · {difficulty?.displayName}</strong></div>}
+        <strong>{name} · {difficulty?.displayName}</strong></div>}
+      {mission.state === 'BOARDING' && mission.plan && <p>{mission.plan.briefing}</p>}
       <OperatorManifest mission={mission} status={status}/>
       {mission.boardingUntil > 0 && <div className="field-extract"><span>START</span><strong>{seconds(mission.boardingUntil, status)} s</strong></div>}
     </aside>}
     {deployment && <div className="deployment-brief" role="status">
       <span>ALBATROSS 02 · {difficulty?.displayName}</span>
-      <strong>{phaseText[mission.phase]}</strong><p>{definition.displayName} · {PLANET_REGISTRY.get(selection?.planetId ?? '')?.displayName}</p>
+      <strong>{phaseText[mission.phase]}</strong><p>{name} · {PLANET_REGISTRY.get(selection?.planetId ?? '')?.displayName}</p>
+      {mission.phaseUntil > 0 && <p>{seconds(mission.phaseUntil, status)} s</p>}
     </div>}
     {!carrier && !deployment && <aside className="field-orders" aria-label="Missionsziele">
-      <div className="field-heading"><strong>{definition.displayName}</strong><span>{difficulty?.displayName}</span></div>
-      <div className="field-counter"><span>PRIMÄRZIELE</span><strong>{completed} / {total}</strong></div>
+      <div className="field-heading"><strong>{name}</strong><span>{difficulty?.displayName}</span></div>
+      <div className="field-counter"><span>{mission.primaryObjectivesCompleted ? 'EXTRAKTION' : 'PRIMÄRZIELE'}</span><strong>{completed} / {total}</strong></div>
       <ol className="field-objectives">
-        {definition.objectives.map((objective) => {
+        {objectives.map((objective) => {
           const entry = mission.objectives.find((item) => item.id === objective.id);
           if (!entry) return null;
-          const detail = objective.kind === 'destroy-nests' ? `${entry.progress} / ${objective.count} · optional`
-            : entry.state === 'defending' ? `Verbindung · ${seconds(entry.completeAt, status)} s`
-            : entry.state === 'complete' ? 'Aktiv' : entry.state === 'locked' ? 'Gesperrt' : 'Bereit';
+          const detail = entry.state === 'failed' ? 'Gescheitert' : entry.state === 'cancelled' ? 'Beendet' :
+            objective.kind === 'destroy-nests' ? `${entry.progress} / ${objective.count}`
+            : entry.state === 'defending' ? (entry.completeAt ? `Verbindung · ${seconds(entry.completeAt, status)} s` :
+              `Relais besetzen · ${Math.round(entry.progress * 100)} %`)
+            : entry.state === 'complete' ? 'Erfüllt' : entry.state === 'locked' ? 'Gesperrt' : 'Bereit';
           return <li key={entry.id} className={entry.state}>
-            <i aria-hidden="true">{entry.state === 'complete' ? '✓' : '◇'}</i><span>{objective.label}</span><small>{detail}</small>
+            <i aria-hidden="true">{entry.state === 'complete' ? '✓' : '◇'}</i><span>{objective.label}</span><small>{detail}{isOptionalObjective(objective) && ' · optional'}</small>
           </li>;
         })}
       </ol>
+      {mission.activeBreaches > 0 && <small className="breach-warning">Schwarmdurchbrüche aktiv · {mission.activeBreaches}</small>}
       {mission.albatross && <div className="field-extract">
         <span>ALBATROSS 02</span>
         <strong>{mission.albatross.lifecycleState === 'DESTROYED' ? 'Zerstört' : mission.albatross.extractionAvailable ? 'Flugfähig' : 'Flugunfähig'} ·
@@ -72,14 +78,10 @@ export function MissionHud({ mission, status }: { mission: MissionSnapshot; stat
             <strong>Neuer Anflug · Am Seil sichern</strong>}
           {tethered && own && distanceSquared(extraction, own) >= (extraction.radius - 1.25) ** 2 && <strong>Seil gespannt · Zonengrenze</strong>}
         </> : <>
-          <span><kbd>{bindings.label('BALLOON')}</kbd> Extraktionsballon einsetzen</span>
+          <span><kbd>{bindings.label('BALLOON')}</kbd> Extraktionsballon {mission.plan ? `am Sammelpunkt ${mission.plan.extraction.balloon.label} einsetzen` : 'einsetzen'}</span>
         </>}
       </div>}
     </aside>}
-    <div className="combat-notice" role="status">
-      {mission.activeBreaches > 0 && <div className="breach-warning">Schwarmdurchbruch entdeckt {mission.activeBreaches > 1 && `× ${mission.activeBreaches}`}</div>}
-      {status.notice && <div>{status.notice}</div>}
-    </div>
     {status.interaction && !deployment && <div className="interact-hint"><kbd>{bindings.label('INTERACT')}</kbd> {status.interaction}</div>}
     {own?.hp === 0 && <div className="respawn" role="status"><strong>Außer Gefecht</strong><span>Der Einsatztrupp bleibt im Feld.</span></div>}
   </>;

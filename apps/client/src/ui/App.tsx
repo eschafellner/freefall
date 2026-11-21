@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent } from 'react';
-import { BODENBRUCH, DIFFICULTY_REGISTRY, isCarrierScene, HORDE_SIZES, MAX_PLAYERS, PLAYER, TEAM_COLORS, PLAYER_MOTION } from '@freefall/shared';
+import { BODENBRUCH, DIFFICULTY_REGISTRY, isCarrierScene, HORDE_SIZES, MAX_PLAYERS, NET, PLAYER, TEAM_COLORS, PLAYER_MOTION, planetWeather } from '@freefall/shared';
 import { Game, INITIAL_STATUS } from '../game/Game.ts';
 import type { GameStatus } from '../game/Game.ts';
+import { DAMAGE_DIRECTIONS } from '../game/DamageFeedback.ts';
+import { cameraPreferences } from '../rendering/CameraPreferences.ts';
 import { initialQuality, rememberQuality } from '../rendering/GraphicsQuality.ts';
 import type { QualityName } from '../rendering/GraphicsQuality.ts';
 import type { MissionDebugAction } from '@freefall/shared';
@@ -32,6 +34,8 @@ function Brand() {
 function Metrics({ status }: { status: GameStatus }) {
   const server = status.metrics;
   const motion = status.motion;
+  const weather = status.weather;
+  const audio = status.audio.diagnostics;
   return <><aside className="telemetry" aria-label="Live-Telemetrie">
     <div className="panel-title"><span className="signal" /> Live-Telemetrie <kbd>F2</kbd></div>
     <dl className="metrics">
@@ -43,7 +47,47 @@ function Metrics({ status }: { status: GameStatus }) {
       <dt>Gegner sichtbar / aktiv</dt><dd>{number.format(status.visibleEnemies)} <span>/ {number.format(status.activeEnemies)}</span></dd>
       <dt>Ping</dt><dd>{status.ping === null ? '–' : `${Math.round(status.ping)} ms`}</dd>
       <dt>Netzlast ≈</dt><dd>{decimal.format(status.bytesPerSecond / 1000)} kB/s</dd>
+      {status.eventTiming && <>
+        <dt>Ereignisalter ≈ Schuss / Aktion / Mission</dt><dd>{
+          [status.eventTiming.shot, status.eventTiming.action, status.eventTiming.mission]
+            .map((ms) => ms === undefined ? '–' : Math.round(ms)).join(' / ')} ms</dd>
+        <dt>Wartezeit Posenabgleich</dt><dd>{status.eventTiming.poseWait === undefined ? '–' : `${Math.round(status.eventTiming.poseWait)} ms`}</dd>
+      </>}
+      {status.weaponVfx && <>
+        <dt>Waffen-VFX</dt><dd>{status.weaponVfx.flashes}/{status.weaponVfx.flashCap} Blitz · {status.weaponVfx.tracers}/{status.weaponVfx.tracerCap} Tracer</dd>
+        <dt>Hülsen / Lauflicht</dt><dd>{status.weaponVfx.casings}/{status.weaponVfx.casingCap} / {status.weaponVfx.lights}</dd>
+        <dt>Impact-VFX</dt><dd>{status.weaponVfx.impacts}/{status.weaponVfx.tracerCap} · {status.weaponVfx.particles}/{status.weaponVfx.particleCap} Partikel · {status.weaponVfx.impactMs.toFixed(2)} ms</dd>
+        <dt>Impact-Pool</dt><dd>{status.weaponVfx.impactAccepted} angenommen ({status.impactRate ?? 0}/s) · {status.weaponVfx.impactReused} wiederverwendet · {status.weaponVfx.impactDropped} gekürzt</dd>
+        <dt>Impact-Audio</dt><dd>{status.impactSounds ?? 0} abgespielt</dd>
+        {status.lastImpact?.impact && <>
+          <dt>Letzter bestätigter Impact</dt><dd>{status.lastImpact.tick}:{status.lastImpact.shooter} · {status.lastImpact.impact.kind}{
+            status.lastImpact.impact.kind === 'world' ? ' · ' + status.lastImpact.impact.surface : ''}</dd>
+          <dt>Kontakt / Normale</dt><dd>{[status.lastImpact.toX, status.lastImpact.toY, status.lastImpact.toZ].map((value) => value.toFixed(2)).join(' / ')} · {
+            'normal' in status.lastImpact.impact ? status.lastImpact.impact.normal?.map((value) => value.toFixed(2)).join(' / ') : '–'}</dd>
+        </>}
+        <dt>Verworfene Schuss-Echos</dt><dd>{status.duplicateShots ?? 0}</dd>
+      </>}
+      {status.explosiveVfx && <>
+        <dt>Granaten / Explosionen</dt><dd>{status.explosiveVfx.grenades} / {status.explosiveVfx.blasts}/{status.explosiveVfx.cap} · {status.explosiveVfx.accepted} bestätigt</dd>
+        <dt>Rauch / Staub / Splitter / Licht</dt><dd>{status.explosiveVfx.smoke} / {status.explosiveVfx.dust} / {status.explosiveVfx.debris} / {status.explosiveVfx.lights} · {status.explosiveVfx.updateMs.toFixed(2)} ms</dd>
+        <dt>Explosionspool</dt><dd>{status.explosiveVfx.recycled} wiederverwendet · {status.explosiveVfx.dropped} gekürzt</dd>
+        <dt>Nahkampf / Treffer / Echos</dt><dd>{status.meleeSwings ?? 0} / {status.confirmedMeleeHits ?? 0} / {status.duplicateActions ?? 0}</dd>
+        {status.explosiveVfx.last && <>
+          <dt>Letzte Detonation</dt><dd>#{status.explosiveVfx.last.id} · {status.explosiveVfx.last.grenade ?? 'Frag'} · {status.explosiveVfx.last.contact?.surface ?? '—'}</dd>
+          <dt>Detonationspunkt</dt><dd>{[status.explosiveVfx.last.x, status.explosiveVfx.last.y, status.explosiveVfx.last.z].map((v) => v.toFixed(2)).join(' / ')}</dd>
+        </>}
+      </>}
     </dl>
+    {weather && status.mission?.debug && <>
+      <div className="metrics-divider">ATMOSPHÄRE <span>{weather.profile}</span></div>
+      <dl className="metrics" aria-label="Atmosphärentelemetrie" data-atmosphere={JSON.stringify(weather)}>
+        <dt>Wetter</dt><dd>{weather.current}{weather.target && ` → ${weather.target} (${Math.round(weather.progress * 100)} %)`}</dd>
+        <dt>Tageszeit / Version</dt><dd>{weather.timeOfDay} / {weather.version}.{weather.revision}</dd>
+        <dt>Wind / Stärke / Böe</dt><dd>{Math.round(weather.direction * 180 / Math.PI)}° / {weather.strength.toFixed(2)} / {weather.gust.toFixed(2)}</dd>
+        <dt>Partikel / Limit</dt><dd>{weather.particles} / {weather.cap}</dd>
+        <dt>Atmosphäre / Partikel</dt><dd>{weather.updateMs.toFixed(3)} / {weather.particleMs.toFixed(3)} ms</dd>
+      </dl>
+    </>}
     <div className="metrics-divider">SERVER <span>{server ? `${server.tickHz.toFixed(1)} Hz` : 'Offline'}</span></div>
     <dl className="metrics">
       <dt>Tick · zuletzt</dt><dd>{server ? `${server.lastMs.toFixed(2)} ms` : '–'}</dd>
@@ -57,16 +101,81 @@ function Metrics({ status }: { status: GameStatus }) {
         <dt>Durchbrüche aktiv / gesamt</dt><dd>{status.mission.activeBreaches} / {status.mission.breachCount}</dd>
       </>}
     </dl>
+    {server?.hordeDirector && status.mission?.encounter && <>
+      <div className="metrics-divider">HORDE DIRECTOR <span>{status.mission.state}</span></div>
+      <dl className="metrics">
+        <dt>Phase / Dauer</dt><dd>{server.hordeDirector.state} / {Math.max(0, Math.floor((status.mission.tick - server.hordeDirector.stateAt) / NET.tickHz))} s</dd>
+        <dt>Druck / Bedrängung</dt><dd>{decimal.format(server.hordeDirector.pressure * 100)} % / {server.hordeDirector.nearby} nah · {server.hordeDirector.attacking} im Angriff</dd>
+        <dt>Welle / Rest / Budget</dt><dd>{server.hordeDirector.waveId ?? '–'} / {server.hordeDirector.remaining} / {server.hordeDirector.budget}</dd>
+        <dt>Operatoren / Skalierung</dt><dd>{server.hordeDirector.living} / ×{decimal.format(server.hordeDirector.scale)}</dd>
+        <dt>Gegner / Reserviert / Limit</dt><dd>{server.activeEnemies} / {server.hordeDirector.reserved} / {server.hordeDirector.cap}</dd>
+        <dt>Wartende Gruppen</dt><dd>{server.hordeDirector.queuedGroups}</dd>
+        <dt>Letzter Spawnbereich</dt><dd>{server.hordeDirector.lastSpawnRegion ?? '–'}</dd>
+        <dt>Letzter Kandidat</dt><dd>{server.hordeDirector.lastRegion ?? '–'} · {server.hordeDirector.lastResult ?? '–'}</dd>
+        <dt>Prüfungen/s / Welle/s / verworfen</dt><dd>{server.hordeDirector.checksPerSecond} / {server.hordeDirector.waveChecksPerSecond} / {server.hordeDirector.failures}</dd>
+        <dt>Director / Prüfung / Spawn</dt><dd>{server.hordeDirector.updateMs.toFixed(3)} / {server.hordeDirector.validationMs.toFixed(3)} / {server.hordeDirector.initializationMs.toFixed(3)} ms</dd>
+        <dt>Pause / Budgetlimit</dt><dd>{server.hordeDirector.hold ?? '–'} / {server.hordeDirector.throttled ? 'aktiv' : '–'}</dd>
+      </dl>
+    </>}
+    {server?.enemyAI && <>
+      <div className="metrics-divider">GEGNER-KI <span>Letzter Tick</span></div>
+      <dl className="metrics">
+        <dt>Ziel / Navigation</dt><dd>{server.enemyAI.targetMs.toFixed(2)} / {server.enemyAI.navigationMs.toFixed(2)} ms</dd>
+        <dt>Lenkung / Nachbarn / Kollision</dt><dd>{server.enemyAI.steeringMs.toFixed(2)} / {server.enemyAI.neighborMs.toFixed(2)} / {server.enemyAI.collisionMs.toFixed(2)} ms</dd>
+        <dt>Pfade / aufgeschoben</dt><dd>{server.enemyAI.pathRequests} / {server.enemyAI.deferredPaths}</dd>
+        <dt>Distanzfelder neu / Cache</dt><dd>{server.enemyAI.fieldBuilds} / {server.enemyAI.fieldHits} · {server.enemyAI.fieldMs.toFixed(2)} ms</dd>
+        <dt>Wahrnehmung</dt><dd>{server.enemyAI.perceptionMs.toFixed(2)} ms</dd>
+        <dt>Nahkampf / Encounter</dt><dd>{server.enemyAI.attackMs.toFixed(2)} / {server.enemyAI.encounterMs.toFixed(2)} ms</dd>
+        <dt>Trefferprüfung</dt><dd>{server.enemyAI.attackValidationMs.toFixed(2)} ms</dd>
+        <dt>Windup / Aktiv / Recovery</dt><dd>{server.enemyAI.attacks.windup} / {server.enemyAI.attacks.active} / {server.enemyAI.attacks.recovery}</dd>
+        <dt>Angriffe / Treffer pro Sekunde</dt><dd>{server.enemyAI.attacks.startsPerSecond.toFixed(1)} / {server.enemyAI.attacks.hitsPerSecond.toFixed(1)}</dd>
+        <dt>Stecken / kein Pfad / repariert</dt><dd>{server.enemyAI.stuckEpisodes} / {server.enemyAI.unreachableEpisodes} / {server.enemyAI.recoveries}</dd>
+        <dt>Recovery versucht / gelöst / wartet</dt><dd>{server.enemyAI.recoveryAttempts} / {server.enemyAI.recoverySuccesses} / {server.enemyAI.recoveryFallbacks}</dd>
+        {server.enemyAI.samples.map((enemy) => <Fragment key={enemy.id}>
+          <dt>#{enemy.id} · {enemy.state}</dt>
+          <dd>{enemy.targetValid && enemy.distance !== undefined ? `${enemy.target} · ${enemy.distance.toFixed(1)} m` : 'Kein gültiges Ziel'}</dd>
+          <dt>{enemy.destination ? `Wegpunkt ${enemy.destination.x.toFixed(1)}, ${enemy.destination.z.toFixed(1)}` : 'Kein Wegpunkt'}</dt>
+          <dd>{enemy.cooldownTicks} Ticks {enemy.waitingForClearance ? '· Wartet auf Freiraum' : enemy.stuck ? `· Recovery ${enemy.recoveryAttempts}` : enemy.unreachable ? '· Kein Pfad' : ''}</dd>
+          {enemy.combat && <>
+            <dt>{enemy.combat.type} · {enemy.combat.phase} {enemy.combat.id && `· ${enemy.combat.id}`}</dt>
+            <dd>{enemy.combat.range.toFixed(2)} m / {enemy.combat.angle}°{enemy.combat.remainingTicks !== undefined && ` · ${enemy.combat.remainingTicks} Ticks`}</dd>
+            {enemy.combat.result && <>
+              <dt>Validierung / Sektor</dt><dd>{enemy.combat.result} · {enemy.combat.damage ?? 0} HP · {enemy.combat.reservation ?? '–'}</dd>
+            </>}
+          </>}
+          <dt>Nachbarn / Tempo</dt><dd>{enemy.neighborCount ?? '–'} / {enemy.velocity ? Math.hypot(enemy.velocity.x, enemy.velocity.z).toFixed(1) : '–'} m/s</dd>
+          {enemy.steering && enemy.separation && enemy.avoidance && <>
+            <dt>Lenkung · Trennung · Ausweichen (x/z)</dt>
+            <dd>{[enemy.steering, enemy.separation, enemy.avoidance].map(({ x, z }) => `${x.toFixed(1)}/${z.toFixed(1)}`).join(' · ')}</dd>
+          </>}
+        </Fragment>)}
+      </dl>
+    </>}
     {server?.combat && <CombatMetrics combat={server.combat}/>}
-    <div className="metrics-divider">AUDIO <span>{status.audio.voices} Stimmen</span></div>
+    <div className="metrics-divider" data-audio={audio && JSON.stringify(audio)}>
+      AUDIO <span>{status.audio.voices} Stimmen</span>
+    </div>
     <dl className="metrics">
       <dt>Stimmen Spitze / verworfen</dt><dd>{status.audio.peak} <span>/ {status.audio.dropped}</span></dd>
+      {audio && <>
+        <dt>Audio-Kontext</dt><dd>{audio.context}{audio.duck ? ' · Ducking' : ''}</dd>
+        <dt>Planet / Wetter-Audio</dt><dd>{audio.planet ?? '–'} <span>{audio.weather ?? '–'} · {audio.wind ?? '–'}</span></dd>
+        <dt>Budget / Kampf / Ambience / 3D</dt><dd>{audio.budget} <span>/ {audio.combat} / {audio.ambience} / {audio.spatial}</span></dd>
+        <dt>Ereignisse / s</dt><dd>{audio.rate}</dd>
+        <dt>Audio CPU / Horde-Spitze</dt><dd>{audio.updateMs.toFixed(2)} <span>/ {audio.enemyPeakMs.toFixed(2)} ms</span></dd>
+        <dt>Audio-Cache</dt><dd>{audio.buffers} <span>· {audio.pcmMiB.toFixed(1)} MiB PCM · {audio.loading} laden</span></dd>
+        <dt>Audio Laden / Dekodieren / Fehler</dt><dd>{audio.loadMs.toFixed(0)} / {audio.decodeMs.toFixed(0)} ms <span>/ {audio.errors}</span></dd>
+        <dt>Master / Kampf / Welt / Amb. / Wetter / UI</dt><dd>{[audio.levels.master, audio.levels.weapons, audio.levels.environment,
+          audio.levels.ambience, audio.levels.weather, audio.levels.ui].map((v) => Math.round(100 * v)).join(' / ')} %
+          {audio.levels.muted ? ' · stumm' : ''}</dd>
+      </>}
     </dl>
   </aside>
   {motion && <aside className="telemetry motion-telemetry" aria-label="Bewegungstelemetrie">
       <div className="panel-title"><span className="signal" /> Bewegung <kbd>{motion.animState}</kbd></div>
       <dl className="metrics">
         <dt>Frame P95 / P99</dt><dd>{motion.frameP95.toFixed(1)} <span>/ {motion.frameP99.toFixed(1)}</span></dd>
+        <dt>Kamera / Reticle / Schadens-HUD</dt><dd>{motion.cameraMs.toFixed(3)} / {motion.reticleMs.toFixed(3)} / {motion.damageHudMs.toFixed(3)} ms</dd>
         <dt>Snapshots / Jitter</dt><dd>{motion.snapshotHz.toFixed(0)} Hz <span>/ {motion.snapshotJitterMs.toFixed(0)} ms</span></dd>
         <dt>Interp. / Puffer</dt><dd>{motion.interpolationMs.toFixed(0)} <span>/ {motion.bufferedMs.toFixed(0)} ms</span></dd>
         <dt>Extrapol. / gehalten</dt><dd>{motion.extrapolatedPct.toFixed(1)} <span>/ {motion.heldPct.toFixed(1)} %</span></dd>
@@ -76,10 +185,16 @@ function Metrics({ status }: { status: GameStatus }) {
         <dt>Unbestätigte Eingaben</dt><dd>{motion.unacknowledged}</dd>
         <dt>Haltung / Zielhaltung</dt><dd>{motion.posture} <span>/ {motion.requestedPosture}</span></dd>
         <dt>Hechtsprung / Cooldown</dt><dd>{motion.dive}</dd>
+        <dt>Körperwinkel / Kriechtempo</dt><dd>{motion.bodyYaw.toFixed(0)}° <span>/ {motion.groundSpeed.toFixed(2)} m/s</span></dd>
+        <dt>Aufstehen / Aktion</dt><dd>{motion.getUp} <span>/ {motion.action}</span></dd>
         <dt>Kollider / Bodenkontakt</dt><dd>{motion.collider} <span>m · {motion.grounded ? 'ja' : 'nein'}</span></dd>
         <dt>Erlaubte Aktionen</dt><dd>{motion.actions || '–'}</dd>
         <dt>Serverposition</dt><dd>{motion.serverPosition}</dd>
         <dt>Sichtbare Position</dt><dd>{motion.visualPosition}</dd>
+        <dt>Animationszeit / Oberkörper</dt><dd>{motion.playback}</dd>
+        <dt>Kamera / Kollisionsrückzug</dt><dd>{motion.camera}</dd>
+        <dt>Kameraziel</dt><dd>{motion.cameraTarget}</dd>
+        <dt>Letzte Eingabe</dt><dd>{motion.input}</dd>
         <dt>Tempo Lauf / Anim.</dt><dd>{motion.moveSpeed.toFixed(1)} <span>/ {motion.animSpeed.toFixed(1)} m/s</span></dd>
       </dl>
   </aside>}
@@ -108,8 +223,15 @@ function AudioSettings({ game }: { game: Game | null }) {
   const [, refresh] = useState(0);
   const settings = game?.audio.settings;
   if (!game || !settings) return null;
-  const channels = [['master', 'Master'], ['weapons', 'Waffen / SFX'], ['environment', 'Umgebung'], ['ui', 'Interface']] as const;
+  const channels = [['master', 'Master'], ['weapons', 'Kampf'], ['environment', 'Welt'],
+    ['ambience', 'Ambience'], ['weather', 'Wetter'], ['ui', 'Interface']] as const;
   return <fieldset className="audio-settings"><legend>Audio</legend>
+    <div className="audio-toggles">
+      <label><input type="checkbox" checked={settings.enabled}
+        onChange={(event) => { game.setAudioOption('enabled', event.target.checked); refresh((n) => n + 1); }}/> Audio aktiv</label>
+      <label><input type="checkbox" checked={settings.muted}
+        onChange={(event) => { game.setAudioOption('muted', event.target.checked); refresh((n) => n + 1); }}/> Stumm</label>
+    </div>
     {channels.map(([channel, label]) => <label key={channel}>{label}
       <input type="range" min={0} max={100} value={Math.round(settings[channel] * 100)} aria-label={`Lautstärke ${label}`}
         onChange={(event) => { game.setVolume(channel, Number(event.target.value) / 100); refresh((n) => n + 1); }}/>
@@ -119,6 +241,8 @@ function AudioSettings({ game }: { game: Game | null }) {
 
 export function App() {
   const surface = useRef<HTMLDivElement>(null);
+  const reticle = useRef<HTMLDivElement>(null);
+  const damageHud = useRef<HTMLDivElement>(null);
   const game = useRef<Game | null>(null);
   const [status, setStatus] = useState(INITIAL_STATUS);
   const [quality, setQuality] = useState(initialQuality);
@@ -136,14 +260,16 @@ export function App() {
   const mission = status.mission;
   const inCarrier = status.missionRoom && (!mission || isCarrierScene(mission.state, mission.phase));
   const result = mission?.result;
-  const cinematic = mission?.state === 'DEPLOYMENT' || mission?.extraction?.phase === 'LIFT';
+  const cinematic = mission?.state === 'DEPLOYMENT' ||
+    (mission?.extraction?.phase === 'LIFT' && mission.extraction.securedIds.includes(status.ownId));
   const reward = result?.rewards.find(({ operatorId }) => operatorId === status.ownId);
+  const objectivesCompleted = result?.objectives?.filter(({ state }) => state === 'complete').length;
   const own = status.players.find((player) => player.id === status.ownId);
 
   useEffect(() => {
     if (!surface.current) return;
     try {
-      game.current = new Game(surface.current, setStatus, setFault, qualityRef.current);
+      game.current = new Game(surface.current, setStatus, setFault, qualityRef.current, reticle, damageHud);
     } catch (error) {
       console.error(error);
       setFatal(true);
@@ -154,6 +280,9 @@ export function App() {
       if (event.code === 'F3' && !event.repeat) {
         event.preventDefault();
         game.current?.toggleRoutes();
+      }
+      if (event.code === 'F4' && !event.repeat) {
+        game.current?.toggleWeather();
       }
       if (event.code === 'F2' && !event.repeat) {
         event.preventDefault();
@@ -206,26 +335,32 @@ export function App() {
     if (code.trim()) void connect('code');
   };
 
-  return <main className={`freefall ${status.locked ? 'in-game' : 'in-menu'} ${(own?.motion ?? 0) & PLAYER_MOTION.aim ? 'aiming' : ''}`}>
+  const missionName = mission?.plan?.displayName ?? BODENBRUCH.displayName;
+  return <main data-reduced-motion={cameraPreferences.reducedMotion} className={`freefall ${status.locked ? 'in-game' : 'in-menu'} ${(own?.motion ?? 0) & PLAYER_MOTION.aim ? 'aiming' : ''}`}>
     <div ref={surface} className="surface"/>
-    <div className={`vignette ${status.hurt ? 'hurt' : ''}`}/>
+    <div className={`vignette ${status.hurt && status.locked && !cinematic && !result ? 'hurt' : ''}`}/>
     <header className="topbar">
       <Brand />
       <div className="mission-label"><span>{inCarrier ? 'CARRIER' : status.missionRoom ? 'OPERATION' : active ? 'TESTARENA' : 'KOOP'}</span>
-        <strong>{inCarrier ? 'Skyfall Carrier' : status.missionRoom ? BODENBRUCH.displayName : active ? 'Boreal Relay' : 'Einsatzleitstelle'}</strong></div>
+        <strong>{inCarrier ? 'Skyfall Carrier' : status.missionRoom ? missionName : active ? 'Boreal Relay' : 'Einsatzleitstelle'}</strong></div>
       <div className={`connection ${active ? 'is-online' : ''}`}><i />{active ? 'Verbunden' : 'Bereit zum Beitritt'}</div>
     </header>
 
     {telemetry && <Metrics status={status}/>}
     {status.locked && mission && <MissionHud mission={mission} status={status}/>}
-    {!status.locked && <section className="operations" aria-label={active ? 'Einsatzsteuerung' : 'Koop-Lobby'}>
-      <div className="eyebrow"><span />{active ? inCarrier ? 'Skyfall Carrier · Deck 03' : status.missionRoom ? BODENBRUCH.displayName : 'Boreal Relay · Testarena' : 'KOOP · 1–4 SPIELER'}</div>
+    {status.locked && !result && status.notice && <div className="combat-notice" role="status"><div>{status.notice}</div></div>}
+    {!status.locked && <section className={result ? 'operations results' : 'operations'}
+      aria-label={result ? 'Einsatzergebnis' : active ? 'Einsatzsteuerung' : 'Koop-Lobby'}>
+      <div className="eyebrow"><span />{active ? inCarrier ? 'Skyfall Carrier · Deck 03' : status.missionRoom ? missionName : 'Boreal Relay · Testarena' : 'KOOP · 1–4 SPIELER'}</div>
       {active ? <>
-        <h1 className="room-heading">{result ? result.primaryObjectivesCompleted ? 'Einsatz erfolgreich' : 'Einsatz gescheitert'
+        <h1 className="room-heading">{result ? result.extractionSucceeded ? 'Einsatz erfolgreich' : 'Einsatz gescheitert'
           : status.atConsole ? 'Einsatzplanung' : inCarrier ? 'Mannschaftsdeck' : 'Einsatz bereit'}</h1>
-        {result && <>
-          <p>{result.extractionSucceeded ? `Extraktion bestätigt · ${result.extractedOperatorIds.length} Operator`
+        {result && <div key={result.id} className="mission-result">
+          <p>{result.extractionSucceeded ? `Extraktion bestätigt · ${result.extractedOperatorIds.length} Operator · ${result.extractionMethod === 'balloon' ? 'Rettungsballon' : 'Albatross 02'}`
+            : result.outcome === 'objective-unavailable' ? 'Missionsziel nicht verfügbar · Einsatz abgebrochen'
             : 'Trupp ausgefallen · Keine Operatoren extrahiert'}</p>
+          {result.procedural && <p>{missionName} · Seed {result.procedural.seed}
+            {objectivesCompleted !== undefined && ` · ${objectivesCompleted} ${objectivesCompleted === 1 ? 'Ziel' : 'Ziele'} erfüllt`}</p>}
           <p>Convicts im Statusbericht {result.convictsSurvived}/{result.convictsDeployed} lebend.
             Albatross {result.albatrossSurvived ? 'erhalten' : 'zerstört'}.</p>
           {reward && <div className="result-reward">{reward.baseExperience} Basis-EP + {reward.extractionBonusExperience} Extraktions-EP
@@ -234,14 +369,20 @@ export function App() {
             aria-pressed={mission.operators.some(({ id, endVote }) => id === status.ownId && endVote)}>
             Rückkehr bestätigen <span>{seconds(mission.resultUntil, status)} s</span>
           </button>
-        </>}
+        </div>}
         {!result && <div className="room">
           <div><span>RAUMCODE</span><strong>{status.roomId}</strong></div>
           <button className="text-button" type="button" onClick={() => void copyLink()}>{copied ? 'Kopiert' : 'Einladungslink kopieren'}</button>
         </div>}
         {mission && status.atConsole && !result && <CarrierConsole mission={mission} status={status}
           select={(selection) => game.current?.select(selection)} start={() => game.current?.startMission()}/>}
-        {mission?.state === 'BOARDING' && <OperatorManifest mission={mission} status={status}/>}
+        {mission?.state === 'BOARDING' && <>
+          {mission.plan && <p>{mission.plan.briefing}</p>}
+          {mission.fallback && <p>Ersatzauftrag · Operation Bodenbruch</p>}
+          <OperatorManifest mission={mission} status={status}/>
+        </>}
+        {mission?.state === 'BOARDING' && status.host && <button className="secondary" type="button"
+          onClick={() => game.current?.cancelBoarding()}>Boarding abbrechen · zurück zur Missionskonsole</button>}
         {!result && <button className="primary" type="button" onClick={() => { setFault(''); game.current?.lock(); }}
           disabled={!status.ready || (status.missionRoom && !mission)}>
           {status.ready && (!status.missionRoom || mission) ? inCarrier ? 'Carrier betreten' : status.missionRoom ? 'Einsatz betreten' : 'Arena betreten' : 'Synchronisiere …'}
@@ -257,17 +398,26 @@ export function App() {
             {HORDE_SIZES.map((size) => <button key={size} type="button" disabled={!status.host} aria-pressed={status.metrics?.hordeSize === size} onClick={() => game.current?.setHorde(size)}>{number.format(size)}</button>)}
           </div>
         </div>}
-        {mission && !inCarrier && <div className="session-difficulty">{DIFFICULTY_REGISTRY.get(mission.difficultyId)?.displayName}</div>}
-        {mission?.debug && status.host &&
+        {mission && !inCarrier && !result && <div className="session-difficulty">{DIFFICULTY_REGISTRY.get(mission.difficultyId)?.displayName}</div>}
+        {mission?.debug && status.host && !result &&
           <div className="debug-controls">
             {([
               ['patrol', 'Patrouille'], ['alert', 'Alarm'], ['breach', 'Durchbruch'], ['nest', 'Nest'],
-              ['destroy-nest', 'Nest zerstören'], ['objectives', 'Relais abschließen'],
+              ['destroy-nest', 'Nest zerstören'], ['objectives', 'Relais abschließen'], ['horde-wave', 'Welle anstoßen'],
               ['board', 'Boarding simulieren'], ['deploy', 'Deployment starten'], ['land', 'Direkt landen'],
               ['damage-thruster', 'Düse beschädigen'], ['destroy-albatross', 'Albatross zerstören'],
               ['balloon', 'Ballon auslösen'], ['fighter', 'Rettungsjäger rufen'],
             ] satisfies [MissionDebugAction, string][]).map(([action, label]) =>
               <button className="secondary" key={action} type="button" onClick={() => game.current?.debug(action)}>{label}</button>)}
+            {!inCarrier && mission.plan?.world && <label>Testwetter
+              <select value="" onChange={(event) => {
+                if (event.target.value) game.current?.debug(`weather:${event.target.value}`);
+              }}>
+                <option value="">Wetter wählen</option>
+                {planetWeather(mission.plan.world.planetId).map(({ id }) => <option key={id} value={id}>{id}</option>)}
+              </select>
+            </label>}
+            <button className="secondary" type="button" onClick={() => game.current?.toggleWeather()}>Wetterdarstellung · F4</button>
             <button className="secondary" type="button" onClick={() => game.current?.toggleRoutes()}>Routen · F3</button>
             {mission.convicts.length > 0 && <ul className="debug-convicts">{mission.convicts.map((convict) =>
               <li key={convict.id}>Convict {convict.slot + 1} · {convict.state} · {convict.hp}/{convict.maxHp} · {convict.equipmentId} · {convict.weaponId}</li>)}</ul>}
@@ -275,7 +425,7 @@ export function App() {
       </> : <>
         <h1>FREEFALL<span>.</span></h1>
         <div className="mode-picker" aria-label="Spielmodus">
-          <button type="button" aria-pressed={mode === 'mission'} onClick={() => setMode('mission')}>Operation Bodenbruch</button>
+          <button type="button" aria-pressed={mode === 'mission'} onClick={() => setMode('mission')}>Planeteneinsätze</button>
           <button type="button" aria-pressed={mode === 'arena'} onClick={() => setMode('arena')}>Boreal Relay</button>
         </div>
         <p>{mode === 'mission' ? 'Plant euren Einsatz auf dem Skyfall Carrier und stellt die Verbindung nach Dev’ Ault wieder her.' : 'Testarena mit einstellbarer Hordengröße für Kampftraining und Benchmarks.'}</p>
@@ -299,13 +449,20 @@ export function App() {
       {fault && <div className="fault" role="alert">{fault}</div>}
     </section>}
 
-    {status.locked && !inCarrier && !cinematic && own && own.hp > 0 && <div className={`reticle ${status.hit ? 'hit' : ''} ${status.eliminated ? 'kill' : ''} ${status.allyHit ? 'ally' : ''}`} aria-hidden="true"><i/><i/><i/><i/></div>}
-    {status.locked && status.friendlyNotice && <div className="friendly-notice" role="status">{status.friendlyNotice}</div>}
+    {status.locked && !inCarrier && !cinematic && !result && own && own.hp > 0 && <>
+      <div ref={reticle} className={`reticle ${status.hit ? 'hit' : ''} ${status.eliminated ? 'kill' : ''} ${status.allyHit ? 'ally' : ''}`} aria-hidden="true">
+        <i/><i/><i/><i/><span className="reticle-blocked"/><span className="reticle-confirmation"/>
+      </div>
+      <div ref={damageHud} className="damage-directions" aria-hidden="true">
+        {DAMAGE_DIRECTIONS.map((i) => <span key={i} hidden/>)}
+      </div>
+    </>}
+    {status.locked && !result && !cinematic && status.friendlyNotice && <div className="friendly-notice" role="status">{status.friendlyNotice}</div>}
     {status.locked && !cinematic && own && own.hp > 0 && own.posture?.standBlockedAt !== undefined &&
       status.serverTick - own.posture.standBlockedAt < 30 && <div className="posture-notice" role="status">Kein Platz zum Aufstehen</div>}
     {active && status.respawn > 0 && <div className="respawn" role="status"><strong>Außer Gefecht</strong><span>Respawn in {status.respawn.toFixed(1)} s</span></div>}
 
-    <footer className="bottom">
+    {!result && <footer className="bottom">
       {active && own && <div className="operator-hud">
         {status.locked && !cinematic && <VitalSigns player={own} tick={status.serverTick}/>}
         <div className="squad" aria-label="Spieler im Einsatz">
@@ -330,6 +487,6 @@ export function App() {
         <span><kbd>{bindings.label('FIRE')}</kbd> Feuern</span><span><kbd>Esc</kbd> Menü</span>
       </div>}
       {active && own && status.locked && !inCarrier && !cinematic && <WeaponReadout player={own} tick={status.serverTick}/>}
-    </footer>
+    </footer>}
   </main>;
 }

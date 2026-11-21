@@ -1,5 +1,5 @@
-import { ALBATROSS, BALLOON, distanceSquared, inAlbatross, openGround } from '@freefall/shared';
-import type { ExtractionMethod, ExtractionSnapshot, PositionXZ, WorldDefinition } from '@freefall/shared';
+import { ALBATROSS, BALLOON, canSecureExtraction, distanceSquared, inAlbatross, openGround } from '@freefall/shared';
+import type { ExtractionMethod, ExtractionSnapshot, MissionLocation, PositionXZ, WorldDefinition } from '@freefall/shared';
 import type { SimPlayer } from '../simulation/Player.ts';
 
 interface ExtractionStrategy {
@@ -26,10 +26,11 @@ export class ExtractionSystem {
   private balloonUsed = false;
 
   start(method: ExtractionMethod, player: SimPlayer, ship: PositionXZ, airworthy: boolean,
-    tick: number, world: WorldDefinition): boolean {
+    tick: number, world: WorldDefinition, pickup?: MissionLocation): boolean {
     if (this.current || (method === 'balloon' ? this.balloonUsed : !airworthy)) return false;
     const strategy = strategies[method];
-    const anchor = strategy.anchor(player, ship);
+    if (method === 'balloon' && pickup && distanceSquared(player, pickup) > pickup.radius ** 2) return false;
+    const anchor = method === 'balloon' && pickup ? pickup : strategy.anchor(player, ship);
     if (!strategy.eligible(player, anchor) || (method === 'balloon' && (!openGround(world, anchor.x, anchor.z, 1.1) || inAlbatross(anchor, ship)))) return false;
     this.current = {
       method, x: anchor.x, z: anchor.z, phase: 'COUNTDOWN', startedAt: tick, phaseAt: tick,
@@ -64,7 +65,7 @@ export class ExtractionSystem {
     return active?.method === 'balloon' && active.securedIds.includes(player.id) ? active : undefined;
   }
 
-  update(living: readonly SimPlayer[], tick: number, airworthy: boolean): 'cancel' | 'complete' | undefined {
+  update(living: readonly SimPlayer[], tick: number, airworthy: boolean, world?: WorldDefinition): 'cancel' | 'complete' | undefined {
     const active = this.current;
     if (!active) return;
     if (active.method === 'albatross' && !airworthy) {
@@ -81,6 +82,9 @@ export class ExtractionSystem {
       active.phaseAt = tick;
       active.endsAt = tick + BALLOON.approachTicks;
       return;
+    }
+    for (const id of active.securedIds) {
+      if (!living.some((player) => player.id === id && canSecureExtraction(player.posture.current, player, world))) this.release(id);
     }
     if (!active.securedIds.length) {
       if (active.method === 'albatross') {

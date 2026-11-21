@@ -299,17 +299,99 @@ export const combatSchema = obj({
 });
 
 export const swarmSchema = obj({
+  director: obj({
+    enabled: bool(),
+    sampleTicks: count({ min: 1, max: SIMULATION_HZ * 10 }),
+    timing: obj({
+      calmTicks: count({ min: 1, max: 18000 }),
+      calmJitterTicks: count({ max: 18000 }),
+      buildupTicks: count({ min: 1, max: 18000 }),
+      assaultMinTicks: count({ min: 1, max: 18000 }),
+      assaultMaxTicks: count({ min: 1, max: 18000 }),
+      peakMinTicks: count({ min: 1, max: 18000 }),
+      peakMaxTicks: count({ min: 1, max: 18000 }),
+      recoveryMinTicks: count({ min: 1, max: 18000 }),
+      recoveryMaxTicks: count({ min: 1, max: 18000 }),
+    }),
+    pressure: obj({
+      smoothing: positive({ max: 1 }),
+      startAtMost: nonNegative({ max: 1 }),
+      pauseAt: positive({ max: 1 }),
+      weights: obj({ population: nonNegative({ max: 1 }), nearby: nonNegative({ max: 1 }),
+        attacks: nonNegative({ max: 1 }), health: nonNegative({ max: 1 }), damage: nonNegative({ max: 1 }),
+        casualties: nonNegative({ max: 1 }) }),
+    }),
+    wave: obj({
+      minEnemies: count({ min: 1, max: MAX_ENEMIES }),
+      maxEnemies: count({ min: 1, max: MAX_ENEMIES }),
+      groupMin: count({ min: 1, max: MAX_ENEMIES }),
+      groupMax: count({ min: 1, max: MAX_ENEMIES }),
+      perAdditionalOperator: nonNegative({ max: 1 }),
+      budgetJitter: nonNegative({ max: .5 }),
+      groupIntervalTicks: count({ min: 1, max: 18000 }),
+      spawnIntervalTicks: count({ min: 1, max: 18000 }),
+      candidateRetries: count({ min: 1, max: 100 }),
+    }),
+    spawn: obj({
+      visibilityDot: num({ min: -1, max: 1 }),
+      maxChecksPerTick: count({ min: 1, max: MAX_ENEMIES }),
+      dynamicChecksPerTick: count({ min: 1, max: MAX_ENEMIES }),
+      priorityHeadroom: count({ max: MAX_ENEMIES }),
+      patrolSeedWindowTicks: count({ min: 1, max: 18000 }),
+    }),
+  }),
+  meleeAttack: obj({
+    windupTicks: count({ min: 1, max: 300 }),
+    activeTicks: count({ min: 1, max: 300 }),
+    recoveryTicks: count({ min: 1, max: 300 }),
+    halfAngleDegrees: positive({ max: 90 }),
+    decisionTicks: count({ min: 1, max: 30 }),
+  }),
   hordeAi: obj({
     targetTicks: count({ min: 1, max: 300 }),
+    targeting: (value, path, issues) => obj({
+      commitmentTicks: count({ max: 3600 }),
+      switchMeters: nonNegative({ max: 500 }),
+      switchRatio: positive({ max: 1 }),
+    })(value === undefined ? { commitmentTicks: SIMULATION_HZ, switchMeters: 2, switchRatio: .8 } : value, path, issues),
     steeringTicks: count({ min: 1, max: 300 }),
     separationRadius: positive({ max: 20 }),
-    neighborsPerCell: count({ min: 1, max: 1000 }),
+    neighborsPerCell: count({ min: 1, max: 32 }),
+    maxNeighbors: count({ min: 1, max: 32 }),
+    separationStrength: nonNegative({ max: 3 }),
+    contactStrength: nonNegative({ max: 3 }),
+    contactDiameterFraction: positive({ max: 1 }),
+    contactCandidatesPerCell: count({ min: 1, max: 64 }),
+    forwardFloor: nonNegative({ max: 1 }),
+    steeringResponse: positive({ max: 60 }),
+    turnRate: positive({ max: 60 }),
+    attackRingFraction: positive({ max: 1 }),
+    attackSpacing: positive({ max: 5 }),
+    approachRange: positive({ max: 30 }),
+    arrivalRadius: positive({ max: 1 }),
+    goalRefreshDistance: positive({ max: 10 }),
+    routeRefreshTicks: count({ min: 2, max: 300 }),
+    routeRequestsPerTick: count({ min: 1, max: 1000 }),
+    fieldBuildsPerTick: count({ min: 1, max: 8 }),
+    fieldCacheLimit: count({ min: 1, max: 64 }),
+    gridCellSize: positive({ min: 2, max: 10 }),
+    cornerClearance: positive({ max: 0.2 }),
+    anchorSearchCells: count({ min: 1, max: 4 }),
+    waypointLookahead: count({ min: 1, max: 6 }),
+    stuckTicks: count({ min: 1, max: 300 }),
+    stuckProgressRatio: positive({ max: 1 }),
+    recoveryRetries: count({ min: 1, max: 3 }),
+    recoveryCooldownTicks: count({ min: 1, max: 1200 }),
+    recoveryContactScale: positive({ max: 1 }),
+    unreachableRetryTicks: count({ min: 1, max: 300 }),
   }),
   arena: obj({
     archetypeId: id(),
     outerRadiusInset: nonNegative({ max: 50 }),
     ringWidth: positive({ max: 50 }),
     refillTicks: count({ max: 3600 }),
+    maxSpawnsPerTick: (value, path, issues) =>
+      count({ min: 1, max: MAX_ENEMIES })(value === undefined ? 100 : value, path, issues),
   }),
   patrols: obj({
     archetypeId: id(),
@@ -370,6 +452,10 @@ export const swarmSchema = obj({
     initialPressureSeconds: nonNegative({ max: 600 }),
     pressureIntervalSeconds: positive({ max: 600 }),
   }),
+  missionGeneration: (value, path, issues) => obj({
+    relayDefenseSeconds: positive({ max: 120 }),
+    earlyPressureMultiplier: positive({ min: 0.5, max: 0.95 }),
+  })(value === undefined ? { relayDefenseSeconds: 8, earlyPressureMultiplier: .65 } : value, path, issues),
 });
 
 export const convictSquadSchema = obj({
@@ -411,7 +497,7 @@ export const difficultySchema = obj({
   reinforcementBudget: count({ max: 1000 }),
   maxSpawnsPerTick: count({ min: 1, max: MAX_ENEMIES }),
   enemyHealthMultiplier: positive({ max: 10 }),
-  enemyDamageMultiplier: nonNegative({ max: 10 }),
+  enemyDamageMultiplier: positive({ max: 10 }),
   convictKitId: id(),
 });
 
@@ -423,27 +509,46 @@ const postureColliderSchema = obj({
 const postureActionsSchema = obj({
   sprint: bool(), aim: bool(), fire: bool(), reload: bool(), stim: bool(),
   switch: bool(), grenade: bool(), melee: bool(), resupply: bool(),
+  dive: bool(), groundMove: bool(), standUp: bool(),
+});
+
+export const OPERATOR_SLIDE_LIMITS = {
+  seconds: { min: .2, max: 3 },
+  distance: { min: .1, max: 12 },
+  decay: { min: 0, max: 1 },
+  cooldownSeconds: { min: 0, max: 15 },
+  minSpeed: { min: .1, max: 20 },
+} as const;
+
+const operatorSlideSchema = obj({
+  seconds: num(OPERATOR_SLIDE_LIMITS.seconds), distance: num(OPERATOR_SLIDE_LIMITS.distance),
+  decay: num(OPERATOR_SLIDE_LIMITS.decay), cooldownSeconds: num(OPERATOR_SLIDE_LIMITS.cooldownSeconds),
+  minSpeed: num(OPERATOR_SLIDE_LIMITS.minSpeed),
 });
 
 export const movementSchema = obj({
   crouchSpeedMultiplier: positive({ max: 1 }), proneSpeedMultiplier: positive({ max: 1 }),
   supineSpeedMultiplier: positive({ max: 1 }), crouchSeconds: positive({ max: 3 }),
+  slide: operatorSlideSchema,
   diveDistance: positive({ max: 12 }), diveSeconds: num({ min: .2, max: 3 }),
   diveCooldownSeconds: nonNegative({ max: 15 }), divePrepSeconds: nonNegative({ max: 2 }),
   diveArcHeight: positive({ max: 2 }), noDirection: oneOf(['forward', 'reject'] as const),
   backwardDotThreshold: num({ min: -.5, max: 0 }), proneGetUpSeconds: positive({ max: 5 }),
-  supineGetUpSeconds: positive({ max: 5 }), groundTurnRadiansPerSecond: positive({ max: 12 }),
+  supineGetUpSeconds: positive({ max: 5 }),
+  proneTurnRadiansPerSecond: positive({ max: 12 }), supineTurnRadiansPerSecond: positive({ max: 12 }),
+  groundAcceleration: positive({ max: 60 }), getUpColliderExponent: num({ min: 1, max: 4 }),
   proneMinPitch: num({ min: -.69, max: 0 }), supineMinPitch: num({ min: -.69, max: 0 }),
+  proneMaxPitch: positive({ max: .69 }), supineMaxPitch: positive({ max: .69 }),
   groundAimHalfArc: positive({ max: Math.PI / 2 }),
   cameraDamping: positive({ max: 60 }), enemyAttackHalfHeight: positive({ max: 2 }),
   operatorMeleeHeight: positive({ max: 3 }),
   colliders: obj({
     STANDING: postureColliderSchema, CROUCHING: postureColliderSchema, DIVING: postureColliderSchema,
-    PRONE: postureColliderSchema, SUPINE: postureColliderSchema,
+    PRONE: postureColliderSchema, SUPINE: postureColliderSchema, SLIDING: postureColliderSchema,
   }),
   actions: obj({
     STANDING: postureActionsSchema, CROUCHING: postureActionsSchema, DIVING: postureActionsSchema,
-    PRONE: postureActionsSchema, SUPINE: postureActionsSchema, GETTING_UP: postureActionsSchema,
+    PRONE: postureActionsSchema, SUPINE: postureActionsSchema, GETTING_UP: postureActionsSchema, SLIDING: postureActionsSchema,
   }),
 });
 
@@ -475,6 +580,7 @@ export type MedicalDefinition = Infer<typeof medicalSchema>;
 export type MeleeDefinition = Infer<typeof meleeSchema>;
 export type SupplyContainerDefinition = Infer<typeof supplyContainerSchema>;
 export type MovementDefinition = Infer<typeof movementSchema>;
+export type OperatorSlideDefinition = Infer<typeof operatorSlideSchema>;
 export type PostureCollider = Infer<typeof postureColliderSchema>;
 export type CombatDefinition = Infer<typeof combatSchema>;
 export type DamagePolicy = CombatDefinition['damagePolicy'];

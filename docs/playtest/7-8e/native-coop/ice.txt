@@ -1,0 +1,432 @@
+{
+  "chromium": "153.0.8010.12",
+  "angle": "gl",
+  "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+  "quality": "medium",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "balanceHash": "01855759529dd588",
+  "phase": "ACTIVE_MISSION",
+  "wave": {
+    "skipped": "fixed-population sample selected"
+  },
+  "plan": {
+    "id": "generated.94cad383c1c0d28f",
+    "seed": 0,
+    "templateId": "relay-defense",
+    "world": {
+      "id": "world.generated.b9ec957f0a62f9c4",
+      "planetId": "ice",
+      "biome": "glacial",
+      "seed": 48,
+      "formatVersion": 1,
+      "generatorVersion": 1,
+      "profileVersion": 1,
+      "assetVersion": 1
+    }
+  },
+  "objectiveUpdateMs": {
+    "mean": 0.0012369117646224314,
+    "p95": 0.0016299999988405034,
+    "p99": 0.0018000000000029104,
+    "max": 0.002590000000054715
+  },
+  "navigationMs": {
+    "mean": 0.22750330147062628,
+    "p95": 0.36200000000098953,
+    "p99": 0.4719100000002072,
+    "max": 0.7571200000002136
+  },
+  "weatherServerMs": {
+    "mean": 0.002087573529506164,
+    "p95": 0.002449999999953434,
+    "p99": 0.0029600000016216654,
+    "max": 0.030900000001565786
+  },
+  "collisionMs": {
+    "mean": 0.08780950735304567,
+    "p95": 0.1384699999998702,
+    "p99": 0.1833200000000943,
+    "max": 0.5653400000010151
+  },
+  "directorMs": {
+    "mean": 0.004947139705885039,
+    "p95": 0.022360000000844593,
+    "p99": 0.035640000000057626,
+    "max": 0.03665999999975611
+  },
+  "operatorAttacks": 0,
+  "movedEnemies": 97,
+  "missionNetwork": {
+    "mission-state": {
+      "totalPackets": 71,
+      "totalBytes": 166661,
+      "samplePackets": 23,
+      "sampleBytesPerSecond": 14194.50099731401
+    },
+    "atmosphere-state": {
+      "totalPackets": 3,
+      "totalBytes": 885,
+      "samplePackets": 0,
+      "sampleBytesPerSecond": 0
+    },
+    "mission-plan": {
+      "totalPackets": 1,
+      "totalBytes": 1508,
+      "samplePackets": 0,
+      "sampleBytesPerSecond": 0
+    },
+    "mission-events": {
+      "totalPackets": 13,
+      "totalBytes": 2579,
+      "samplePackets": 0,
+      "sampleBytesPerSecond": 0
+    }
+  },
+  "memoryBefore": {
+    "rss": 774230016,
+    "heapTotal": 146243584,
+    "heapUsed": 90514896,
+    "external": 35274349,
+    "arrayBuffers": 4308055
+  },
+  "memoryAfter": {
+    "rss": 773890048,
+    "heapTotal": 145575936,
+    "heapUsed": 81758008,
+    "external": 34174442,
+    "arrayBuffers": 3208108
+  },
+  "enemies": 100,
+  "packetsPerSecond": 9.92915615922542,
+  "payloadBytesPerSecond": 9988.731096180773,
+  "minFrameCount": 100,
+  "operators": 4,
+  "tickHz": 30,
+  "renderedClients": 4,
+  "fps": 60.002214103841474,
+  "frameMs": {
+    "mean": 16.666051660516604,
+    "p95": 16.799999999999272,
+    "p99": 16.80000000000109,
+    "max": 16.80000000000109
+  },
+  "clientFrames": [
+    {
+      "frames": 271,
+      "fps": 60.002214103841474,
+      "mean": 16.666051660516604,
+      "p95": 16.799999999999272,
+      "p99": 16.80000000000109,
+      "max": 16.80000000000109
+    },
+    {
+      "frames": 271,
+      "fps": 60.002214103841474,
+      "mean": 16.666051660516604,
+      "p95": 16.799999999999272,
+      "p99": 16.80000000000109,
+      "max": 16.80000000000109
+    },
+    {
+      "frames": 271,
+      "fps": 60.002214103841474,
+      "mean": 16.666051660516604,
+      "p95": 16.799999999999272,
+      "p99": 16.80000000000109,
+      "max": 16.80000000000109
+    },
+    {
+      "frames": 271,
+      "fps": 60.002214103841474,
+      "mean": 16.666051660516604,
+      "p95": 16.700000000000728,
+      "p99": 16.80000000000109,
+      "max": 16.80000000000109
+    }
+  ],
+  "renderStats": [
+    {
+      "CPU / GPU": "2.7 / 0.1 ms",
+      "Draw Calls / Dreiecke": "221 / 92.553",
+      "Meshes / Instanzen": "133 / 709",
+      "Geometrien / Texturen": "198 / 51",
+      "Gegner sichtbar / aktiv": "92 / 100",
+      "audio": {
+        "voices": 4,
+        "peak": 5,
+        "dropped": 0,
+        "budget": 28,
+        "ambience": 2,
+        "combat": 1,
+        "spatial": 2,
+        "context": "running",
+        "duck": false,
+        "levels": {
+          "master": 0.8,
+          "weapons": 0.9,
+          "environment": 0.8,
+          "ambience": 0.8,
+          "weather": 0.8,
+          "ui": 0.7,
+          "muted": false,
+          "enabled": true
+        },
+        "buffers": 23,
+        "pcmMiB": 68.9003791809082,
+        "loading": 0,
+        "errors": 0,
+        "loadMs": 245.80000001192093,
+        "decodeMs": 255.5,
+        "planet": "ice",
+        "weather": "windy-snow",
+        "wind": "ice-wind",
+        "rate": 0,
+        "enemyMs": 0,
+        "enemyPeakMs": 0.7000000029802322,
+        "updateMs": 0.033333335320154825,
+        "windups": 0,
+        "impacts": 0
+      },
+      "weather": {
+        "planet": "ice",
+        "profile": "ice.overcast-day.v1",
+        "version": 1,
+        "revision": 2,
+        "current": "windy-snow",
+        "timeOfDay": "day",
+        "audio": "ambience.ice.windy-snow",
+        "seed": 1786697896,
+        "startTick": 142,
+        "durationTicks": 0,
+        "progress": 0,
+        "x": 0.7379015204776581,
+        "z": 0.3512400828016126,
+        "direction": 0.444262780299602,
+        "strength": 0.8172320659945518,
+        "gust": 0.12723206599455186,
+        "turbulence": 0.276,
+        "particles": 176,
+        "cap": 176,
+        "particleMs": 0,
+        "updateMs": 0
+      }
+    },
+    {
+      "CPU / GPU": "2.8 / 0.1 ms",
+      "Draw Calls / Dreiecke": "206 / 82.253",
+      "Meshes / Instanzen": "121 / 611",
+      "Geometrien / Texturen": "192 / 50",
+      "Gegner sichtbar / aktiv": "80 / 100",
+      "audio": {
+        "voices": 6,
+        "peak": 6,
+        "dropped": 0,
+        "budget": 28,
+        "ambience": 2,
+        "combat": 3,
+        "spatial": 4,
+        "context": "running",
+        "duck": false,
+        "levels": {
+          "master": 0.8,
+          "weapons": 0.9,
+          "environment": 0.8,
+          "ambience": 0.8,
+          "weather": 0.8,
+          "ui": 0.7,
+          "muted": false,
+          "enabled": true
+        },
+        "buffers": 22,
+        "pcmMiB": 68.8113899230957,
+        "loading": 0,
+        "errors": 0,
+        "loadMs": 49.70000000298023,
+        "decodeMs": 275,
+        "planet": "ice",
+        "weather": "windy-snow",
+        "wind": "ice-wind",
+        "rate": 4,
+        "enemyMs": 0,
+        "enemyPeakMs": 0.6000000089406967,
+        "updateMs": 0.10000000099341075,
+        "windups": 0,
+        "impacts": 0
+      },
+      "weather": {
+        "planet": "ice",
+        "profile": "ice.overcast-day.v1",
+        "version": 1,
+        "revision": 2,
+        "current": "windy-snow",
+        "timeOfDay": "day",
+        "audio": "ambience.ice.windy-snow",
+        "seed": 1786697896,
+        "startTick": 142,
+        "durationTicks": 0,
+        "progress": 0,
+        "x": 0.7485952885000079,
+        "z": 0.35463287318085646,
+        "direction": 0.44241252293040834,
+        "strength": 0.8283473792467261,
+        "gust": 0.13834737924672616,
+        "turbulence": 0.276,
+        "particles": 176,
+        "cap": 176,
+        "particleMs": 0,
+        "updateMs": 0
+      }
+    },
+    {
+      "CPU / GPU": "2.7 / 0.1 ms",
+      "Draw Calls / Dreiecke": "105 / 54.855",
+      "Meshes / Instanzen": "54 / 410",
+      "Geometrien / Texturen": "165 / 51",
+      "Gegner sichtbar / aktiv": "81 / 100",
+      "audio": {
+        "voices": 5,
+        "peak": 5,
+        "dropped": 0,
+        "budget": 28,
+        "ambience": 2,
+        "combat": 2,
+        "spatial": 3,
+        "context": "running",
+        "duck": false,
+        "levels": {
+          "master": 0.8,
+          "weapons": 0.9,
+          "environment": 0.8,
+          "ambience": 0.8,
+          "weather": 0.8,
+          "ui": 0.7,
+          "muted": false,
+          "enabled": true
+        },
+        "buffers": 22,
+        "pcmMiB": 68.8113899230957,
+        "loading": 0,
+        "errors": 0,
+        "loadMs": 19.100000008940697,
+        "decodeMs": 291.70000000298023,
+        "planet": "ice",
+        "weather": "windy-snow",
+        "wind": "ice-wind",
+        "rate": 4,
+        "enemyMs": 0,
+        "enemyPeakMs": 0.5,
+        "updateMs": 0.03125000186264515,
+        "windups": 0,
+        "impacts": 0
+      },
+      "weather": {
+        "planet": "ice",
+        "profile": "ice.overcast-day.v1",
+        "version": 1,
+        "revision": 2,
+        "current": "windy-snow",
+        "timeOfDay": "day",
+        "audio": "ambience.ice.windy-snow",
+        "seed": 1786697896,
+        "startTick": 142,
+        "durationTicks": 0,
+        "progress": 0,
+        "x": 0.7584113971324776,
+        "z": 0.35828462295462027,
+        "direction": 0.44133677604591526,
+        "strength": 0.8387822830426088,
+        "gust": 0.14878228304260888,
+        "turbulence": 0.276,
+        "particles": 176,
+        "cap": 176,
+        "particleMs": 0,
+        "updateMs": 0
+      }
+    },
+    {
+      "CPU / GPU": "2.7 / 0.1 ms",
+      "Draw Calls / Dreiecke": "192 / 79.999",
+      "Meshes / Instanzen": "105 / 690",
+      "Geometrien / Texturen": "173 / 50",
+      "Gegner sichtbar / aktiv": "50 / 100",
+      "audio": {
+        "voices": 5,
+        "peak": 5,
+        "dropped": 0,
+        "budget": 28,
+        "ambience": 2,
+        "combat": 2,
+        "spatial": 3,
+        "context": "running",
+        "duck": false,
+        "levels": {
+          "master": 0.8,
+          "weapons": 0.9,
+          "environment": 0.8,
+          "ambience": 0.8,
+          "weather": 0.8,
+          "ui": 0.7,
+          "muted": false,
+          "enabled": true
+        },
+        "buffers": 22,
+        "pcmMiB": 68.8113899230957,
+        "loading": 0,
+        "errors": 0,
+        "loadMs": 49.29999999701977,
+        "decodeMs": 283.09999999403954,
+        "planet": "ice",
+        "weather": "windy-snow",
+        "wind": "ice-wind",
+        "rate": 4,
+        "enemyMs": 0,
+        "enemyPeakMs": 1.199999988079071,
+        "updateMs": 0.013333332538604737,
+        "windups": 0,
+        "impacts": 0
+      },
+      "weather": {
+        "planet": "ice",
+        "profile": "ice.overcast-day.v1",
+        "version": 1,
+        "revision": 2,
+        "current": "windy-snow",
+        "timeOfDay": "day",
+        "audio": "ambience.ice.windy-snow",
+        "seed": 1786697896,
+        "startTick": 142,
+        "durationTicks": 0,
+        "progress": 0,
+        "x": 0.763390913985182,
+        "z": 0.3602556300113216,
+        "direction": 0.4409282528962155,
+        "strength": 0.8441266531214293,
+        "gust": 0.1541266531214293,
+        "turbulence": 0.276,
+        "particles": 176,
+        "cap": 176,
+        "particleMs": 0,
+        "updateMs": 0
+      }
+    }
+  ],
+  "serverRecentTickMs": {
+    "mean": 0.3737548750000769,
+    "p95": 0.5608100000008562,
+    "p99": 0.8715699999993376,
+    "max": 0.8891200000016397
+  },
+  "droppedSteps": 0,
+  "observedTickHz": 30.00811639232571,
+  "payloadSource": "Horde broadcasts per recipient",
+  "wallSeconds": 4.532107188,
+  "errors": []
+}
+{"reconnectAudio":[{"voices":3,"peak":3,"dropped":0,"budget":28,"ambience":2,"combat":0,"spatial":1,"context":"running","duck":false,"levels":{"master":0.8,"weapons":0.9,"environment":0.8,"ambience":0.8,"weather":0.8,"ui":0.7,"muted":false,"enabled":true},"buffers":23,"pcmMiB":68.9003791809082,"loading":0,"errors":0,"loadMs":245.80000001192093,"decodeMs":255.5,"planet":"ice","weather":"windy-snow → windy-snow","wind":"ice-wind","rate":0,"enemyMs":0,"enemyPeakMs":0.7000000029802322,"updateMs":0.018749999813735485,"windups":0,"impacts":0},{"voices":4,"peak":4,"dropped":0,"budget":28,"ambience":2,"combat":1,"spatial":2,"context":"running","duck":false,"levels":{"master":0.8,"weapons":0.9,"environment":0.8,"ambience":0.8,"weather":0.8,"ui":0.7,"muted":false,"enabled":true},"buffers":30,"pcmMiB":70.55228424072266,"loading":0,"errors":0,"loadMs":49.70000000298023,"decodeMs":275,"planet":"ice","weather":"windy-snow → windy-snow","wind":"ice-wind","rate":8,"enemyMs":0.10000000894069672,"enemyPeakMs":0.10000000894069672,"updateMs":0.020000000794728596,"windups":0,"impacts":0},{"voices":3,"peak":3,"dropped":0,"budget":28,"ambience":2,"combat":0,"spatial":1,"context":"running","duck":false,"levels":{"master":0.8,"weapons":0.9,"environment":0.8,"ambience":0.8,"weather":0.8,"ui":0.7,"muted":false,"enabled":true},"buffers":22,"pcmMiB":68.8113899230957,"loading":0,"errors":0,"loadMs":19.100000008940697,"decodeMs":291.70000000298023,"planet":"ice","weather":"windy-snow → windy-snow","wind":"ice-wind","rate":0,"enemyMs":0,"enemyPeakMs":0.5,"updateMs":0.03333333432674408,"windups":0,"impacts":0},{"voices":3,"peak":4,"dropped":0,"budget":28,"ambience":2,"combat":0,"spatial":1,"context":"running","duck":false,"levels":{"master":0.8,"weapons":0.9,"environment":0.8,"ambience":0.8,"weather":0.8,"ui":0.7,"muted":false,"enabled":true},"buffers":22,"pcmMiB":68.8113899230957,"loading":0,"errors":0,"loadMs":49.29999999701977,"decodeMs":283.09999999403954,"planet":"ice","weather":"windy-snow → windy-snow","wind":"ice-wind","rate":0,"enemyMs":0,"enemyPeakMs":1.199999988079071,"updateMs":0.0066666662693023685,"windups":0,"impacts":0}]}
+{"during":{"instanceId":"0da553ee-e8ab-41e9-a4bc-8048ab9a7e86","worldId":"world.generated.b9ec957f0a62f9c4","planetId":"ice","profileId":"ice.overcast-day.v1","version":1,"seed":1786697896,"originTick":82,"timeOfDay":"day","revision":3,"current":{"weather":"windy-snow","wind":{"direction":0.5168146928204145,"strength":0.69,"gust":0.29,"frequency":0.113,"turbulence":0.276}},"startTick":404,"durationTicks":660,"target":{"weather":"windy-snow","wind":{"direction":0.5168146928204145,"strength":0.69,"gust":0.29,"frequency":0.113,"turbulence":0.276}}},"serverProgress":0.030303030303030304,"shared":[{"planet":"ice","profile":"ice.overcast-day.v1","version":1,"revision":3,"current":"windy-snow","target":"windy-snow","timeOfDay":"day","audio":"ambience.ice.windy-snow","targetAudio":"ambience.ice.windy-snow","seed":1786697896,"startTick":404,"durationTicks":660,"progress":0.025296969697376083,"x":0.6111736008444701,"z":0.3368882340013107,"direction":0.5037757767008966,"strength":0.6978730920287138,"gust":0.007873092028713911,"turbulence":0.276,"particles":176,"cap":176,"particleMs":0,"updateMs":0},{"planet":"ice","profile":"ice.overcast-day.v1","version":1,"revision":3,"current":"windy-snow","target":"windy-snow","timeOfDay":"day","audio":"ambience.ice.windy-snow","targetAudio":"ambience.ice.windy-snow","seed":1786697896,"startTick":404,"durationTicks":660,"progress":0.023004545454409966,"x":0.6120267185242162,"z":0.33641009840527425,"direction":0.5025865191328904,"strength":0.6983899043489722,"gust":0.008389904348972249,"turbulence":0.276,"particles":64,"cap":64,"particleMs":0,"updateMs":0},{"planet":"ice","profile":"ice.overcast-day.v1","version":1,"revision":3,"current":"windy-snow","target":"windy-snow","timeOfDay":"day","audio":"ambience.ice.windy-snow","targetAudio":"ambience.ice.windy-snow","seed":1786697896,"startTick":404,"durationTicks":660,"progress":0.029883333333468744,"x":0.6102610096101602,"z":0.3382882549826994,"direction":0.5061643525147241,"strength":0.697751706060008,"gust":0.007751706060008078,"turbulence":0.276,"particles":320,"cap":320,"particleMs":0,"updateMs":0},{"planet":"ice","profile":"ice.overcast-day.v1","version":1,"revision":3,"current":"windy-snow","target":"windy-snow","timeOfDay":"day","audio":"ambience.ice.windy-snow","targetAudio":"ambience.ice.windy-snow","seed":1786697896,"startTick":404,"durationTicks":660,"progress":0.022228787878787952,"x":0.6123757863426886,"z":0.3362817484617641,"direction":0.5021848468146111,"strength":0.698634037280841,"gust":0.008634037280841014,"turbulence":0.276,"particles":176,"cap":176,"particleMs":0,"updateMs":0}]}
+{"reconnect":true,"players":4,"world":"world.generated.b9ec957f0a62f9c4","guestQualities":["low","high","medium"]}
+[combat-telemetry] {"missionId":"generated.94cad383c1c0d28f","difficultyId":"freefall","balanceHash":"01855759529dd588","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+{"generatedCompletion":{"outcome":"extracted","method":"balloon","extracted":4,"durationTicks":3449}}

@@ -33,6 +33,7 @@ Insgesamt acht Nutzungen pro Mission. Kapazitätsgrenzen sind die Tragekapazitä
 - Jede Ressource wird höchstens bis zur Tragekapazität aufgefüllt (Beispiel: 4/5 Stims → +1, nicht +2; 8/8 Rifle-Magazine → +0).
 - Eine Ladung wird nur verbraucht, wenn mindestens eine Ressource ergänzt wird. Bei Vollversorgung: Meldung „Vollständig versorgt“, keine Ladung.
 - Voraussetzungen: Operator lebt, Container intakt und verfügbar, Ladung vorhanden, Operator außen am Rumpf auf der Containerseite und innerhalb der Reichweite, keine andere Aktion und kein Reload, mindestens eine Ressource auffüllbar.
+- Jede nicht erfüllte Voraussetzung meldet E sofort (`mission-feedback`): `resupply-busy` bei laufender Aktion oder gehaltenem Feuer, `resupply-reloading` während eines Reloads, `resupply-posture` in einer Haltung ohne Nachschub. Vorher meldete der Server in diesen Fällen Erfolg und es geschah nichts.
 - Ablauf: `E` → Server prüft (`ResupplySystem.blocker`) → Aktion `resupply` für 1 s → am letzten Tick erneute Prüfung und atomare Transaktion (`complete`). Abbruch durch Feuern, Sprinten, R, jede Ausrüstungstaste, Verlassen der Reichweite, Ausfall des Containers, Tod oder Disconnect. Ein Abbruch verbraucht nichts.
 
 ## Verfügbarkeit

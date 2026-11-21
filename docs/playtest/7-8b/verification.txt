@@ -1,0 +1,72 @@
+FREEFALL 7.8B – lokale Verifikation
+
+$ npm test
+✔ receive window permits reordering and cuts off pre-join and pre-reconnect contacts (0.09505ms)
+✔ pooled particles exit the contact plane, obey quality budgets and expire independently of tracers (2.464594ms)
+✔ impact audio uses the confirmed coordinates, applies cooldown and falls back with no decoded asset (1.150062ms)
+✔ only actual damage to an operator is confirmed and it carries the target life (0.168141ms)
+✔ dominant finishes, props and neutral fallback are sourced from all four worlds (52.423894ms)
+✔ triangle normal traverses the same sloped terrain as the collision, including a cell boundary (0.3044ms)
+✔ four real connections share state, reject a fifth, and transfer host on disconnect (5780.042545ms)
+✔ mission reconnect restores prone and an in-progress supine get-up on its original clock (3623.707819ms)
+✔ four Colyseus peers share authoritative enemy timing at 140 ms simulated RTT and recover an in-flight attack (1537.409758ms)
+✔ four clients receive one authoritative wave and reconnect twice at the 1,000-enemy cap (3228.755224ms)
+✔ Fixed world generated contract replicates to four WebSocket peers across contested relay, reconnect and result (14341.963338ms)
+✔ Green Plains generated contract replicates to four WebSocket peers across contested relay, reconnect and result (14416.741417ms)
+ℹ tests 319
+ℹ pass 319
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 69937.520654
+
+$ npm run typecheck
+
+> project-freefall@0.1.0 typecheck
+> npm run typecheck --workspaces --if-present
+
+
+> @freefall/shared@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @freefall/client@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @freefall/server@0.1.0 typecheck
+> tsc -p tsconfig.test.json
+
+
+$ npm run build
+✓ built in 234ms
+
+$ npm run balance:check
+Balance 7.3 · Schema 2 · Hash 01855759529dd588
+2 Waffen, 2 Ausrüstung, 1 Gegner, 1 Nester, 7 Schwierigkeitsgrade
+1 Leicht          Gegner ≤  120 · Nest-HP 306 · Nest-Intervall 260 Ticks · Sicht 25.42 m · Convict-Kit security-surplus
+2 Normal          Gegner ≤  200 · Nest-HP 360 · Nest-Intervall 202 Ticks · Sicht 31.00 m · Convict-Kit field-standard
+3 Herausfordernd  Gegner ≤  320 · Nest-HP 360 · Nest-Intervall 168 Ticks · Sicht 33.17 m · Convict-Kit light-webbing
+4 Schwer          Gegner ≤  450 · Nest-HP 396 · Nest-Intervall 134 Ticks · Sicht 35.34 m · Convict-Kit aged-infantry
+5 Extrem          Gegner ≤  600 · Nest-HP 414 · Nest-Intervall 104 Ticks · Sicht 37.82 m · Convict-Kit worn-reserve
+6 Albtraum        Gegner ≤  800 · Nest-HP 432 · Nest-Intervall 79 Ticks · Sicht 40.30 m · Convict-Kit restricted-issue
+7 FREEFALL        Gegner ≤ 1000 · Nest-HP 450 · Nest-Intervall 54 Ticks · Sicht 42.78 m · Convict-Kit minimum-issue
+OK
+
+$ node --conditions=development apps/server/test/support/balance-trace.ts --check
+{
+  "arena": "2f4d1385be645eb19ec1f56770396c25de5542001d2e000c76ee4be65dfdacfb",
+  "mission.easy": "47467ab3721304ce495767ae991605e0dcf60cb60e23ae9a2891e47b0468e55b",
+  "mission.normal": "3449ca5ecb67d3003358fe75de37d426468a8fd171c40af6ff0bb7822223933e",
+  "mission.challenging": "be2cb46957ed2bc56a12e30af9cf82423a730b89fca1d08c5e7b581a1d98944a",
+  "mission.hard": "68608ca13526ac6dba00bbabfc5d555ff5171d9fb64c9cac361dd6e67d3fa1f9",
+  "mission.extreme": "e8d6d939a5339dc566d930b90dabc6c55aacbd6bc7b9497ca78ea41bf8839827",
+  "mission.nightmare": "acba439a2dc0658252f56d6afeec40b53ca604a4ae4b5596d13a8841c7a91d30",
+  "mission.freefall": "409b981326b2a3a9d93b1ba47748ad30603cdbf22801ed2dc375ee3fc3b8a6cf"
+}
+
+$ sha256sum -c docs/enemies/schabe/baseline.sha256
+apps/client/src/rendering/EnemyVisualLOD.ts: OK
+apps/client/src/rendering/AgentMeshes.ts: OK
+apps/server/src/ecs/HordeManager.ts: OK

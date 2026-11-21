@@ -1,0 +1,58 @@
+FREEFALL 7.8D – 21.11.2026
+Node v24.18.0
+
+npm test
+✔ higher-priority notices preempt, keep their lifetime, and fit in one slot (0.28053ms)
+✔ mission events reject duplicates, stale packets and prior instances while accepting fresh reordering (0.33931ms)
+✔ both extraction methods read authoritative phases; reconnect only restores the persistent state (0.26807ms)
+✔ damage directions use camera-relative cardinal bearings, cap simultaneous hits and expire (0.27192ms)
+✔ aiming suppresses cosmetic positional motion and priority keeps weaker cues from extending damage (0.25982ms)
+✔ low postures and steep pitch keep the camera above generated terrain on every planet (58.612107ms)
+✔ four Colyseus peers share authoritative enemy timing at 140 ms simulated RTT and recover an in-flight attack (1546.839561ms)
+✔ four clients receive one authoritative wave and reconnect twice at the 1,000-enemy cap (3231.216635ms)
+ℹ tests 333
+ℹ pass 333
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ duration_ms 73357.86698
+
+npm run typecheck
+> @freefall/shared@0.1.0 typecheck
+> @freefall/client@0.1.0 typecheck
+> @freefall/server@0.1.0 typecheck
+
+npm run build
+> @freefall/shared@0.1.0 build
+> @freefall/server@0.1.0 build
+> @freefall/client@0.1.0 build
+✓ built in 333ms
+
+Browser-Missionen
+albatross green-plains deployment and extraction verified with 4 connections
+balloon desert deployment and extraction verified with 4 connections
+failure ice verified with 4 connections
+
+Kombinierte Waldlast
+forest 1000 20.3 FPS; 2.944 ms server p95; 3 blasts
+
+sha256sum -c docs/enemies/schabe/baseline.sha256
+apps/client/src/rendering/EnemyVisualLOD.ts: OK
+apps/client/src/rendering/AgentMeshes.ts: OK
+apps/server/src/ecs/HordeManager.ts: OK
+
+Gameplay-Fingerabdrücke
+
+> project-freefall@0.1.0 balance:trace
+> node --conditions=development apps/server/test/support/balance-trace.ts
+
+{
+  "arena": "2f4d1385be645eb19ec1f56770396c25de5542001d2e000c76ee4be65dfdacfb",
+  "mission.easy": "47467ab3721304ce495767ae991605e0dcf60cb60e23ae9a2891e47b0468e55b",
+  "mission.normal": "3449ca5ecb67d3003358fe75de37d426468a8fd171c40af6ff0bb7822223933e",
+  "mission.challenging": "be2cb46957ed2bc56a12e30af9cf82423a730b89fca1d08c5e7b581a1d98944a",
+  "mission.hard": "68608ca13526ac6dba00bbabfc5d555ff5171d9fb64c9cac361dd6e67d3fa1f9",
+  "mission.extreme": "e8d6d939a5339dc566d930b90dabc6c55aacbd6bc7b9497ca78ea41bf8839827",
+  "mission.nightmare": "acba439a2dc0658252f56d6afeec40b53ca604a4ae4b5596d13a8841c7a91d30",
+  "mission.freefall": "409b981326b2a3a9d93b1ba47748ad30603cdbf22801ed2dc375ee3fc3b8a6cf"
+}

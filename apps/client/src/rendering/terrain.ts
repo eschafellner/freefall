@@ -1,16 +1,10 @@
 import * as T from 'three';
+import { ARENA_ROAD_PLATES as roadPlates } from '@freefall/shared';
 import { ENVIRONMENT } from './environment/EnvironmentConfig.ts';
 import { landscapeNoise, noise, randomSource, smoothstep } from './environment/noise.ts';
 import type { SurfaceMaterials } from './environment/SurfaceMaterials.ts';
 
 const { pad, colors, extent, roadX } = ENVIRONMENT;
-const roadPlates = [{ x: 14, z: -16 }, { x: 14, z: -34 }] as const;
-
-export function groundSurface(x: number, z: number): 'metal' | 'concrete' | 'soil' {
-  if (roadPlates.some((plate) => Math.abs(plate.x - x) <= 1.6 && Math.abs(plate.z - z) <= 3)) return 'metal';
-  return Math.hypot(x - pad.x, z - pad.z) <= pad.radius ? 'concrete' : 'soil';
-}
-
 export function landHeight(x: number, z: number): number {
   const edge = Math.max(Math.abs(x), Math.abs(z));
   if (edge <= 77) return 0;

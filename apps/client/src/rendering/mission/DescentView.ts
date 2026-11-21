@@ -29,7 +29,7 @@ export class DescentView {
     const entry = state.phase === 'ATMOSPHERIC_ENTRY';
     const braking = state.phase === 'BRAKING';
     this.root.position.set(position?.x ?? CARRIER_SHIP.x, braking ? 11 : 0, position?.z ?? CARRIER_SHIP.z);
-    const t = T.MathUtils.clamp((tick - state.phaseAt) / (state.phaseUntil - state.phaseAt), 0, 1);
+    const t = T.MathUtils.clamp((tick - state.phaseAt) / Math.max(1, state.phaseUntil - state.phaseAt), 0, 1);
     if (!braking) scene.background = this.sky.setHex(entry ? 0x442523 : 0x08161f);
     this.planet.position.set(-28, (entry ? -82 : braking ? -68 : -100) + t * 6, -68);
     this.planet.visible = !entry && !braking;

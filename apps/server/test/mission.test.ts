@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   ALBATROSS, BALANCE, BALLOON, FRAG, BOARDING_TICKS, BODENBRUCH, CARRIER_ROOMS, CARRIER_SHIP, DIFFICULTIES, LANDING_STAGE_TICKS, HordeFrame, MAX_ENEMIES, NET, SCHABE_TYPE, WIDE_POSITION_SCALE, decodeHorde,
-  distanceSquared, inAlbatross, missionGround, openGround, resolveMissionBalance,
+  distanceSquared, inAlbatross, missionGround, newPosture, openGround, resolveMissionBalance,
 } from '@freefall/shared';
 import type { DifficultyDefinition, MissionDefinition, MissionEvent, PatrolRegion, PositionXZ } from '@freefall/shared';
 import { GroundNavigation } from '../src/mission/GroundNavigation.ts';
@@ -152,8 +152,9 @@ test('disconnect and leaving the boarding footprint clear readiness without bloc
 
 test('a mission reconnect restores an airborne dive, which lands without a second request', () => {
   const { mission, player } = deployed('easy');
-  assert.ok(mission.receiveInput(player.id, { seq: player.input.seq + 1, life: player.life,
-    forward: -1, strafe: .19, yaw: 0, pitch: 0, sprint: false, fire: false, posture: 'dive' }));
+  const seq = player.input.seq + 1;
+  assert.ok(mission.receiveInput(player.id, { seq, life: player.life,
+    forward: -1, strafe: .19, yaw: player.posture.yaw, pitch: 0, sprint: false, fire: false, posture: 'dive' }));
   advance(mission, 6);
   const started = player.posture.started;
   assert.equal(player.posture.current, 'DIVING');
@@ -163,6 +164,7 @@ test('a mission reconnect restores an airborne dive, which lands without a secon
   const rejoined = playerSnapshot(mission, player.id).players[0];
   assert.equal(rejoined.posture?.current, 'DIVING');
   assert.equal(rejoined.posture?.started, started);
+  assert.equal(rejoined.posture?.dive?.id, seq);
   assert.ok(rejoined.y! > 0);
   advance(mission, 30);
   assert.equal(playerSnapshot(mission, player.id).players[0].posture?.current, 'SUPINE');
@@ -231,8 +233,11 @@ test('nearby Schaben damage an individual Albatross nozzle through the shared me
   const { mission } = deployed('easy', noPatrols);
   const ship = mission.snapshot().albatross!;
   const [location] = ALBATROSS.thrusters;
-  mission.horde.spawn(ship.x + location.x - .55, ship.z + location.z, SCHABE_TYPE);
+  const enemy = mission.horde.spawn(ship.x + location.x - .55, ship.z + location.z, SCHABE_TYPE);
+  mission.horde.yaw[enemy] = Math.PI / 2;
   advance(mission, 2);
+  assert.equal(mission.snapshot().albatross!.thrusters[0].state, 'INTACT');
+  advance(mission, mission.enemyCombat.timing.windupTicks + mission.enemyCombat.timing.activeTicks);
   const damaged = mission.snapshot().albatross!;
   assert.equal(damaged.hullHealth, ship.hullHealth);
   assert.equal(damaged.thrusters[0].state, 'DAMAGED');
@@ -536,49 +541,62 @@ test('a cleared breach region remains on cooldown independently of the current n
   assert.ok(director.request(player, tick + 55 * NET.tickHz)?.breachId);
 });
 
-test('a solo player walks from the carrier through both relays and returns without debug', () => {
-  const mission = new MissionInstance(51296, BODENBRUCH);
-  const player = mission.addPlayer('pilot');
-  const nav = new GroundNavigation(missionGround(BODENBRUCH.world));
-  let seq = 0;
-  const go = (target: PositionXZ, radius: number, surface = false): boolean => {
-    const steering = { ...target };
-    for (let i = 0; i < 60 * NET.tickHz; i++) {
-      if (distanceSquared(player, target) <= radius ** 2) return true;
-      Object.assign(steering, target);
-      if (surface) nav.steer(player.x, player.z, steering);
-      const yaw = Math.atan2(steering.x - player.x, player.z - steering.z);
-      mission.receiveInput(player.id, { seq: ++seq, yaw, pitch: 0, forward: 1, strafe: 0, sprint: true, fire: false });
-      mission.step();
-      if (mission.snapshot().result) return false;
+for (const [count, method] of [[1, 'albatross'], [2, 'balloon'], [4, 'albatross'], [4, 'balloon']] as const) {
+  test(`${count} operators complete Operation Bodenbruch via ${method} without debug`, () => {
+    const mission = new MissionInstance(51296, BODENBRUCH);
+    const crew = Array.from({ length: count }, (_, slot) => mission.addPlayer(`operator-${slot}`));
+    const player = crew[0];
+    const nav = new GroundNavigation(missionGround(BODENBRUCH.world), mission.balance.hordeAi,
+      mission.movementBalance.colliders.STANDING.radius);
+    const go = (operator: typeof player, target: PositionXZ, radius: number, surface = false): boolean => {
+      const steering = { ...target };
+      for (let i = 0; i < 60 * NET.tickHz; i++) {
+        if (distanceSquared(operator, target) <= radius ** 2) return true;
+        Object.assign(steering, target);
+        if (surface) nav.steer(operator.x, operator.z, steering);
+        const yaw = Math.atan2(steering.x - operator.x, operator.z - steering.z);
+        const forward = Math.min(1, Math.sqrt(distanceSquared(operator, steering)) * NET.tickHz / BALANCE.operator.sprintSpeed);
+        mission.receiveInput(operator.id, { seq: operator.lastInputSeq + 1, life: operator.life,
+          yaw, pitch: 0, forward, strafe: 0, sprint: true, fire: false });
+        mission.step();
+        if (!operator.hp || mission.snapshot().result) return false;
+      }
+      return false;
+    };
+    assert.ok(go(player, { x: 0, z: 4 }, .6));
+    assert.ok(mission.select(player.id, { planetId: 'dev-ault', missionId: BODENBRUCH.id, difficultyId: 'normal' }));
+    assert.ok(mission.start(player.id));
+    for (const operator of crew) {
+      for (const target of [{ x: 3.3, z: 3.3 }, { x: 3.3, z: -4 }, { x: 0, z: -10 }, CARRIER_SHIP]) {
+        assert.ok(go(operator, target, .75), JSON.stringify({ target, x: operator.x, z: operator.z }));
+      }
+      assert.ok(mission.interact(operator.id));
     }
-    return false;
-  };
-  assert.ok(go({ x: 0, z: 4 }, .6));
-  assert.ok(mission.select(player.id, { planetId: 'dev-ault', missionId: BODENBRUCH.id, difficultyId: 'normal' }));
-  assert.ok(mission.start(player.id));
-  for (const target of [{ x: 3.3, z: 3.3 }, { x: 3.3, z: -4 }, { x: 0, z: -10 }, CARRIER_SHIP]) {
-    assert.ok(go(target, .75), JSON.stringify({ target, player }));
-  }
-  assert.ok(mission.interact(player.id));
-  advance(mission, BOARDING_TICKS + LANDING_STAGE_TICKS + 1);
-  assert.ok(go({ x: player.x, z: player.z + 7 }, 1, true));
-  for (const target of [alpha, bravo]) {
-    assert.ok(go(target, 3, true), JSON.stringify({ target, player }));
-    assert.ok(mission.interact(player.id));
-    advance(mission, 2);
-  }
-  const ship = mission.snapshot().albatross!;
-  assert.ok(go({ x: ship.x, z: ship.z + 1 }, 1.5, true));
-  assert.ok(mission.interact(player.id));
-  mission.receiveInput(player.id, { ...player.input, seq: ++seq, forward: 0 });
-  advance(mission, ALBATROSS.launchTicks + BALLOON.liftTicks + 1);
-  assert.ok(mission.snapshot().result?.extractionSucceeded);
-  assert.ok(mission.snapshot().result?.primaryObjectivesCompleted);
-  assert.ok(mission.action(player.id, 'return-vote'));
-  advance(mission, NET.tickHz + 1);
-  assert.equal(mission.state, 'CARRIER_HUB');
-});
+    advance(mission, BOARDING_TICKS + LANDING_STAGE_TICKS + 1);
+    assert.equal(mission.state, 'ACTIVE_MISSION');
+    assert.ok(go(player, { x: player.x, z: player.z + 7 }, 1, true));
+    for (const target of [alpha, bravo]) {
+      assert.ok(go(player, target, 3, true), JSON.stringify({ target, x: player.x, z: player.z }));
+      assert.ok(mission.interact(player.id));
+      advance(mission, 2);
+    }
+    const ship = mission.snapshot().albatross!;
+    const assembly = method === 'albatross' ? { x: ship.x, z: ship.z + 1 } : { x: -145, z: 178 };
+    for (const operator of crew) assert.ok(go(operator, assembly, 1.5, true),
+      JSON.stringify({ operator: operator.id, x: operator.x, z: operator.z, hp: operator.hp, assembly }));
+    assert.ok(mission.action(player.id, method));
+    for (const operator of crew.slice(1)) assert.ok(mission.action(operator.id, 'secure'));
+    const pickup = method === 'albatross' ? ALBATROSS.launchTicks : BALLOON.countdownTicks + BALLOON.approachTicks;
+    advance(mission, pickup + BALLOON.liftTicks + 1);
+    const result = mission.snapshot().result;
+    assert.ok(result?.extractionSucceeded && result.primaryObjectivesCompleted);
+    assert.equal(result.extractionMethod, method);
+    assert.deepEqual(result.extractedOperatorIds, crew.map(({ id }) => id));
+    for (const operator of crew) assert.ok(mission.action(operator.id, 'return-vote'));
+    advance(mission, NET.tickHz + 1);
+    assert.equal(mission.state, 'CARRIER_HUB');
+  });
+}
 
 test('four personal stim supplies complete once, cancel on death and disconnect, and reset on new deployment', () => {
   const { mission, players } = deployed('normal', BODENBRUCH, 4);
@@ -668,3 +686,33 @@ test('an empty launch is cancelled and a missed balloon pickup returns for the s
   advance(mission, 1 + BALLOON.approachTicks + BALLOON.liftTicks);
   assert.deepEqual(mission.snapshot().result?.extractedOperatorIds, [player.id]);
 });
+
+for (const method of ['albatross', 'balloon'] as const) {
+  test(`${method} checks stance when securing and again at pickup`, () => {
+    const { mission, player, players: [, wing] } = deployed('easy', BODENBRUCH, 2);
+    unlock(mission, player);
+    const ship = mission.snapshot().albatross!;
+    const site = method === 'albatross' ? { x: ship.x, z: ship.z + 1 } : { x: -145, z: 178 };
+    for (const member of [player, wing]) Object.assign(member, site, { protectedUntil: Infinity });
+    for (const posture of ['DIVING', 'PRONE', 'SUPINE', 'GETTING_UP', 'SLIDING'] as const) {
+      player.posture = { ...newPosture(), current: posture };
+      assert.equal(mission.action(player.id, method), false);
+      assert.deepEqual(mission.drainFeedback(), [{ id: player.id, code: 'extraction-posture' }]);
+      assert.equal(mission.snapshot().extraction, undefined);
+    }
+    player.posture = { ...newPosture(), current: 'CROUCHING' };
+    assert.ok(mission.action(player.id, method));
+    wing.posture = { ...newPosture(), current: 'SUPINE' };
+    assert.equal(mission.action(wing.id, 'secure'), false);
+    assert.deepEqual(mission.snapshot().extraction?.securedIds, [player.id]);
+    wing.posture = newPosture();
+    assert.ok(mission.action(wing.id, 'secure'));
+    player.posture = { ...newPosture(), current: 'PRONE' };
+    const pickup = method === 'albatross' ? ALBATROSS.launchTicks : BALLOON.countdownTicks + BALLOON.approachTicks;
+    advance(mission, pickup);
+    assert.equal(mission.snapshot().extraction?.phase, 'LIFT');
+    assert.deepEqual(mission.snapshot().extraction?.securedIds, [wing.id]);
+    advance(mission, BALLOON.liftTicks);
+    assert.deepEqual(mission.snapshot().result?.extractedOperatorIds, [wing.id]);
+  });
+}

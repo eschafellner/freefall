@@ -1,5 +1,5 @@
 import { bindings } from '../input/Bindings.ts';
-import { BASE_LOADOUT, FRAG, MELEE, NET, PLAYER, STIM } from '@freefall/shared';
+import { BASE_LOADOUT, FRAG, MELEE, NET, PLAYER, STIM, allowsPostureAction } from '@freefall/shared';
 import type { PlayerState } from '@freefall/shared';
 
 export function VitalSigns({ player, tick }: { player: PlayerState; tick: number }) {
@@ -19,7 +19,7 @@ export function VitalSigns({ player, tick }: { player: PlayerState; tick: number
 
 function ActionProgress({ label, remaining, ticks }: { label: string; remaining: number; ticks: number }) {
   return <div className="kit-progress" role="status"><span>{label}</span>
-    <progress aria-label={label} max={ticks} value={Math.max(0, Math.min(ticks, ticks - remaining))}/></div>;
+    <progress aria-label={label} max={Math.max(1, ticks)} value={Math.max(0, Math.min(ticks, ticks - remaining))}/></div>;
 }
 
 const RELOAD_LABEL = {
@@ -34,7 +34,7 @@ export function WeaponReadout({ player, tick }: { player: PlayerState; tick: num
   const weapon = BASE_LOADOUT.weapons[slot];
   const spare = BASE_LOADOUT.weapons[other];
   const switching = gear?.action === 'primary' || gear?.action === 'secondary';
-  const reload = player.reload;
+  const reload = player.reload?.slot === slot ? player.reload : undefined;
   const reloading = reload && reload.phase !== 'READY' && reload.phase !== 'RELOAD_INTERRUPTED';
   const interrupted = reload?.phase === 'RELOAD_INTERRUPTED' && tick - reload.at < NET.tickHz;
   const mags = gear?.magazines[slot] ?? 0;
@@ -42,6 +42,8 @@ export function WeaponReadout({ player, tick }: { player: PlayerState; tick: num
   const dry = !reloading && !mags && ammo <= weapon.magazineSize * .25;
   const meleeLeft = gear ? gear.meleeReadyAt - tick : 0;
   const grounded = player.posture?.current === 'PRONE' || player.posture?.current === 'SUPINE';
+  const canGrenade = !player.posture || allowsPostureAction(player.posture, 'grenade');
+  const canMelee = !player.posture || allowsPostureAction(player.posture, 'melee');
   const actionLabel = switching ? 'Waffenwechsel' : gear?.action === 'grenade' ? 'Granatenwurf'
     : gear?.action === 'melee' ? MELEE.displayName : gear?.action === 'resupply' ? 'Nachschub aufnehmen' : '';
   return <section className="weapon readout" aria-label="Bewaffnung">
@@ -51,14 +53,16 @@ export function WeaponReadout({ player, tick }: { player: PlayerState; tick: num
     </strong>
     {grounded && <div className="kit-line"><span>{player.posture?.current === 'PRONE' ? 'Bauchlage' : 'Rückenlage'}</span> <span><kbd>{bindings.label('STAND_UP')}</kbd> Aufstehen</span></div>}
     {reloading && <ActionProgress label={RELOAD_LABEL[reload.phase]} remaining={reload.until - tick} ticks={reload.until - reload.started}/>}
+    {reloading && tick < reload.insertAt && ammo > 0 && <small className="kit-note">Beim Magazinwechsel gehen {ammo} Schuss verloren.</small>}
     {interrupted && <small className="kit-note" role="status">{RELOAD_LABEL.RELOAD_INTERRUPTED}</small>}
     {dry && <small className="kit-note warn" role="status">Keine Reservemagazine</small>}
     {gear && <>
       <div className="kit-line"><span><kbd>{bindings.label(other === 'primary' ? 'SWITCH_PRIMARY' : 'SWITCH_SECONDARY')}</kbd> {spare.displayName}</span>
         <b>{gear.inactiveAmmo}/{spare.magazineSize} · {gear.magazines[other]} MAG</b></div>
-      <div className="kit-line"><span><kbd>{bindings.label('THROW_GRENADE')}</kbd> {FRAG.displayName}</span><b>{gear.grenades}/{FRAG.capacity}</b></div>
-      <div className={`kit-line ${meleeLeft > 0 ? 'cooling' : ''}`}><span><kbd>{bindings.label('MELEE')}</kbd> {MELEE.displayName}</span>
-        <b>{meleeLeft > 0 ? `${(meleeLeft / NET.tickHz).toFixed(1)} s` : 'bereit'}</b></div>
+      <div className="kit-line"><span>{canGrenade && <kbd>{bindings.label('THROW_GRENADE')}</kbd>} {FRAG.displayName}</span>
+        <b>{gear.grenades}/{FRAG.capacity}{!canGrenade && ' · gesperrt'}</b></div>
+      <div className={`kit-line ${meleeLeft > 0 ? 'cooling' : ''}`}><span>{canMelee && <kbd>{bindings.label('MELEE')}</kbd>} {MELEE.displayName}</span>
+        <b>{!canMelee ? 'gesperrt' : meleeLeft > 0 ? `${(meleeLeft / NET.tickHz).toFixed(1)} s` : 'bereit'}</b></div>
       {actionLabel && <ActionProgress label={actionLabel} remaining={gear.until - tick} ticks={gear.until - gear.started}/>}
     </>}
   </section>;

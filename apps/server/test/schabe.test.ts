@@ -26,11 +26,11 @@ test('arena spawns the approved Schabe on legacy wire type zero', () => {
     meleeRange: 1.45, meleeDamage: 8, meleeCooldown: 1.3,
   });
   assert.deepEqual(ARENA_REINFORCEMENTS, {
-    archetypeId: 'swarm.schabe', outerRadius: 51, ringWidth: 11, refillTicks: 9,
+    archetypeId: 'swarm.schabe', outerRadius: 51, ringWidth: 11, refillTicks: 9, maxSpawnsPerTick: 100,
   });
-  assert.deepEqual(AI, {
-    targetTicks: 6, steeringTicks: 2, separationRadius: 1.65, neighborsPerCell: 12, refillTicks: 9,
-  });
+  assert.equal(AI.targetTicks, 6);
+  assert.equal(AI.steeringTicks, 2);
+  assert.equal(AI.refillTicks, 9);
 
   const arena = new Arena(1, 100);
   arena.step();

@@ -6,6 +6,7 @@ stateDiagram-v2
     CARRIER_HUB --> MISSION_SELECTION
     MISSION_SELECTION --> BOARDING
     BOARDING --> DEPLOYMENT
+    BOARDING --> MISSION_SELECTION: Host bricht Boarding ab
     DEPLOYMENT --> ACTIVE_MISSION
     ACTIVE_MISSION --> OBJECTIVES_COMPLETED
     OBJECTIVES_COMPLETED --> EXTRACTION_AVAILABLE
@@ -27,6 +28,7 @@ Der Audit ergab einen bestehenden Colyseus-Room mit fester `MissionInstance`, `B
 | --- | --- |
 | `input` | Validierte Richtungen, Blickwinkel und Waffenimpulse. |
 | `mission-selection`, `mission-start` | Host-Anfragen in Reichweite des Missionstischs. |
+| `mission-cancel` | Host bricht das Boarding ab. Der Trupp kehrt zur Missionsauswahl zurück, die Auswahl bleibt erhalten. |
 | `mission-interact`, `mission-action` | Positions- und phasenabhängige Handlungen. |
 | `players` | 20 Hz. Operator mit Bewegung, Input-Bestätigung, Lebens-ID und Host-ID. |
 | `mission-state` | 5 Hz plus Phasenwechsel. Auswahl, Operatorstatus, Flugphasen, Albatross, Convicts, Ballon und Ergebnis. |
@@ -36,7 +38,9 @@ Der Audit ergab einen bestehenden Colyseus-Room mit fester `MissionInstance`, `B
 
 Positionswechsel nutzen den vorhandenen Lebenszähler zur Zurücksetzung der Prediction. Der Client blendet Carrier oder Oberfläche im vorhandenen Renderer ein und verwendet eigene Kameras für Fallflug, Touchdown und Rettung. Rückkehr nach zwölf Sekunden oder nach Zustimmung aller noch verbundenen Operator. Der Room und seine Einladungs-ID bleiben bestehen.
 
-Der Room reserviert bei einem unerwarteten Verbindungsabbruch zwölf Sekunden. Reconnects erhalten dieselbe Session-ID und denselben Entitätenbestand. Die Host-Rolle geht bei einem Abbruch an die nächste bestehende Verbindung. Getrennte Operator werden aus Bereitschaft, Sicherung vor Fang und Rückkehrabstimmung nach dem Ergebnis entfernt. Wer vor der Abflugverriegelung getrennt bleibt, verpasst diesen Einsatz und wartet bei Reconnect bis zur Rückkehr. Wer nach dem Verriegeln getrennt wird, behält seinen Einsatzslot. Bereits gefangene Operator bleiben im Resultat. Neue Teilnehmer können bis zum Verriegeln und wieder auf dem Carrier beitreten.
+Der Room reserviert bei einem unerwarteten Verbindungsabbruch zwölf Sekunden. Reconnects erhalten dieselbe Session-ID und denselben Entitätenbestand. Die Host-Rolle geht bei einem Abbruch an die nächste bestehende Verbindung. Getrennte Operator werden aus Bereitschaft, Sicherung vor Fang und Rückkehrabstimmung nach dem Ergebnis entfernt. Wer vor der Abflugverriegelung getrennt bleibt, verpasst diesen Einsatz und wartet bei Reconnect bis zur Rückkehr. Wer nach dem Verriegeln getrennt wird, behält seinen Einsatzslot. Bereits gefangene Operator bleiben im Resultat. Neue Teilnehmer können bis zum Verriegeln und wieder auf dem Carrier beitreten. Ein voller Room bleibt nach der Rückkehr gesperrt und wird erst freigegeben, wenn ein Platz frei wird. So listet das Matchmaking keinen vollen Room als beitretbar.
+
+Das Boarding hat keinen Timeout. Solange nicht alle verbundenen Operator bereit sind, wartet der Trupp. Der Host kann das Boarding im Menü mit **Boarding abbrechen** beenden. Der Einsatz wird verworfen (Instanz, Albatross, Convicts, Nachschub, Bereitschaft), die Operator bleiben an ihrer Position. Die gewählte Mission und Schwierigkeit bleiben auf der Konsole, ein erneutes **Boarding freigeben** startet sofort einen neuen Einsatz.
 
 ## Prüfung und Grenzen
 

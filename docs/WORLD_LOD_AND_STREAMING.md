@@ -1,0 +1,5 @@
+# World LOD und Streaming
+
+64 Terrain-Chunks von 60 × 60 m verwenden ihre Welt-ID und Rasterkoordinaten als stabile IDs. Nahe Chunks verwenden 450 Dreiecke. Ferne Chunks vereinfachen die Innenflächen (140 Dreiecke) und behalten sämtliche Randvertices samt Höhen und Normalen. Die Terrainstufen teilen Vertexattribute und Materialien. Detailvegetation wird per Instancing und entfernungsabhängiger Sichtbarkeit auf den aktuellen Bildausschnitt beschränkt. Baumkronen schalten auf einfachere Meshes um, wenn sie sich von der Ansicht entfernen. Nur nahe Kronen werfen dynamische Schatten.
+
+Die Weltgröße passt in einen vollständig geladenen Heightfield- und Chunk-Satz. Chunk-Wechsel ändern nur die lokale Renderstufe. Beim Wechsel der Welt entfernt der Client den bisherigen Szenenbaum, Instanzen und eigene GPU-Ressourcen. Die gemeinsam verwendeten Texturmaps leben weiter. Der Server hält Kollision, Missionsobjekte und Navigation für den gesamten Einsatz. Vier getrennte Ansichten dürfen verschiedene LOD-Stufen für denselben Chunk wählen.

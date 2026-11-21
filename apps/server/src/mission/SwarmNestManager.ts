@@ -1,7 +1,7 @@
 import {
-  CAMERA_BACK, NEST_COLLAPSE_TICKS, NEST_EXITS, NEST_EXIT_RADIUS, NEST_HIT_HEIGHT, NEST_RADIUS, SWARM_FACTION_ID,
+  CAMERA_BACK, NEST_COLLAPSE_TICKS, NEST_EXITS, NEST_EXIT_RADIUS, NEST_HIT_HEIGHT, NEST_RADIUS, SWARM_FACTION_ID, distanceSquared, groundHeight,
 } from '@freefall/shared';
-import type { AimRay, MissionBalance, MissionEvent, NestSnapshot, PositionXZ } from '@freefall/shared';
+import type { AimRay, MissionBalance, MissionEvent, NestSnapshot, PositionXZ, WorldDefinition } from '@freefall/shared';
 import type { CombatTargets } from '../systems/combat.ts';
 
 export interface SwarmNest extends NestSnapshot {
@@ -22,7 +22,10 @@ export class SwarmNestManager implements CombatTargets {
   /** Static nest definition of this mission run (`structures.json`, resolved for the difficulty). */
   private readonly config: MissionBalance['nest'];
 
-  constructor(emit: (event: MissionEvent) => void, random: () => number, balance: MissionBalance) {
+  private readonly world?: WorldDefinition;
+
+  constructor(emit: (event: MissionEvent) => void, random: () => number, balance: MissionBalance, world?: WorldDefinition) {
+    this.world = world;
     this.emit = emit;
     this.random = random;
     this.config = balance.nest;
@@ -57,7 +60,7 @@ export class SwarmNestManager implements CombatTargets {
     for (const nest of this.active.values()) {
       if (nest.state === 'EMERGING') continue;
       const x = ray.x - nest.x;
-      const y = (ray.y - NEST_HIT_HEIGHT) * vertical;
+      const y = (ray.y - groundHeight(this.world, nest.x, nest.z) - NEST_HIT_HEIGHT) * vertical;
       const z = ray.z - nest.z;
       const b = x * ray.dx + y * dy + z * ray.dz;
       const c = x * x + y * y + z * z - NEST_RADIUS ** 2;
@@ -73,14 +76,16 @@ export class SwarmNestManager implements CombatTargets {
     return nestId ? { nestId, distance: nearest } : undefined;
   }
 
-  hit(nestId: number, amount: number, tick: number, shooter: string): void {
+  hit(nestId: number, amount: number, tick: number, shooter: string): number {
     const nest = this.active.get(nestId);
-    if (!nest || nest.state === 'EMERGING') return;
+    if (!nest || nest.state === 'EMERGING') return 0;
+    const before = nest.hp;
     nest.hp = Math.max(0, nest.hp - amount);
     nest.lastHitAt = tick;
     this.emit({ type: 'SwarmNestDamaged', nestId, hp: nest.hp, shooter, tick });
     if (nest.hp === 0) this.destroy(nest, tick, shooter);
     else nest.state = 'DAMAGED';
+    return before - nest.hp;
   }
 
   destroy(nest: SwarmNest, tick: number, shooter?: string): void {
@@ -91,7 +96,7 @@ export class SwarmNestManager implements CombatTargets {
     nest.destroyedAt = tick;
     this.remains.set(nest.id, nest);
     this.destroyed++;
-    this.emit({ type: 'SwarmNestDestroyed', nestId: nest.id, shooter, tick });
+    this.emit({ type: 'SwarmNestDestroyed', nestId: nest.id, shooter, tick, position: { x: nest.x, z: nest.z } });
   }
 
   emergingCount(): number {
@@ -100,7 +105,25 @@ export class SwarmNestManager implements CombatTargets {
     return count;
   }
 
-  update(tick: number, spawn: (nest: SwarmNest, exit: PositionXZ) => boolean, pressure: number): void {
+  blocksSpawn(position: PositionXZ, radius: number): boolean {
+    const clearance = (NEST_RADIUS + radius) ** 2;
+    for (const nest of this.active.values()) if (distanceSquared(nest, position) < clearance) return true;
+    for (const nest of this.remains.values()) {
+      if (nest.state === 'DESTROYING' && distanceSquared(nest, position) < clearance) return true;
+    }
+    return false;
+  }
+
+  hasBoost(tick: number): boolean {
+    for (const nest of this.active.values()) if (tick < nest.boostUntil) return true;
+    return false;
+  }
+
+  halt(): void {
+    for (const nest of this.active.values()) nest.spawnBudget = 0;
+  }
+
+  update(tick: number, spawn: (nest: SwarmNest, exit: PositionXZ) => boolean | undefined, pressure: number): void {
     for (const nest of this.remains.values()) {
       if (tick >= nest.destroyedAt + NEST_COLLAPSE_TICKS) nest.state = 'DESTROYED';
     }
@@ -112,15 +135,24 @@ export class SwarmNestManager implements CombatTargets {
       }
       if (tick < nest.spawnCooldown || !nest.spawnBudget) continue;
       const config = this.config;
-      const exitIndex = (nest.exit + 1) % NEST_EXITS;
-      const angle = nest.rotation + exitIndex * Math.PI * 2 / NEST_EXITS;
-      if (!spawn(nest, { x: nest.x + Math.sin(angle) * NEST_EXIT_RADIUS, z: nest.z + Math.cos(angle) * NEST_EXIT_RADIUS })) {
+      let usedExit = -1;
+      for (let offset = 1; offset <= NEST_EXITS; offset++) {
+        const exit = (nest.exit + offset) % NEST_EXITS;
+        const angle = nest.rotation + exit * Math.PI * 2 / NEST_EXITS;
+        const spawned = spawn(nest, { x: nest.x + Math.sin(angle) * NEST_EXIT_RADIUS, z: nest.z + Math.cos(angle) * NEST_EXIT_RADIUS });
+        if (spawned === undefined) break;
+        if (spawned) {
+          usedExit = exit;
+          break;
+        }
+      }
+      if (usedExit < 0) {
         // Hold a single due spawn and retry. No backlog of overdue spawn times.
         nest.spawnCooldown = tick + config.blockedSpawnRetryTicks;
         continue;
       }
       nest.spawnBudget--;
-      nest.exit = exitIndex;
+      nest.exit = usedExit;
       nest.lastSpawnAt = tick;
       const rate = (tick < nest.boostUntil ? config.reinforcementBoostRate : 1) * pressure;
       nest.spawnCooldown = tick + Math.max(config.minSpawnIntervalTicks, Math.round(nest.spawnInterval / rate));

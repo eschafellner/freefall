@@ -10,19 +10,42 @@
 
 Der Fallback besitzt artikulierte Knie und Ellenbogen. Eine begrenzte Zweigelenk-Lösung positioniert die Hände am Griff, am Handschutz und beim Nachladen am Magazin. Der obere Körper richtet sich teilweise nach dem Blickwinkel aus, der Lauf richtet sich im Aim-Modus auf einen Punkt des bestehenden Zielstrahls. Die Bewegung der Beine läuft unabhängig weiter.
 
-## Importierte Clips
+## Hybrid-Animation (GLB-Clips mit prozeduralem Fallback)
 
-`CharacterClipPlayer` verwendet einen `AnimationMixer` pro sichtbarem Rig-Slot. Zustand und Clipname lassen sich in der Registry zuordnen. Die Basisbewegung blendet über 150 ms. Fehlende Richtungsclips verwenden Walk oder Run. Optionale Aim-, Fire-, Reload-, Hit- und Death-Clips dienen als passende Vollkörper-Overrides. Aim allein verdrängt die Bewegungsclips nur im Stand. Bei bewegter Figur bleibt die lokale Waffenanpassung aktiv. Bei fehlendem Reload-Clip bleiben Magazin- und Waffenbewegung sichtbar. Ohne Death-Clip fällt das Modell als Ganzes.
+Ziel: hochwertige GLB-Clips für Bewegung und Aktionen, prozedurale Ergänzungen für alles, was vom Spielzustand abhängt, und das bestehende prozedurale Rig als Fallback für jeden Zustand ohne Clip. Asset-Vertrag und Clipliste: [Character Asset Requirements](CHARACTER_ASSET_REQUIREMENTS.md).
 
-Neue Clips müssen In-Place exportiert werden. Für den unbenannten Mixer-Root und einen optional benannten `motionRoot` fixiert der Import horizontale Translation und entfernt Rotationsspuren. Ein Beckenknochen mit beabsichtigter Drehung und Seitbewegung gehört unter einen separaten Root-Knoten. Animationspakete brauchen dieselben Bone-Namen und dieselbe Bind-Pose. Reload läuft über normierten Fortschritt vom Server und passt die Abspielposition an die Clipdauer an.
+| Schicht | Inhalt | Datei |
+| --- | --- | --- |
+| Clip-Vertrag | ID, Gruppe, Ebene (base/upper), Taktung (free/speed/server), Priorität, Fallback | `characters/animation/ClipLibrary.ts` |
+| Humanoid-Zuordnung | Rollen, Presets FREEFALL/Mixamo/Unreal, Oberkörpermaske | `characters/animation/HumanoidSkeleton.ts` |
+| Retargeting | Übertragung zwischen Skeletten mit anderen Namen, Ruheposen und Proportionen | `characters/animation/Retargeting.ts`, `CharacterClipSet.ts` |
+| Clip-Player | Basis- und Oberkörperebene, lineares Blending, Serverfortschritt | `characters/CharacterClipPlayer.ts` |
+| Prozedurale Ergänzung | Blick und Zielneigung über die Wirbelsäule, Rückstoß, Foot IK | `characters/animation/SkeletonOverlay.ts` |
+| Fallback | prozedurales Rig pro Zustand ohne Clip | `characters/PlayerVisualController.ts`, `SoldierRig.ts` |
 
-Für geskinntes Rig, Fingerkontakte und vollständiges Layering werden abgenommene Oberkörperclips benötigt. Der GLB-Pfad enthält derzeit einen Waffen-Pivot und Vollkörperübergänge. Additive Clip-Layer und IK auf beliebigen importierten Skeletten stehen noch aus. Die Fallback-Gelenke lösen nur die bekannten prozeduralen Gliedmaßen.
+**Ebenen.** Die Basisebene spielt Locomotion, Ducken, Hechtsprung, Landung, Bauch- und Rückenlage, Aufstehen und Tod. Die Oberkörperebene spielt Haltungsvarianten für Nachladen, Waffenwechsel, Stim und Schuss über der laufenden Grundpose. Mit Humanoid-Zuordnung blendet der Mixer pro Track, sodass ein Clip für die Waffenhand die übrige Haltung erhält. Weitere Details stehen in der [7.3D-Charakteranimation](CHARACTER_ANIMATION.md).
+
+**Übergänge.** Die Gewichte werden linear im Player geblendet: Gangart zu Gangart 220 ms mit übernommener Schrittphase, allgemein 150 ms, servergetaktete Übergänge 80 ms, Tod 100 ms, Oberkörper ein 120 ms und aus 200 ms. Laufende Überblendungen werden bei Unterbrechung normiert. Das erste Bild eines frisch angehängten Modells zeigt sofort die Zielpose.
+
+**Taktung.** `speed`-Clips folgen dem gerenderten Tempo über `clipSpeeds` (0,6–1,6×). `server`-Clips laufen nie frei: Haltungsübergänge folgen `postureProgress`, Nachladen dem Reload-Fortschritt, Stims dem Fortschritt der Ausrüstungsaktion. Lokale und fremde Figuren sehen dadurch dieselbe Phase.
+
+**Prozedurale Ergänzungen.** Nach dem Mixer verteilt `SkeletonOverlay` Blickneigung und Gierabweichung zum Körper (begrenzt auf ±60°) auf Wirbelsäule, Brust, Hals und Kopf. Sprint reduziert den Anteil, Bodenhaltungen und Tod schalten ihn ab. Der Schussimpuls kippt die Brust kurz. Die Waffe hängt am `PrimaryWeapon`-Knoten und richtet sich beim Zielen weiterhin auf den Zielpunkt aus. Der prozedurale Nachlade- und Stim-Knick der Waffe wird mit dem Gewicht eines vorhandenen Clips ausgeblendet. Foot IK (`footIK` in der Registry) hebt einen Fuß, den ein Clip unter den Boden drückt, mit einer Zweigelenk-Lösung auf seine Ruhehöhe. Es ist standardmäßig aus, bis eine Clip-Lieferung abgenommen ist.
+
+**Fallback.** Ohne Idle und Walk oder Run wird das GLB nicht verwendet. Fehlt der Clip eines Haltungszustands (Ducken, Hechtsprung, Bauch-/Rückenlage, Aufstehen), zeigt die Figur für diesen Zustand das prozedurale Rig und wechselt danach zurück. Fehlende Locomotion-Richtungen nutzen Walk oder Run, fehlende Oberkörperclips die prozedurale Waffenhandhabung. Beim Laden meldet die Konsole die fehlenden Kern-Clips je Gruppe.
+
+**Retargeting.** Pakete aus `animationPacks` mit anderem Skelett werden einmal beim Laden übertragen: Drehung jedes Humanoid-Knochens relativ zur eigenen Ruhepose im Wurzelraum, Hüftversatz skaliert mit der Hüfthöhe. Pakete mit gleichem Skelett und `animationPaths` werden unverändert verwendet.
+
+**Grenzen.** Hand-IK am Waffengriff für retargetete Clips, Finger-Retargeting und Bodenanpassung an Gelände fehlen noch; das Spielfeld ist derzeit flach. Ohne registriertes GLB läuft weiterhin ausschließlich das prozedurale Rig.
+
+Neue Clips werden in-place exportiert. Der Mixer entfernt Transformationsspuren der Modellwurzel. Bei einem separaten `motionRoot` fixiert er die horizontale Translation auf der Ruheposition und entfernt Rotation und Skalierung. Beim Dive entfernt er auch die vertikale Wurzeltranslation. Beckenpose und lokale Gelenkbewegung bleiben unterhalb der Wurzel erhalten. Nachladen folgt dem normierten Fortschritt des autoritativen Reload-Intervalls.
+
+Für Produktionsqualität fehlen ein geskinntes Modell, abgenommene Clips und Fingerkontakte. Die Integrationsstruktur für Ebenen, Retargeting und Overlays ist vorhanden.
 
 ## Multiplayer und Kamera
 
-`input` übernimmt optionale Bool-Felder für Aim und Reload. Bestehende `players`-Nachrichten tragen Pitch, Sprint/Aim-Bits, Munition und `reloadUntil`. Andere Spieler leiten das Tempo aus dem gepufferten Snapshot-Verlauf ab. HP und Leben bestimmen Trefferreaktion und Tod. Zusätzliche Animationsnachrichten und Knochenmatrizen werden nicht gesendet. Der Schussimpuls kommt über das bestehende autoritative `shot`-Ereignis und bleibt getrennt vom Positionspuffer.
+Lokale und fremde Operatoren teilen den Playback-Controller. `players` trägt Haltung, Leben, Ziel- und Sprintflags sowie das vorhandene Timing für Ausrüstung und Magazin. Der Room ergänzt bestätigte Operator-Schüsse um Tick und Lebensnummer. Der Remote-Rückstoß wird bei diesem gerenderten Tick verarbeitet. Alle Posen entstehen auf den Clients. [Charakteranimation](CHARACTER_ANIMATION.md)
 
-Die Schulterkamera schiebt sich beim Zielen entlang der bestehenden Zielachse näher heran und blendet das Sichtfeld von 62° auf 48°. Sprint weitet das Sichtfeld leicht. Der Rückstoß verändert kurz das Sichtfeld um höchstens 0,63°. Schussrichtung und Fadenkreuz bleiben auf der bestehenden Zielachse. Bodennähe ist wie in der Ausgangskamera begrenzt. Die flache Testarena verwendet dabei dieselben Sicht- und Kollisionsannahmen wie zuvor. Für eine variable Schulterseite oder Kamerakollision in späteren Leveln brauchen Client und Server ein gemeinsames Zielkonzept. [Missionsarchitektur](ROADMAP_MISSION_GAMEPLAY.md)
+Die Schulterkamera nutzt lokale Bewegungsinterpolation und die Blickhöhe der Haltung. Kollisionsanker, Sichtfeld und Komfortoptionen sind in der [taktischen Kamera](TACTICAL_CAMERA.md) beschrieben.
 
 ## Milestone 6
 

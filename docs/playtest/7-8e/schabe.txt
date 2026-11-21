@@ -1,0 +1,3 @@
+apps/client/src/rendering/EnemyVisualLOD.ts: OK
+apps/client/src/rendering/AgentMeshes.ts: OK
+apps/server/src/ecs/HordeManager.ts: OK

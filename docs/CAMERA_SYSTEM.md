@@ -4,8 +4,8 @@
 
 ## Aufbau
 
-- **Zielachse.** `aimRay()` aus dem Shared-Paket liefert Kamerapunkt und Blickrichtung aus Position, Yaw und Pitch. Der Server verwendet denselben Strahl für Treffer. Fadenkreuz und Schussrichtung stimmen deshalb überein.
-- **Zoom.** Aim, Sprint und Kollision verschieben die Kamera nur *entlang* dieser Achse. Das Fadenkreuz bleibt dabei auf dem Serverstrahl.
+- **Zielachse.** `aimRay()` aus dem Shared-Paket liefert Blickrichtung und Schulterstrahl. Die Treffervalidierung ergänzt diesen Strahl mit der bestehenden Mündungsgeometrie, der autoritativen Zielbegrenzung, Recoil und Streuung.
+- **Zoom.** Aim und Sprint verschieben die Kamera entlang der Blickachse. Die Kollisionsvermeidung kann die Kamera seitlich zum Operator einziehen. Das Reticle wird aus der geometrisch gültigen Zielrichtung in die aktuelle Perspektive projiziert.
 - **Schulterperspektive.** Rechte Schulter, 0,86 m seitlich, 4,8 m hinter dem Blickpunkt (`CAMERA_SHOULDER`, `CAMERA_BACK`).
 
 ## Was geglättet wird und was nicht
@@ -18,7 +18,7 @@
 | Sprint-Rückzug und FOV | gedämpft, Rate 9/s | angenehmer Übergang |
 | Kollision einziehen | sofort | die Kamera darf nie durch Geometrie sehen |
 | Kollision freigeben | gedämpft, Rate 7/s | kein Pumpen an Kanten und Pfeilern |
-| Rückstoß | kurzer FOV-Impuls, höchstens 0,63° | keine Positionsbewegung, das Fadenkreuz bleibt ruhig |
+| Waffenimpuls | kurzer FOV-Impuls, höchstens 0,8° | Zoomakzent zusätzlich zum vorhandenen Gameplay-Recoil |
 
 Animationen bewegen die Kamera nicht. Kopf- und Oberkörperbewegung des Rigs wirken nicht auf die Kamera zurück.
 
@@ -43,5 +43,7 @@ Animationen bewegen die Kamera nicht. Kopf- und Oberkörperbewegung des Rigs wir
 
 ## Offen
 
-- Kollisionsprüfung nur gegen die Box-Hindernisse der Welt. Für Decken oder schräge Geometrie fehlt eine allgemeinere Abfrage.
+- Deckung basiert auf den vorhandenen Box-Collidern und dem Terrain-Höhenfeld. Modellkanten können vom vereinfachten Collider abweichen.
 - Die Schulterseite ist fest. Eine wechselbare Schulter braucht ein gemeinsames Zielkonzept mit dem Server.
+
+[Haltungen, Einstellungen und Kameraabfragen in 7.8D](TACTICAL_CAMERA.md)

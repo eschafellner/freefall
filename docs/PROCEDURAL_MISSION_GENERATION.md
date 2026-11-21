@@ -1,0 +1,11 @@
+# Prozedurale Aufträge
+
+Der Host wählt am Skyfall Carrier einen prozeduralen Auftrag, eine Schwierigkeit und optional eine Vorlage. **Neuen Auftrag erzeugen** validiert und bestätigt die gemeinsame Vorschau. **Boarding für diesen Auftrag freigeben** verweist auf deren Plan-ID. Nach Ergebnis und Carrier-Rückkehr kann der Host erneut erzeugen oder die feste Operation Bodenbruch wählen.
+
+Der Generator probiert höchstens zwölf Kandidaten. Er zieht aus dem ausgewählten Planetprofil eine kompatible Vorlage, passende autorisierte Zielorte, eine Ballonzone, optionale Schritte, Durchbruchregionen und gegebenenfalls einen kompatiblen Modifier. Ein Kandidat enthält den vollständigen Zielgraphen, beide Extraktionsregeln, Briefing, Balancebezug und Schwierigkeitsbudgets. Der Validator prüft den zusammengesetzten Plan. Die Generierungsdiagnose meldet Versuchszahl, Ablehnungsgründe, Generierungs- und Prüfzeit.
+
+Kann die Generierung trotz gültiger Auswahl keinen Auftrag liefern, bietet das Profil die feste Operation Bodenbruch als **Ersatzauftrag** an, sofern Weltidentität, Deployment, Pflichtziele, Navigation und eine freie Ballonposition für die feste Definition geprüft wurden. Der Planstatus bleibt fehlgeschlagen und die GUI zeigt den Ersatzfall mit dem versuchten Seed. Unbekannte Planeten, nicht unterstützte Schwierigkeiten, unzulässige Seed-Eingaben und unbekannte explizite Vorlagen werden abgelehnt. Eine vorher bestätigte Auswahl bleibt bei einer Ablehnung verfügbar.
+
+Die Missionskomposition läuft vor dem Boarding. Der EncounterDirector verwendet die ausgewählten zwölf Durchbruchregionen und die aufgelöste Balance. Patrouillen, Nester, Zielpriorität, Spawn Scheduling, Rückzug und Recovery bleiben im vorhandenen Director. Er lässt bei besetzter Relaisverteidigung, Nachschub und Extraktion Missionsereignissen den Vortritt. Alle Spawnquellen teilen sich den Schwierigkeits- und ECS-Cap.
+
+Die Karte und ihre Kollisionsflächen sind die feste Dev’-Ault-Oberfläche. Das Profil definiert verfügbare Inhalte und Regeln. Der Generator kombiniert diese Inhalte zu einem konkreten Auftrag. Für später erzeugte Landschaften ist der Geometrieadapter dokumentiert. [Standorte](MISSION_LOCATION_VALIDATION.md)

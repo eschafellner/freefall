@@ -1,0 +1,1715 @@
+{
+  "before": {
+    "solo": {
+      "samples": [
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.0010462576177370539,
+            "p95": 0.0015299999995477265,
+            "p99": 0.00261000000000422,
+            "max": 0.03153999999994994
+          },
+          "navigationMs": {
+            "mean": 0.008864088642627731,
+            "p95": 0.013869999999769789,
+            "p99": 0.026649999999790452,
+            "max": 0.035979999999653955
+          },
+          "collisionMs": {
+            "mean": 0.001327562326846129,
+            "p95": 0.0019700000002558227,
+            "p99": 0.004080000000158179,
+            "max": 0.004400000000032378
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 68,
+              "totalBytes": 152884,
+              "samplePackets": 60,
+              "sampleBytesPerSecond": 11851.417726042895
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 1,
+              "totalBytes": 374,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            }
+          },
+          "memoryBefore": {
+            "rss": 718700544,
+            "heapTotal": 138498048,
+            "heapUsed": 75988712,
+            "external": 32114012,
+            "arrayBuffers": 1147718
+          },
+          "memoryAfter": {
+            "rss": 719093760,
+            "heapTotal": 139546624,
+            "heapUsed": 87737496,
+            "external": 32566823,
+            "arrayBuffers": 1600489
+          },
+          "enemies": 0,
+          "packetsPerSecond": 9.974751377326971,
+          "payloadBytesPerSecond": 59.848508263961826,
+          "minFrameCount": 0,
+          "operators": 1,
+          "tickHz": 30,
+          "renderedClients": 1,
+          "fps": 60.00183084643359,
+          "frameMs": {
+            "mean": 16.66615811373093,
+            "p95": 16.700000000000728,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.00183084643359,
+              "mean": 16.66615811373093,
+              "p95": 16.700000000000728,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "7.0 / 0.1 ms",
+              "Draw Calls / Dreiecke": "85 / 40.284",
+              "Geometrien / Texturen": "104 / 48",
+              "Gegner sichtbar / aktiv": "0 / 0"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 0.1326829416666745,
+            "p95": 0.21139000000039232,
+            "p99": 0.2273589999986143,
+            "max": 0.31689900000128546
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 30.007377060125304,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.03037504,
+          "errors": [],
+          "quality": "medium",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        }
+      ],
+      "acceptance": [
+        {
+          "generatedCompletion": {
+            "outcome": "extracted",
+            "method": "balloon",
+            "extracted": 1,
+            "durationTicks": 3476
+          }
+        }
+      ]
+    },
+    "coop": {
+      "samples": [
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "wave": {
+            "state": "BUILDUP",
+            "stateAt": 69,
+            "waveId": 1,
+            "created": 1,
+            "region": "breach/sector-5"
+          },
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.001263038674072738,
+            "p95": 0.0017000000007101335,
+            "p99": 0.002209999999649881,
+            "max": 0.005919999999605352
+          },
+          "navigationMs": {
+            "mean": 0.3413439502762861,
+            "p95": 0.48277000000052794,
+            "p99": 0.5646590000005745,
+            "max": 0.7965489999996862
+          },
+          "collisionMs": {
+            "mean": 0.1154349281768422,
+            "p95": 0.18128900000010617,
+            "p99": 0.22648000000117463,
+            "max": 0.46117899999990186
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 77,
+              "totalBytes": 188120,
+              "samplePackets": 60,
+              "sampleBytesPerSecond": 13794.956774516133
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 15,
+              "totalBytes": 1680,
+              "samplePackets": 10,
+              "sampleBytesPerSecond": 89.72869981015072
+            }
+          },
+          "memoryBefore": {
+            "rss": 735911936,
+            "heapTotal": 143622144,
+            "heapUsed": 79462056,
+            "external": 33428422,
+            "arrayBuffers": 2462128
+          },
+          "memoryAfter": {
+            "rss": 741933056,
+            "heapTotal": 142954496,
+            "heapUsed": 99163336,
+            "external": 33199209,
+            "arrayBuffers": 2232875
+          },
+          "enemies": 250,
+          "packetsPerSecond": 9.96985553446119,
+          "payloadBytesPerSecond": 24984.457969359744,
+          "minFrameCount": 250,
+          "operators": 4,
+          "tickHz": 30,
+          "renderedClients": 4,
+          "fps": 60.00183084643359,
+          "frameMs": {
+            "mean": 16.66615811373093,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.00183084643359,
+              "mean": 16.66615811373093,
+              "p95": 16.700000000000728,
+              "p99": 16.80000000000109,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758011,
+              "mean": 16.666019417475727,
+              "p95": 16.700000000000728,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00183084643359,
+              "mean": 16.66615811373093,
+              "p95": 16.799999999999272,
+              "p99": 16.80000000000109,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.799999999999272,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "3.2 / 0.1 ms",
+              "Draw Calls / Dreiecke": "34 / 17.357",
+              "Geometrien / Texturen": "107 / 48",
+              "Gegner sichtbar / aktiv": "1 / 250"
+            },
+            {
+              "CPU / GPU": "1.7 / 0.1 ms",
+              "Draw Calls / Dreiecke": "35 / 21.473",
+              "Geometrien / Texturen": "109 / 47",
+              "Gegner sichtbar / aktiv": "0 / 250"
+            },
+            {
+              "CPU / GPU": "2.0 / 0.1 ms",
+              "Draw Calls / Dreiecke": "42 / 40.980",
+              "Geometrien / Texturen": "109 / 48",
+              "Gegner sichtbar / aktiv": "1 / 250"
+            },
+            {
+              "CPU / GPU": "3.6 / 0.1 ms",
+              "Draw Calls / Dreiecke": "74 / 67.234",
+              "Geometrien / Texturen": "125 / 47",
+              "Gegner sichtbar / aktiv": "1 / 250"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 0.592611625000033,
+            "p95": 0.7594890000000305,
+            "p99": 0.8806800000002113,
+            "max": 0.8881190000010974
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 30.07573086229126,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.036282731,
+          "errors": [],
+          "quality": "medium",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        },
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "wave": {
+            "state": "BUILDUP",
+            "stateAt": 69,
+            "waveId": 1,
+            "created": 1,
+            "region": "breach/sector-5"
+          },
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.000964930748004338,
+            "p95": 0.0014799999989918433,
+            "p99": 0.00202999999964959,
+            "max": 0.008350000000064028
+          },
+          "navigationMs": {
+            "mean": 0.4746623047092151,
+            "p95": 0.6259589999972377,
+            "p99": 0.7047899999997753,
+            "max": 0.7543399999995017
+          },
+          "collisionMs": {
+            "mean": 0.16257071468140147,
+            "p95": 0.22987999999895692,
+            "p99": 0.2711200000012468,
+            "max": 0.27908000000024913
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 139,
+              "totalBytes": 365970,
+              "samplePackets": 60,
+              "sampleBytesPerSecond": 14295.151469455244
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 16,
+              "totalBytes": 1748,
+              "samplePackets": 1,
+              "sampleBytesPerSecond": 5.647959444093641
+            }
+          },
+          "memoryBefore": {
+            "rss": 742064128,
+            "heapTotal": 142954496,
+            "heapUsed": 87812376,
+            "external": 33280333,
+            "arrayBuffers": 2313999
+          },
+          "memoryAfter": {
+            "rss": 742981632,
+            "heapTotal": 144003072,
+            "heapUsed": 97770256,
+            "external": 33278867,
+            "arrayBuffers": 2312533
+          },
+          "enemies": 500,
+          "packetsPerSecond": 10.05004548140192,
+          "payloadBytesPerSecond": 50310.52767989801,
+          "minFrameCount": 500,
+          "operators": 4,
+          "tickHz": 30,
+          "renderedClients": 4,
+          "fps": 60.00233018758009,
+          "frameMs": {
+            "mean": 16.66601941747573,
+            "p95": 16.700000000000728,
+            "p99": 16.799999999999272,
+            "max": 16.80000000000291
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.700000000000728,
+              "p99": 16.799999999999272,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758011,
+              "mean": 16.666019417475727,
+              "p95": 16.799999999999272,
+              "p99": 16.799999999999272,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.700000000000728,
+              "p99": 16.799999999999272,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.002829537037805,
+              "mean": 16.665880721220528,
+              "p95": 16.700000000000728,
+              "p99": 16.80000000000109,
+              "max": 16.80000000000291
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "1.1 / 0.1 ms",
+              "Draw Calls / Dreiecke": "35 / 37.331",
+              "Geometrien / Texturen": "107 / 48",
+              "Gegner sichtbar / aktiv": "41 / 500"
+            },
+            {
+              "CPU / GPU": "1.2 / 0.1 ms",
+              "Draw Calls / Dreiecke": "43 / 44.845",
+              "Geometrien / Texturen": "116 / 47",
+              "Gegner sichtbar / aktiv": "34 / 500"
+            },
+            {
+              "CPU / GPU": "1.1 / 0.1 ms",
+              "Draw Calls / Dreiecke": "43 / 65.108",
+              "Geometrien / Texturen": "112 / 48",
+              "Gegner sichtbar / aktiv": "53 / 500"
+            },
+            {
+              "CPU / GPU": "1.3 / 0.1 ms",
+              "Draw Calls / Dreiecke": "77 / 101.580",
+              "Geometrien / Texturen": "126 / 47",
+              "Gegner sichtbar / aktiv": "143 / 500"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 0.7006002833330361,
+            "p95": 0.901480000000447,
+            "p99": 1.0345689999994647,
+            "max": 1.1113199999999779
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 29.984019989967713,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.039746509,
+          "errors": [],
+          "quality": "medium",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        },
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "wave": {
+            "state": "BUILDUP",
+            "stateAt": 69,
+            "waveId": 1,
+            "created": 1,
+            "region": "breach/sector-5"
+          },
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.0007601662050106129,
+            "p95": 0.000999999996565748,
+            "p99": 0.0014700000028824434,
+            "max": 0.028350000000500586
+          },
+          "navigationMs": {
+            "mean": 0.8254110581718758,
+            "p95": 1.062488999996276,
+            "p99": 1.2750190000006114,
+            "max": 1.8571280000032857
+          },
+          "collisionMs": {
+            "mean": 0.2796078864266545,
+            "p95": 0.3944489999994403,
+            "p99": 0.44961899999907473,
+            "max": 0.5267100000055507
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 201,
+              "totalBytes": 543718,
+              "samplePackets": 60,
+              "sampleBytesPerSecond": 14299.987984458625
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 16,
+              "totalBytes": 1748,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            }
+          },
+          "memoryBefore": {
+            "rss": 743243776,
+            "heapTotal": 144265216,
+            "heapUsed": 86624976,
+            "external": 33567973,
+            "arrayBuffers": 2601639
+          },
+          "memoryAfter": {
+            "rss": 744030208,
+            "heapTotal": 145051648,
+            "heapUsed": 85391312,
+            "external": 35887142,
+            "arrayBuffers": 1744386
+          },
+          "enemies": 1000,
+          "packetsPerSecond": 9.9760398003339,
+          "payloadBytesPerSecond": 99820.25424214102,
+          "minFrameCount": 1000,
+          "operators": 4,
+          "tickHz": 30,
+          "renderedClients": 4,
+          "fps": 60.002330187580114,
+          "frameMs": {
+            "mean": 16.666019417475724,
+            "p95": 16.700000000004366,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.002330187580114,
+              "mean": 16.666019417475724,
+              "p95": 16.700000000004366,
+              "p99": 16.80000000000291,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.799999999995634,
+              "p99": 16.80000000000291,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.002330187580114,
+              "mean": 16.666019417475724,
+              "p95": 16.700000000004366,
+              "p99": 16.80000000000291,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.002330187580114,
+              "mean": 16.666019417475724,
+              "p95": 16.700000000004366,
+              "p99": 16.80000000000291,
+              "max": 16.80000000000291
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "1.1 / 0.1 ms",
+              "Draw Calls / Dreiecke": "35 / 58.269",
+              "Geometrien / Texturen": "107 / 48",
+              "Gegner sichtbar / aktiv": "84 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.1 / 0.1 ms",
+              "Draw Calls / Dreiecke": "39 / 60.867",
+              "Geometrien / Texturen": "116 / 47",
+              "Gegner sichtbar / aktiv": "65 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.1 / 0.1 ms",
+              "Draw Calls / Dreiecke": "46 / 87.188",
+              "Geometrien / Texturen": "112 / 48",
+              "Gegner sichtbar / aktiv": "95 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.3 / 0.1 ms",
+              "Draw Calls / Dreiecke": "76 / 138.516",
+              "Geometrien / Texturen": "126 / 47",
+              "Gegner sichtbar / aktiv": "284 / 1.000"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 0.956765625000177,
+            "p95": 1.1913889999996172,
+            "p99": 1.3289089999962016,
+            "max": 1.9813580000045476
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 30.011253066004485,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.028821295999998,
+          "errors": [],
+          "quality": "medium",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        }
+      ],
+      "acceptance": [
+        {
+          "generatedCompletion": {
+            "outcome": "extracted",
+            "method": "balloon",
+            "extracted": 1,
+            "durationTicks": 4230
+          }
+        }
+      ]
+    },
+    "high": {
+      "samples": [
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "quality": "high",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "wave": {
+            "state": "BUILDUP",
+            "stateAt": 75,
+            "waveId": 1,
+            "created": 1,
+            "region": "patrol/patrol-4"
+          },
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.0012434072022291342,
+            "p95": 0.001759999999194406,
+            "p99": 0.002300000000104774,
+            "max": 0.004550000000563159
+          },
+          "navigationMs": {
+            "mean": 1.0479546509695385,
+            "p95": 1.3347389999998995,
+            "p99": 1.477429000000484,
+            "max": 1.6675489999997808
+          },
+          "collisionMs": {
+            "mean": 0.3667430554016361,
+            "p95": 0.5065190000004804,
+            "p99": 0.6691900000005262,
+            "max": 0.7332690000002913
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 79,
+              "totalBytes": 190960,
+              "samplePackets": 60,
+              "sampleBytesPerSecond": 13769.113524225992
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 15,
+              "totalBytes": 1683,
+              "samplePackets": 7,
+              "sampleBytesPerSecond": 60.79501078889345
+            }
+          },
+          "memoryBefore": {
+            "rss": 747675648,
+            "heapTotal": 143360000,
+            "heapUsed": 94523072,
+            "external": 33823769,
+            "arrayBuffers": 2857475
+          },
+          "memoryAfter": {
+            "rss": 756604928,
+            "heapTotal": 143478784,
+            "heapUsed": 92983328,
+            "external": 33502356,
+            "arrayBuffers": 2536022
+          },
+          "enemies": 1000,
+          "packetsPerSecond": 9.980029130871703,
+          "payloadBytesPerSecond": 99860.17148350226,
+          "minFrameCount": 1000,
+          "operators": 4,
+          "tickHz": 30,
+          "renderedClients": 4,
+          "fps": 60.00233018758011,
+          "frameMs": {
+            "mean": 16.666019417475727,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.00233018758011,
+              "mean": 16.666019417475727,
+              "p95": 16.799999999999272,
+              "p99": 16.80000000000109,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.799999999999272,
+              "p99": 16.80000000000109,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.700000000000728,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00183084643359,
+              "mean": 16.66615811373093,
+              "p95": 16.799999999999272,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "1.5 / 0.2 ms",
+              "Draw Calls / Dreiecke": "37 / 23.983",
+              "Meshes / Instanzen": "5 / 992",
+              "Geometrien / Texturen": "108 / 50",
+              "Gegner sichtbar / aktiv": "16 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.4 / 0.2 ms",
+              "Draw Calls / Dreiecke": "34 / 21.315",
+              "Meshes / Instanzen": "4 / 1.390",
+              "Geometrien / Texturen": "107 / 49",
+              "Gegner sichtbar / aktiv": "0 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.5 / 0.2 ms",
+              "Draw Calls / Dreiecke": "45 / 66.704",
+              "Meshes / Instanzen": "7 / 2.427",
+              "Geometrien / Texturen": "110 / 50",
+              "Gegner sichtbar / aktiv": "52 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.8 / 0.3 ms",
+              "Draw Calls / Dreiecke": "78 / 123.392",
+              "Meshes / Instanzen": "19 / 2.492",
+              "Geometrien / Texturen": "126 / 49",
+              "Gegner sichtbar / aktiv": "284 / 1.000"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 1.1694782833333799,
+            "p95": 1.4433289999997214,
+            "p99": 1.4760089999999764,
+            "max": 1.6332089999996242
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 30.02325430203904,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.024012998999998,
+          "errors": []
+        }
+      ],
+      "acceptance": []
+    }
+  },
+  "after": {
+    "solo": {
+      "samples": [
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.0009605540165774028,
+            "p95": 0.0014400000000023283,
+            "p99": 0.0033700000003591413,
+            "max": 0.011489999999866995
+          },
+          "navigationMs": {
+            "mean": 0.009042238227124008,
+            "p95": 0.013249999999970896,
+            "p99": 0.03290999999990163,
+            "max": 0.04642000000012558
+          },
+          "collisionMs": {
+            "mean": 0.001002409972348798,
+            "p95": 0.0016099999998004932,
+            "p99": 0.004269999999905849,
+            "max": 0.005420000000412983
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 68,
+              "totalBytes": 152872,
+              "samplePackets": 60,
+              "sampleBytesPerSecond": 11850.236866572539
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 1,
+              "totalBytes": 374,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            }
+          },
+          "memoryBefore": {
+            "rss": 722604032,
+            "heapTotal": 139943936,
+            "heapUsed": 83902024,
+            "external": 32673158,
+            "arrayBuffers": 1706864
+          },
+          "memoryAfter": {
+            "rss": 724176896,
+            "heapTotal": 140992512,
+            "heapUsed": 83703048,
+            "external": 32958869,
+            "arrayBuffers": 1992535
+          },
+          "enemies": 0,
+          "packetsPerSecond": 9.974597018824428,
+          "payloadBytesPerSecond": 59.84758211294657,
+          "minFrameCount": 0,
+          "operators": 1,
+          "tickHz": 30,
+          "renderedClients": 1,
+          "fps": 60.00183084643359,
+          "frameMs": {
+            "mean": 16.66615811373093,
+            "p95": 16.799999999999272,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.00183084643359,
+              "mean": 16.66615811373093,
+              "p95": 16.799999999999272,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "16.5 / 0.1 ms",
+              "Draw Calls / Dreiecke": "43 / 63.170",
+              "Meshes / Instanzen": "6 / 1.063",
+              "Geometrien / Texturen": "111 / 53",
+              "Gegner sichtbar / aktiv": "0 / 0"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 0.11288997499999216,
+            "p95": 0.25384000000121887,
+            "p99": 0.3647899999996298,
+            "max": 0.5079989999994723
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 30.00691269829682,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.030561212,
+          "errors": [],
+          "quality": "medium",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        }
+      ],
+      "acceptance": [
+        {
+          "generatedCompletion": {
+            "outcome": "extracted",
+            "method": "balloon",
+            "extracted": 1,
+            "durationTicks": 3472
+          }
+        }
+      ]
+    },
+    "coop": {
+      "samples": [
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "wave": {
+            "state": "BUILDUP",
+            "stateAt": 84,
+            "waveId": 1,
+            "created": 1,
+            "region": "patrol/patrol-5"
+          },
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.001171108033173328,
+            "p95": 0.0015699999994467362,
+            "p99": 0.0018199999994976679,
+            "max": 0.002080000000205473
+          },
+          "navigationMs": {
+            "mean": 0.3365825512465182,
+            "p95": 0.4622800000006464,
+            "p99": 0.5741200000002209,
+            "max": 0.7124999999996362
+          },
+          "collisionMs": {
+            "mean": 0.11503559279776143,
+            "p95": 0.17677000000003318,
+            "p99": 0.23273900000003778,
+            "max": 0.2653700000000754
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 78,
+              "totalBytes": 187022,
+              "samplePackets": 60,
+              "sampleBytesPerSecond": 13778.918146772327
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 16,
+              "totalBytes": 1735,
+              "samplePackets": 10,
+              "sampleBytesPerSecond": 89.79064246929147
+            }
+          },
+          "memoryBefore": {
+            "rss": 747986944,
+            "heapTotal": 142835712,
+            "heapUsed": 80997248,
+            "external": 33459602,
+            "arrayBuffers": 2493308
+          },
+          "memoryAfter": {
+            "rss": 752431104,
+            "heapTotal": 142692352,
+            "heapUsed": 76477088,
+            "external": 33551251,
+            "arrayBuffers": 1551683
+          },
+          "enemies": 250,
+          "packetsPerSecond": 9.967508877257147,
+          "payloadBytesPerSecond": 24978.57724640641,
+          "minFrameCount": 250,
+          "operators": 4,
+          "tickHz": 30,
+          "renderedClients": 4,
+          "fps": 60.00233018758009,
+          "frameMs": {
+            "mean": 16.66601941747573,
+            "p95": 16.700000000000728,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.700000000000728,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.002829537037805,
+              "mean": 16.665880721220528,
+              "p95": 16.700000000000728,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.799999999999272,
+              "p99": 16.80000000000109,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00282953703782,
+              "mean": 16.665880721220525,
+              "p95": 16.700000000000728,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "2.3 / 0.1 ms",
+              "Draw Calls / Dreiecke": "41 / 50.196",
+              "Meshes / Instanzen": "5 / 751",
+              "Geometrien / Texturen": "111 / 53",
+              "Gegner sichtbar / aktiv": "0 / 250"
+            },
+            {
+              "CPU / GPU": "1.9 / 0.1 ms",
+              "Draw Calls / Dreiecke": "40 / 52.758",
+              "Meshes / Instanzen": "6 / 731",
+              "Geometrien / Texturen": "113 / 51",
+              "Gegner sichtbar / aktiv": "0 / 250"
+            },
+            {
+              "CPU / GPU": "3.0 / 0.1 ms",
+              "Draw Calls / Dreiecke": "60 / 123.738",
+              "Meshes / Instanzen": "7 / 1.983",
+              "Geometrien / Texturen": "114 / 53",
+              "Gegner sichtbar / aktiv": "0 / 250"
+            },
+            {
+              "CPU / GPU": "3.3 / 0.1 ms",
+              "Draw Calls / Dreiecke": "91 / 141.368",
+              "Meshes / Instanzen": "19 / 1.727",
+              "Geometrien / Texturen": "130 / 52",
+              "Gegner sichtbar / aktiv": "1 / 250"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 0.6084272750000006,
+            "p95": 0.8216090000005352,
+            "p99": 0.8559900000000198,
+            "max": 0.8774900000007619
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 29.985589205748585,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.039116441000003,
+          "errors": [],
+          "quality": "medium",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        },
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "wave": {
+            "state": "BUILDUP",
+            "stateAt": 84,
+            "waveId": 1,
+            "created": 1,
+            "region": "patrol/patrol-5"
+          },
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.0010959556786267835,
+            "p95": 0.0015000000021245796,
+            "p99": 0.0020100000001548324,
+            "max": 0.029460000001563458
+          },
+          "navigationMs": {
+            "mean": 0.47867280609411195,
+            "p95": 0.6234789999980421,
+            "p99": 0.7447199999987788,
+            "max": 0.8203900000007707
+          },
+          "collisionMs": {
+            "mean": 0.16453935457065808,
+            "p95": 0.2235099999998056,
+            "p99": 0.26837000000159605,
+            "max": 0.3254899999992631
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 141,
+              "totalBytes": 367740,
+              "samplePackets": 61,
+              "sampleBytesPerSecond": 14542.55620757565
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 17,
+              "totalBytes": 1803,
+              "samplePackets": 1,
+              "sampleBytesPerSecond": 5.651532319006642
+            }
+          },
+          "memoryBefore": {
+            "rss": 752431104,
+            "heapTotal": 142692352,
+            "heapUsed": 91424752,
+            "external": 33359021,
+            "arrayBuffers": 2392687
+          },
+          "memoryAfter": {
+            "rss": 753479680,
+            "heapTotal": 143740928,
+            "heapUsed": 104569352,
+            "external": 33861771,
+            "arrayBuffers": 2895437
+          },
+          "enemies": 500,
+          "packetsPerSecond": 10.056403097055936,
+          "payloadBytesPerSecond": 50342.353903862015,
+          "minFrameCount": 500,
+          "operators": 4,
+          "tickHz": 30,
+          "renderedClients": 4,
+          "fps": 60.00233018758011,
+          "frameMs": {
+            "mean": 16.666019417475727,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.00233018758011,
+              "mean": 16.666019417475727,
+              "p95": 16.700000000000728,
+              "p99": 16.80000000000291,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.002829537037805,
+              "mean": 16.665880721220528,
+              "p95": 16.700000000000728,
+              "p99": 16.799999999999272,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.700000000000728,
+              "p99": 16.799999999999272,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.799999999999272,
+              "p99": 16.80000000000109,
+              "max": 16.80000000000291
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "1.2 / 0.1 ms",
+              "Draw Calls / Dreiecke": "43 / 70.390",
+              "Meshes / Instanzen": "5 / 829",
+              "Geometrien / Texturen": "111 / 53",
+              "Gegner sichtbar / aktiv": "41 / 500"
+            },
+            {
+              "CPU / GPU": "1.2 / 0.1 ms",
+              "Draw Calls / Dreiecke": "45 / 75.970",
+              "Meshes / Instanzen": "4 / 832",
+              "Geometrien / Texturen": "120 / 51",
+              "Gegner sichtbar / aktiv": "34 / 500"
+            },
+            {
+              "CPU / GPU": "1.2 / 0.1 ms",
+              "Draw Calls / Dreiecke": "62 / 148.388",
+              "Meshes / Instanzen": "7 / 2.081",
+              "Geometrien / Texturen": "117 / 53",
+              "Gegner sichtbar / aktiv": "53 / 500"
+            },
+            {
+              "CPU / GPU": "1.3 / 0.2 ms",
+              "Draw Calls / Dreiecke": "94 / 176.018",
+              "Meshes / Instanzen": "19 / 1.935",
+              "Geometrien / Texturen": "134 / 52",
+              "Gegner sichtbar / aktiv": "143 / 500"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 0.7167305416667357,
+            "p95": 0.9398690000016359,
+            "p99": 1.1074499999995169,
+            "max": 1.2158400000007532
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 30.08609852177065,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.032135031999998,
+          "errors": [],
+          "quality": "medium",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        },
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "wave": {
+            "state": "BUILDUP",
+            "stateAt": 84,
+            "waveId": 1,
+            "created": 1,
+            "region": "patrol/patrol-5"
+          },
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.0007854138889746941,
+            "p95": 0.0010900000015681144,
+            "p99": 0.0015000000021245796,
+            "max": 0.026559999998426065
+          },
+          "navigationMs": {
+            "mean": 0.8231123499999639,
+            "p95": 1.0623600000035367,
+            "p99": 1.177479999998468,
+            "max": 1.3114690000002156
+          },
+          "collisionMs": {
+            "mean": 0.27490060555545726,
+            "p95": 0.3876299999974435,
+            "p99": 0.441899999997986,
+            "max": 0.6062499999970896
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 204,
+              "totalBytes": 548354,
+              "samplePackets": 60,
+              "sampleBytesPerSecond": 14301.37923524832
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 17,
+              "totalBytes": 1803,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            }
+          },
+          "memoryBefore": {
+            "rss": 753741824,
+            "heapTotal": 143740928,
+            "heapUsed": 92934000,
+            "external": 34157626,
+            "arrayBuffers": 3191292
+          },
+          "memoryAfter": {
+            "rss": 754397184,
+            "heapTotal": 144003072,
+            "heapUsed": 88334992,
+            "external": 32827200,
+            "arrayBuffers": 1860866
+          },
+          "enemies": 1000,
+          "packetsPerSecond": 10.06026909752367,
+          "payloadBytesPerSecond": 100663.05258982186,
+          "minFrameCount": 1000,
+          "operators": 4,
+          "tickHz": 30,
+          "renderedClients": 4,
+          "fps": 60.00233018758009,
+          "frameMs": {
+            "mean": 16.66601941747573,
+            "p95": 16.799999999995634,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.799999999995634,
+              "p99": 16.80000000000291,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.799999999995634,
+              "p99": 16.80000000000291,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.002330187580114,
+              "mean": 16.666019417475724,
+              "p95": 16.700000000004366,
+              "p99": 16.80000000000291,
+              "max": 16.80000000000291
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.799999999999272,
+              "p99": 16.80000000000291,
+              "max": 16.80000000000291
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "1.2 / 0.1 ms",
+              "Draw Calls / Dreiecke": "43 / 91.628",
+              "Meshes / Instanzen": "5 / 911",
+              "Geometrien / Texturen": "111 / 53",
+              "Gegner sichtbar / aktiv": "84 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.2 / 0.1 ms",
+              "Draw Calls / Dreiecke": "44 / 91.630",
+              "Meshes / Instanzen": "4 / 892",
+              "Geometrien / Texturen": "120 / 51",
+              "Gegner sichtbar / aktiv": "64 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.1 / 0.1 ms",
+              "Draw Calls / Dreiecke": "65 / 170.470",
+              "Meshes / Instanzen": "9 / 2.164",
+              "Geometrien / Texturen": "117 / 53",
+              "Gegner sichtbar / aktiv": "95 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.3 / 0.1 ms",
+              "Draw Calls / Dreiecke": "93 / 212.652",
+              "Meshes / Instanzen": "19 / 2.123",
+              "Geometrien / Texturen": "134 / 52",
+              "Gegner sichtbar / aktiv": "284 / 1.000"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 0.9373284083334511,
+            "p95": 1.2053599999999278,
+            "p99": 1.315588999997999,
+            "max": 1.3269799999980023
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 30.014521852942526,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.027511274999997,
+          "errors": [],
+          "quality": "medium",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        }
+      ],
+      "acceptance": [
+        {
+          "reconnect": true,
+          "players": 4,
+          "world": "world.generated.acdc7ec0c04dd3da",
+          "guestQualities": [
+            "low",
+            "high",
+            "medium"
+          ]
+        },
+        {
+          "generatedCompletion": {
+            "outcome": "extracted",
+            "method": "balloon",
+            "extracted": 4,
+            "durationTicks": 4253
+          }
+        }
+      ]
+    },
+    "high": {
+      "samples": [
+        {
+          "chromium": "153.0.8010.12",
+          "angle": "gl",
+          "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+          "quality": "high",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "balanceHash": "01855759529dd588",
+          "phase": "ACTIVE_MISSION",
+          "wave": {
+            "state": "BUILDUP",
+            "stateAt": 80,
+            "waveId": 1,
+            "created": 1,
+            "region": "patrol/patrol-5"
+          },
+          "plan": {
+            "id": "generated.1df7f7561fcb275f",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "world": {
+              "id": "world.generated.acdc7ec0c04dd3da",
+              "planetId": "forest",
+              "biome": "temperate-forest",
+              "seed": 63,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "objectiveUpdateMs": {
+            "mean": 0.0014080000000401723,
+            "p95": 0.0019800000000032014,
+            "p99": 0.002590000000054715,
+            "max": 0.0026099999995494727
+          },
+          "navigationMs": {
+            "mean": 1.0297248222222353,
+            "p95": 1.3668799999995827,
+            "p99": 1.5177889999995386,
+            "max": 1.8552789999994275
+          },
+          "collisionMs": {
+            "mean": 0.3614713638888588,
+            "p95": 0.5027700000009645,
+            "p99": 0.579570000001695,
+            "max": 0.6152499999989232
+          },
+          "missionNetwork": {
+            "mission-state": {
+              "totalPackets": 79,
+              "totalBytes": 191657,
+              "samplePackets": 60,
+              "sampleBytesPerSecond": 13808.940779121445
+            },
+            "mission-plan": {
+              "totalPackets": 1,
+              "totalBytes": 1330,
+              "samplePackets": 0,
+              "sampleBytesPerSecond": 0
+            },
+            "mission-events": {
+              "totalPackets": 15,
+              "totalBytes": 1695,
+              "samplePackets": 10,
+              "sampleBytesPerSecond": 90.94829182012175
+            }
+          },
+          "memoryBefore": {
+            "rss": 738648064,
+            "heapTotal": 142835712,
+            "heapUsed": 91677992,
+            "external": 33522361,
+            "arrayBuffers": 2556067
+          },
+          "memoryAfter": {
+            "rss": 743505920,
+            "heapTotal": 143478784,
+            "heapUsed": 87412304,
+            "external": 36077917,
+            "arrayBuffers": 2167720
+          },
+          "enemies": 1000,
+          "packetsPerSecond": 9.966936089876357,
+          "payloadBytesPerSecond": 99729.16251530283,
+          "minFrameCount": 1000,
+          "operators": 4,
+          "tickHz": 30,
+          "renderedClients": 4,
+          "fps": 60.00233018758009,
+          "frameMs": {
+            "mean": 16.66601941747573,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          "clientFrames": [
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.799999999999272,
+              "p99": 16.80000000000109,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758011,
+              "mean": 16.666019417475727,
+              "p95": 16.700000000000728,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00183084643359,
+              "mean": 16.66615811373093,
+              "p95": 16.700000000000728,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            },
+            {
+              "frames": 721,
+              "fps": 60.00233018758009,
+              "mean": 16.66601941747573,
+              "p95": 16.700000000000728,
+              "p99": 16.800000000000182,
+              "max": 16.80000000000109
+            }
+          ],
+          "renderStats": [
+            {
+              "CPU / GPU": "1.8 / 0.2 ms",
+              "Draw Calls / Dreiecke": "45 / 70.234",
+              "Meshes / Instanzen": "5 / 1.041",
+              "Geometrien / Texturen": "112 / 55",
+              "Gegner sichtbar / aktiv": "16 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.5 / 0.2 ms",
+              "Draw Calls / Dreiecke": "43 / 94.132",
+              "Meshes / Instanzen": "4 / 1.501",
+              "Geometrien / Texturen": "111 / 53",
+              "Gegner sichtbar / aktiv": "0 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.6 / 0.2 ms",
+              "Draw Calls / Dreiecke": "64 / 201.338",
+              "Meshes / Instanzen": "7 / 2.779",
+              "Geometrien / Texturen": "114 / 55",
+              "Gegner sichtbar / aktiv": "51 / 1.000"
+            },
+            {
+              "CPU / GPU": "1.8 / 0.3 ms",
+              "Draw Calls / Dreiecke": "95 / 223.774",
+              "Meshes / Instanzen": "19 / 2.613",
+              "Geometrien / Texturen": "131 / 54",
+              "Gegner sichtbar / aktiv": "284 / 1.000"
+            }
+          ],
+          "serverRecentTickMs": {
+            "mean": 1.1656101249999817,
+            "p95": 1.4935590000004595,
+            "p99": 1.6396479999984876,
+            "max": 1.780018999999811
+          },
+          "droppedSteps": 0,
+          "observedTickHz": 29.90080826962907,
+          "payloadSource": "Horde broadcasts per recipient",
+          "wallSeconds": 12.039808313999998,
+          "errors": []
+        }
+      ],
+      "acceptance": []
+    }
+  }
+}

@@ -9,7 +9,7 @@ Gameplay-Events (shot, combat: reload/melee/blast/resupply, Waffenwechsel aus Sn
 WeaponAudio (apps/client/src/audio/WeaponAudio.ts)   geschichtete Synthese pro Ereignis
         │
 AudioEngine (apps/client/src/audio/AudioEngine.ts)
-   Quellen → Bus (weapons | environment | ui) → Master → Limiter → Ausgabe
+   Quellen → Bus (weapons | environment | ambience | weather | ui) → Master → Limiter → Ausgabe
         └─ Send → Faltungshall (Umgebungs-IR) + Echo mit Rückkopplung → environment-Bus
 ```
 
@@ -46,10 +46,10 @@ Die Impulsantworten werden beim Start einmal prozedural erzeugt; der Wechsel ble
 
 ## Stimmen- und Pegelmanagement
 
-- `maxVoices` 28 gleichzeitige Klangereignisse, `maxVoicesPerShooter` 4. Darüber werden ferne Ereignisse verworfen, eigene haben Vorrang. Zähler im F2-Panel (aktiv, Spitze, verworfen).
+- `maxVoices` 28 gleichzeitige Klangereignisse, `maxVoicesPerShooter` 4. Die Stimmeinteilung und Reservierung für nahe Angriffe und Missionssignale stehen in [Horde-Audio](HORDE_AUDIO_PRIORITIZATION.md). Zähler im F2-Panel (aktiv, Spitze, verworfen).
 - Der Server sendet höchstens 48 `combat`-Events pro Tick.
 - Limiter (`DynamicsCompressor`, −6 dB, Ratio 20, 2 ms Attack) am Master gegen Clipping und Spitzen.
-- Lautstärkeregler im Menü: Master, Waffen / SFX, Umgebung, Interface (gespeichert in `localStorage › freefall.audio.v1`, quadratische Kennlinie). Der UI-Bus ist vorbereitet, aktuell ohne eigene Klänge.
+- Das Menü regelt Master, Kampf, Welt, Ambience, Wetter und Interface. [Audio-Mischung](AUDIO_MIXING.md).
 
 ## Eigene Schüsse
 
@@ -57,7 +57,7 @@ Eigene Schüsse werden sofort beim vorhergesagten Abzug gespielt (siehe Recoil-P
 
 ## Assets und Lizenzen
 
-**Es wurden keine Audiodateien integriert.** Alle Klänge sind zur Laufzeit synthetisiert (Web Audio, eigener Code). Es wurden keine Fremdquellen und keine aus kommerziellen Spielen extrahierten Sounds verwendet. Lizenzfragen entstehen derzeit nicht.
+Waffenimpulse, Explosionen, Mechanik und Nachladen bleiben synthetisiert. 7.7D ergänzt lokale Aufnahmen und gestaltete Samples für Welt, Bewegung, Gegner und Missionsereignisse. [Audio-Asset-Katalog](AUDIO_ASSET_CATALOG.md).
 
 Anforderungen für aufgenommene Assets (die Pipeline ist darauf vorbereitet: Busse, Raum-Sends, Distanzkette und Stimmenlimit gelten unverändert; ein Sample ersetzt die Impuls- und Druckschicht):
 
@@ -75,4 +75,4 @@ Quellen nur mit nachweisbarer Lizenz (z. B. eigene Aufnahmen, CC0 mit dokumentie
 
 ## Tests und Messung
 
-Die Audio-Pipeline läuft nur im Browser und ist nicht durch automatisierte Tests abgedeckt. Typprüfung und Build sind grün. Klang, Lautheit und Stimmenzahl müssen im Playtest beurteilt werden.
+Der [Playtest-Bericht](MILESTONE_7_7D_PLAYTEST.md) sammelt Browsermessungen und den Stand der Höraufgaben.

@@ -10,13 +10,14 @@
  * Distance: delay by the speed of sound, level falloff, a low-pass that closes with distance and a cross-fade from
  * the close variant (crack + mechanics) to the distant variant (dull boom + more tail).
  *
- * Optional recorded samples can replace the transient layer (`ASSETS.audio`), see docs/WEAPON_AUDIO.md.
+ * Procedural weapons share the mixer and voice budget with recorded gameplay audio.
  */
 import { COMBAT, WEAPONS } from '@freefall/shared';
 import type { AudioEnvironmentId, WeaponSlot } from '@freefall/shared';
 import type { AudioEngine } from './AudioEngine.ts';
+import { PRIORITY } from './VoiceBudget.ts';
 
-export interface Listener { x: number; z: number; yaw: number }
+export interface Listener { x: number; y?: number; z: number; yaw: number }
 export interface SoundSource { x: number; z: number; y?: number }
 
 const smooth = (edge0: number, edge1: number, x: number) => {
@@ -29,13 +30,14 @@ interface Voice {
   /** Close (0) to distant (1). */
   blend: number;
   out: AudioNode;
-  dry: GainNode;
+  sources: Set<AudioScheduledSourceNode>;
 }
 
 export class WeaponAudio {
   private readonly engine: AudioEngine;
   private curve?: Float32Array<ArrayBuffer>;
   private readonly pending = new Map<string, AudioScheduledSourceNode[]>();
+  private readonly transient = new Set<() => void>();
   private random = 0x51ed;
 
   constructor(engine: AudioEngine) { this.engine = engine; }
@@ -49,17 +51,31 @@ export class WeaponAudio {
     return this.random / 0x100000000;
   }
 
-  /** Creates the spatial output chain of one sound event, or undefined if it is inaudible or over budget. */
-  private voice(owner: string, source: SoundSource, listener: Listener, own: boolean, seconds: number, gain = 1): Voice | undefined {
+  /**
+   * Creates the spatial output chain of one sound event, or undefined if it is inaudible or over budget.
+   * `seconds` is the audible length; it may depend on the distance blend (distant tails ring longer).
+   */
+  private voice(owner: string, source: SoundSource, listener: Listener, own: boolean, length: number | ((blend: number) => number),
+    gain = 1, priority?: number): Voice | undefined {
     const context = this.engine.context;
     const bus = this.engine.bus('weapons');
     if (!context || !bus || context.state !== 'running') return;
     const { audibleDistance, distantBlendStart, distantBlendEnd, speedOfSound } = COMBAT.audio;
     const dx = source.x - listener.x, dz = source.z - listener.z;
-    const distance = own ? 0 : Math.hypot(dx, dz);
+    const horizontal = Math.hypot(dx, dz);
+    const distance = own ? 0 : priority === undefined ? horizontal : Math.hypot(horizontal, (source.y ?? listener.y ?? 0) - (listener.y ?? 0));
     if (distance > audibleDistance) return;
-    if (!this.engine.acquire(owner, seconds + distance / speedOfSound, own)) return;
     const blend = smooth(distantBlendStart, distantBlendEnd, distance);
+    const seconds = typeof length === 'function' ? length(blend) : length;
+    const sources = new Set<AudioScheduledSourceNode>();
+    const release = this.engine.reserve(owner, seconds + distance / speedOfSound + .10,
+      priority ?? (own ? PRIORITY.threat : PRIORITY.combat - Math.min(14, distance / 6)), () => {
+        if (release) this.transient.delete(release);
+        for (const source of sources) source.stop();
+        out.disconnect(); wet?.disconnect(); dry.disconnect(); filter.disconnect(); pan.disconnect();
+      });
+    if (!release) return;
+    if (priority !== undefined) this.transient.add(release);
     const at = context.currentTime + .005 + distance / speedOfSound;
     const pan = context.createStereoPanner();
     const filter = context.createBiquadFilter();
@@ -82,9 +98,7 @@ export class WeaponAudio {
       wet.gain.value = gain * (.35 + blend * .9) / (1 + distance / 40);
       out.connect(wet).connect(send);
     }
-    window.setTimeout(() => { out.disconnect(); wet?.disconnect(); dry.disconnect(); filter.disconnect(); pan.disconnect(); },
-      (seconds + distance / speedOfSound + .3) * 1000);
-    return { at, blend, out, dry };
+    return { at, blend, out, sources };
   }
 
   private noise(voice: Voice, start: number, duration: number, type: BiquadFilterType, frequency: number, q: number,
@@ -94,6 +108,8 @@ export class WeaponAudio {
     if (!buffer || level <= 0) return;
     const source = context.createBufferSource();
     source.buffer = buffer;
+    // Looping white noise has no audible seam, so a random start offset can never cut a long layer short.
+    source.loop = true;
     const filter = context.createBiquadFilter();
     filter.type = type;
     filter.frequency.setValueAtTime(frequency, start);
@@ -104,18 +120,11 @@ export class WeaponAudio {
     gain.gain.exponentialRampToValueAtTime(level, start + attack);
     gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
     source.connect(filter).connect(gain).connect(voice.out);
-    source.start(start, this.rand() * 1.5);
+    source.start(start, this.rand() * buffer.duration);
     source.stop(start + duration + .02);
-    source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
+    voice.sources.add(source);
+    source.onended = () => { voice.sources.delete(source); source.disconnect(); filter.disconnect(); gain.disconnect(); };
     return source;
-  }
-
-  posture(owner: string, source: SoundSource, listener: Listener, own: boolean, landing: boolean): void {
-    const voice = this.voice(owner, source, listener, own, .17, .43);
-    if (!voice) return;
-    this.noise(voice, voice.at, landing ? .14 : .10, 'bandpass', landing ? 490 : 970, .7,
-      landing ? .22 : .12, .012, landing ? 250 : 510);
-    if (landing) this.tone(voice, voice.at, .11, 91, 51, .15);
   }
 
   private tone(voice: Voice, start: number, duration: number, from: number, to: number, level: number,
@@ -134,7 +143,8 @@ export class WeaponAudio {
     (shaper ? oscillator.connect(shaper) : oscillator).connect(gain).connect(voice.out);
     oscillator.start(start);
     oscillator.stop(start + duration + .02);
-    oscillator.onended = () => { oscillator.disconnect(); shaper?.disconnect(); gain.disconnect(); };
+    voice.sources.add(oscillator);
+    oscillator.onended = () => { voice.sources.delete(oscillator); oscillator.disconnect(); shaper?.disconnect(); gain.disconnect(); };
     return oscillator;
   }
 
@@ -157,7 +167,8 @@ export class WeaponAudio {
     const profile = COMBAT.audio.weapons[kind];
     const rifle = kind === 'rifle';
     const tail = rifle ? .42 : .3;
-    const voice = this.voice(shooter, source, listener, own, tail + .1, profile.gain);
+    // The tail layer starts 10 ms late and lasts tail × (1 + blend).
+    const voice = this.voice(shooter, source, listener, own, (blend) => tail * (1 + blend) + .1, profile.gain);
     if (!voice) return;
     const { at, blend } = voice;
     const close = 1 - blend;
@@ -177,19 +188,15 @@ export class WeaponAudio {
     }
   }
 
-  explosion(id: number, source: SoundSource, listener: Listener): void {
+  explosion(source: SoundSource, listener: Listener, distance: number): void {
     const profile = COMBAT.audio.explosion;
-    const voice = this.voice(`blast-${id}`, source, listener, false, 1.9, profile.gain);
+    const priority = distance < 12 ? PRIORITY.combat + 17 : PRIORITY.combat - Math.min(14, distance / 5);
+    const voice = this.voice('blast', source, listener, false, 1.35, profile.gain * .76, priority);
     if (!voice) return;
     const { at, blend } = voice;
-    this.noise(voice, at, .7 + blend * .4, 'lowpass', 5200 - 3000 * blend, .6, 1, .002, 160);
-    this.tone(voice, at, 1.1, profile.bodyHz * 1.6, profile.bodyHz * .5, 1.1, 'sine', true);
-    this.tone(voice, at, .35, profile.bodyHz * 3.1, profile.bodyHz, .5, 'triangle', true);
-    // Falling soil and debris.
-    for (let i = 0; i < 7; i++) {
-      this.noise(voice, at + .12 + this.rand() * .7, .04 + this.rand() * .05, 'bandpass', 900 + this.rand() * 2600, 3, .12 * (1 - blend));
-    }
-    this.noise(voice, at + .04, 1.6, 'lowpass', 900, .4, profile.tailGain * .5, .05);
+    this.noise(voice, at, .22 + blend * .21, 'lowpass', 5600 - 4200 * blend, .7, .94, .002, 190);
+    this.tone(voice, at, .65, profile.bodyHz * (1.48 + this.rand() * .16), profile.bodyHz * .52, .93, 'sine', true);
+    this.noise(voice, at + .035, .85 + .34 * blend, 'lowpass', 890 - blend * 380, .5, profile.tailGain * .52, .034);
   }
 
   private mechanics(owner: string, source: SoundSource, listener: Listener, own: boolean, steps: [number, number, number, number][]): AudioScheduledSourceNode[] {
@@ -214,9 +221,16 @@ export class WeaponAudio {
     }
     const rifle = slot === 'primary';
     if (phase === 'RELOAD_START') {
-      this.pending.set(key, this.mechanics(`${operator}-reload`, source, listener, own, [
+      const nodes = this.mechanics(`${operator}-reload`, source, listener, own, [
         [0, 900, 2, .18], [removalSeconds, rifle ? 1900 : 2600, 7, .4], [removalSeconds + .2, 700, 3, .22],
-      ]));
+      ]);
+      if (!nodes.length) return;
+      const pending = new Set(nodes);
+      this.pending.set(key, nodes);
+      for (const node of nodes) node.addEventListener('ended', () => {
+        pending.delete(node);
+        if (!pending.size && this.pending.get(key) === nodes) this.pending.delete(key);
+      }, { once: true });
     } else {
       this.pending.delete(key);
       this.mechanics(`${operator}-reload`, source, listener, own, [
@@ -225,18 +239,28 @@ export class WeaponAudio {
     }
   }
 
+  reset(): void {
+    this.pending.clear();
+    this.clearTransient();
+  }
+
+  clearTransient(): void { for (const release of this.transient) release(); }
+
   switchWeapon(operator: string, source: SoundSource, listener: Listener, own: boolean): void {
     this.mechanics(`${operator}-switch`, source, listener, own, [[0, 600, 1.5, .16], [.24, 2800, 8, .3]]);
   }
 
-  melee(operator: string, source: SoundSource, listener: Listener, own: boolean, hit: boolean, delay: number): void {
-    const voice = this.voice(`${operator}-melee`, source, listener, own, .5, own ? .8 : .6);
+  grenadeRelease(operator: string, source: SoundSource, listener: Listener, own: boolean): void {
+    if (!own && Math.hypot(source.x - listener.x, source.z - listener.z) > 30) return;
+    const voice = this.voice(`${operator}-throw`, source, listener, own, .18, .50, PRIORITY.world + 4);
     if (!voice) return;
-    this.noise(voice, voice.at, .16, 'bandpass', 700, 1.2, .25, .04, 2400);
-    if (hit) {
-      this.tone(voice, voice.at + delay, .12, 160, 70, .7, 'sine', true);
-      this.noise(voice, voice.at + delay, .06, 'bandpass', 1300, 2, .5);
-    }
+    this.noise(voice, voice.at, .06, 'bandpass', 1650, 3.8, .25, .007, 740);
+  }
+
+  meleeSwing(operator: string, source: SoundSource, listener: Listener, own: boolean): void {
+    if (!own && Math.hypot(source.x - listener.x, source.z - listener.z) > 30) return;
+    const voice = this.voice(`${operator}-melee`, source, listener, own, .18, own ? .76 : .53, PRIORITY.combat);
+    if (voice) this.noise(voice, voice.at, .115, 'bandpass', 540, 1.1, .39, .018, 1950);
   }
 
   resupply(operator: string, source: SoundSource, listener: Listener, own: boolean): void {

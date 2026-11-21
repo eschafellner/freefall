@@ -1,12 +1,15 @@
 import { NET, TEST_RIFLE } from '@freefall/shared';
+import type { EquipmentAction } from '@freefall/shared';
 import * as T from 'three';
 import { TacticalAnimation } from './TacticalAnimation.ts';
-import type { TacticalClip } from './TacticalAnimation.ts';
+import type { TacticalClip, TacticalOverlay } from './TacticalAnimation.ts';
 
 export type Locomotion = 'idle' | 'walk' | 'run' | 'sprint' | 'strafeLeft' | 'strafeRight' | 'backward';
 export type Combat = 'ready' | 'aim' | 'fire' | 'reload';
 export type Reaction = 'none' | 'hit' | 'death';
-export type CharacterClip = Locomotion | Exclude<Combat, 'ready'> | Exclude<Reaction, 'none'> | TacticalClip;
+/** Upper-body variants that have no matching locomotion or combat state of their own. */
+export type OverlayVariant = 'reloadPistol' | 'stim' | 'weaponSwitch';
+export type CharacterClip = Locomotion | Exclude<Combat, 'ready'> | Exclude<Reaction, 'none'> | TacticalClip | TacticalOverlay | OverlayVariant;
 
 const clamp = T.MathUtils.clamp;
 const damp = T.MathUtils.damp;
@@ -26,6 +29,7 @@ export class CharacterAnimation {
   turn = 0;
   lean = 0;
   aim = 0;
+  aiming = false;
   sprint = 0;
   kick = 0;
   flinch = 0;
@@ -37,6 +41,10 @@ export class CharacterAnimation {
   /** Melee strike: negative = wind-up, 1 = full thrust at the impact frame. */
   melee = 0;
   holdingGrenade = false;
+  /** Running equipment action, its server progress (0..1) and the drawn weapon, for GLB layer selection. */
+  gearAction?: EquipmentAction;
+  actionProgress = 0;
+  weaponSlot: 'primary' | 'secondary' = 'primary';
   private velocityForward = 0;
   private velocityStrafe = 0;
 
@@ -47,6 +55,10 @@ export class CharacterAnimation {
     this.reaction = 'none';
     this.speed = this.forward = this.strafe = this.phase = this.aim = this.sprint = this.kick = this.flinch = this.fall = 0;
     this.holdingGrenade = false;
+    this.aiming = false;
+    this.gearAction = undefined;
+    this.actionProgress = 0;
+    this.weaponSlot = 'primary';
     this.lower = this.inject = this.throwing = this.melee = 0;
     this.stride = this.turn = this.lean = 0;
     this.reload = -1;
@@ -57,7 +69,7 @@ export class CharacterAnimation {
   hit(): void { this.flinch = 1; }
 
   update(dt: number, forwardSpeed: number, strafeSpeed: number, sprint: boolean, aim: boolean,
-    alive: boolean, reloadUntil: number, tick: number, turnRate = 0, reloadSeconds: number = TEST_RIFLE.reloadSeconds): void {
+    alive: boolean, reloadUntil: number, tick: number, turnRate = 0, reloadSeconds: number = TEST_RIFLE.reloadSeconds, reloadStarted?: number): void {
     // Prediction advances at 30 Hz even on a high-refresh display. Filter velocity before clipping its magnitude.
     const lastForward = this.velocityForward;
     this.velocityForward = damp(this.velocityForward, alive ? forwardSpeed : 0, 14, dt);
@@ -76,13 +88,13 @@ export class CharacterAnimation {
     else this.locomotion = this.speed < 3.3 ? 'walk' : 'run';
 
     if (alive && reloadUntil > tick) {
-      const reloadTicks = Math.ceil(reloadSeconds * NET.tickHz);
-      const progress = clamp(1 - (reloadUntil - tick) / reloadTicks, 0, 1);
-      this.reload = Math.min(1, progress + 2 / reloadTicks, Math.max(progress, this.reload + dt / reloadSeconds));
+      const reloadTicks = reloadStarted === undefined ? Math.ceil(reloadSeconds * NET.tickHz) : Math.max(1, reloadUntil - reloadStarted);
+      this.reload = clamp(1 - (reloadUntil - tick) / reloadTicks, 0, 1);
     } else {
       this.reload = -1;
     }
     this.combat = !alive ? 'ready' : this.reload >= 0 ? 'reload' : this.kick > 0.19 ? 'fire' : aim && alive ? 'aim' : 'ready';
+    this.aiming = alive && aim;
     this.reaction = !alive ? 'death' : this.flinch > 0.17 ? 'hit' : 'none';
     this.aim = damp(this.aim, alive && this.combat !== 'reload' ? aim ? 1 : this.kick * 0.74 : 0, 14, dt);
     this.sprint = damp(this.sprint, sprinting && this.combat === 'ready' ? 1 : 0, 11, dt);

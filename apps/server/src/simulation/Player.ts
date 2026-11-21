@@ -1,4 +1,4 @@
-import { BASE_LOADOUT, NET, PLAYER, createRecoilState, newPosture, resetRecoil } from '@freefall/shared';
+import { BASE_LOADOUT, createRecoilState, newPosture, resetRecoil } from '@freefall/shared';
 import type {
   EffectiveLoadout, EquipmentCommand, EquipmentState, PlayerInput, PlayerState, PostureState, RecoilState, ReloadState,
 } from '@freefall/shared';
@@ -13,6 +13,8 @@ export interface SimPlayer extends PlayerState {
   pendingEquipment?: EquipmentCommand;
   /** Supply container requested through the interaction key, processed on the next tick. */
   pendingResupply?: string;
+  /** Highest accepted wire sequence, including packets from an earlier life. */
+  lastInputSeq: number;
   input: PlayerInput;
   /** Received inputs not yet applied to movement. Each one advances movement exactly once. */
   moves: PlayerInput[];
@@ -47,9 +49,13 @@ export const reloading = (player: SimPlayer): boolean =>
 /** Drops queued movement, e.g. on placement or disconnect. Acknowledges everything received so far. */
 export function clearMoves(player: SimPlayer): void {
   player.moves.length = 0;
+  delete player.posture.groundMotion;
   player.moveWaiting = true;
   player.moveStarvedAt = -1;
-  player.ack = player.input.seq;
+  player.ack = player.lastInputSeq;
+  player.input = { ...idleInput(player.yaw, player.pitch), seq: player.lastInputSeq };
+  player.inputTick = -Infinity;
+  player.activeInput = false;
 }
 
 /** Full resupply as defined by `equipment.json › resupply` (mission start and respawn). */
@@ -97,13 +103,15 @@ export function respawnPlayer(player: SimPlayer, tick: number): void {
   refillPlayer(player);
   player.pendingEquipment = undefined;
   player.pendingResupply = undefined;
-  player.protectedUntil = tick + Math.ceil(PLAYER.protectionSeconds * NET.tickHz);
+  // Inputs queued during the previous life must not move the new one.
+  clearMoves(player);
+  player.protectedUntil = tick + player.loadout.respawnProtectionTicks;
 }
 
 export function createPlayer(id: string, slot: number, tick: number, loadout: EffectiveLoadout = BASE_LOADOUT): SimPlayer {
   const player: SimPlayer = {
     id, slot, x: 0, y: 0, z: 0, posture: newPosture(), yaw: 0, hp: 0, ack: 0, life: 0, respawnTick: 0, kills: 0, loadout,
-    equipment: freshEquipment(loadout), input: idleInput(), moves: [], moveCredit: 0, moveCushion: 0, moveWaiting: true, moveStarvedAt: -1, moveCushionAt: 0, inputTick: -Infinity, fireAt: 0, protectedUntil: 0, activeInput: false,
+    equipment: freshEquipment(loadout), lastInputSeq: 0, input: idleInput(), moves: [], moveCredit: 0, moveCushion: 0, moveWaiting: true, moveStarvedAt: -1, moveCushionAt: 0, inputTick: -Infinity, fireAt: 0, protectedUntil: 0, activeInput: false,
     ammo: 0, reloadUntil: 0, reload: readyReload(tick), reloadRequested: false, recoil: createRecoilState(), pitch: 0,
   };
   respawnPlayer(player, tick);

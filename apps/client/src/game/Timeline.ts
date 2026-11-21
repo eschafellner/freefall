@@ -54,9 +54,9 @@ export class Timeline<T extends Ticked> {
   /** Current distance between the newest snapshot and the playback position, in ticks. */
   get bufferedTicks(): number { return (this.frames.at(-1)?.tick ?? 0) - this.renderTick; }
 
-  push(frame: T, now = performance.now()): void {
+  push(frame: T, now = performance.now()): boolean {
     const head = this.frames.at(-1);
-    if (frame.tick <= (head?.tick ?? -1)) return;
+    if (frame.tick <= (head?.tick ?? -1)) return false;
     const offset = now - frame.tick * TICK_MS;
     this.offsets.push({ at: now, offset, tick: frame.tick });
     while (this.offsets.length > 2 && now - this.offsets[0].at > INTERPOLATION.windowMs) this.offsets.shift();
@@ -77,6 +77,7 @@ export class Timeline<T extends Ticked> {
     this.base = base;
     this.frames.push(frame);
     if (this.frames.length > HISTORY) this.frames.shift();
+    return true;
   }
 
   sample(now: number): void {

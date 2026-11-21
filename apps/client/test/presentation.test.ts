@@ -84,9 +84,11 @@ test('fallback rifle aims from the muzzle and keeps gameplay position independen
     assert.ok(bore.angleTo(target.sub(origin).normalize()) < .04);
     assert.deepEqual(player.root.position.toArray(), [2, 0, 5]);
   }
-  player.shot('pilot', origin);
+  let posed = false;
+  player.queueShot({ shooter: 'pilot', life: 1, slot: 'primary' }, 720, (weapon) => { posed = weapon === player.weapon; });
+  player.draw('pilot', 1, 100, position.x, position.z, 1.5, -.4, true, false, 0, 45, 720, 1 / 60, true);
   assert.ok(player.animation.kick > 0);
-  assert.equal(player.shot('other', origin), undefined);
+  assert.ok(posed);
 });
 
 test('mixer accepts in-place packs and filters horizontal root motion', () => {
@@ -94,7 +96,7 @@ test('mixer accepts in-place packs and filters horizontal root motion', () => {
   const root = new T.Group();
   root.name = 'RigRoot';
   model.add(root);
-  const track = new T.VectorKeyframeTrack('RigRoot.position', [0, 1], [0, 0, 0, 2, .2, 3]);
+  const track = new T.VectorKeyframeTrack('RigRoot.position', [0, 1], [1, 0, 4, 2, .2, 3]);
   const clips = [new T.AnimationClip('Idle', 1, [track]), new T.AnimationClip('Walk', 1, [track])];
   const mixer = new CharacterClipPlayer(model, clips, { path: 'test.glb', motionRoot: 'RigRoot' });
   assert.equal(mixer.ready, true);
@@ -104,6 +106,29 @@ test('mixer accepts in-place packs and filters horizontal root motion', () => {
   assert.ok(root.position.y > 0);
   assert.equal(root.position.z, 0);
   assert.equal(track.values[3], 2); // Clips are cached and shared across instances.
+  mixer.dispose();
+});
+
+test('a dive clip poses the body without adding vertical or horizontal root motion', () => {
+  const model = new T.Group();
+  const root = new T.Group();
+  const hips = new T.Group();
+  root.name = 'RigRoot';
+  hips.name = 'Hips';
+  model.add(root);
+  root.add(hips);
+  const motion = new T.VectorKeyframeTrack('RigRoot.position', [0, 1], [0, 0, 0, 2, .7, 3]);
+  const tuck = new T.VectorKeyframeTrack('Hips.position', [0, 1], [0, 1, 0, 0, .3, 0]);
+  const clips = [new T.AnimationClip('Idle', 1, [tuck]), new T.AnimationClip('Walk', 1, [tuck]),
+    new T.AnimationClip('diveForward', 1, [motion, tuck])];
+  const mixer = new CharacterClipPlayer(model, clips, { path: 'test.glb', motionRoot: 'RigRoot' });
+  const state = new CharacterAnimation();
+  state.tactical.clip = 'diveForward';
+  state.tactical.progress = .75;
+  mixer.update(state, .15);
+  assert.equal(mixer.baseClip, 'diveForward');
+  assert.deepEqual(root.position.toArray(), [0, 0, 0]);
+  assert.ok(hips.position.y > .3 && hips.position.y < 1);
   mixer.dispose();
 });
 

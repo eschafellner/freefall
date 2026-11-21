@@ -1,3 +1,4 @@
+import type { Heightfield } from '../world/Terrain.ts';
 import type { PositionXZ } from '../config/movement.ts';
 
 export interface Circle extends PositionXZ { radius: number }
@@ -6,16 +7,20 @@ export interface PatrolRoute { readonly waypoints: readonly PositionXZ[] }
 export interface PatrolRegion extends Circle { id: string; route: PatrolRoute }
 export interface SwarmBreachRegion extends Circle { id: string }
 export interface Obstacle extends PositionXZ {
+  /** Optional presentation override for colliders whose visual finish differs from their kind. */
+  surface?: 'metal';
   halfX: number;
   halfZ: number;
   /** Top elevation. Solids start at ground level unless bottom is set. */
   height: number;
   bottom?: number;
-  kind: 'rock' | 'bunker' | 'barrier' | 'container';
+  kind: 'rock' | 'tree' | 'ice' | 'arch-pier' | 'arch-span' | 'bunker' | 'barrier' | 'container';
 }
 export interface WorldDefinition {
   id: string;
   half: number;
+  terrain?: Heightfield;
+  planetId?: string;
   deployment: PlayerSpawnRegion;
   obstacles: readonly Obstacle[];
   serviceApron?: Circle;
@@ -24,9 +29,26 @@ export interface WorldDefinition {
   initialNests: readonly PositionXZ[];
 }
 
-export type ObjectiveDefinition =
-  | (Circle & { id: string; kind: 'activate'; label: string; requires?: string; defenseSeconds?: number })
-  | { id: string; kind: 'destroy-nests'; label: string; count: number };
+interface ObjectiveRules {
+  id: string;
+  label: string;
+  optional?: boolean;
+  requires?: string | readonly string[];
+}
+
+export type ObjectiveDefinition = ObjectiveRules & (
+  | (Circle & { kind: 'activate'; defenseSeconds?: number; defenseRequiresPresence?: true })
+  | { kind: 'destroy-nests'; count: number; target?: PositionXZ }
+);
+
+/** Legacy nest quotas were optional by default. Generated objectives declare their role explicitly. */
+export function isOptionalObjective(objective: ObjectiveDefinition): boolean {
+  return objective.optional ?? objective.kind === 'destroy-nests';
+}
+
+export function objectiveDependencies(objective: ObjectiveDefinition): readonly string[] {
+  return typeof objective.requires === 'string' ? [objective.requires] : objective.requires ?? [];
+}
 
 export interface MissionDefinition {
   id: string;

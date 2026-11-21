@@ -1,12 +1,35 @@
 import { useEffect, useState } from 'react';
-import { ACTION_LABELS, INPUT_ACTIONS, bindings, keyboardCode } from '../input/Bindings.ts';
+import { ACTION_LABELS, INPUT_ACTIONS, bindings, keyboardCode, setMenuInputContext } from '../input/Bindings.ts';
 import type { InputAction } from '../input/Bindings.ts';
 import { cameraPreferences, setCameraPreferences } from '../rendering/CameraPreferences.ts';
 
+/** Swallows the click events that follow a mouse press used as a binding, then removes itself. */
+function suppressFollowUp(): void {
+  const types = ['click', 'auxclick', 'contextmenu'] as const;
+  const swallow = (event: Event) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    // contextmenu may follow auxclick of the same release (Windows), so let the sequence finish first.
+    if (event.type !== 'contextmenu') window.setTimeout(release, 50);
+  };
+  const release = () => {
+    window.clearTimeout(timer);
+    for (const type of types) window.removeEventListener(type, swallow, true);
+  };
+  for (const type of types) window.addEventListener(type, swallow, true);
+  // A press that never turns into a click (drag, focus change) must not swallow a later, unrelated click.
+  const timer = window.setTimeout(release, 1000);
+}
+
 export function ControlSettings({ onChange }: { onChange: () => void }) {
   const [editing, setEditing] = useState<InputAction>();
+  const [open, setOpen] = useState(false);
   const [notice, setNotice] = useState('');
   const [, refresh] = useState(0);
+  useEffect(() => {
+    setMenuInputContext(editing ? 'rebinding' : open ? 'settings' : 'menu');
+    return () => setMenuInputContext('menu');
+  }, [editing, open]);
   useEffect(() => {
     if (!editing) return;
     const choose = (code: string) => {
@@ -27,6 +50,9 @@ export function ControlSettings({ onChange }: { onChange: () => void }) {
     const mouse = (event: MouseEvent) => {
       event.preventDefault();
       event.stopImmediatePropagation();
+      // The same press still produces click/auxclick/contextmenu on whatever lies under the cursor (for example
+      // "Standardbelegung wiederherstellen" or "Raum verlassen"). Swallow exactly those follow-up events.
+      suppressFollowUp();
       choose(`Mouse${event.button}`);
     };
     window.addEventListener('keydown', key, true);
@@ -37,7 +63,10 @@ export function ControlSettings({ onChange }: { onChange: () => void }) {
     };
   }, [editing, onChange]);
 
-  return <details className="control-settings" onContextMenu={(event) => { if (editing) event.preventDefault(); }}>
+  return <details className="control-settings" onToggle={(event) => {
+    setOpen(event.currentTarget.open);
+    if (!event.currentTarget.open) setEditing(undefined);
+  }} onContextMenu={(event) => { if (editing) event.preventDefault(); }}>
     <summary>Steuerung und Kamera</summary>
     <div className="binding-grid">
       {INPUT_ACTIONS.map((action) => <button key={action} type="button" className="binding-button"
@@ -55,6 +84,12 @@ export function ControlSettings({ onChange }: { onChange: () => void }) {
         onChange={(e) => { setCameraPreferences('shake', Number(e.target.value) / 100); refresh((n) => n + 1); }}/></label>
       <label>Glättung <input type="range" min={50} max={200} step={5} value={cameraPreferences.smoothing * 100}
         onChange={(e) => { setCameraPreferences('smoothing', Number(e.target.value) / 100); refresh((n) => n + 1); }}/></label>
+      <label>Haltungswechsel <input type="range" min={50} max={200} step={5} value={cameraPreferences.follow * 100}
+        onChange={(e) => { setCameraPreferences('follow', Number(e.target.value) / 100); refresh((n) => n + 1); }}/></label>
+      <label>Mausempfindlichkeit <input type="range" min={25} max={300} step={5} value={cameraPreferences.sensitivity * 100}
+        onChange={(e) => { setCameraPreferences('sensitivity', Number(e.target.value) / 100); refresh((n) => n + 1); }}/></label>
+      <label>Mündungs- und Explosionsblitze <input type="range" min={0} max={100} step={10} value={cameraPreferences.muzzleFlash * 100}
+        onChange={(e) => { setCameraPreferences('muzzleFlash', Number(e.target.value) / 100); refresh((n) => n + 1); }}/></label>
       <label className="reduced-motion"><input type="checkbox" checked={cameraPreferences.reducedMotion}
         onChange={(e) => { setCameraPreferences('reducedMotion', e.target.checked); refresh((n) => n + 1); }}/> Reduzierte Bewegung</label>
     </fieldset>

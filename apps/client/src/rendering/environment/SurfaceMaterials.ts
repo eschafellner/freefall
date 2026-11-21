@@ -3,7 +3,7 @@ import { noise } from './noise.ts';
 
 type Finish = 'soil' | 'concrete' | 'painted';
 
-function map(data: Uint8Array, size: number, srgb = false): T.DataTexture {
+export function repeatSurfaceMap(data: Uint8Array, size: number, srgb = false): T.DataTexture {
   const texture = new T.DataTexture(data, size, size);
   texture.colorSpace = srgb ? T.SRGBColorSpace : T.NoColorSpace;
   texture.wrapS = texture.wrapT = T.RepeatWrapping;
@@ -46,7 +46,8 @@ function surfaceMaps(finish: Finish, anisotropy: number) {
       normals.set([128 - 127 * dx / n, 128 - 127 * dy / n, 128 + 127 / n, 255], (y * size + x) * 4);
     }
   }
-  const maps = { map: map(albedo, size, true), normalMap: map(normals, size), roughnessMap: map(roughness, size) };
+  const maps = { map: repeatSurfaceMap(albedo, size, true), normalMap: repeatSurfaceMap(normals, size),
+    roughnessMap: repeatSurfaceMap(roughness, size) };
   for (const texture of Object.values(maps)) texture.anisotropy = anisotropy;
   return maps;
 }

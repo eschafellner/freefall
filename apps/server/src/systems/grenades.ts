@@ -1,5 +1,6 @@
-import { ARENA_HALF, BALANCE, BASE_LOADOUT, MUZZLE_HEIGHT, NET, clearGroundLine, obstacleIntersection, postureCollider } from '@freefall/shared';
-import type { DamagePolicy, EffectiveGrenade, GrenadeState, WorldDefinition } from '@freefall/shared';
+import { ARENA_HALF, BALANCE, BASE_LOADOUT, MUZZLE_HEIGHT, NET, clearGroundLine, groundHeight, impactNormal,
+  impactSurface, obstacleIntersection, postureCollider, terrainIntersection } from '@freefall/shared';
+import type { DamagePolicy, EffectiveGrenade, ExplosionEvent, GrenadeState, Obstacle, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import type { UniformGrid } from '../ecs/UniformGrid.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
@@ -14,6 +15,8 @@ interface Projectile extends GrenadeState {
   vz: number;
   resting: boolean;
   definition: EffectiveGrenade;
+  release: NonNullable<GrenadeState['release']>;
+  obstacle?: Obstacle;
 }
 
 /**
@@ -30,7 +33,7 @@ export function blastDamage(g: GrenadeState, x: number, y: number, z: number, wo
 /** Blast damage against a structure, e.g. a swarm nest, including its structure multiplier (central resolver). */
 export function structureBlastDamage(g: GrenadeState, structureId: string, x: number, z: number, world: WorldDefinition | undefined,
   grenade: EffectiveGrenade, policy?: DamagePolicy): number | undefined {
-  const damage = blastDamage(g, x, .5, z, world, grenade);
+  const damage = blastDamage(g, x, groundHeight(world, x, z) + .5, z, world, grenade);
   if (!damage) return;
   const structureMultiplier = grenade.structureDamageMultipliers[structureId] ?? 1;
   if (!policy) return Math.round(damage * structureMultiplier);
@@ -48,9 +51,12 @@ export class Grenades {
     const angle = Math.max(toss.minPitch, player.pitch + toss.pitchOffset);
     const speed = Math.cos(angle) * toss.speed;
     const crouchOffset = player.posture.current === 'CROUCHING' ? balance.colliders.CROUCHING.muzzleHeight - MUZZLE_HEIGHT : 0;
-    this.items.push({ id: ++this.serial, owner: player.id, x: player.x, y: player.y + Math.max(.15, toss.releaseHeight + crouchOffset), z: player.z,
+    const release = { tick, x: player.x, y: player.y + Math.max(.15, toss.releaseHeight + crouchOffset), z: player.z };
+    const id = ++this.serial;
+    this.items.push({ x: release.x, y: release.y, z: release.z, id, owner: player.id, release,
       vx: Math.sin(player.yaw) * speed, vz: -Math.cos(player.yaw) * speed, vy: Math.sin(angle) * toss.speed,
       resting: false, detonates: tick + definition.fuseTicks, definition });
+    context.events?.push({ type: 'grenade-release', id, owner: player.id, ...release });
   }
 
   private advance(g: Projectile, world?: WorldDefinition): void {
@@ -58,19 +64,33 @@ export class Grenades {
     g.vy -= g.definition.throw.gravity * dt;
     const dx = g.vx * dt, dy = g.vy * dt, dz = g.vz * dt;
     const half = world?.half ?? ARENA_HALF;
-    let fraction = dy < 0 ? Math.min(1, (.09 - g.y) / dy) : 1;
+    let fraction = Math.min(1, terrainIntersection(world, g.x, g.y, g.z, dx, dy, dz, 0, 1, .09));
     for (const obstacle of world?.obstacles ?? []) {
-      fraction = Math.min(fraction, obstacleIntersection(obstacle, g.x, g.y, g.z, dx, dy, dz, 0, fraction, .075));
+      const hit = obstacleIntersection(obstacle, g.x, g.y, g.z, dx, dy, dz, 0, fraction, .075);
+      if (hit < fraction) g.obstacle = obstacle;
+      fraction = Math.min(fraction, hit);
     }
     const step = Math.max(0, fraction - (fraction < 1 ? .002 : 0));
     g.x = Math.max(-half, Math.min(half, g.x + dx * step));
     g.z = Math.max(-half, Math.min(half, g.z + dz * step));
-    g.y = Math.max(.09, g.y + dy * step);
+    const base = groundHeight(world, g.x, g.z);
+    g.y = Math.max(base + .09, g.y + dy * step);
     // Contact stops horizontal travel. A wall impact drops to the ground on subsequent ticks.
     if (fraction < 1 || Math.max(Math.abs(g.x), Math.abs(g.z)) >= half) {
       g.vx = g.vz = 0;
       g.vy = Math.min(g.vy, 0);
-      g.resting = g.y <= .10 || (dx === 0 && dz === 0 && fraction < 1);
+      g.resting = g.y <= base + .10 || (dx === 0 && dz === 0 && fraction < 1);
+    }
+  }
+
+  private contact(g: Projectile, world?: WorldDefinition): ExplosionEvent['contact'] {
+    // A canister that slid along a solid uses that surface only while it is still adjacent to it.
+    const { x, y, z, obstacle } = g;
+    if (obstacle && obstacleIntersection(obstacle, x, y, z, 0, 0, 0, 0, 1, .13, .045) === 0) {
+      return { surface: impactSurface(world, x, z, obstacle), normal: impactNormal(world, x, y, z, obstacle) };
+    }
+    if (y - groundHeight(world, x, z) <= .18) {
+      return { surface: impactSurface(world, x, z), normal: impactNormal(world, x, y, z) };
     }
   }
 
@@ -96,7 +116,7 @@ export class Grenades {
           for (let x = grid.cell(g.x - radius); x <= endX; x++) {
             for (let i = grid.head[z * grid.width + x]; i !== -1; i = grid.next[i]) {
               if (!horde.hp[i]) continue;
-              const damage = blastDamage(g, horde.x[i], .5, horde.z[i], world, g.definition);
+              const damage = blastDamage(g, horde.x[i], groundHeight(world, horde.x[i], horde.z[i]) + .5, horde.z[i], world, g.definition);
               if (!damage) continue;
               const before = horde.hp[i];
               const killed = damageEnemy(horde, i, damage);
@@ -117,17 +137,18 @@ export class Grenades {
             if (!base) continue;
             const self = player.id === g.owner;
             const { amount } = resolveDamage(policy, { source: 'explosion', attacker: 'operator', target: 'operator', self, base });
-            const dealt = damagePlayer(player, amount, tick, context.respawns ?? true);
+            const dealt = damagePlayer(player, amount, tick, context.respawns ?? true, context);
             if (!dealt) continue;
             if (stats) {
               if (self) stats.selfDamage += dealt;
               else stats.friendlyFireDamage.explosion += dealt;
             }
-            context.events?.push({ type: 'friendly-fire', tick, attacker: g.owner, target: player.id, amount: dealt, source: 'explosion', self });
+            context.events?.push({ type: 'friendly-fire', tick, attacker: g.owner, target: player.id, amount: dealt,
+              source: 'explosion', self, life: player.life, direction: { x: g.x - player.x, z: g.z - player.z } });
           }
           for (const convict of context.allies?.() ?? []) {
             if (convict.hp <= 0) continue;
-            const base = blastDamage(g, convict.x, .5, convict.z, world, g.definition);
+            const base = blastDamage(g, convict.x, groundHeight(world, convict.x, convict.z) + .5, convict.z, world, g.definition);
             if (!base) continue;
             const before = convict.hp;
             convict.damage(resolveDamage(policy, { source: 'explosion', attacker: 'operator', target: 'convict', base }).amount, tick);
@@ -135,7 +156,8 @@ export class Grenades {
           }
         }
         onBlast(g, g.owner, g.definition);
-        context.events?.push({ type: 'blast', tick, id: g.id, x: g.x, y: g.y, z: g.z, radius });
+        context.events?.push({ type: 'blast', tick, id: g.id, x: g.x, y: g.y, z: g.z, radius, owner: g.owner,
+          grenade: g.definition.id, contact: this.contact(g, world) });
         if (stats) {
           const elapsed = performance.now() - started;
           stats.blasts++;
@@ -148,7 +170,10 @@ export class Grenades {
 
   clear(): void { this.items.length = 0; }
 
-  snapshot(): GrenadeState[] | undefined {
-    if (this.items.length) return this.items.map(({ id, x, y, z, detonates }) => ({ id, x, y, z, detonates }));
+  snapshot(tick?: number): GrenadeState[] | undefined {
+    if (this.items.length) return this.items.map(({ id, x, y, z, detonates, release }) => ({
+      id, x, y, z, detonates,
+      ...(tick !== undefined && tick - release.tick <= 6 && { release }),
+    }));
   }
 }

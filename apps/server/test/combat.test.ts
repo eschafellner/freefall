@@ -134,6 +134,29 @@ test('the server controls the fire rate regardless of how often the client sends
   assert.deepEqual(Object.keys(parsed).sort(), ['fire', 'forward', 'pitch', 'seq', 'sprint', 'strafe', 'yaw']);
 });
 
+test('flat-world standing shots replicate the validated shoulder ray and the original muzzle separately', () => {
+  const field = new Range(wall);
+  const p = field.addPlayer('a');
+  place(p, 0, 0);
+  driver(field)(p, { fire: true, aim: true });
+  const [shot] = field.shots;
+  assert.ok(shot.traceFrom);
+  assert.ok(Math.abs(shot.traceFrom.x - CAMERA_SHOULDER) < .05);
+  assert.ok(Math.abs(shot.traceFrom.z) < .05);
+  assert.ok(Math.abs(shot.toZ + 1.8) < 1e-8);
+  assert.ok(Math.abs(shot.traceFrom.x - shot.fromX) > .2);
+  assert.equal(shot.enemy, 0);
+  assert.equal(shot.eliminated, false);
+
+  const closeWall = { ...wall, obstacles: [{ ...wall.obstacles[0], z: -.45, halfZ: .12 }] };
+  const blocked = new Range(closeWall);
+  const other = blocked.addPlayer('a');
+  place(other, 0, 0);
+  driver(blocked)(other, { fire: true, aim: true });
+  const [stopped] = blocked.shots;
+  assert.deepEqual(stopped.traceFrom, { x: stopped.toX, y: stopped.toY, z: stopped.toZ });
+});
+
 // ---------------------------------------------------------------------------------------------------------------
 // 15.2 Tactical reload
 

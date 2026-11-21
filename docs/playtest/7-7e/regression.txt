@@ -1,0 +1,81 @@
+
+> project-freefall@0.1.0 typecheck
+> npm run typecheck --workspaces --if-present
+
+
+> @freefall/shared@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @freefall/client@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @freefall/server@0.1.0 typecheck
+> tsc -p tsconfig.test.json
+
+
+> project-freefall@0.1.0 build
+> npm run build -w @freefall/shared && npm run build -w @freefall/server && npm run build -w @freefall/client
+
+
+> @freefall/shared@0.1.0 build
+> tsc
+
+
+> @freefall/server@0.1.0 build
+> tsc
+
+
+> @freefall/client@0.1.0 build
+> vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 200 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                 0.77 kB │ gzip:   0.48 kB
+dist/assets/basis_transcoder-o4Hde_L7.js       57.52 kB
+dist/assets/basis_transcoder-VXdx5NbI.wasm    527.33 kB │ gzip: 248.94 kB
+dist/assets/index-DgGzjLbh.css                 18.13 kB │ gzip:   5.18 kB
+dist/assets/SkeletonUtils-C3iIgbbm.js           4.01 kB │ gzip:   1.54 kB
+dist/assets/GLTFLoader-D6P1JxLr.js             45.08 kB │ gzip:  13.19 kB
+dist/assets/KTX2Loader-B9LAceWU.js             59.39 kB │ gzip:  24.33 kB
+dist/assets/index-D-3lvDYc.js               1,432.07 kB │ gzip: 421.54 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 255ms
+
+> project-freefall@0.1.0 balance:check
+> node --conditions=development scripts/balance-check.ts
+
+Balance 7.3 · Schema 2 · Hash 01855759529dd588
+2 Waffen, 2 Ausrüstung, 1 Gegner, 1 Nester, 7 Schwierigkeitsgrade
+1 Leicht          Gegner ≤  120 · Nest-HP 306 · Nest-Intervall 260 Ticks · Sicht 25.42 m · Convict-Kit security-surplus
+2 Normal          Gegner ≤  200 · Nest-HP 360 · Nest-Intervall 202 Ticks · Sicht 31.00 m · Convict-Kit field-standard
+3 Herausfordernd  Gegner ≤  320 · Nest-HP 360 · Nest-Intervall 168 Ticks · Sicht 33.17 m · Convict-Kit light-webbing
+4 Schwer          Gegner ≤  450 · Nest-HP 396 · Nest-Intervall 134 Ticks · Sicht 35.34 m · Convict-Kit aged-infantry
+5 Extrem          Gegner ≤  600 · Nest-HP 414 · Nest-Intervall 104 Ticks · Sicht 37.82 m · Convict-Kit worn-reserve
+6 Albtraum        Gegner ≤  800 · Nest-HP 432 · Nest-Intervall 79 Ticks · Sicht 40.30 m · Convict-Kit restricted-issue
+7 FREEFALL        Gegner ≤ 1000 · Nest-HP 450 · Nest-Intervall 54 Ticks · Sicht 42.78 m · Convict-Kit minimum-issue
+OK
+apps/client/src/rendering/EnemyVisualLOD.ts: OK
+apps/client/src/rendering/AgentMeshes.ts: OK
+apps/server/src/ecs/HordeManager.ts: OK
+✔ spatial audio accepts Web Audio listeners with legacy setters (0.435521ms)
+✔ v1 world IDs do not depend on the JavaScript engine’s Math.hypot implementation (34.651292ms)
+ℹ tests 305
+ℹ suites 0
+ℹ pass 305
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 69556.840629
+{"comparedWorlds":88,"unchangedV1WorldIdentities":true}
+aca075f518c87e14ed1b975b0bf54d597b963c13b38d1a0b1a25f4fbb1d3d013  apps/client/dist/assets/index-D-3lvDYc.js

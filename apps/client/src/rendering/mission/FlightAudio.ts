@@ -1,10 +1,11 @@
 import type { MissionSnapshot } from '@freefall/shared';
 import type { AudioEngine } from '../../audio/AudioEngine.ts';
+import { PRIORITY } from '../../audio/VoiceBudget.ts';
 
-/** Small Web Audio fallback until authored ship audio is available. Routed through the environment bus. */
+/** Legacy deployment cues sit over the authored vehicle layers. */
 export class FlightAudio {
   private readonly engine: AudioEngine;
-  private cue = '';
+  private cue?: string;
 
   constructor(engine: AudioEngine) { this.engine = engine; }
 
@@ -12,9 +13,9 @@ export class FlightAudio {
 
   update(state?: MissionSnapshot): void {
     const cue = state?.result ? '' : state?.extraction ? state.extraction.method + state.extraction.phase : state?.phase ?? '';
-    if (this.cue === cue) return;
+    const previous = this.cue;
     this.cue = cue;
-    if (!this.context || this.context.state !== 'running') return;
+    if (previous === undefined || previous === cue || !this.engine.running) return;
     switch (cue) {
       case 'LOCKED':
         this.tone('triangle', 119, 31, .55, .19);
@@ -25,15 +26,19 @@ export class FlightAudio {
       case 'ATMOSPHERIC_ENTRY': this.tone('sawtooth', 74, 111, 2.25, .065); break;
       case 'BRAKING': this.tone('sawtooth', 58, 104, 1.6, .085); break;
       case 'TOUCHDOWN': this.tone('triangle', 91, 26, .83, .21, .48); break;
-      case 'balloonCOUNTDOWN': this.tone('sine', 320, 780, .48, .07); break;
-      case 'balloonAPPROACH': this.tone('sawtooth', 43, 115, 2.85, .08); break;
-      case 'balloonLIFT': this.tone('triangle', 158, 44, 1.7, .10); break;
-      case 'albatrossCOUNTDOWN': this.tone('sawtooth', 36, 81, 3.8, .075); break;
     }
   }
 
+  clear(): void { this.cue = undefined; }
+
   private tone(type: OscillatorType, from: number, to: number, duration: number, volume: number, delay = 0): void {
     const context = this.context!;
+    const bus = this.engine.bus('environment');
+    if (!bus) return;
+    const release = this.engine.reserve('deployment', duration + delay + .08, PRIORITY.combat, () => {
+      oscillator.stop(); oscillator.disconnect(); gain.disconnect();
+    });
+    if (!release) return;
     const oscillator = context.createOscillator();
     const gain = context.createGain();
     const at = context.currentTime + delay;
@@ -43,9 +48,9 @@ export class FlightAudio {
     gain.gain.setValueAtTime(.001, at);
     gain.gain.exponentialRampToValueAtTime(volume, at + Math.min(.16, duration / 3));
     gain.gain.exponentialRampToValueAtTime(.001, at + duration);
-    oscillator.connect(gain).connect(this.engine.bus('environment') ?? context.destination);
+    oscillator.connect(gain).connect(bus);
     oscillator.start(at);
     oscillator.stop(at + duration + .04);
-    oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+    oscillator.onended = release;
   }
 }

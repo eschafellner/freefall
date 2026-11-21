@@ -4,32 +4,40 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
-import type { HordeFrame, MissionDefinition, MissionSnapshot, OperatorPosition, PlayerState, PlayersSnapshot, PositionXZ, PostureState, ShotEvent } from '@freefall/shared';
+import type { AtmosphereState, Circle, ExplosionEvent, HordeFrame, MeleeEvent, MissionDefinition, MissionSnapshot, OperatorPosition, PlanetAtmosphereProfile, PlayerState, PlayersSnapshot, PositionXZ, PostureState, ShotEvent, WeaponSlot, WorldDefinition } from '@freefall/shared';
 import { MissionEnvironment } from './mission/MissionEnvironment.ts';
+import { disposeMissionMeshes } from './mission/disposeMissionMeshes.ts';
 import { MissionMarkers } from './mission/MissionMarkers.ts';
 import { SwarmBreachController } from './mission/SwarmBreachController.ts';
-import { CARRIER_WORLD, WEAPONS, allowsPostureAction, isCarrierScene, landingShip, missionGround, newPosture, postureCollider } from '@freefall/shared';
+import {
+  CAMERA_BACK, CARRIER_WORLD, WORLD_PROFILES, groundHeight, GROUND_HIT_ZONES, MAX_PITCH, MUZZLE_HEIGHT, WEAPONS, aimRay, allowsPostureAction, groundHitZoneTop,
+  isCarrierScene, isGroundPosture, landingShip, missionGround, newPosture, postureCollider, postureDistanceSquared, shotWorldLimit,
+  tacticalAimPitch, tacticalAimYaw, tacticalMuzzle, tacticalShotLimit,
+} from '@freefall/shared';
 import { AlbatrossView } from './mission/AlbatrossView.ts';
 import { Carrier } from './mission/Carrier.ts';
 import { ConvictView } from './mission/ConvictView.ts';
 import { RecoveryView } from './mission/RecoveryView.ts';
 import { DescentView } from './mission/DescentView.ts';
 import { PlayerRigBatches } from './characters/PlayerRigBatches.ts';
+import type { PresentShot } from './characters/PlayerVisualController.ts';
 import { GrenadeView } from './weapons/GrenadeView.ts';
 import { PlayerView } from './Agents.ts';
 import { AssetLoader } from './AssetLoader.ts';
+import { cameraPreferences } from './CameraPreferences.ts';
 import { ENEMY_VISUALS, SCHABE_VISUAL } from './AssetRegistry.ts';
 import { ContactShadows } from './ContactShadows.ts';
 import type { EnemyVisualLOD } from './EnemyVisualLOD.ts';
 import { GRAPHICS_QUALITY, initialQuality } from './GraphicsQuality.ts';
 import type { GraphicsQuality, QualityName } from './GraphicsQuality.ts';
 import { GpuFrameTimer } from './RenderMetrics.ts';
-import { ThirdPersonCamera } from './ThirdPersonCamera.ts';
+import { ThirdPersonCamera, cameraAnchorWeight } from './ThirdPersonCamera.ts';
 import { VisualEffectsManager } from './VisualEffectsManager.ts';
 import { createTerrain } from './terrain.ts';
 import { createBase } from './environment/Base.ts';
 import { GroundDetails } from './environment/GroundDetails.ts';
-import { LIGHTING, createLighting } from './environment/Lighting.ts';
+import { AtmosphereController } from './environment/AtmosphereController.ts';
+import { createLighting } from './environment/Lighting.ts';
 import { createSurfaceMaterials } from './environment/SurfaceMaterials.ts';
 
 const FLIGHT_PHASES = new Set(['DROPPING', 'ATMOSPHERIC_ENTRY', 'BRAKING']);
@@ -39,8 +47,9 @@ export class ArenaView {
   readonly renderer: T.WebGLRenderer;
   readonly horde: EnemyVisualLOD;
   private readonly scene = new T.Scene();
+  private readonly weather = new AtmosphereController(this.scene);
+  private debugWeatherOff = new URLSearchParams(location.search).get('weather') === 'off';
   private readonly grenades = new GrenadeView(this.scene);
-  private readonly reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   private recoilPitch = 0;
   private recoilYaw = 0;
   private readonly staggered = new Map<number, number>();
@@ -63,18 +72,22 @@ export class ArenaView {
     environment: MissionEnvironment;
     breach: SwarmBreachController;
     surface: MissionDefinition['world'];
+    atmosphere?: PlanetAtmosphereProfile;
   };
   private operation?: {
     carrier: Carrier; ship: AlbatrossView; recovery: RecoveryView; convicts: ConvictView; descent: DescentView;
   };
   private missionActive = false;
   private markerMode = '';
-  private readonly darkness = new T.Color(0x101b1f);
+  private cameraMode = '';
+  private cameraTotal = 0;
+  private reticleTotal = 0;
   private readonly vector = new T.Vector3();
-  private ownId = '';
+  private readonly reticleRay = { x: 0, y: 0, z: 0, dx: 0, dy: 0, dz: 0 };
+  private readonly reticleMuzzle = { x: 0, y: 0, z: 0 };
   private readonly overview = { x: -1.8, z: 7.7 };
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
-  private debugMarkers?: { server: T.Mesh; predicted: T.Mesh; collider: T.LineSegments };
+  private debugMarkers?: { server: T.Mesh; predicted: T.Mesh; collider: T.LineSegments; zones: T.Group };
   private post?: { composer: EffectComposer; render: RenderPass; output: OutputPass; fxaa: ShaderPass };
 
   private readonly container: HTMLElement;
@@ -87,7 +100,6 @@ export class ArenaView {
     this.gpuTimer = new GpuFrameTimer(this.renderer.getContext() as WebGL2RenderingContext);
     this.renderer.outputColorSpace = T.SRGBColorSpace;
     this.renderer.toneMapping = T.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = LIGHTING.exposure;
     this.renderer.shadowMap.type = T.PCFShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.info.autoReset = false;
@@ -111,20 +123,34 @@ export class ArenaView {
     this.canvas.addEventListener('webglcontextrestored', this.restoreContext);
   }
 
-  setMission(definition?: MissionDefinition): void {
+  setMission(definition?: MissionDefinition, reservations: readonly Circle[] = []): void {
     if (definition && this.mission?.definition !== definition) {
-      const environment = new MissionEnvironment(definition, this.materials);
+      if (this.mission) this.disposeMissionEnvironment(this.mission.environment);
+      this.weather.clear();
+      this.light.clearPlanet();
+      const anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
+      const environment = new MissionEnvironment(definition, this.materials, reservations, anisotropy, this.weather.wind);
       const breach = new SwarmBreachController(this.materials);
       environment.root.add(breach.root);
       this.scene.add(environment.root);
       const surface = missionGround(definition.world);
-      this.mission = { definition, environment, breach, surface };
+      breach.world = surface;
+      const atmosphere = surface.terrain && surface.planetId ? WORLD_PROFILES.get(surface.planetId)?.atmosphere : undefined;
+      this.mission = { definition, environment, breach, surface, atmosphere };
       if (!this.operation) {
         const carrier = new Carrier(), ship = new AlbatrossView(), recovery = new RecoveryView();
         const convicts = new ConvictView(this.scene);
         const descent = new DescentView();
         this.scene.add(carrier.root, ship.root, recovery.root, descent.root);
         this.operation = { carrier, ship, recovery, convicts, descent };
+      }
+    }
+    if (!definition) {
+      this.weather.clear();
+      this.light.clearPlanet();
+      if (this.mission) {
+        this.disposeMissionEnvironment(this.mission.environment);
+        this.mission = undefined;
       }
     }
     this.missionActive = Boolean(definition);
@@ -139,9 +165,8 @@ export class ArenaView {
     if (this.mission) {
       this.mission.environment.root.visible = this.missionActive;
       this.mission.environment.debug.visible = false;
-      this.mission.environment.simplify(this.quality === GRAPHICS_QUALITY.low);
+      this.mission.environment.configureQuality(this.quality);
     }
-    (this.scene.fog as T.FogExp2).density = definition ? .0041 : LIGHTING.fogDensity;
     this.camera.far = definition ? 470 : 325;
     this.camera.updateProjectionMatrix();
     this.canvas.setAttribute('aria-label', definition ? definition.displayName : '3D-Einsatzgebiet Boreal Relay');
@@ -150,11 +175,27 @@ export class ArenaView {
     this.refreshShadows();
   }
 
+  audioTransport() {
+    const operation = this.operation;
+    return {
+      ship: operation?.ship.root.visible ? operation.ship.root.position : undefined,
+      recovery: operation?.recovery.audioPosition,
+    };
+  }
+
+  toggleDebugWeather(): void { this.debugWeatherOff = !this.debugWeatherOff; }
+
+  private disposeMissionEnvironment(environment: MissionEnvironment): void {
+    disposeMissionMeshes(environment.root, new Set(Object.values(this.materials)),
+      environment.auxiliaryMaterials(), environment.generatedTextures());
+  }
+
   setQuality(name: QualityName): void {
     this.quality = GRAPHICS_QUALITY[name];
     this.effects.setQuality(this.quality);
+    this.grenades.setQuality(this.quality);
     this.terrain.simplify(name === 'low');
-    this.mission?.environment.simplify(name === 'low');
+    this.mission?.environment.configureQuality(this.quality);
     const floatColor = this.renderer.extensions.has('EXT_color_buffer_float');
     const { shadowMapSize, fxaa } = this.quality;
     const { sun } = this.light;
@@ -214,13 +255,16 @@ export class ArenaView {
     }
   };
 
-  blast(distance: number): void {
-    if (!this.reducedMotion.matches && distance < 22) this.cameraRig.blast(1 - distance / 22);
+  explosion(event: ExplosionEvent, distance: number, alive: boolean, now: number): void {
+    this.grenades.explode(event, now, this.camera);
+    if (alive && distance < 22) this.cameraRig.blast((1 - distance / 22) ** 2);
   }
 
-  /** Authoritative explosion event: pooled flash, pressure wave, smoke, dust, debris and scorch mark. */
-  explosion(id: number, x: number, y: number, z: number, radius: number): void {
-    this.grenades.explode(id, x, y, z, radius, performance.now());
+  melee(event: MeleeEvent, own: boolean, alive: boolean, now: number): void {
+    if (own && alive && event.damage > 0) this.cameraRig.impulse('melee', .24);
+    if (event.damage <= 0) return;
+    const fallen = event.eliminated && event.enemy ? this.horde.hit(event.enemy, now, true) : undefined;
+    this.effects.melee(event, now, this.camera, own, fallen);
   }
 
   /** Predicted gameplay recoil of the local weapon. Moves the camera (and crosshair) onto the server's shot line. */
@@ -232,20 +276,57 @@ export class ArenaView {
   /** Keeps the approved hit reaction of a staggered enemy active for the stagger duration (no new animation). */
   stagger(id: number, until: number): void { if (id) this.staggered.set(id, until); }
 
-  shot(event: ShotEvent, now: number): void {
-    if (!this.reducedMotion.matches && this.ownId === event.shooter) {
-      this.cameraRig.fire(WEAPONS[event.slot ?? 'primary'].recoil.cameraKick / .63);
+  private firingCamera(slot: WeaponSlot): void {
+    if (!cameraPreferences.reducedMotion) this.cameraRig.fire(WEAPONS[slot].recoil.cameraKick / .63);
+  }
+
+  predictFire(shooter: PlayerState, slot: WeaponSlot, now: number): void {
+    this.firingCamera(slot);
+    this.players.queueShot({ shooter: shooter.id, life: shooter.life, slot }, shooter, now, (weapon, at) => {
+      if (weapon) this.effects.fire(weapon, slot, at, true, this.camera);
+    });
+  }
+
+  shot(event: ShotEvent, shooter: PlayerState | undefined, local: boolean, predicted: boolean, now: number, audio: () => void): void {
+    const slot = event.slot ?? 'primary';
+    const present: PresentShot = (weapon, at) => {
+      if (weapon) this.effects.fire(weapon, slot, at, local, this.camera);
+      const fallen = event.impact?.kind === 'enemy' && event.eliminated ? this.horde.hit(event.enemy, at, true) : undefined;
+      this.effects.add(event, at, this.camera, local, fallen);
+      audio();
+    };
+    if (!predicted) {
+      if (local) this.firingCamera(slot);
+      const cue = local ? { ...event, tick: undefined } : event;
+      if (this.players.queueShot(cue, shooter, now, present) || this.operation?.convicts.queueShot(cue, now, present)) return;
     }
-    this.effects.add(event, now, this.horde.hit(event.enemy, now, event.eliminated), this.operation?.convicts.shot(event) ?? this.players.shotOrigin(event));
+    present(undefined, now);
+  }
+
+  clearWeaponPresentation(): void {
+    this.players.clearShots();
+    this.operation?.convicts.clearShots();
+    this.effects.clear();
+  }
+
+  clearCombatActions(tick: number): void {
+    this.grenades.fence(tick);
+    this.staggered.clear();
+    this.cameraRig.clearImpulse();
+  }
+
+  clearCameraFeedback(): void { this.cameraRig.clearImpulse(); }
+  damageImpulse(amount: number): void { this.cameraRig.impulse('damage', Math.min(.8, .28 + amount / 100)); }
+  missionImpulse(distance: number): void {
+    if (distance < 18 && this.quality !== GRAPHICS_QUALITY.low) this.cameraRig.impulse('mission', .26 * (1 - distance / 18));
   }
 
   clearMatch(): void {
-    this.ownId = '';
     this.cameraRig.reset();
     this.players.clear();
     this.horde.clear();
-    this.effects.clear();
-    this.grenades.clear();
+    this.clearWeaponPresentation();
+    this.grenades.clear(true);
     this.staggered.clear();
     this.setMission();
   }
@@ -255,8 +336,8 @@ export class ArenaView {
     h1: HordeFrame | undefined, h2: HordeFrame | undefined, hAlpha: number,
     aim = false, sprint = false, latest?: PlayersSnapshot,
     state?: MissionSnapshot, missionTick = 0, showMarkers = false, debug = false, posture?: PostureState, poseTick = missionTick,
+    reticle?: HTMLElement | null, atmosphere?: AtmosphereState, online = true, measurePresentation = false,
   ): void {
-    this.ownId = own;
     this.contact.begin();
     const mission = this.missionActive ? this.mission : undefined;
     const operation = this.operation;
@@ -268,47 +349,69 @@ export class ArenaView {
     const mode = renderCarrier ? 'carrier' : mission ? 'surface' : 'arena';
     if (mode !== this.markerMode) {
       this.markerMode = mode;
+      this.effects.clear();
       this.refreshShadows();
     }
-    this.scene.background = renderCarrier ? this.darkness : this.light.sky;
-    const fog = this.scene.fog as T.FogExp2;
-    fog.color.setHex(renderCarrier ? 0x1d2b2e : LIGHTING.fog);
-    fog.density = renderCarrier ? .009 : mission ? .0041 : LIGHTING.fogDensity;
     if (mission) mission.environment.root.visible = !renderCarrier;
     if (operation) operation.carrier.root.visible = carrier && !flying;
     const world = carrier ? CARRIER_WORLD : mission?.surface;
+    this.contact.world = this.effects.world = this.grenades.world = world;
     const aiming = aim && (!posture || allowsPostureAction(posture, 'aim'));
     const sprinting = sprint && (!posture || allowsPostureAction(posture, 'sprint'));
-    this.players.draw(p1, p2, pAlpha, own, position, yaw, pitch, aiming, sprinting, now, dt, this.contact, latest, missionTick, posture, poseTick);
-    this.cameraRig.update(own ? position : this.overview, own ? yaw + this.recoilYaw : .19, own ? pitch + this.recoilPitch : -.12,
-      Boolean(own && alive && aiming), this.players.localSprint, dt, world, own ? position.y : 0,
-      own && alive && posture ? postureCollider(posture, poseTick).lookHeight : undefined);
+    this.players.draw(p1, p2, pAlpha, own, position, yaw, pitch, aiming, sprinting, now, dt, this.contact, latest, missionTick, posture, poseTick, world);
+    this.players.expireShots(now);
+    const shape = own && alive && posture ? postureCollider(posture, poseTick) : undefined;
+    const viewYaw = own ? yaw + this.recoilYaw : .19;
+    const viewPitch = own ? Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch + this.recoilPitch)) : -.12;
+    const securedLift = state?.extraction?.phase === 'LIFT' && state.extraction.securedIds.includes(own);
+    const cameraMode = state?.state === 'DEPLOYMENT' || securedLift ? 'transport' : mode;
+    if (this.cameraMode !== cameraMode) {
+      this.cameraMode = cameraMode;
+      this.cameraRig.reset();
+    }
+    const cameraStart = measurePresentation ? performance.now() : 0;
+    this.cameraRig.update(own ? position : this.overview, viewYaw, viewPitch,
+      Boolean(own && alive && aiming), this.players.localSprint, dt, world, own ? position.y : 0, shape?.lookHeight,
+      shape && posture ? cameraAnchorWeight(posture, poseTick) : 0);
+    if (measurePresentation) this.cameraTotal += performance.now() - cameraStart;
+    const cameraPosition = this.cameraRig.camera.position;
+    if (shape && posture && cameraPosition.y < position.y + shape.height + .11 &&
+        postureDistanceSquared(position, shape, posture.yaw, cameraPosition.x, cameraPosition.z) < .11 ** 2) {
+      this.players.hideLocal(own);
+    }
+    if (reticle) {
+      const reticleStart = measurePresentation ? performance.now() : 0;
+      const slot = latest?.players.find((player) => player.id === own)?.equipment?.slot ?? 'primary';
+      this.updateReticle(reticle, position, yaw, viewYaw, viewPitch, poseTick, slot, world, own && alive ? posture : undefined);
+      if (measurePresentation) this.reticleTotal += performance.now() - reticleStart;
+    }
     const low = this.quality === GRAPHICS_QUALITY.low;
     if (operation) {
-      operation.descent.update(flying && state ? state : undefined, missionTick, low, this.scene, groundBelow);
       PlayerRigBatches.setTransport(this.scene, undefined);
       if (mission && state) {
         operation.carrier.update(now, state, low);
-        operation.ship.update(state, missionTick, low, latest);
+        operation.ship.update(state, missionTick, this.quality, latest, mission.surface, cameraPreferences.reducedMotion);
         operation.recovery.update(state.result || state.state === 'RETURN_TO_CARRIER' ? undefined : state.extraction,
-          missionTick, dt, latest, own, position);
+          missionTick, dt, latest, own, position, mission.surface);
         const ship = operation.ship.root;
         if (groundBelow) {
-          const t = T.MathUtils.clamp((missionTick - state.phaseAt) / (state.phaseUntil - state.phaseAt), 0, 1);
+          const t = T.MathUtils.clamp((missionTick - state.phaseAt) / Math.max(1, state.phaseUntil - state.phaseAt), 0, 1);
           ship.position.set(groundBelow.x, 9 + 24 * (1 - t) ** 1.6, groundBelow.z);
         }
+        // Flight turbulence follows the camera settings: scaled by "Wackeln", off with reduced motion.
+        const turbulence = cameraPreferences.reducedMotion ? 0 : cameraPreferences.shake;
         if (state.state === 'DEPLOYMENT' && (flying || state.phase === 'TOUCHDOWN')) {
           const scale = flying ? groundBelow ? 1.25 : 1 : .55;
           this.camera.position.set(ship.position.x + 12.8 * scale, ship.position.y + (groundBelow ? 8.3 : 5.5) * scale,
             ship.position.z + (flying ? 13 : 16));
-          this.camera.position.x += Math.sin(missionTick * .7) * (flying ? .13 : .035);
+          this.camera.position.x += Math.sin(missionTick * .7) * (flying ? .13 : .035) * turbulence;
           this.camera.lookAt(ship.position.x, ship.position.y + 1.7, ship.position.z - .7);
         } else if (state.state === 'DEPLOYMENT' && state.phase === 'LOCKED') {
-          this.camera.position.y += Math.sin(missionTick * 1.5) * .022;
+          this.camera.position.y += Math.sin(missionTick * 1.5) * .022 * turbulence;
         }
         const extraction = state.extraction;
         if (extraction?.phase === 'LIFT' && !state.result) {
-          const t = T.MathUtils.clamp((missionTick - extraction.phaseAt) / (extraction.endsAt - extraction.phaseAt), 0, 1);
+          const t = T.MathUtils.clamp((missionTick - extraction.phaseAt) / Math.max(1, extraction.endsAt - extraction.phaseAt), 0, 1);
           const offset = extraction.method === 'albatross'
             ? this.vector.set(0, ship.position.y, ship.position.z - extraction.z)
             : this.vector.set(Math.sin(Math.PI * .235) * 95 * t ** 1.8, 45 * t, -Math.cos(Math.PI * .235) * 95 * t ** 1.8);
@@ -317,33 +420,48 @@ export class ArenaView {
           if (extraction.securedIds.includes(own)) {
             const rescuedByFighter = extraction.method === 'balloon';
             this.camera.position.set(position.x + offset.x + (rescuedByFighter ? 21 : 8),
-              offset.y + (rescuedByFighter ? 11.8 : 5.8), position.z + offset.z + (rescuedByFighter ? 22 : 11));
-            this.camera.lookAt(position.x + offset.x, offset.y + (rescuedByFighter ? 8.3 : 2.5), position.z + offset.z);
+              position.y + offset.y + (rescuedByFighter ? 11.8 : 5.8), position.z + offset.z + (rescuedByFighter ? 22 : 11));
+            this.camera.lookAt(position.x + offset.x, position.y + offset.y + (rescuedByFighter ? 8.3 : 2.5), position.z + offset.z);
           }
         }
         this.camera.updateMatrixWorld();
         operation.convicts.draw(state.convicts, missionTick, now, dt, this.camera,
-          Boolean(flying) || state.phase === 'TOUCHDOWN' || state.state === 'RETURN_TO_CARRIER');
+          Boolean(flying) || state.phase === 'TOUCHDOWN' || state.state === 'RETURN_TO_CARRIER', world);
         if (!carrier) {
           mission.environment.updateObjectives(state.objectives);
           mission.environment.debug.visible = debug;
           mission.breach.update(state.nests, missionTick, this.camera, low);
           this.markers.update(mission.definition, state, this.camera, position, missionTick, hAlpha > .5 ? h2 : h1,
-            showMarkers && state.state !== 'DEPLOYMENT' && state.extraction?.phase !== 'LIFT');
+            showMarkers && state.state !== 'DEPLOYMENT' && !securedLift);
         } else this.markers.root.hidden = true;
       } else operation.convicts.draw([], missionTick, now, dt, this.camera, true);
     }
-    // Player snapshots may be extrapolated a little (alpha > 1); grenades follow a ballistic arc and do not.
-    this.grenades.draw(p1, p2, Math.min(1, pAlpha), this.camera, low, now);
     for (const [id, until] of this.staggered) {
       if (now >= until) this.staggered.delete(id);
       else this.horde.hit(id, now, false);
     }
     this.players.drawBatches(this.camera);
+    if (mission && !renderCarrier) mission.environment.update(this.camera);
+    const weatherEnabled = !(state?.debug && this.debugWeatherOff);
+    const weatherState = weatherEnabled && atmosphere?.instanceId === state?.instanceId ? atmosphere : undefined;
+    const weather = state?.result && mode === 'surface' && weatherEnabled
+      ? this.weather.finish(state.instanceId)
+      : this.weather.update(state?.result ? undefined : weatherState, mission?.surface, mission?.atmosphere, missionTick, dt, this.camera,
+        this.quality, cameraPreferences.reducedMotion, this.renderer.getPixelRatio(), mode === 'surface' && !flying, Boolean(state?.debug));
+    if (this.light.update(mode, Boolean(this.post), this.camera.position.x, this.camera.position.z, mission?.atmosphere, weather)) {
+      this.refreshShadows();
+    }
+    this.renderer.toneMappingExposure = this.light.exposure;
+    operation?.descent.update(flying && state ? state : undefined, missionTick, low, this.scene, groundBelow);
     if (!mission) this.details.update(this.camera, this.quality.gravelDistance, this.quality.brushDistance);
-    this.horde.draw(this.camera, carrier ? undefined : h1, carrier ? undefined : h2, hAlpha, now, this.quality, this.contact);
+    this.horde.draw(this.camera, carrier ? undefined : h1, carrier ? undefined : h2, hAlpha, now, this.quality, this.contact, world);
     this.contact.end();
-    this.effects.draw(now, this.camera);
+    const wind = this.weather.wind.flow.value;
+    // Operator poses may extrapolate a little; grenade poses stop at the last confirmed sample.
+    const combatScene = online && !carrier && !flying && !state?.result;
+    this.grenades.draw(combatScene ? p1 : undefined, combatScene ? p2 : undefined, Math.min(1, pAlpha), latest?.tick ?? -1, this.camera, now,
+      cameraPreferences.muzzleFlash, cameraPreferences.reducedMotion, wind.x, wind.y);
+    this.effects.draw(now, this.camera, cameraPreferences.muzzleFlash, cameraPreferences.reducedMotion, wind.x, wind.y);
     this.renderer.info.reset();
     this.gpuTimer.begin();
     try {
@@ -355,8 +473,51 @@ export class ArenaView {
   }
 
   /** Locomotion state and animation speed of the local operator (telemetry). */
-  localMotion(): { state: string; speed: number } {
-    return { state: this.players.localState, speed: this.players.localSpeed };
+  localMotion() {
+    const model = this.players.localModel;
+    return { playback: model?.playback, locomotion: model?.animation.locomotion, speed: model?.animation.speed ?? 0,
+      cameraPosition: this.cameraRig.camera.position, cameraTarget: this.cameraRig.target, collisionPull: this.cameraRig.collisionPull };
+  }
+
+  presentationCosts(frames: number) {
+    const result = { cameraMs: this.cameraTotal / frames, reticleMs: this.reticleTotal / frames };
+    this.cameraTotal = this.reticleTotal = 0;
+    return result;
+  }
+
+  private updateReticle(element: HTMLElement, position: OperatorPosition, bodyYaw: number, yaw: number, pitch: number, tick: number,
+    slot: WeaponSlot, world?: WorldDefinition, posture?: PostureState): void {
+    const canFire = !posture || allowsPostureAction(posture, 'fire');
+    const tactical = posture && posture.current !== 'STANDING';
+    if (!canFire) {
+      element.style.left = element.style.top = '50%';
+      element.style.visibility = 'hidden';
+      element.classList.remove('blocked');
+      return;
+    }
+    const shape = posture ? postureCollider(posture, tick) : undefined;
+    const aimYaw = tactical ? tacticalAimYaw(posture, yaw) : yaw;
+    const ray = this.reticleRay, muzzle = this.reticleMuzzle;
+    aimRay(ray, position, aimYaw, tactical ? tacticalAimPitch(posture, pitch) : pitch, tactical ? shape?.lookHeight : undefined, position.y, !!world?.terrain);
+    const range = WEAPONS[slot].effectiveRange;
+    const aimDistance = shotWorldLimit(ray, CAMERA_BACK, range + CAMERA_BACK, world);
+    let end = aimDistance;
+    if (shape && posture && (tactical || world?.terrain)) {
+      if (tactical) tacticalMuzzle(muzzle, position, posture, aimYaw, shape);
+      else {
+        muzzle.x = position.x + Math.cos(bodyYaw) * .58 + Math.sin(bodyYaw) * .66;
+        muzzle.y = position.y + MUZZLE_HEIGHT;
+        muzzle.z = position.z + Math.sin(bodyYaw) * .58 - Math.cos(bodyYaw) * .66;
+      }
+      end = tacticalShotLimit(ray, position, muzzle, posture, shape, aimDistance, range, false, world);
+    }
+    const point = this.vector.set(ray.x + ray.dx * end, ray.y + ray.dy * end, ray.z + ray.dz * end);
+    point.project(this.cameraRig.camera);
+    const visible = point.z >= -1 && point.z <= 1 && Math.abs(point.x) < .97 && Math.abs(point.y) < .96;
+    element.style.visibility = '';
+    element.style.left = visible ? `${(1 + point.x) * 50}%` : '50%';
+    element.style.top = visible ? `${(1 - point.y) * 50}%` : '50%';
+    element.classList.toggle('blocked', !visible || end <= (tactical || world?.terrain ? .28 : CAMERA_BACK + .02));
   }
 
   /**
@@ -365,7 +526,10 @@ export class ArenaView {
    */
   debugPositions(server?: PlayerState, predicted?: OperatorPosition, tick = 0): void {
     if (!server && !predicted) {
-      if (this.debugMarkers) this.debugMarkers.server.visible = this.debugMarkers.predicted.visible = this.debugMarkers.collider.visible = false;
+      if (this.debugMarkers) {
+        const { server, predicted, collider, zones } = this.debugMarkers;
+        server.visible = predicted.visible = collider.visible = zones.visible = false;
+      }
       return;
     }
     if (!this.debugMarkers) {
@@ -383,12 +547,20 @@ export class ArenaView {
       unit.dispose();
       collider.renderOrder = 10;
       this.scene.add(collider);
-      this.debugMarkers = { server: marker(0xff8a3d, .55), predicted: marker(0x5fe3ff, .42), collider };
+      const zones = new T.Group();
+      for (const color of [0xffdf72, 0xff6274, 0x8aff94]) {
+        const zone = new T.LineSegments(collider.geometry, new T.LineBasicMaterial({ color, depthTest: false, toneMapped: false }));
+        zone.renderOrder = 11;
+        zones.add(zone);
+      }
+      this.scene.add(zones);
+      this.debugMarkers = { server: marker(0xff8a3d, .55), predicted: marker(0x5fe3ff, .42), collider, zones };
     }
-    const { server: s, predicted: p, collider } = this.debugMarkers;
+    const { server: s, predicted: p, collider, zones } = this.debugMarkers;
     s.visible = !!server;
     p.visible = !!predicted;
     collider.visible = !!server && server.hp > 0;
+    zones.visible = !!server?.posture && server.hp > 0 && isGroundPosture(server.posture.current);
     if (server) {
       const posture = server.posture ?? newPosture(server.yaw);
       const shape = postureCollider(posture, tick);
@@ -396,11 +568,25 @@ export class ArenaView {
       collider.position.set(server.x, (server.y ?? 0) + shape.height / 2, server.z);
       collider.scale.set(shape.radius * 2, shape.height, shape.halfLength * 2);
       collider.rotation.y = posture.current === 'STANDING' || posture.current === 'CROUCHING' ? 0 : -posture.yaw;
+      if (zones.visible) {
+        const supine = posture.current === 'SUPINE';
+        zones.position.set(server.x, server.y ?? 0, server.z);
+        zones.rotation.y = -posture.yaw;
+        for (const [i, zone] of GROUND_HIT_ZONES.entries()) {
+          const top = groundHitZoneTop(zone, supine);
+          zones.children[i].position.set(0, (top + zone.bottom) * shape.height / 2, zone.z * shape.halfLength * (supine ? -1 : 1));
+          zones.children[i].scale.set(2 * zone.halfWidth * shape.radius, (top - zone.bottom) * shape.height,
+            2 * zone.halfLength * shape.halfLength);
+        }
+      }
     }
     if (predicted) p.position.set(predicted.x, predicted.y + .05, predicted.z);
   }
 
-  metrics() {
+  metrics(captureCamera = false) {
+    if (captureCamera) this.canvas.dataset.camera = JSON.stringify({ position: this.camera.position.toArray(),
+      quaternion: this.camera.quaternion.toArray(), fov: this.camera.fov, resolution: [this.canvas.width, this.canvas.height] });
+    else if (this.canvas.dataset.camera) delete this.canvas.dataset.camera;
     const { render, memory } = this.renderer.info;
     const { opaque, transparent, transmissive } = this.renderer.renderLists.get(this.scene, 0);
     let meshes = 0;
@@ -415,6 +601,9 @@ export class ArenaView {
     return {
       drawCalls: render.calls, triangles: render.triangles, meshes, instances,
       geometries: memory.geometries, textures: memory.textures, gpuMs: this.gpuTimer.sample(),
+      weather: this.weather.metrics(),
+      weaponVfx: this.effects.metrics(),
+      explosiveVfx: this.grenades.metrics(),
     };
   }
 
@@ -431,21 +620,17 @@ export class ArenaView {
     this.observer.disconnect();
     this.canvas.removeEventListener('webglcontextrestored', this.restoreContext);
     this.disposePost();
-    this.light.sun.shadow.dispose();
+    this.weather.clear();
+    this.light.dispose();
     this.players.dispose();
+    this.effects.dispose();
     this.operation?.convicts.dispose();
     PlayerRigBatches.setTransport(this.scene, undefined);
-    if (this.debugMarkers) {
-      for (const marker of Object.values(this.debugMarkers)) {
-        marker.geometry.dispose();
-        (marker.material as T.Material).dispose();
-      }
-    }
     this.assets.dispose();
     this.gpuTimer.dispose();
     const geometries = new Set<T.BufferGeometry>();
     const materials = new Set<T.Material>([...this.terrain.materials, ...(this.mission?.environment.auxiliaryMaterials() ?? [])]);
-    const textures = new Set<T.Texture>([this.light.sky]);
+    const textures = new Set<T.Texture>(this.mission?.environment.generatedTextures());
     this.scene.traverse((object) => {
       if ('geometry' in object && object.geometry instanceof T.BufferGeometry) geometries.add(object.geometry);
       if ('material' in object) {

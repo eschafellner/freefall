@@ -1,11 +1,19 @@
 import * as T from 'three';
-import { ALBATROSS, CARRIER_SHIP } from '@freefall/shared';
-import type { MissionSnapshot, PlayersSnapshot } from '@freefall/shared';
+import { ALBATROSS, CARRIER_SHIP, NET, groundHeight } from '@freefall/shared';
+import type { MissionSnapshot, PlayersSnapshot, WorldDefinition } from '@freefall/shared';
+import { GRAPHICS_QUALITY } from '../GraphicsQuality.ts';
+import type { GraphicsQuality } from '../GraphicsQuality.ts';
 import { PanelBatch, emitter, metal, plate, stencil } from './ShipParts.ts';
 import { SupplyContainerView } from './SupplyContainerView.ts';
 
 const unit = new T.Object3D();
 const timeProgress = (tick: number, start: number, end: number) => T.MathUtils.clamp((tick - start) / Math.max(1, end - start), 0, 1);
+const DOWNWASH = {
+  ice: { tint: 0xc5dae2, width: .86, height: .35 },
+  desert: { tint: 0xbf9267, width: 1, height: .43 },
+  'green-plains': { tint: 0x82714e, width: .53, height: .19 },
+  forest: { tint: 0x91653d, width: .47, height: .25 },
+};
 
 export class AlbatrossView {
   readonly root = new T.Group();
@@ -119,9 +127,11 @@ export class AlbatrossView {
     this.root.add(this.detail, this.dust, this.wreck, this.supply.root);
   }
 
-  update(state: MissionSnapshot, tick: number, low: boolean, players?: PlayersSnapshot): void {
+  update(state: MissionSnapshot, tick: number, quality: GraphicsQuality, players: PlayersSnapshot | undefined,
+    world: WorldDefinition, reducedMotion: boolean): void {
+    const low = quality === GRAPHICS_QUALITY.low;
     const { albatross, phase, phaseAt, phaseUntil, extraction } = state;
-    this.supply.update(albatross?.supply, tick, Math.max(0, Math.min(.1, (tick - this.lastTick) / 30)), players);
+    this.supply.update(albatross?.supply, tick, Math.max(0, Math.min(.1, (tick - this.lastTick) / NET.tickHz)), players);
     this.lastTick = tick;
     const flight = phase === 'DROPPING' || phase === 'ATMOSPHERIC_ENTRY' || phase === 'BRAKING';
     const elapsed = timeProgress(tick, phaseAt, phaseUntil);
@@ -152,7 +162,7 @@ export class AlbatrossView {
     const openAtLanding = phase === 'TOUCHDOWN' ? Math.min(1, (elapsed - .58) * 3.5) : 1;
     this.ramp.rotation.x = destroyed ? -.09 : open && !lift ? (-.027 + (1 - openAtLanding) * -1.49) : -1.53 * close;
     const alarm = state.state === 'DEPLOYMENT' || lift;
-    this.alarm.emissiveIntensity = destroyed ? 0 : alarm ? 1.8 + .8 * Math.sin(tick * .24) : .34;
+    this.alarm.emissiveIntensity = destroyed ? 0 : alarm ? 1.8 + (reducedMotion ? 0 : .45 * Math.sin(tick * .24)) : .34;
     this.flame.color.setHex(phase === 'ATMOSPHERIC_ENTRY' ? 0xffa272 : 0x90cfff);
     this.nozzles.forEach((unit, i) => {
       const engine = albatross?.thrusters[i];
@@ -170,16 +180,26 @@ export class AlbatrossView {
       unit.smoke.scale.setScalar(.5 + drift);
       (unit.smoke.material as T.MeshBasicMaterial).opacity = .45 * (1 - drift);
     });
-    this.dust.visible = phase === 'TOUCHDOWN' && elapsed > .35 && elapsed < .98;
+    const touchdownWash = phase === 'TOUCHDOWN' ? (elapsed - .08) / .78 : -1;
+    const departureWash = lift ? liftProgress / .35 : -1;
+    const spread = Math.max(touchdownWash, departureWash);
+    this.dust.visible = this.root.visible && !state.result && !destroyed && spread > 0 && spread < 1;
+    this.dust.count = 0;
     if (this.dust.visible) {
-      const spread = (elapsed - .35) / .63;
-      this.dust.count = low ? 14 : 32;
-      this.dustMaterial.opacity = .26 * (1 - spread);
+      const profile = DOWNWASH[world.planetId as keyof typeof DOWNWASH] ?? DOWNWASH['green-plains'];
+      const active = albatross ? albatross.thrusters.filter(({ state }) => state !== 'DESTROYED').length / 4 : 1;
+      this.dust.count = reducedMotion ? 8 : low ? 14 : quality === GRAPHICS_QUALITY.high ? 32 : 22;
+      this.dustMaterial.color.setHex(profile.tint);
+      this.dustMaterial.opacity = .24 * Math.sin(Math.PI * spread) * active * (reducedMotion ? .5 : 1);
+      const { x, y, z } = this.root.position;
       for (let i = 0; i < this.dust.count; i++) {
         const angle = i * 2.39996;
-        const radius = 3 + spread * (5 + i % 7);
-        unit.position.set(Math.cos(angle) * radius, .17 + spread * (i % 3) * .4, Math.sin(angle) * radius);
-        unit.scale.setScalar(.55 + spread * 1.2);
+        const radius = 3 + spread * (5 + i % 7) * profile.width;
+        const dx = Math.cos(angle) * radius, dz = Math.sin(angle) * radius;
+        const height = groundHeight(world, x + dx, z + dz) - y + .17 + spread * (i % 3) * profile.height;
+        unit.position.set(dx, height, dz);
+        const size = (.43 + spread * .85) * profile.width;
+        unit.scale.set(size, size * .42, size);
         unit.updateMatrix();
         this.dust.setMatrixAt(i, unit.matrix);
       }

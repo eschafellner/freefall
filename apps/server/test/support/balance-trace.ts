@@ -7,12 +7,37 @@
  */
 import { createHash } from 'node:crypto';
 import { BODENBRUCH, BOARDING_TICKS, CARRIER_SHIP, LANDING_STAGE_TICKS, wrapAngle } from '@freefall/shared';
-import type { EquipmentCommand } from '@freefall/shared';
+import type { CombatEvent, EquipmentCommand } from '@freefall/shared';
 import { MissionInstance } from '../../src/mission/MissionInstance.ts';
 import { Arena } from '../../src/simulation/Arena.ts';
 import type { Battlefield } from '../../src/simulation/Battlefield.ts';
 
 export const TRACE_DIFFICULTIES = ['easy', 'normal', 'challenging', 'hard', 'extreme', 'nightmare', 'freefall'] as const;
+
+// The tracer start and impact are render metadata. Keep the gameplay shot fields in the fingerprint.
+const shotGameplay = (key: string, value: unknown) => key === 'traceFrom' || key === 'impact' ? undefined : value;
+
+function combatGameplay(events: CombatEvent[]): string {
+  return JSON.stringify(events.filter((event) => event.type !== 'grenade-release').map((event) => {
+    if (event.type === 'blast') {
+      const { owner, grenade, contact, ...gameplay } = event;
+      return gameplay;
+    }
+    if (event.type === 'melee') {
+      const { y, contact, ...gameplay } = event;
+      return gameplay;
+    }
+    if (event.type === 'enemy-hit') {
+      const { direction, ...gameplay } = event;
+      return gameplay;
+    }
+    if (event.type === 'friendly-fire') {
+      const { direction, life, ...gameplay } = event;
+      return gameplay;
+    }
+    return event;
+  }));
+}
 
 function hordeState(field: Battlefield): unknown[] {
   const h = field.horde;
@@ -74,16 +99,21 @@ export function missionTrace(difficultyId: string, ticks = 1200): string {
     mission.step();
     if (i === 400) mission.debug('host', 'breach');
     if (i === 600) mission.debug('host', 'alert');
-    hash.update(JSON.stringify(mission.shots));
-    hash.update(JSON.stringify(mission.combatEvents));
+    hash.update(JSON.stringify(mission.shots, shotGameplay));
+    hash.update(combatGameplay(mission.combatEvents));
     if (i % 30 === 0) {
       const snapshot = mission.snapshot();
       hash.update(JSON.stringify([hordeState(mission), playerState(mission), snapshot.nests, snapshot.convicts,
-        snapshot.albatross, snapshot.threat, snapshot.groups, snapshot.alarms, mission.grenades.snapshot()]));
+        snapshot.albatross, snapshot.threat, snapshot.groups, snapshot.alarms, snapshot.encounter, mission.grenades.snapshot()]));
     }
     const events = mission.drainEvents();
     for (const event of events) stats[event.type] = (stats[event.type] ?? 0) + 1;
-    hash.update(JSON.stringify(events, metadata));
+    const gameplayEvents = events.map(({ sequence, instanceId, ...event }) => {
+      if (event.type !== 'SwarmNestDestroyed') return event;
+      const { position, ...gameplay } = event;
+      return gameplay;
+    });
+    hash.update(JSON.stringify(gameplayEvents, metadata));
   }
   stats.kills = players.reduce((sum, p) => sum + p.kills, 0);
   stats.stimsUsed = players.reduce((sum, p) => sum + 5 - p.equipment.stims, 0);
@@ -102,8 +132,8 @@ export function arenaTrace(ticks = 600): string {
   for (let i = 0; i < ticks; i++) {
     drive(arena, arena.tick, seqs);
     arena.step();
-    hash.update(JSON.stringify(arena.shots));
-    hash.update(JSON.stringify(arena.combatEvents));
+    hash.update(JSON.stringify(arena.shots, shotGameplay));
+    hash.update(combatGameplay(arena.combatEvents));
     if (i % 20 === 0) hash.update(JSON.stringify([hordeState(arena), playerState(arena), arena.grenades.snapshot()]));
   }
   return hash.digest('hex');

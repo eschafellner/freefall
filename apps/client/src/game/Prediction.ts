@@ -1,4 +1,7 @@
-import { BALANCE, advancePosture, applyPostureInput, constrainTether, copyPosture, newPosture } from '@freefall/shared';
+import {
+  BALANCE, advancePosture, applyPostureInput, constrainTether, copyPosture, diveEnvelope,
+  groundHeight, isGroundPosture, lerpAngle, newPosture, postureCollider, postureSweep, sampleDive,
+} from '@freefall/shared';
 import type { PlayerInput, PlayerState, PositionXZ, PostureState, WorldDefinition } from '@freefall/shared';
 
 /** Corrections above this distance are shown at once instead of being blended (teleport-sized). */
@@ -29,6 +32,7 @@ export class Prediction {
   visualTick = 0;
   private previousPosture = this.posture;
   private tick = 0;
+  private readonly correctionOrigin = { x: 0, y: 0, z: 0 };
 
   /** Reconciliation telemetry. Counted for every server confirmation that moved the prediction. */
   readonly stats = { corrections: 0, lastCorrection: 0, maxCorrection: 0, snaps: 0 };
@@ -39,22 +43,27 @@ export class Prediction {
   private alive = false;
   private ready = false;
   private errorX = 0;
-  private errorY = 0;
   private errorZ = 0;
 
   private move(input: PlayerInput): void {
     if (this.frozen) return;
     this.tick++;
     advancePosture(this.position, this.posture, this.tick, this.balance, this.world, this.tether);
-    applyPostureInput(this.position, this.posture, input.posture && input.life !== this.life
-      ? { ...input, posture: undefined } : input, this.tick, this.balance, this.world, this.tether);
+    // Like the server: an input of an earlier life is acknowledged but does not move the operator.
+    if (input.life !== undefined && input.life !== this.life) return;
+    applyPostureInput(this.position, this.posture, input, this.tick, this.balance, this.world, this.tether);
   }
 
   /** Predicted inputs the server has not acknowledged yet (network round trip plus server input buffer). */
   get unacknowledged(): number { return this.pending.length; }
 
   /** Current visual offset from the interpolated prediction in meters. */
-  get error(): number { return Math.hypot(this.errorX, this.errorY, this.errorZ); }
+  get error(): number { return Math.hypot(this.errorX, this.errorZ); }
+
+  awaitSnapshot(): void {
+    this.pending.length = 0;
+    this.ready = false;
+  }
 
   confirm(player: PlayerState, serverTick = this.tick): void {
     const snap = !this.ready || this.life !== player.life || this.alive !== (player.hp > 0);
@@ -69,7 +78,7 @@ export class Prediction {
     this.position.z = player.z;
     this.position.y = player.y ?? 0;
     this.tick = serverTick;
-    this.posture = player.posture ? copyPosture(player.posture) : newPosture(player.yaw);
+    this.posture = player.posture ? copyPosture(player.posture) : newPosture(player.bodyYaw ?? player.yaw);
     while (this.pending[0] && this.pending[0].seq <= player.ack) this.pending.shift();
     if (snap) this.pending.length = 0;
     if (this.alive) for (const input of this.pending) this.move(input);
@@ -80,7 +89,7 @@ export class Prediction {
     if (snap || predicted !== this.posture.current) this.previousPosture = copyPosture(this.posture);
     if (snap || size > SNAP_DISTANCE) {
       // Discontinuity: new life, death, first state or a real desync. Show the authoritative state.
-      this.errorX = this.errorY = this.errorZ = 0;
+      this.errorX = this.errorZ = 0;
       this.previous.x = this.position.x;
       this.previous.z = this.position.z;
       this.previous.y = this.position.y;
@@ -98,7 +107,6 @@ export class Prediction {
     this.previous.y -= dy;
     this.errorX += dx;
     this.errorZ += dz;
-    this.errorY += dy;
   }
 
   step(input: PlayerInput): void {
@@ -119,17 +127,41 @@ export class Prediction {
     const smooth = Math.exp(-dt * CORRECTION_RATE);
     this.errorX *= smooth;
     this.errorZ *= smooth;
-    this.errorY *= smooth;
     if (Math.abs(this.errorX) < 1e-5) this.errorX = 0;
-    if (Math.abs(this.errorY) < 1e-5) this.errorY = 0;
     if (Math.abs(this.errorZ) < 1e-5) this.errorZ = 0;
     const t = Math.max(0, Math.min(1, alpha));
-    this.rendered.x = this.previous.x + (this.position.x - this.previous.x) * t + this.errorX;
-    this.rendered.z = this.previous.z + (this.position.z - this.previous.z) * t + this.errorZ;
-    this.rendered.y = Math.max(0, this.previous.y + (this.position.y - this.previous.y) * t + this.errorY);
+    let x = this.previous.x + (this.position.x - this.previous.x) * t;
+    let z = this.previous.z + (this.position.z - this.previous.z) * t;
     const division = this.posture.current === 'DIVING' || this.posture.current === 'GETTING_UP' ? 0 : 1;
     this.visualPosture = t < division ? this.previousPosture : this.posture;
+    if (isGroundPosture(this.posture.current) && this.previousPosture.current === this.posture.current &&
+        this.previousPosture.started === this.posture.started && this.previousPosture.yaw !== this.posture.yaw) {
+      this.visualPosture = { ...this.posture,
+        yaw: lerpAngle(this.previousPosture.yaw, this.posture.yaw, t),
+      };
+    }
     this.visualTick = this.tick - 1 + t;
+    const { landedDive } = this.posture;
+    const dive = this.visualPosture.current === 'DIVING' ? this.posture.dive ?? landedDive : undefined;
+    let y = this.previous.y + (this.position.y - this.previous.y) * t;
+    if (dive) {
+      // Reconciliation can retime the dive. Anchor the blend to its corrected fixed-tick path.
+      sampleDive(dive, this.visualTick, this.rendered);
+      ({ x, y, z } = this.rendered);
+    } else if (this.position.y === 0) y = 0;
+    let fraction = 1;
+    if ((this.errorX || this.errorZ) && (dive || isGroundPosture(this.visualPosture.current) ||
+        this.visualPosture.current === 'GETTING_UP')) {
+      this.correctionOrigin.x = x;
+      this.correctionOrigin.y = groundHeight(this.world, x, z);
+      this.correctionOrigin.z = z;
+      const shape = dive ? diveEnvelope(dive.landing, this.balance) : postureCollider(this.visualPosture, this.visualTick, this.balance);
+      fraction = postureSweep(this.correctionOrigin, this.errorX, this.errorZ, (this.world?.terrain ? this.correctionOrigin.y + (dive ? y : 0) : y) + shape.height,
+        shape, this.visualPosture.yaw, this.world, this.tether);
+    }
+    this.rendered.x = x + this.errorX * fraction;
+    this.rendered.z = z + this.errorZ * fraction;
     if (this.tether) constrainTether(this.rendered, this.tether, this.tether.radius);
+    this.rendered.y = this.world?.terrain ? groundHeight(this.world, this.rendered.x, this.rendered.z) + (dive ? y : 0) : y;
   }
 }

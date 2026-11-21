@@ -13,7 +13,9 @@ npm run dev
 
 Öffne die [Einsatzleitstelle](http://127.0.0.1:5173/) und erstelle einen Raum für **Operation Bodenbruch**. Mit **Carrier betreten** erfasst du die Maus. Geh zum holografischen Tisch in der Mitte der Messe und öffne ihn mit **E**. Wähle als Host **Dev’ Ault**, **Operation Bodenbruch** und eine der sieben Schwierigkeiten. Gib das Boarding frei. Geht gemeinsam durch die vordere Luftschleuse in den Albatross 02 und bestätigt jeweils mit **E**.
 
-Nach der Landung aktiviert ihr die Relais Alpha und Bravo. Danach stehen Albatross und Extraktionsballon zur Wahl. Der Einsatz endet mit erfolgreicher Extraktion oder vollständigem Teamwipe. **Esc** gibt die Maus frei und öffnet das Menü. **Boreal Relay** bietet weiterhin **Arena betreten** und die Hordensteuerung.
+Für einen generierten Einsatz wählst du an derselben Konsole **Grüne Ebene**, **Wüste**, **Eiswelt** oder **Wald**. Optional kannst du einen Welt-Seed angeben. Wähle danach **Neuen Auftrag erzeugen** und gib das Boarding für den angezeigten Auftrag frei. [Planeten und Profile](docs/PLANET_PROFILES.md) · [Planet Art Bible](docs/PLANET_ART_BIBLE.md) · [Abnahmestand 7.7](docs/MILESTONE_7_7_FINAL_ACCEPTANCE.md)
+
+In Operation Bodenbruch aktiviert ihr nach der Landung die Relais Alpha und Bravo. Danach stehen Albatross und Extraktionsballon zur Wahl. Der Einsatz endet mit erfolgreicher Extraktion oder vollständigem Teamwipe. **Esc** gibt die Maus frei und öffnet das Menü. **Boreal Relay** bietet weiterhin **Arena betreten** und die Hordensteuerung.
 
 Server und Client lassen sich auch in zwei Terminals starten.
 
@@ -38,7 +40,7 @@ npm run dev:client   # Vite auf 127.0.0.1:5173
 | Esc | Maus freigeben und Menü öffnen |
 | F2 | Live-Telemetrie ein- oder ausblenden |
 
-Treffer erzeugen einen sichtbaren Einschlag und ändern das Fadenkreuz. Friendly Fire ist mit 30 % Schaden aktiv (blaues Fadenkreuz bei Eigenbeschuss). Kampfsystem und Werte: [Combat Balance 7.2B](docs/COMBAT_BALANCE_7_2B.md). In Boreal Relay setzt der Server ausgeschaltete Spieler nach drei Simulationssekunden zurück. Bei einem vollständigen Truppausfall endet Bodenbruch. Bereits erfüllte Hauptziele sichern die Basis-EP.
+Serverbestätigte Weltkontakte erzeugen materialabhängige Partikel und räumliche Einschlaggeräusche. Bestätigte Schabentreffer und Eigenbeschuss haben eigene Fadenkreuzmarker. Friendly Fire ist mit 30 % Schaden aktiv. [Trefferpräsentation 7.8B](docs/MILESTONE_7_8B_FINAL_ACCEPTANCE.md). Kampfsystem und Werte: [Combat Balance 7.2B](docs/COMBAT_BALANCE_7_2B.md). In Boreal Relay setzt der Server ausgeschaltete Spieler nach drei Simulationssekunden zurück. Bei einem vollständigen Truppausfall endet Bodenbruch. Bereits erfüllte Hauptziele sichern die Basis-EP.
 
 ## Vier Spieler testen
 
@@ -82,6 +84,18 @@ Der Prototyp ist für lokale Tests ausgelegt. Fortschritt, Inventar, Accounts, S
 [Architektur](docs/ARCHITECTURE.md) · [Performance und Messprotokoll](docs/PERFORMANCE.md) · [Boreal Relay und Rendering](docs/VISUAL_STYLE.md) · [Spielercharakter](docs/CHARACTER_SYSTEM.md) · [Fraktionen](docs/FACTIONS.md) · [Missionssystem](docs/MISSION_SYSTEM.md) · [Operation Bodenbruch](docs/MISSIONS/OPERATION_BODENBRUCH.md)
 
 [Skyfall Carrier](docs/SKYFALL_CARRIER.md) · [Game Flow](docs/GAME_FLOW.md) · [Extraktion](docs/EXTRACTION_SYSTEM.md) · [Missionsbelohnungen](docs/MISSION_REWARDS.md)
+
+## Combat Presentation und Multiplayer-Abnahme · 7.8E
+
+Waffen-, Treffer-, Explosions-, Nahkampf- und Missionsereignisse verwenden gemeinsame Regeln für Deduplizierung und Wiederverbindung. **F2** zeigt Ereignisalter und Posenwartezeit. Die finale Freigabe steht aus. [Abnahmebericht](docs/MILESTONE_7_8_FINAL_ACCEPTANCE.md) · [Testmatrix](docs/MILESTONE_7_8E_TEST_MATRIX.md) · [Performance](docs/MILESTONE_7_8E_PERFORMANCE_REPORT.md)
+
+## Milestone 7.8D
+
+Die taktische Kamera verwendet geglättete Haltungsanker, Terrain- und Deckungsprüfung. Das Combat-HUD zeigt bestätigte Treffer, Schadensrichtung und taktischen Magazinverlust. Deployment, Nachschub, Schwarmnester und beide Extraktionen nutzen priorisierte Missionsmeldungen und bestehende audiovisuelle Effekte. [Audit](docs/MILESTONE_7_8D_AUDIT.md) · [Playtest](docs/MILESTONE_7_8D_PLAYTEST.md) · [Abnahme](docs/MILESTONE_7_8D_FINAL_ACCEPTANCE.md)
+
+## Milestone 7.8C
+
+Serverbestätigte Granaten und Kolbenstöße lösen materialabhängige Partikel, räumliches Audio und kurze Kameraimpulse aus. **F2** zeigt aktive Granaten, Explosionspools und bestätigte Nahkampftreffer. [Abschlussbericht und Release Gates](docs/MILESTONE_7_8C_FINAL_ACCEPTANCE.md) · [Playtest auf vier Planeten](docs/MILESTONE_7_8C_PLAYTEST.md)
 
 ## Milestone 7.2A
 

@@ -1,0 +1,30 @@
+# 7.7E · Audioabnahme
+
+Chromium 153.0.8010.12 lieferte messbaren Stereoausgang für alle vier Soundscapes. Chromium und Firefox 159.0.1 dekodierten je alle 124 lokalen Ogg/MP3-Dateien. Die Audio-Lab-Probe erzwang für `ice-bed` erfolgreich den MP3-Fallback. Alle 62 Master mit Quellen, Formaten, Bearbeitung, Laufzeit, Pfad und Prüfsummen sind weiterhin im Katalog erfasst. Kein Asset wurde gekauft oder ergänzt. [Audio-Katalog](AUDIO_ASSET_CATALOG.md) · [Lizenzprüfung](AUDIO_ASSET_LICENSING.md) · [Dekodierung und Ausgang](playtest/7-7e/audio.json)
+
+| Soundscape | Wetter-Auswahl im Audio Lab | Charakter laut Quellen und Mischung | Gemessener Stereo-RMS am Lab-Ausgang, L/R |
+| --- | --- | --- | --- |
+| `ice-bed` + `ice-wind` | `windy-snow` | Schneesturm und kalt gefilterter Wind, seltene Eisbrüche | 0,00117 / 0,00123 |
+| `desert-bed` + `desert-wind` | `light-dust-gusts` | Trockener Mojave-Wind, Sand-Foley | 0,00642 / 0,00777 |
+| `plains-bed` + `plains-wind` | `windy` | Offene Wiese, Insektenatmo und Grasrascheln | 0,00176 / 0,00123 |
+| `forest-bed` + `forest-wind` | `windy-forest` | Dichtes Kronenrauschen mit Holz-Details | 0,00143 / 0,00195 |
+
+Die RMS-Werte sind Momentaufnahmen kurz nach Einblendung. Die vollständige Integration wurde auf allen Planeten mit jeweils zwei aktiven Soundscape-Stimmen im Browser geprüft. Der maximale Sample-Peak der dekodierten Dateien lag bei 0,689 FS in `ice-wind.ogg`. Für jeden Loop mit überblendeter Naht wurden im dekodierten 48-kHz-Signal der Sample-Sprung am Loop-Punkt und der größte gewöhnliche Sample-Abstand in den umliegenden 50-ms-Fenstern erfasst. Der größte Sprung unter den acht Planeten-Layern lag bei 0,0307 FS in `plains-wind.mp3` gegenüber 0,0546 FS lokal. Die größte Naht aller Loops lag bei 0,0616 FS in `recovery.mp3` gegenüber 0,0872 FS lokal. Die Messung validiert Signal und Übergangswerte. Wahrnehmbarkeit, LUFS des vollständigen Mischsignals und Ermüdung brauchen eine eigene Abnahme.
+
+## Spielmix und Priorität
+
+Der Firefox-Einsatz-Smoke bestätigte nach der Anpassung der Web-Audio-Positionsschnittstelle zwei aktive Soundscape-Quellen in der Eiswelt und einen laufenden Kontext ohne gemeldeten Fehler. Die native Eingabe mit Pointer Lock bleibt in Firefox separat zu prüfen. [Browser-Gegenprobe](playtest/7-7e/browser-compatibility.json)
+
+- Der vorhandene Mixer verbindet Master, Ambience, Weather, World (`environment`), Combat (`weapons`) und UI mit begrenzten Stimmen und Spitzenschutz. Ein eigener Musikbus ist nicht implementiert. Für nahe Gefahren sind vier Plätze, für dringende UI-Hinweise zwei reserviert. Die Lab-Probe mit 1.000 gleichzeitigen Ereignissen meldete 978 verworfene Hintergrundereignisse und bis zu 23/28 Stimmen in der gemeldeten Stichprobe. Die Regression prüft die Reservierung der beiden Alarmplätze. Ducking senkt World, Wetter und Ambience weich ab und lässt sie nach dem Ereignis ausklingen. [Mixer](AUDIO_MIXING.md) · [Voice Budget](HORDE_AUDIO_PRIORITIZATION.md)
+- Der Panner-Test mit ±8 m lieferte auf der Quellseite etwa das 4,2-Fache des RMS des anderen Kanals. Bei +29 m erreichte der rechte Kanal rund 23 % des Pegels bei +8 m. Die Hörposition folgt der geglätteten Operatorhöhe für Crouch, Dive und Bodenhaltung und nutzt die Blickrichtung. Bewegte Schaben und die Fahrzeug-Loops erhalten räumliche Positionen aus der Darstellung, Missionsalarme bleiben zentral. Es gibt keine Occlusion-Raycasts. [Räumliches Audio](SPATIAL_AUDIO.md)
+- Schritte verwenden sichtbare Terrain-Gewichte und wählen Material-Takes für Schnee, Eis, Sand, Gras, Erde, Fels oder Waldboden. Nach Dive zählt die serverseitig bestätigte Landungs-ID. Bewegung im Stand und ein nach Reconnect bereits bekannter Dive erzeugen keine zweite Landung. [Oberflächen-Audio](SURFACE_AUDIO.md)
+- Windup und aktive Phase einer Schabenattacke verwenden den neueren autoritativen Horde-Frame. Ein abgebrochener oder entfernter Angriff kann aus dem alten Frame keinen Cue starten. Pro Scan spielen höchstens zwei nahe Attack-Cues. Die durchschnittliche Voice-Auslastung steigt dadurch nicht linear mit 1.000 Gegnern. Die Waldprobe bestätigte an allen vier Clients Annahmen von Windup- und Impact-Cues. [Kampfaudio](ENEMY_COMBAT_AUDIO.md) · [Rohdaten](playtest/7-7e/performance.json)
+- Das Carrier-Brummen, Albatross-Triebwerk, der Bergungsjäger, Aufsetzen, Nestaktivität und Missionssignale sind im normalen Spielpfad angeschlossen. Der Nachschub stammt aus den stationären Rumpfcontainern der vorhandenen Albatross 02. Der Server bestätigt den Transfer und der Client spielt den bestehenden Resupply-Cue. Resultat und Raumaustritt wurden nach Fade mit null Stimmen beobachtet. [Audioarchitektur](AUDIO_ARCHITECTURE.md) · [Missionsnachweise](playtest/7-7e/captures.json)
+
+## Offene Hörabnahme
+
+**NOT TESTED** für menschliches Hören. Ein Kopfhörer- und Blindvergleich wurde in dieser Sitzung nicht durchgeführt. Für die Abnahme `/?audioLab` öffnen und einer Testperson die vier gemischten Soundscapes in zufälliger Reihenfolge bei festem Masterpegel je 30–60 Sekunden vorspielen. Danach je einen stabilen Loop über den dokumentierten Umlauf, den Direktwechsel von zwei Planeten und die isolierten Oberflächen und Pannerpositionen prüfen. In einer echten Vierer-Mission Einsatzfunk, Nahangriffe, Nachladen und Extraktion bei aktiviertem Wetter anhören. Hörbare Klicks, Pumpen, falsch lokalisierte Quellen und wahrgenommene Ermüdung mit Zeit und Szenario dokumentieren. [Reproduzierbare Lab-Messung](MILESTONE_7_7_FINAL_ACCEPTANCE.md)
+
+## Pegel am Spielausgang
+
+Zusätzlich zum Lab wurde der Hauptmix bei vier Clients auf dem Waldplaneten mit 1.000 simulierten Gegnern und `windy-forest` vermessen. Der höchste dekodierte Spielausgangs-Samplepeak betrug 0,827 FS. Keines der überlappenden Analysefenster hatte ein Sample bei oder über Vollaussteuerung. Die Wahrnehmbarkeit einzelner Cues, True Peak am Ausgabegerät und integrierte LUFS sind getrennte Hör- und Instrumentationsprüfungen. [Werte aller vier Clients](playtest/7-7e/additional-measurements.json)

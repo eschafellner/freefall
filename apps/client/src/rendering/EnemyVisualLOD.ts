@@ -1,9 +1,10 @@
 import * as T from 'three';
-import { MAX_ENEMIES, lerpAngle } from '@freefall/shared';
-import type { HordeFrame } from '@freefall/shared';
+import { MAX_ENEMIES, groundHeight, lerpAngle } from '@freefall/shared';
+import type { HordeFrame, WorldDefinition } from '@freefall/shared';
 import { combineParts, paintedPart } from './AgentMeshes.ts';
 import type { ContactShadows } from './ContactShadows.ts';
 import type { GraphicsQuality } from './GraphicsQuality.ts';
+import { enemyAttackPitch } from './EnemyAttackPose.ts';
 
 export interface EnemyPose {
   x: number;
@@ -95,7 +96,7 @@ export class EnemyVisualLOD {
   }
 
   draw(camera: T.Camera, a: HordeFrame | undefined, b: HordeFrame | undefined, alpha: number, now: number,
-    quality: GraphicsQuality, shadows: ContactShadows): void {
+    quality: GraphicsQuality, shadows: ContactShadows, world?: WorldDefinition): void {
     this.before = a;
     this.after = b;
     this.alpha = alpha;
@@ -109,13 +110,15 @@ export class EnemyVisualLOD {
       const near = quality.enemyNear ** 2;
       const far = quality.enemyFar ** 2;
       const shadow = quality.enemyShadowDistance ** 2;
+      const tick = a.tick + (b.tick - a.tick) * alpha;
       for (let i = 0; i < a.count; i++) {
         const id = a.id[i];
         if (this.eliminated.has(id)) continue;
         const other = b.byId.get(id);
         const x = other === undefined ? a.x[i] : a.x[i] + (b.x[other] - a.x[i]) * alpha;
         const z = other === undefined ? a.z[i] : a.z[i] + (b.z[other] - a.z[i]) * alpha;
-        this.bounds.center.set(x, 0.62, z);
+        const ground = groundHeight(world, x, z);
+        this.bounds.center.set(x, ground + .62, z);
         if (!this.frustum.intersectsSphere(this.bounds)) continue;
         const dx = x - camera.position.x;
         const dz = z - camera.position.z;
@@ -126,8 +129,9 @@ export class EnemyVisualLOD {
         const gait = moving && tier < 2 ? Math.sin(now / 88 + id * 3.79) * (tier === 0 ? 0.055 : 0.025) : 0;
         const reaction = tier < 2 ? Math.max(0, (this.reactions.get(id) ?? 0) - now) / 135 : 0;
         const yaw = -(other === undefined ? a.yaw[i] : lerpAngle(a.yaw[i], b.yaw[other], alpha));
-        this.transform.position.set(x, Math.abs(gait) * 0.44, z);
-        this.transform.rotation.set(tier === 0 ? gait * 0.75 - reaction * 0.2 : 0, yaw, gait);
+        this.transform.position.set(x, ground + Math.abs(gait) * .44, z);
+        const attackPitch = tier < 2 ? enemyAttackPitch(a, i, b, other, tick) : 0;
+        this.transform.rotation.set(attackPitch + (tier === 0 ? gait * 0.75 - reaction * 0.2 : 0), yaw, gait);
         this.transform.updateMatrix();
         mesh.setMatrixAt(mesh.count, this.transform.matrix);
         const variation = 0.78 + (id % 11) * 0.022;

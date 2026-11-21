@@ -1,0 +1,3964 @@
+{
+  "green-plains": [
+    {
+      "planet": "green-plains",
+      "x": -3,
+      "y": 5.18,
+      "z": 15,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "green-plains-clear.png",
+      "camera": {
+        "position": [
+          0.5472888712591351,
+          7.854618594986812,
+          18.296385161678845
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.315658726780511,
+          0.01896228381041395,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 400,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 2,
+        "current": {
+          "weather": "clear",
+          "wind": {
+            "direction": 2.6,
+            "strength": 0.25,
+            "gust": 0.14,
+            "frequency": 0.065,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 390,
+        "durationTicks": 0
+      },
+      "enemies": 39
+    },
+    {
+      "capture": "green-plains-transition.png",
+      "camera": {
+        "position": [
+          0.5472888712591351,
+          7.854618594986812,
+          18.296385161678845
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.315658726780511,
+          0.01896228381041395,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 494,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 3,
+        "current": {
+          "weather": "clear",
+          "wind": {
+            "direction": 2.6,
+            "strength": 0.25,
+            "gust": 0.14,
+            "frequency": 0.065,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 404,
+        "durationTicks": 180,
+        "target": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        }
+      },
+      "enemies": 38
+    },
+    {
+      "capture": "green-plains.png",
+      "camera": {
+        "position": [
+          0.5472888712591351,
+          7.854618594986812,
+          18.296385161678845
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.315658726780511,
+          0.01896228381041395,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 584,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 4,
+        "current": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 584,
+        "durationTicks": 0
+      },
+      "enemies": 35
+    },
+    {
+      "capture": "green-plains-motion.png",
+      "camera": {
+        "position": [
+          0.5472888712591351,
+          7.854618594986812,
+          18.296385161678845
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.315658726780511,
+          0.01896228381041395,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 602,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 4,
+        "current": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 584,
+        "durationTicks": 0
+      },
+      "enemies": 35
+    },
+    {
+      "capture": "green-plains-light-mist.png",
+      "camera": {
+        "position": [
+          0.5472888712591351,
+          7.854618594986812,
+          18.296385161678845
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.315658726780511,
+          0.01896228381041395,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 677,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 6,
+        "current": {
+          "weather": "light-mist",
+          "wind": {
+            "direction": 3.5,
+            "strength": 0.18,
+            "gust": 0.12,
+            "frequency": 0.113,
+            "turbulence": 0.20800000000000002
+          }
+        },
+        "startTick": 667,
+        "durationTicks": 0
+      },
+      "enemies": 36
+    },
+    {
+      "planet": "green-plains",
+      "weather": [
+        "clear",
+        "windy",
+        "light-mist"
+      ],
+      "time": "overcast-day"
+    },
+    {
+      "planet": "green-plains",
+      "audio": {
+        "voices": 3,
+        "peak": 3,
+        "dropped": 0,
+        "budget": 28,
+        "ambience": 2,
+        "combat": 0,
+        "spatial": 1,
+        "context": "running",
+        "duck": false,
+        "levels": {
+          "master": 0.8,
+          "weapons": 0.9,
+          "environment": 0.8,
+          "ambience": 0.8,
+          "weather": 0.8,
+          "ui": 0.7,
+          "muted": false,
+          "enabled": true
+        },
+        "buffers": 18,
+        "pcmMiB": 68.55322265625,
+        "loading": 0,
+        "errors": 0,
+        "loadMs": 94.59999999403954,
+        "decodeMs": 523.9000000059605,
+        "planet": "green-plains",
+        "weather": "windy",
+        "wind": "plains-wind",
+        "rate": 0,
+        "enemyMs": 0,
+        "enemyPeakMs": 0.20000000298023224,
+        "updateMs": 0,
+        "windups": 0,
+        "impacts": 0
+      }
+    },
+    {
+      "planet": "green-plains",
+      "x": -208,
+      "y": 11.5,
+      "z": 192,
+      "yaw": 0.8253768505207383
+    },
+    {
+      "capture": "green-plains-wide.png",
+      "camera": {
+        "position": [
+          -210.91837129796,
+          14.174618594986812,
+          195.86426221128158
+        ],
+        "quaternion": [
+          -0.054929780988922886,
+          -0.40035177956378704,
+          -0.02404997367100036,
+          0.9143974904422266
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 776,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 8,
+        "current": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 742,
+        "durationTicks": 0
+      },
+      "enemies": 41
+    },
+    {
+      "planet": "green-plains",
+      "x": 135,
+      "y": 7.71,
+      "z": 30,
+      "yaw": -0.4636476090008061
+    },
+    {
+      "capture": "green-plains-relay.png",
+      "camera": {
+        "position": [
+          137.90039547874127,
+          10.384618594986813,
+          33.87777249683275
+        ],
+        "quaternion": [
+          -0.058359908710555866,
+          0.22933948934206633,
+          0.013776905616373302,
+          0.97149766677808
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 800,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 8,
+        "current": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 742,
+        "durationTicks": 0
+      },
+      "enemies": 41
+    },
+    {
+      "planet": "green-plains",
+      "x": -3,
+      "y": 5.18,
+      "z": 15,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "green-plains-close-crouch.png",
+      "camera": {
+        "position": [
+          -0.07985216156906727,
+          9.893963746048124,
+          17.46019711790791
+        ],
+        "quaternion": [
+          -0.3181617517005567,
+          0.2979136899160995,
+          0.10605391723351891,
+          0.8937410697482988
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 848,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 8,
+        "current": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 742,
+        "durationTicks": 0
+      },
+      "enemies": 42
+    },
+    {
+      "capture": "green-plains-terrain.png",
+      "camera": {
+        "position": [
+          -0.07985216156906727,
+          10.31254106020608,
+          17.46019711790791
+        ],
+        "quaternion": [
+          -0.3181617517005567,
+          0.2979136899160995,
+          0.10605391723351891,
+          0.8937410697482988
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 873,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 8,
+        "current": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 742,
+        "durationTicks": 0
+      },
+      "enemies": 42
+    },
+    {
+      "planet": "green-plains",
+      "x": -121,
+      "y": 0,
+      "z": 152,
+      "yaw": 0
+    },
+    {
+      "capture": "green-plains-combat.png",
+      "camera": {
+        "position": [
+          -120.14,
+          2.67461743732321,
+          156.76548145209856
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 893,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 8,
+        "current": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 742,
+        "durationTicks": 0
+      },
+      "enemies": 45
+    },
+    {
+      "capture": "green-plains-prone.png",
+      "camera": {
+        "position": [
+          -120.14,
+          1.7421752704318407,
+          151.01706480357234
+        ],
+        "quaternion": [
+          -0.059964006479444644,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 51.230888993706074,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 929,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 8,
+        "current": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 742,
+        "durationTicks": 0
+      },
+      "enemies": 45
+    },
+    {
+      "capture": "green-plains-supine.png",
+      "camera": {
+        "position": [
+          -120.14,
+          1.8377325394738337,
+          156.35387372807776
+        ],
+        "quaternion": [
+          -0.059964006479444644,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 56.07729734532681,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 1061,
+      "atmosphere": {
+        "instanceId": "80c747c5-2154-4cde-93cf-ba9007164bf2",
+        "worldId": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "profileId": "green-plains.daylight.v1",
+        "version": 1,
+        "seed": 1378957931,
+        "originTick": 67,
+        "timeOfDay": "overcast-day",
+        "revision": 8,
+        "current": {
+          "weather": "windy",
+          "wind": {
+            "direction": 3.2,
+            "strength": 0.65,
+            "gust": 0.28,
+            "frequency": 0.097,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 742,
+        "durationTicks": 0
+      },
+      "enemies": 46
+    },
+    {
+      "planet": "green-plains",
+      "x": -141.32,
+      "y": 0,
+      "z": 156,
+      "yaw": 0
+    },
+    {
+      "planet": "green-plains",
+      "resupply": "supply.port",
+      "remainingCharges": 3
+    },
+    {
+      "planet": "green-plains",
+      "x": 132,
+      "y": 7.72,
+      "z": 23,
+      "yaw": 0
+    },
+    {
+      "planet": "green-plains",
+      "x": -138,
+      "y": 0,
+      "z": 157,
+      "yaw": 0
+    },
+    {
+      "capture": "green-plains-result.png",
+      "camera": {
+        "position": [
+          -137.14,
+          2.674618594986813,
+          161.76548145209856
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 61.99240836187551,
+        "resolution": [
+          864,
+          531
+        ]
+      },
+      "planet": "green-plains",
+      "world": {
+        "id": "world.generated.68c909076155c5e5",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 17,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.a58cebc7fb48a707",
+      "quality": "medium",
+      "timeOfDay": "overcast-day",
+      "tick": 1643,
+      "enemies": 46
+    },
+    {
+      "planet": "green-plains",
+      "result": "extracted",
+      "method": "albatross",
+      "durationTicks": 1566,
+      "wallSeconds": 52.803537722
+    },
+    {
+      "planet": "green-plains",
+      "resourceExit": {
+        "before": [
+          212,
+          55
+        ],
+        "after": [
+          107,
+          46
+        ],
+        "voices": 0
+      }
+    }
+  ],
+  "desert": [
+    {
+      "planet": "desert",
+      "x": -108,
+      "y": -2.57,
+      "z": -53,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "desert-clear.png",
+      "camera": {
+        "position": [
+          -104.45271112874086,
+          0.10461859498681314,
+          -49.70361483832115
+        ],
+        "quaternion": [
+          -0.056886851431241836,
+          0.31565872678051127,
+          0.018962283810413965,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 391,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 2,
+        "current": {
+          "weather": "dry-clear",
+          "wind": {
+            "direction": 0.6,
+            "strength": 0.23,
+            "gust": 0.11,
+            "frequency": 0.065,
+            "turbulence": 0.20400000000000001
+          }
+        },
+        "startTick": 381,
+        "durationTicks": 0
+      },
+      "enemies": 43
+    },
+    {
+      "capture": "desert-transition.png",
+      "camera": {
+        "position": [
+          -104.45271112874086,
+          0.10461859498681292,
+          -49.70361483832115
+        ],
+        "quaternion": [
+          -0.056886851431241836,
+          0.31565872678051127,
+          0.018962283810413965,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 486,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 3,
+        "current": {
+          "weather": "dry-clear",
+          "wind": {
+            "direction": 0.6,
+            "strength": 0.23,
+            "gust": 0.11,
+            "frequency": 0.065,
+            "turbulence": 0.20400000000000001
+          }
+        },
+        "startTick": 395,
+        "durationTicks": 180,
+        "target": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        }
+      },
+      "enemies": 39
+    },
+    {
+      "capture": "desert.png",
+      "camera": {
+        "position": [
+          -104.45271112874086,
+          0.10461859498681292,
+          -49.70361483832115
+        ],
+        "quaternion": [
+          -0.056886851431241836,
+          0.31565872678051127,
+          0.018962283810413965,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 575,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 4,
+        "current": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        },
+        "startTick": 575,
+        "durationTicks": 0
+      },
+      "enemies": 38
+    },
+    {
+      "capture": "desert-motion.png",
+      "camera": {
+        "position": [
+          -104.45271112874086,
+          0.10461859498681292,
+          -49.70361483832115
+        ],
+        "quaternion": [
+          -0.056886851431241836,
+          0.31565872678051127,
+          0.018962283810413965,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 593,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 4,
+        "current": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        },
+        "startTick": 575,
+        "durationTicks": 0
+      },
+      "enemies": 38
+    },
+    {
+      "capture": "desert-dust-haze.png",
+      "camera": {
+        "position": [
+          -104.45271112874086,
+          0.10461859498681292,
+          -49.70361483832115
+        ],
+        "quaternion": [
+          -0.056886851431241836,
+          0.31565872678051127,
+          0.018962283810413965,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 667,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 6,
+        "current": {
+          "weather": "dust-haze",
+          "wind": {
+            "direction": 0.8999999999999999,
+            "strength": 0.42,
+            "gust": 0.22,
+            "frequency": 0.081,
+            "turbulence": 0.248
+          }
+        },
+        "startTick": 657,
+        "durationTicks": 0
+      },
+      "enemies": 39
+    },
+    {
+      "planet": "desert",
+      "weather": [
+        "dry-clear",
+        "light-dust-gusts",
+        "dust-haze"
+      ],
+      "time": "day"
+    },
+    {
+      "planet": "desert",
+      "audio": {
+        "voices": 4,
+        "peak": 4,
+        "dropped": 0,
+        "budget": 28,
+        "ambience": 2,
+        "combat": 0,
+        "spatial": 2,
+        "context": "running",
+        "duck": false,
+        "levels": {
+          "master": 0.8,
+          "weapons": 0.9,
+          "environment": 0.8,
+          "ambience": 0.8,
+          "weather": 0.8,
+          "ui": 0.7,
+          "muted": false,
+          "enabled": true
+        },
+        "buffers": 18,
+        "pcmMiB": 69.18310546875,
+        "loading": 0,
+        "errors": 0,
+        "loadMs": 248,
+        "decodeMs": 615,
+        "planet": "desert",
+        "weather": "light-dust-gusts",
+        "wind": "desert-wind",
+        "rate": 0,
+        "enemyMs": 0,
+        "enemyPeakMs": 0.10000000894069672,
+        "updateMs": 0,
+        "windups": 0,
+        "impacts": 0
+      }
+    },
+    {
+      "planet": "desert",
+      "x": 80,
+      "y": 7.29,
+      "z": 0,
+      "yaw": -1.5707963267948966
+    },
+    {
+      "capture": "desert-wide.png",
+      "camera": {
+        "position": [
+          84.76548145209856,
+          9.964618594986813,
+          -0.8599999999999997
+        ],
+        "quaternion": [
+          -0.04240095560872937,
+          0.705834370772256,
+          0.04240095560872936,
+          0.7058343707722561
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 764,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 8,
+        "current": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        },
+        "startTick": 732,
+        "durationTicks": 0
+      },
+      "enemies": 39
+    },
+    {
+      "planet": "desert",
+      "x": -107,
+      "y": -3.46,
+      "z": -11,
+      "yaw": -0.4636476090008061
+    },
+    {
+      "capture": "desert-relay.png",
+      "camera": {
+        "position": [
+          -104.09960452125871,
+          -0.7853814050131872,
+          -7.1222275031672515
+        ],
+        "quaternion": [
+          -0.05835990871055587,
+          0.22933948934206627,
+          0.0137769056163733,
+          0.97149766677808
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 788,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 8,
+        "current": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        },
+        "startTick": 732,
+        "durationTicks": 0
+      },
+      "enemies": 39
+    },
+    {
+      "planet": "desert",
+      "x": -108,
+      "y": -2.57,
+      "z": -53,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "desert-close-crouch.png",
+      "camera": {
+        "position": [
+          -105.07985216156906,
+          2.1450109677761002,
+          -50.53980288209209
+        ],
+        "quaternion": [
+          -0.3181617517005568,
+          0.2979136899160996,
+          0.106053917233519,
+          0.8937410697482988
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 833,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 8,
+        "current": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        },
+        "startTick": 732,
+        "durationTicks": 0
+      },
+      "enemies": 40
+    },
+    {
+      "capture": "desert-terrain.png",
+      "camera": {
+        "position": [
+          -105.07985216156906,
+          2.5554163144660067,
+          -50.53980288209209
+        ],
+        "quaternion": [
+          -0.3181617517005568,
+          0.2979136899160996,
+          0.106053917233519,
+          0.8937410697482988
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 853,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 8,
+        "current": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        },
+        "startTick": 732,
+        "durationTicks": 0
+      },
+      "enemies": 40
+    },
+    {
+      "planet": "desert",
+      "x": -134,
+      "y": 0,
+      "z": 149,
+      "yaw": 0
+    },
+    {
+      "capture": "desert-combat.png",
+      "camera": {
+        "position": [
+          -133.14,
+          2.674617816824748,
+          153.76548145209856
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 874,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 8,
+        "current": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        },
+        "startTick": 732,
+        "durationTicks": 0
+      },
+      "enemies": 43
+    },
+    {
+      "capture": "desert-prone.png",
+      "camera": {
+        "position": [
+          -133.14,
+          1.6730255779692933,
+          147.86727046890022
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 49.07546952064318,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 912,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 8,
+        "current": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        },
+        "startTick": 732,
+        "durationTicks": 0
+      },
+      "enemies": 43
+    },
+    {
+      "capture": "desert-supine.png",
+      "camera": {
+        "position": [
+          -133.14,
+          1.7161539586402563,
+          152.86727046890022
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 49.07546952064314,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 1041,
+      "atmosphere": {
+        "instanceId": "588ed8a3-674d-4705-877b-b6fb544ac741",
+        "worldId": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "profileId": "desert.dry-day.v1",
+        "version": 1,
+        "seed": 1714364882,
+        "originTick": 58,
+        "timeOfDay": "day",
+        "revision": 8,
+        "current": {
+          "weather": "light-dust-gusts",
+          "wind": {
+            "direction": 1.5,
+            "strength": 0.67,
+            "gust": 0.31,
+            "frequency": 0.113,
+            "turbulence": 0.28400000000000003
+          }
+        },
+        "startTick": 732,
+        "durationTicks": 0
+      },
+      "enemies": 44
+    },
+    {
+      "planet": "desert",
+      "x": -154.32,
+      "y": 0,
+      "z": 153,
+      "yaw": 0
+    },
+    {
+      "planet": "desert",
+      "resupply": "supply.port",
+      "remainingCharges": 3
+    },
+    {
+      "planet": "desert",
+      "x": -110,
+      "y": -3.42,
+      "z": -18,
+      "yaw": 0
+    },
+    {
+      "planet": "desert",
+      "x": -151,
+      "y": 0,
+      "z": 154,
+      "yaw": 0
+    },
+    {
+      "capture": "desert-result.png",
+      "camera": {
+        "position": [
+          -150.14,
+          2.674618594986813,
+          158.76548145209856
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 61.992436127864956,
+        "resolution": [
+          864,
+          531
+        ]
+      },
+      "planet": "desert",
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.aa17444b34ec8e2d",
+      "quality": "medium",
+      "timeOfDay": "day",
+      "tick": 1628,
+      "enemies": 51
+    },
+    {
+      "planet": "desert",
+      "result": "extracted",
+      "method": "albatross",
+      "durationTicks": 1560,
+      "wallSeconds": 52.585741025
+    },
+    {
+      "planet": "desert",
+      "resourceExit": {
+        "before": [
+          201,
+          53
+        ],
+        "after": [
+          107,
+          46
+        ],
+        "voices": 0
+      }
+    }
+  ],
+  "ice": [
+    {
+      "planet": "ice",
+      "x": 15,
+      "y": 1.6575,
+      "z": 0,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "ice-clear.png",
+      "camera": {
+        "position": [
+          18.547288871259134,
+          4.332118594986813,
+          3.296385161678846
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.31565872678051105,
+          0.018962283810413958,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 394,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 2,
+        "current": {
+          "weather": "clear-cold",
+          "wind": {
+            "direction": 5.9,
+            "strength": 0.24,
+            "gust": 0.13,
+            "frequency": 0.065,
+            "turbulence": 0.21200000000000002
+          }
+        },
+        "startTick": 384,
+        "durationTicks": 0
+      },
+      "enemies": 39
+    },
+    {
+      "capture": "ice-transition.png",
+      "camera": {
+        "position": [
+          18.547288871259134,
+          4.332118594986813,
+          3.296385161678846
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.31565872678051105,
+          0.018962283810413958,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 489,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 3,
+        "current": {
+          "weather": "clear-cold",
+          "wind": {
+            "direction": 5.9,
+            "strength": 0.24,
+            "gust": 0.13,
+            "frequency": 0.065,
+            "turbulence": 0.21200000000000002
+          }
+        },
+        "startTick": 399,
+        "durationTicks": 180,
+        "target": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        }
+      },
+      "enemies": 36
+    },
+    {
+      "capture": "ice.png",
+      "camera": {
+        "position": [
+          18.547288871259134,
+          4.332118594986813,
+          3.296385161678846
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.31565872678051105,
+          0.018962283810413958,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 579,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 4,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 579,
+        "durationTicks": 0
+      },
+      "enemies": 36
+    },
+    {
+      "capture": "ice-motion.png",
+      "camera": {
+        "position": [
+          18.547288871259134,
+          4.332118594986812,
+          3.296385161678846
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.31565872678051105,
+          0.018962283810413958,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 596,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 4,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 579,
+        "durationTicks": 0
+      },
+      "enemies": 36
+    },
+    {
+      "capture": "ice-light-snow.png",
+      "camera": {
+        "position": [
+          18.547288871259134,
+          4.332118594986812,
+          3.296385161678846
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.31565872678051105,
+          0.018962283810413958,
+          0.9469761803415332
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 670,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 6,
+        "current": {
+          "weather": "light-snow",
+          "wind": {
+            "direction": 0.21681469282041377,
+            "strength": 0.42,
+            "gust": 0.22,
+            "frequency": 0.097,
+            "turbulence": 0.248
+          }
+        },
+        "startTick": 660,
+        "durationTicks": 0
+      },
+      "enemies": 37
+    },
+    {
+      "planet": "ice",
+      "weather": [
+        "clear-cold",
+        "windy-snow",
+        "light-snow"
+      ],
+      "time": "dusk"
+    },
+    {
+      "planet": "ice",
+      "audio": {
+        "voices": 3,
+        "peak": 3,
+        "dropped": 0,
+        "budget": 28,
+        "ambience": 2,
+        "combat": 0,
+        "spatial": 1,
+        "context": "running",
+        "duck": false,
+        "levels": {
+          "master": 0.8,
+          "weapons": 0.9,
+          "environment": 0.8,
+          "ambience": 0.8,
+          "weather": 0.8,
+          "ui": 0.7,
+          "muted": false,
+          "enabled": true
+        },
+        "buffers": 18,
+        "pcmMiB": 68.439697265625,
+        "loading": 0,
+        "errors": 0,
+        "loadMs": 141.70000000298023,
+        "decodeMs": 597.2000000029802,
+        "planet": "ice",
+        "weather": "windy-snow",
+        "wind": "ice-wind",
+        "rate": 0,
+        "enemyMs": 0,
+        "enemyPeakMs": 0.10000000894069672,
+        "updateMs": 0.03571428571428571,
+        "windups": 0,
+        "impacts": 0
+      }
+    },
+    {
+      "planet": "ice",
+      "x": 96,
+      "y": 13.36,
+      "z": -96,
+      "yaw": -2.356194490192345
+    },
+    {
+      "capture": "ice-wide.png",
+      "camera": {
+        "position": [
+          98.76159241857717,
+          16.034618594986814,
+          -99.97781608221804
+        ],
+        "quaternion": [
+          -0.02294723181791635,
+          0.9222170481878504,
+          0.055399518273733066,
+          0.38199480881108977
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 772,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 8,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 734,
+        "durationTicks": 0
+      },
+      "enemies": 37
+    },
+    {
+      "planet": "ice",
+      "x": -115,
+      "y": -1.2675,
+      "z": -9,
+      "yaw": -0.4636476090008061
+    },
+    {
+      "capture": "ice-relay.png",
+      "camera": {
+        "position": [
+          -112.09960452125871,
+          1.4071185949868128,
+          -5.1222275031672515
+        ],
+        "quaternion": [
+          -0.05835990871055587,
+          0.22933948934206627,
+          0.0137769056163733,
+          0.97149766677808
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 796,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 8,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 734,
+        "durationTicks": 0
+      },
+      "enemies": 42
+    },
+    {
+      "planet": "ice",
+      "x": 15,
+      "y": 1.6575,
+      "z": 0,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "ice-close-crouch.png",
+      "camera": {
+        "position": [
+          17.920147838430932,
+          6.370706283734361,
+          2.4601971179079105
+        ],
+        "quaternion": [
+          -0.3181617517005567,
+          0.2979136899160995,
+          0.10605391723351891,
+          0.8937410697482988
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 843,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 8,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 734,
+        "durationTicks": 0
+      },
+      "enemies": 43
+    },
+    {
+      "capture": "ice-terrain.png",
+      "camera": {
+        "position": [
+          17.920147838430932,
+          6.789913602355087,
+          2.4601971179079105
+        ],
+        "quaternion": [
+          -0.3181617517005567,
+          0.2979136899160995,
+          0.10605391723351891,
+          0.8937410697482988
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 866,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 8,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 734,
+        "durationTicks": 0
+      },
+      "enemies": 43
+    },
+    {
+      "planet": "ice",
+      "x": -122,
+      "y": 0,
+      "z": 157,
+      "yaw": 0
+    },
+    {
+      "capture": "ice-combat.png",
+      "camera": {
+        "position": [
+          -121.14,
+          2.6746171770592957,
+          161.76548145209856
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 886,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 8,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 734,
+        "durationTicks": 0
+      },
+      "enemies": 46
+    },
+    {
+      "capture": "ice-prone.png",
+      "camera": {
+        "position": [
+          -121.14,
+          1.7377380016040822,
+          155.97959007466332
+        ],
+        "quaternion": [
+          -0.059964006479444644,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 50.69165791654271,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 921,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 8,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 734,
+        "durationTicks": 0
+      },
+      "enemies": 46
+    },
+    {
+      "capture": "ice-supine.png",
+      "camera": {
+        "position": [
+          -121.14,
+          1.711391929505717,
+          161.04806109231922
+        ],
+        "quaternion": [
+          -0.059964006479444644,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 48.8949900568939,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "medium",
+      "timeOfDay": "dusk",
+      "tick": 1057,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 8,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 734,
+        "durationTicks": 0
+      },
+      "enemies": 47
+    },
+    {
+      "planet": "ice",
+      "x": 15,
+      "y": 1.6575,
+      "z": 0,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "ice-low.png",
+      "camera": {
+        "position": [
+          18.547288871259134,
+          4.332118594535534,
+          3.296385161678846
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.31565872678051105,
+          0.018962283810413958,
+          0.9469761803415332
+        ],
+        "fov": 61.992422356601296,
+        "resolution": [
+          652,
+          367
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "low",
+      "timeOfDay": "dusk",
+      "tick": 1223,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 8,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 734,
+        "durationTicks": 0
+      },
+      "enemies": 48
+    },
+    {
+      "capture": "ice-high.png",
+      "camera": {
+        "position": [
+          18.547288871259134,
+          4.332118594986813,
+          3.296385161678846
+        ],
+        "quaternion": [
+          -0.056886851431241864,
+          0.31565872678051105,
+          0.018962283810413958,
+          0.9469761803415332
+        ],
+        "fov": 61.992422356601296,
+        "resolution": [
+          960,
+          540
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "high",
+      "timeOfDay": "dusk",
+      "tick": 1288,
+      "atmosphere": {
+        "instanceId": "50d022e5-cc6e-484c-8e5c-3ff9d8504ae8",
+        "worldId": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "profileId": "ice.overcast-day.v1",
+        "version": 1,
+        "seed": 1786697896,
+        "originTick": 60,
+        "timeOfDay": "dusk",
+        "revision": 8,
+        "current": {
+          "weather": "windy-snow",
+          "wind": {
+            "direction": 0.5168146928204145,
+            "strength": 0.69,
+            "gust": 0.29,
+            "frequency": 0.113,
+            "turbulence": 0.276
+          }
+        },
+        "startTick": 734,
+        "durationTicks": 0
+      },
+      "enemies": 53
+    },
+    {
+      "planet": "ice",
+      "x": -142.32,
+      "y": 0,
+      "z": 161,
+      "yaw": 0
+    },
+    {
+      "planet": "ice",
+      "resupply": "supply.port",
+      "remainingCharges": 3
+    },
+    {
+      "planet": "ice",
+      "x": -118,
+      "y": -1.32,
+      "z": -16,
+      "yaw": 0
+    },
+    {
+      "planet": "ice",
+      "x": 146,
+      "y": -0.68,
+      "z": 138,
+      "yaw": 0
+    },
+    {
+      "capture": "ice-result.png",
+      "camera": {
+        "position": [
+          146.86,
+          1.9946185949868127,
+          142.76548145209856
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 61.992422356601296,
+        "resolution": [
+          960,
+          590
+        ]
+      },
+      "planet": "ice",
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.c398ebdd42969028",
+      "quality": "high",
+      "timeOfDay": "dusk",
+      "tick": 4449,
+      "enemies": 124
+    },
+    {
+      "planet": "ice",
+      "result": "extracted",
+      "method": "balloon",
+      "durationTicks": 4381,
+      "wallSeconds": 146.509566784
+    },
+    {
+      "planet": "ice",
+      "resourceExit": {
+        "before": [
+          240,
+          58
+        ],
+        "after": [
+          118,
+          49
+        ],
+        "voices": 0
+      }
+    }
+  ],
+  "forest": [
+    {
+      "planet": "forest",
+      "x": 118,
+      "y": 0.43750000000000006,
+      "z": 189,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "forest-clear.png",
+      "camera": {
+        "position": [
+          121.54728887125914,
+          3.112118594986813,
+          192.29638516167884
+        ],
+        "quaternion": [
+          -0.05688685143124194,
+          0.31565872678051216,
+          0.018962283810414055,
+          0.9469761803415327
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 400,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 2,
+        "current": {
+          "weather": "forest-calm",
+          "wind": {
+            "direction": 3.7,
+            "strength": 0.19,
+            "gust": 0.11,
+            "frequency": 0.065,
+            "turbulence": 0.20400000000000001
+          }
+        },
+        "startTick": 390,
+        "durationTicks": 0
+      },
+      "enemies": 31
+    },
+    {
+      "capture": "forest-transition.png",
+      "camera": {
+        "position": [
+          121.54728887125914,
+          3.1121185949868124,
+          192.29638516167884
+        ],
+        "quaternion": [
+          -0.05688685143124194,
+          0.31565872678051216,
+          0.018962283810414055,
+          0.9469761803415327
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 494,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 3,
+        "current": {
+          "weather": "forest-calm",
+          "wind": {
+            "direction": 3.7,
+            "strength": 0.19,
+            "gust": 0.11,
+            "frequency": 0.065,
+            "turbulence": 0.20400000000000001
+          }
+        },
+        "startTick": 404,
+        "durationTicks": 180,
+        "target": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        }
+      },
+      "enemies": 28
+    },
+    {
+      "capture": "forest.png",
+      "camera": {
+        "position": [
+          121.54728887125914,
+          3.1121185949868124,
+          192.29638516167884
+        ],
+        "quaternion": [
+          -0.05688685143124194,
+          0.31565872678051216,
+          0.018962283810414055,
+          0.9469761803415327
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 584,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 4,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 584,
+        "durationTicks": 0
+      },
+      "enemies": 28
+    },
+    {
+      "capture": "forest-motion.png",
+      "camera": {
+        "position": [
+          121.54728887125914,
+          3.1121185949868124,
+          192.29638516167884
+        ],
+        "quaternion": [
+          -0.05688685143124194,
+          0.31565872678051216,
+          0.018962283810414055,
+          0.9469761803415327
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 602,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 4,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 584,
+        "durationTicks": 0
+      },
+      "enemies": 28
+    },
+    {
+      "capture": "forest-windy-forest.png",
+      "camera": {
+        "position": [
+          121.54728887125914,
+          3.1121185949868124,
+          192.29638516167884
+        ],
+        "quaternion": [
+          -0.05688685143124194,
+          0.31565872678051216,
+          0.018962283810414055,
+          0.9469761803415327
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 677,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 6,
+        "current": {
+          "weather": "windy-forest",
+          "wind": {
+            "direction": 4,
+            "strength": 0.61,
+            "gust": 0.28,
+            "frequency": 0.081,
+            "turbulence": 0.272
+          }
+        },
+        "startTick": 667,
+        "durationTicks": 0
+      },
+      "enemies": 29
+    },
+    {
+      "planet": "forest",
+      "weather": [
+        "forest-calm",
+        "ground-mist",
+        "windy-forest"
+      ],
+      "time": "dawn"
+    },
+    {
+      "planet": "forest",
+      "audio": {
+        "voices": 3,
+        "peak": 3,
+        "dropped": 0,
+        "budget": 28,
+        "ambience": 2,
+        "combat": 0,
+        "spatial": 1,
+        "context": "running",
+        "duck": false,
+        "levels": {
+          "master": 0.8,
+          "weapons": 0.9,
+          "environment": 0.8,
+          "ambience": 0.8,
+          "weather": 0.8,
+          "ui": 0.7,
+          "muted": false,
+          "enabled": true
+        },
+        "buffers": 14,
+        "pcmMiB": 72.9580078125,
+        "loading": 0,
+        "errors": 0,
+        "loadMs": 142.5,
+        "decodeMs": 523.9000000059605,
+        "planet": "forest",
+        "weather": "ground-mist",
+        "wind": "forest-wind",
+        "rate": 0,
+        "enemyMs": 0,
+        "enemyPeakMs": 1.1000000089406967,
+        "updateMs": 0,
+        "windups": 0,
+        "impacts": 0
+      }
+    },
+    {
+      "planet": "forest",
+      "x": -96,
+      "y": 6.46,
+      "z": 0,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "capture": "forest-wide.png",
+      "camera": {
+        "position": [
+          -100.76548145209856,
+          9.134618594986813,
+          0.8600000000000003
+        ],
+        "quaternion": [
+          -0.04240095560872937,
+          -0.705834370772256,
+          -0.04240095560872936,
+          0.7058343707722561
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 773,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 8,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 741,
+        "durationTicks": 0
+      },
+      "enemies": 29
+    },
+    {
+      "planet": "forest",
+      "x": 93,
+      "y": -5.107500000000001,
+      "z": -122,
+      "yaw": -0.4636476090008061
+    },
+    {
+      "capture": "forest-relay.png",
+      "camera": {
+        "position": [
+          95.90039547874129,
+          -2.4328814050131884,
+          -118.12222750316724
+        ],
+        "quaternion": [
+          -0.05835990871055578,
+          0.229339489342066,
+          0.013776905616373264,
+          0.9714976667780801
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 797,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 8,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 741,
+        "durationTicks": 0
+      },
+      "enemies": 35
+    },
+    {
+      "planet": "forest",
+      "x": 118,
+      "y": 0.43750000000000006,
+      "z": 189,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "forest-close-crouch.png",
+      "camera": {
+        "position": [
+          120.92014783843094,
+          5.153443928652677,
+          191.4601971179079
+        ],
+        "quaternion": [
+          -0.3181617517005572,
+          0.2979136899161002,
+          0.10605391723351934,
+          0.8937410697482983
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 841,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 8,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 741,
+        "durationTicks": 0
+      },
+      "enemies": 36
+    },
+    {
+      "capture": "forest-terrain.png",
+      "camera": {
+        "position": [
+          120.92014783843094,
+          5.562925658839047,
+          191.4601971179079
+        ],
+        "quaternion": [
+          -0.3181617517005572,
+          0.2979136899161002,
+          0.10605391723351934,
+          0.8937410697482983
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 863,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 8,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 741,
+        "durationTicks": 0
+      },
+      "enemies": 36
+    },
+    {
+      "planet": "forest",
+      "x": -130,
+      "y": 0,
+      "z": 162,
+      "yaw": 0
+    },
+    {
+      "capture": "forest-combat.png",
+      "camera": {
+        "position": [
+          -129.14,
+          2.6746178177696533,
+          166.76548145209856
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 62,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 882,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 8,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 741,
+        "durationTicks": 0
+      },
+      "enemies": 41
+    },
+    {
+      "capture": "forest-prone.png",
+      "camera": {
+        "position": [
+          -129.14,
+          1.704787003238174,
+          161.06234363443897
+        ],
+        "quaternion": [
+          -0.059964006479444644,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 51.88241479393825,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 923,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 8,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 741,
+        "durationTicks": 0
+      },
+      "enemies": 45
+    },
+    {
+      "capture": "forest-supine.png",
+      "camera": {
+        "position": [
+          -129.14,
+          1.8272709086497834,
+          166.4663302651709
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 57.69545607245321,
+        "resolution": [
+          864,
+          486
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "medium",
+      "timeOfDay": "dawn",
+      "tick": 1061,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 8,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 741,
+        "durationTicks": 0
+      },
+      "enemies": 46
+    },
+    {
+      "planet": "forest",
+      "x": 118,
+      "y": 0.43750000000000006,
+      "z": 189,
+      "yaw": -0.6435011087932844
+    },
+    {
+      "capture": "forest-low.png",
+      "camera": {
+        "position": [
+          121.54728887125914,
+          3.1121185949532766,
+          192.29638516167884
+        ],
+        "quaternion": [
+          -0.05688685143124194,
+          0.31565872678051216,
+          0.018962283810414055,
+          0.9469761803415327
+        ],
+        "fov": 61.99240417981083,
+        "resolution": [
+          652,
+          367
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "low",
+      "timeOfDay": "dawn",
+      "tick": 1229,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 8,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 741,
+        "durationTicks": 0
+      },
+      "enemies": 50
+    },
+    {
+      "capture": "forest-high.png",
+      "camera": {
+        "position": [
+          121.54728887125914,
+          3.112118594986813,
+          192.29638516167884
+        ],
+        "quaternion": [
+          -0.05688685143124194,
+          0.31565872678051216,
+          0.018962283810414055,
+          0.9469761803415327
+        ],
+        "fov": 61.99240417981083,
+        "resolution": [
+          960,
+          540
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "high",
+      "timeOfDay": "dawn",
+      "tick": 1299,
+      "atmosphere": {
+        "instanceId": "fbc6019f-2b0c-44af-93a4-d7a128138f69",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 62,
+        "timeOfDay": "dawn",
+        "revision": 8,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 741,
+        "durationTicks": 0
+      },
+      "enemies": 50
+    },
+    {
+      "planet": "forest",
+      "x": -150.32,
+      "y": 0,
+      "z": 166,
+      "yaw": 0
+    },
+    {
+      "planet": "forest",
+      "resupply": "supply.port",
+      "remainingCharges": 3
+    },
+    {
+      "planet": "forest",
+      "x": 90,
+      "y": -5.1000000000000005,
+      "z": -129,
+      "yaw": 0
+    },
+    {
+      "planet": "forest",
+      "x": -69,
+      "y": 1.6300000000000001,
+      "z": -166,
+      "yaw": 0
+    },
+    {
+      "capture": "forest-result.png",
+      "camera": {
+        "position": [
+          -68.14,
+          4.304618594986813,
+          -161.23451854790144
+        ],
+        "quaternion": [
+          -0.05996400647944462,
+          0,
+          0,
+          0.9982005399352042
+        ],
+        "fov": 61.99240417981083,
+        "resolution": [
+          960,
+          590
+        ]
+      },
+      "planet": "forest",
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "missionSeed": 0,
+      "generatorVersion": 1,
+      "planId": "generated.eb9f8be4f25d390e",
+      "quality": "high",
+      "timeOfDay": "dawn",
+      "tick": 4457,
+      "enemies": 125
+    },
+    {
+      "planet": "forest",
+      "result": "extracted",
+      "method": "balloon",
+      "durationTicks": 4388,
+      "wallSeconds": 146.75397012899998
+    },
+    {
+      "planet": "forest",
+      "resourceExit": {
+        "before": [
+          244,
+          58
+        ],
+        "after": [
+          118,
+          49
+        ],
+        "voices": 0
+      }
+    }
+  ]
+}

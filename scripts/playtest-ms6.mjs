@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -7,20 +7,25 @@ import { fileURLToPath } from 'node:url';
 import { matchMaker } from '@colyseus/core';
 import { Client } from '@colyseus/sdk';
 import { BODENBRUCH, MAX_ENEMIES, SCHABE_TYPE, openGround } from '@freefall/shared';
-import { preview } from 'vite';
+import { build, preview } from 'vite';
 import { startServer } from '../apps/server/src/server.ts';
 
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const peers = [];
 const root = fileURLToPath(new URL('../', import.meta.url));
 process.env.FREEFALL_MISSION_DEBUG = '1';
-const server = await startServer(2567, '127.0.0.1', false);
+const server = await startServer(0, '127.0.0.1', false);
+const serverUrl = `http://127.0.0.1:${server.transport.server.address().port}`;
 let web, browser;
 const errors = [];
 const output = join(await mkdtemp(join(tmpdir(), 'freefall-playtest-')), 'ms6');
+const outDir = join(dirname(output), 'dist');
 console.log('Aufnahmen', dirname(output));
 try {
-  web = await preview({ root: join(root, 'apps/client'), preview: { host: '127.0.0.1', port: 4185, strictPort: true } });
+  process.env.VITE_FREEFALL_SERVER = serverUrl;
+  const config = { root: join(root, 'apps/client'), build: { outDir }, logLevel: 'error' };
+  await build(config);
+  web = await preview({ ...config, preview: { host: '127.0.0.1', port: 0, strictPort: true } });
   browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_EXECUTABLE || undefined,
     args: ['--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
@@ -29,7 +34,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (entry) => { if (entry.type() === 'error') errors.push(entry.text()); });
-  await page.goto('http://127.0.0.1:4185/');
+  await page.goto(`http://127.0.0.1:${web.httpServer.address().port}/`);
   await page.getByLabel('Grafikqualität').selectOption('medium');
   await page.getByRole('button', { name: 'Raum erstellen' }).click();
   const launch = page.getByRole('button', { name: 'Carrier betreten' });
@@ -72,8 +77,11 @@ try {
     const samples = [];
     for (let start = performance.now(); performance.now() - start < ms;) {
       await delay(270);
-      samples.push(await page.locator('.telemetry .metrics dt').evaluateAll((items) =>
-        Object.fromEntries(items.map((item) => [item.textContent, item.nextElementSibling.textContent]))));
+      samples.push(await page.evaluate(() => Object.fromEntries(
+        Array.from(document.querySelectorAll('.telemetry .metrics dt')).flatMap((item) => {
+          const value = item.nextElementSibling;
+          return value?.matches('dd') ? [[item.textContent, value.textContent]] : [];
+        }))));
     }
     await page.keyboard.press('F2');
     const values = (key) => samples.map((sample) => Number.parseFloat(sample[key])).filter(Number.isFinite).sort((a, b) => a - b);
@@ -98,7 +106,7 @@ try {
   await launch.focus();
   await page.keyboard.press('Enter');
   await page.locator('.in-game').waitFor();
-  const sdk = new Client('http://127.0.0.1:2567');
+  const sdk = new Client(serverUrl);
   for (let i = 0; i < 3; i++) {
     const guest = await sdk.joinById(room.roomId);
     guest.onMessage('*', () => {});
@@ -109,10 +117,12 @@ try {
   await page.getByText('Missionskonsole öffnen').waitFor({ timeout: 4200 });
   await page.keyboard.press('KeyE');
   await page.getByText('Einsatzplanung', { exact: true }).waitFor();
+  await page.getByLabel('Auftrag').selectOption(BODENBRUCH.id);
   await page.getByLabel('Schwierigkeit').selectOption('freefall');
+  await page.getByRole('button', { name: 'Einsatz auswählen' }).click();
   await state(({ selection }) => selection?.difficultyId === 'freefall');
   await screenshot('console');
-  await page.getByRole('button', { name: 'Boarding freigeben' }).click();
+  await page.getByRole('button', { name: 'Boarding für diesen Auftrag freigeben' }).click();
   await state(({ state }) => state === 'BOARDING');
   await page.mouse.move(640, 400);
   await launch.focus();
@@ -146,6 +156,35 @@ try {
   await walk('KeyW', ({ z }) => z > 175);
   assert.equal(mission.snapshot().convicts.length, 4);
   operator.protectedUntil = Infinity;
+  if (process.argv.includes('tactical')) {
+    await page.keyboard.press('KeyC');
+    await until(() => operator.posture.current === 'CROUCHING');
+    await delay(300);
+    await screenshot('crouch');
+    await page.keyboard.press('Space');
+    await until(() => operator.posture.current === 'STANDING');
+    for (const [key, landing] of [['KeyW', 'PRONE'], ['KeyS', 'SUPINE']]) {
+      await page.keyboard.down(key);
+      await page.keyboard.press('KeyX');
+      await page.keyboard.up(key);
+      await until(() => operator.posture.current === landing);
+      const { x, z } = operator;
+      await page.keyboard.down('KeyD');
+      await until(() => Math.hypot(operator.x - x, operator.z - z) > .05);
+      await page.keyboard.up('KeyD');
+      const ammo = operator.ammo;
+      await page.mouse.down({ button: 'right' });
+      await page.mouse.down();
+      await until(() => operator.ammo < ammo);
+      await screenshot(landing.toLowerCase());
+      await page.mouse.up();
+      await page.mouse.up({ button: 'right' });
+      await page.keyboard.press('Space');
+      await until(() => operator.posture.current === 'GETTING_UP');
+      await until(() => operator.posture.current === 'STANDING');
+    }
+    console.log('Browser tactical controls verified: crouch, forward/backward dive, both landings, ground move/fire and get-up');
+  }
   await page.keyboard.press('Digit2');
   await until(() => operator.equipment.slot === 'secondary');
   await page.locator('.readout').getByText('P-01 Dienstpistole', {exact: false}).waitFor();
@@ -162,7 +201,7 @@ try {
   await page.keyboard.press('KeyR');
   await page.getByRole('progressbar', {name: 'Nachladen'}).waitFor();
   await screenshot('reload');
-  await until(() => operator.ammo === 12);
+  await until(() => operator.ammo === 12 && operator.reload.phase === 'READY');
   operator.hp = 31;
   await page.getByText('Kritisch', {exact:true}).waitFor();
   await page.keyboard.press('KeyH');
@@ -228,6 +267,7 @@ try {
       const z = center.z + 11 * Math.sin(i * 2.39996);
       if (openGround(BODENBRUCH.world, x, z, 1)) mission.director.patrols.attach(group, mission.horde.spawn(x, z, SCHABE_TYPE));
     }
+    console.log('Active mission enemies after stress seeding:', mission.horde.count);
     await captureTelemetry('balloon-freefall-at-cap', 2800);
   }
   await screenshot('balloon');
@@ -252,4 +292,5 @@ try {
   await browser?.close();
   await web?.close();
   await server.gracefullyShutdown(false);
+  await rm(outDir, { recursive: true, force: true });
 }

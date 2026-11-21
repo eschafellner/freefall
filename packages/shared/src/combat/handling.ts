@@ -59,6 +59,15 @@ export function recoverRecoil(state: RecoilState, recoil: EffectiveRecoil, sprea
   state.yaw *= scale;
 }
 
+/**
+ * Earliest tick of the next shot (fractional). Sustained fire continues from the scheduled time, so a 4/s weapon
+ * fires every 7 or 8 ticks (7.5 on average) instead of always every 8. After a pause the schedule restarts at `tick`.
+ * Shared by the server and the client recoil prediction.
+ */
+export function nextShotAt(scheduled: number, tick: number, interval: number): number {
+  return (scheduled > tick - 1 ? scheduled : tick) + interval;
+}
+
 /** Spread cone half-angle in radians for the next shot. */
 export function spreadCone(spread: EffectiveSpread, state: RecoilState, aiming: boolean, moving: boolean): number {
   return (aiming ? spread.aim : spread.hip) * (moving ? spread.movingMultiplier : 1) + state.bloom;

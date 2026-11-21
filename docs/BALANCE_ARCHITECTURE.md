@@ -59,7 +59,8 @@ Ungültige Balance-Konfiguration (2 Fehler):
 | IDs | Eindeutig über **alle** Definitionen hinweg, stabile Kleinschreibung |
 | Querverweise | Loadout → Waffen/Granate/Stim, Waffe passt zum Slot, Gegner → Fraktion, Nest → Fraktion und Spawn-Archetyp (gleiche Fraktion), Granaten-Strukturmultiplikator → Nest, Schwierigkeit → Convict-Kit, Convicts → Nachladewaffe, Arena/Patrouille → Archetyp |
 | Konsistenz | Genau 7 Stufen mit Level 1–7, Patrouillen-Minimum ≤ Maximum, `maxActiveEnemies` ≤ ECS-Kapazität 1.000, Durchbrüche ≤ Nester, Spawns je Tick ≤ Gegnerlimit, Wire-Typen eindeutig und lückenlos ab 0, Sprint ≥ Gehen, Granaten-Freigabe vor Wurfende |
-| Reservierte Felder | Recoil, Streuung, waffenabhängige Laufgeschwindigkeit, Gegnerpanzerung/-resistenzen und Stim-Cooldown sind im Datenformat vorhanden, werden aber noch nicht simuliert. Nur der neutrale Wert ist zulässig. Ein Tuning-Versuch schlägt laut fehl, statt wirkungslos zu bleiben. |
+| Reservierte Felder | Waffenabhängige Laufgeschwindigkeit, Gegnerpanzerung/-resistenzen und Stim-Cooldown sind im Datenformat vorhanden, werden aber noch nicht simuliert. Nur der neutrale Wert ist zulässig. Ein Tuning-Versuch schlägt laut fehl, statt wirkungslos zu bleiben. Recoil und Streuung werden seit 7.2B serverseitig simuliert (`combat/handling.ts`) und sind normale Felder. |
+| Multiplikatoren | `enemyHealthMultiplier` und `enemyDamageMultiplier` müssen > 0 sein. Der Wert 0 scheitert schon in der Schemaprüfung mit Pfadangabe. |
 | Auflösung | Nach der Schemaprüfung löst die Registry jedes Loadout und alle 7 Missions-Snapshots probeweise auf. Ungültige effektive Werte (negativ, nicht endlich, außerhalb des Bereichs) fallen beim Start auf, nicht erst beim Missionsstart. |
 
 Ein Fehler verhindert den Serverstart und den Client-Build. Eine teilweise gültige Konfiguration gibt es nicht.

@@ -20,13 +20,21 @@ export const NET = {
 
 /**
  * Server-side movement input buffer. Each received input moves the operator exactly once.
- * A short backlog absorbs send and network jitter; the budget caps catch-up after a starved tick.
+ * A short backlog absorbs send and network jitter. A larger backlog (e.g. after a network stall) is drained
+ * actively with banked credit: one credit per tick plus a small drift allowance for client clocks that run
+ * slightly fast. The credit bounds the average rate to the tick rate (no speed hack), the budget bounds a
+ * single tick (smooth catch-up for remote viewers).
  */
 export const MOVEMENT_INPUT = {
   queue: 10,
-  /** Inputs above cushion + backlog are drained with the banked budget. */
+  /** Inputs above cushion + backlog are drained with the banked credit. */
   backlog: 2,
+  /** At most this many inputs are applied in one tick. */
   budget: 3,
+  /** Banked movement credit is capped here (ticks the server waited without input). */
+  credit: 8,
+  /** Extra credit per tick: tolerates client clocks up to 2 % fast, so their backlog still drains. */
+  drift: .02,
   /** After a starved tick, movement waits until this many extra inputs are buffered (adaptive). */
   maxCushion: 3,
   /** Only gaps up to this many ticks count as jitter. Longer gaps are pauses (hidden tab, menu). */

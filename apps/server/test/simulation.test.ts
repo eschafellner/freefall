@@ -10,9 +10,12 @@ import { UniformGrid } from '../src/ecs/UniformGrid.ts';
 import { validateInput } from '../src/networking/input.ts';
 import { encodeHorde } from '../src/networking/snapshots.ts';
 import { Arena } from '../src/simulation/Arena.ts';
+import { ARENA_REINFORCEMENTS } from '../src/simulation/ArenaEncounter.ts';
+import { Battlefield } from '../src/simulation/Battlefield.ts';
 import { FixedLoop } from '../src/simulation/FixedLoop.ts';
-import { damageEnemy, damagePlayer, fireWeapon, meleeSystem } from '../src/systems/combat.ts';
-import { movementSystem, steeringSystem, targetingSystem } from '../src/systems/horde.ts';
+import { damageEnemy, damagePlayer, fireWeapon } from '../src/systems/combat.ts';
+import { enemyCombatTick, runEnemyStrike } from './support/enemy-combat.ts';
+import { movementSystem, steeringSystem } from '../src/systems/horde.ts';
 
 const input: PlayerInput = { seq: 1, forward: 0, strafe: 0, sprint: false, yaw: 0, pitch: -0.11, fire: true };
 
@@ -20,7 +23,15 @@ test('horde changes live, reaches capacity and allocates fresh identities for re
   const arena = new Arena(11, 0);
   assert.equal(arena.setHordeSize(17), false);
   assert.equal(arena.setHordeSize(1000), true);
-  arena.step();
+  const rampUp = (target: number) => {
+    const { maxSpawnsPerTick } = ARENA_REINFORCEMENTS;
+    for (let expected = Math.min(target, maxSpawnsPerTick); ; expected = Math.min(target, expected + maxSpawnsPerTick)) {
+      arena.step();
+      assert.equal(arena.horde.count, expected);
+      if (expected === target) break;
+    }
+  };
+  rampUp(MAX_ENEMIES);
   assert.equal(arena.horde.count, MAX_ENEMIES);
   assert.equal(arena.horde.spawn(0, 0, RUNNER_TYPE), -1);
   const old = arena.horde.active[4];
@@ -36,24 +47,24 @@ test('horde changes live, reaches capacity and allocates fresh identities for re
   arena.step();
   assert.equal(arena.horde.count, 0);
   assert.equal(arena.setHordeSize(250), true);
-  arena.step();
-  assert.equal(arena.horde.count, 250);
+  rampUp(250);
 });
 
 test('targeting selects the nearest living player and reacts to death and departure', () => {
-  const arena = new Arena(4, 0);
+  const arena = new Battlefield(4);
   const near = arena.addPlayer('near');
   const far = arena.addPlayer('far');
   near.x = 2;
   far.x = -9;
   const enemy = arena.horde.spawn(0, 5, RUNNER_TYPE);
-  targetingSystem(arena.horde, arena.players, 1);
+  arena.step();
   assert.equal(arena.horde.target[enemy], near.slot);
   near.hp = 0;
-  targetingSystem(arena.horde, arena.players, 2);
+  near.respawnTick = 100;
+  arena.step();
   assert.equal(arena.horde.target[enemy], far.slot);
   arena.removePlayer(far.id);
-  targetingSystem(arena.horde, arena.players, 3);
+  arena.step();
   assert.equal(arena.horde.target[enemy], -1);
 });
 
@@ -126,13 +137,13 @@ test('melee respects cooldown, player death is authoritative, and respawn starts
   const player = arena.addPlayer('pilot');
   const enemy = arena.horde.spawn(player.x, player.z, RUNNER_TYPE);
   arena.horde.target[enemy] = player.slot;
-  meleeSystem(arena.horde, arena.players, 1);
+  enemyCombatTick(arena, 1);
   assert.equal(player.hp, PLAYER.health);
-  const now = player.protectedUntil;
-  meleeSystem(arena.horde, arena.players, now);
-  meleeSystem(arena.horde, arena.players, now + 1);
+  const now = player.protectedUntil + player.protectedUntil % arena.enemyCombat.timing.decisionTicks;
+  const impact = runEnemyStrike(arena, now);
+  enemyCombatTick(arena, impact + 1);
   assert.equal(player.hp, PLAYER.health - ENEMY_TYPES[RUNNER_TYPE].meleeDamage);
-  damagePlayer(player, PLAYER.health, now + 1);
+  damagePlayer(player, PLAYER.health, impact + 1);
   assert.equal(player.hp, 0);
   const diedWith = player.life;
   arena.tick = player.respawnTick - 2;

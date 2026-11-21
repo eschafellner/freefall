@@ -127,10 +127,37 @@ resolveLoadout(BALANCE, 'loadout.operator_standard', [
 
 Erledigt (siehe [COMBAT_BALANCE_7_2B](COMBAT_BALANCE_7_2B.md)): serverseitiges Recoil und Streuung, taktisches Nachladen mit ganzen Magazinen, Nahkampf mit Stagger, reduziertes Friendly Fire über einen zentralen Damage Resolver, Albatross-Nachschub, Waffen-Audio-Pipeline und Kampftelemetrie. Die Golden Traces wurden für diese gewollten Änderungen neu aufgezeichnet; der Trace-Treiber nutzt jetzt zusätzlich Nahkampf und hasht die Combat-Events (Laufzeitmessungen der Telemetrie sind ausgenommen).
 
+## Code-Review 2026-11: Golden Traces neu aufgezeichnet
+
+Die Fehlerbehebungen des Code-Reviews ändern Simulationsergebnisse bewusst. Die acht Fingerabdrücke wurden deshalb neu aufgezeichnet:
+
+- Eingabepuffer: Ein Rückstand wird aktiv abgebaut (`MOVEMENT_INPUT.credit`, `drift`). Eingaben eines früheren Lebens bewegen nicht mehr, der Respawn leert die Warteschlange.
+- Knockback erreicht genau `knockbackDistance`. Nach dem Stagger entfällt der zusätzliche Stillstands-Tick.
+- Convicts und Operatorwaffen feuern im Mittel exakt mit `roundsPerSecond` (gebrochenes Feuerintervall statt Aufrunden auf ganze Ticks). Die P-01 schießt damit 4 statt 3,75 Schuss/s, die Kestrel bleibt bei 10 Schuss/s (3 Ticks).
+- Taktische Nahschüsse gehen nicht mehr verloren, wenn der Zielpunkt auf Laufhöhe oder dahinter liegt.
+- Arena: Kills durch Granate und Nahkampf verzögern das Nachfüllen wie Kills durch Schüsse.
+- Gegner-Nahkampf läuft durch den Damage Resolver (ganze HP). Heute bleibt das wirkungslos, weil alle `enemyDamageMultiplier` 1 sind.
+
 Weiter offen:
 
 1. Reichweitenabhängiger Schadensabfall. `effectiveRange` ist weiterhin eine harte Grenze.
-2. Waffenabhängige Laufgeschwindigkeit in `movePlayer` und in der Client-Prediction.
+2. ~~Waffenabhängige Laufgeschwindigkeit~~: entfällt (Entscheidung 2026-11). Waffen beeinflussen die Bewegung nicht; die Bewegungsbalance kommt später über Rüstungen ([Audit](TACTICAL_MOVEMENT_AUDIT.md#34-rüstungen-statt-waffen-als-bewegungsbalance)).
 3. Gegnerpanzerung beziehungsweise Resistenzen (`resistances` bleibt reserviert).
 4. Aufgenommene Audio-Assets (Pipeline vorhanden, siehe [WEAPON_AUDIO](WEAPON_AUDIO.md)).
 5. Time-to-Kill-Auswertung je Stufe aus den Playtest-Telemetriedaten.
+
+### 7.4A · Gegner-KI
+
+Die Arena- und sieben Missions-Fingerprints wurden gezielt neu aufgezeichnet. Zielbindung und Lebenswechsel ändern den Verfolgungsverlauf. Die Korrekturen an Deckung, Kontaktpunkt, Stagger-Ende und Hinderniswegen ändern Positionen und einzelne Treffer. Die registrierten Schabenwerte für Gesundheit, Schaden, Reichweite und Cooldown bleiben gleich. Die Prüfsummen der geschützten Schaben-Dateien werden separat geprüft. [Gegner-KI und Ausgangsaudit](ENEMY_AI_ARCHITECTURE.md)
+
+### 7.4B · Schwarmbewegung
+
+Der Missions-Snapshot enthält `hordeAi` aus der validierten Registry. Neue Werte für Lenkung, Körperkontakt, Angriffsräume, Planungsbudgets und Recovery sind in der [Schwarm-Dokumentation](ENEMY_SWARM_BEHAVIOR.md) beschrieben. Änderungen an Positionsverläufen und Kontaktzeiten sind Teil des Meilensteins. Die Arena- und Missions-Golden-Traces wurden für diese gewollten Änderungen neu aufgezeichnet.
+
+### 7.4C · Nahkampfphasen und Angriffssektoren
+
+Der Missions-Snapshot enthält `meleeAttack` aus der Registry. Die Schabe beginnt ihren Angriff mit Windup, prüft tatsächlichen Kontakt im aktiven Zeitfenster und setzt die vorhandene Wiederholrate beim Start. Der Einschlag kann ausfallen, wenn der Operator die Reichweite oder den Schlagsektor rechtzeitig verlässt. Die Arena- und Missions-Golden-Traces wurden für die gewollten Positionierungs-, Timing- und Treffereignisänderungen mit `npm run balance:trace` neu aufgezeichnet. Die geschützten Gameplay-Werte der Schabe werden separat geprüft. [Nahkampf und Timing](ENEMY_COMBAT_BEHAVIOR.md)
+
+## 7.4D · Director-Balance und Gameplay-Traces
+
+Das Objekt `director` in `balance/data/swarm.json` führt Zustandstakte, Pressure-Gewichte, Wellenbudgets und Spawn-Prüfgrenzen. Die Schwierigkeits-Caps und bisherigen Durchbruchs-, Patrouillen- und Nestparameter bleiben Quellen für das übrige Spawn-Verhalten. Registry-Validierung und der Missionssnapshot greifen vor dem Start des Laufs. Die sieben Missions-Fingerprints aus `npm run balance:trace` wurden für die geänderte Positionsprüfung, Reihenfolge der Spawn-Produzenten und die replizierte Director-Phase aktualisiert. Der Arena-Fingerprint blieb identisch. [Director-Balance](HORDE_ENCOUNTER_PACING.md)

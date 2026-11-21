@@ -68,7 +68,7 @@ export interface AimRay {
   dz: number;
 }
 
-export function aimRay(ray: AimRay, position: PositionXZ, yaw: number, pitch: number, lookHeight = LOOK_HEIGHT, elevation = 0): void {
+export function aimRay(ray: AimRay, position: PositionXZ, yaw: number, pitch: number, lookHeight = LOOK_HEIGHT, elevation = 0, sloped = false): void {
   const sy = Math.sin(yaw);
   const cy = Math.cos(yaw);
   const cp = Math.cos(pitch);
@@ -76,6 +76,6 @@ export function aimRay(ray: AimRay, position: PositionXZ, yaw: number, pitch: nu
   ray.dy = Math.sin(pitch);
   ray.dz = -cy * cp;
   ray.x = position.x + cy * CAMERA_SHOULDER - ray.dx * CAMERA_BACK;
-  ray.y = Math.max(0.19, elevation + lookHeight + CAMERA_LIFT - ray.dy * CAMERA_BACK);
+  ray.y = Math.max(sloped ? -Infinity : .19, elevation + lookHeight + CAMERA_LIFT - ray.dy * CAMERA_BACK);
   ray.z = position.z + sy * CAMERA_SHOULDER - ray.dz * CAMERA_BACK;
 }

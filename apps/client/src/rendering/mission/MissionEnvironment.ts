@@ -1,8 +1,12 @@
 import * as T from 'three';
-import type { MissionDefinition, ObjectiveSnapshot, PositionXZ } from '@freefall/shared';
-import { openGround } from '@freefall/shared';
+import type { Circle, MissionDefinition, ObjectiveSnapshot, PositionXZ } from '@freefall/shared';
+import { groundHeight, openGround } from '@freefall/shared';
 import { landscapeNoise, randomSource, smoothstep } from '../environment/noise.ts';
 import type { SurfaceMaterials } from '../environment/SurfaceMaterials.ts';
+import type { GraphicsQuality } from '../GraphicsQuality.ts';
+
+import type { VegetationWind } from '../environment/VegetationWind.ts';
+import { GeneratedTerrain } from './GeneratedTerrain.ts';
 
 const unitBox = () => new T.BoxGeometry(1, 1, 1);
 
@@ -84,13 +88,41 @@ function sitePlate(parent: T.Group, x: number, z: number, radius: number, text: 
 export class MissionEnvironment {
   readonly root = new T.Group();
   readonly debug = new T.Group();
-  private readonly floor: T.Mesh<T.BufferGeometry, T.Material>;
-  private readonly soil: T.Material;
-  private readonly simpleSoil: T.Material;
+  private readonly generated?: GeneratedTerrain;
+  private readonly floor?: T.Mesh<T.BufferGeometry, T.Material>;
+  private readonly soil?: T.Material;
+  private readonly simpleSoil?: T.Material;
   private readonly lamps = new Map<string, T.MeshStandardMaterial>();
+  private objectives?: readonly ObjectiveSnapshot[];
 
-  constructor(definition: MissionDefinition, materials: SurfaceMaterials) {
+  constructor(definition: MissionDefinition, materials: SurfaceMaterials, reservations: readonly Circle[], anisotropy: number, wind?: VegetationWind) {
     const { world, objectives } = definition;
+    if (world.terrain) {
+      const interactionZones = objectives.filter((objective) => objective.kind === 'activate');
+      this.generated = new GeneratedTerrain(world, [...reservations, ...interactionZones], anisotropy, wind);
+      this.root.add(this.generated.root, this.debug);
+      sitePlate(this.root, world.deployment.x, world.deployment.z, 8, 'LZ', materials.concrete);
+      const mast = new T.CylinderGeometry(.065, .12, 2.7, 8);
+      const cabinet = unitBox();
+      for (const objective of objectives) {
+        if (objective.kind !== 'activate') continue;
+        const { x, z } = objective;
+        const base = groundHeight(world, x, z);
+        const post = new T.Mesh(mast, materials.hardware);
+        post.position.set(x, base + 1.35, z);
+        post.castShadow = true;
+        const unit = new T.Mesh(cabinet, materials.painted);
+        unit.position.set(x + .46, base + .50, z);
+        unit.scale.set(.7, 1, .48);
+        const lampMaterial = materials.lamps.clone();
+        const lamp = new T.Mesh(cabinet, lampMaterial);
+        lamp.position.set(x, base + 2.72, z);
+        lamp.scale.setScalar(.22);
+        this.root.add(post, unit, lamp);
+        this.lamps.set(objective.id, lampMaterial);
+      }
+      return;
+    }
     const random = randomSource(81164);
     const color = new T.Color();
     const cursor = new T.Object3D();
@@ -242,17 +274,23 @@ export class MissionEnvironment {
     this.root.add(this.debug);
   }
 
-  simplify(low: boolean): void { this.floor.material = low ? this.simpleSoil : this.soil; }
+  configureQuality(quality: GraphicsQuality): void {
+    this.generated?.configure(quality);
+    if (this.floor) this.floor.material = (quality.shadowMapSize ? this.soil : this.simpleSoil)!;
+  }
+
+  update(camera: T.Camera): void { this.generated?.update(camera); }
 
   updateObjectives(objectives: readonly ObjectiveSnapshot[]): void {
-    for (const objective of objectives) {
-      const lamp = this.lamps.get(objective.id);
-      if (!lamp) continue;
-      lamp.emissive.setHex(objective.state === 'complete' ? 0x69b8a0 :
-        objective.state === 'locked' ? 0x40332c : 0xd68a3f);
-      lamp.emissiveIntensity = objective.state === 'locked' ? .28 : 1.4;
+    if (this.objectives === objectives) return;
+    this.objectives = objectives;
+    for (const [id, lamp] of this.lamps) {
+      const state = objectives.find((objective) => objective.id === id)?.state ?? 'locked';
+      lamp.emissive.setHex(state === 'complete' ? 0x69b8a0 : state === 'locked' ? 0x40332c : 0xd68a3f);
+      lamp.emissiveIntensity = state === 'locked' ? .28 : 1.4;
     }
   }
 
-  auxiliaryMaterials(): T.Material[] { return [this.simpleSoil]; }
+  auxiliaryMaterials(): T.Material[] { return this.simpleSoil ? [this.simpleSoil] : []; }
+  generatedTextures(): readonly T.Texture[] { return this.generated?.textures ?? []; }
 }

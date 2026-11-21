@@ -10,7 +10,7 @@ Aktuelle Version: Release `7.2B`, Schema 2. Den Hash zeigt `npm run balance:chec
 | --- | ---: | ---: | --- |
 | Slot / Kategorie | primary / assault-rifle | secondary / pistol | `definitions/combat.ts` |
 | `damage` | 24 | **21,6** (7.2A: 18, × 1,2) | `combat.ts` (`TEST_RIFLE`, `SERVICE_PISTOL`) |
-| `roundsPerSecond` (Feuerintervall) | 10 (3 Ticks) | 4 (8 Ticks) | `combat.ts`. Intervall in `systems/combat.ts` pro Schuss berechnet |
+| `roundsPerSecond` (Feuerintervall) | 10 (3 Ticks) | 4 (7,5 Ticks: abwechselnd 8 und 7) | `combat.ts`. Gebrochenes Intervall (`fireInterval`, `nextShotAt`), Dauerfeuer erreicht im Mittel genau `roundsPerSecond`. Server und Client-Recoil-Vorhersage nutzen dieselbe Funktion |
 | `magazineSize` | **45** (7.2A: 30) | 12 | `combat.ts` |
 | `reserveMagazines` / `maxReserveMagazines` | **8 / 8** (7.2A: unbegrenzt) | **4 / 4 ganze Magazine** (7.2A: 48 lose Patronen) | taktisches Nachladen, [TACTICAL_RELOADING](TACTICAL_RELOADING.md) |
 | `reloadTimeline.removalAt` / `insertionAt` | 0,2 / 0,72 (Tick 13 / 45 von 63) | 0,18 / 0,68 (Tick 8 / 30 von 44) | neu in 7.2B |
@@ -114,7 +114,7 @@ Die Geometrie des Albatross (Abmessungen, Thruster-Positionen, Startdauer) bleib
 
 ## Convicts (`convicts.json`)
 
-Trupp: 4 Convicts, 5,1 m/s, Kampfreichweite 37 m, Neu-Zielsuche alle 5 Ticks, Nachladedauer der `kestrel-ar-01` (2,1 s). Vorher: Tupel-Tabelle und Magic Numbers in `mission/Convicts.ts`, Nachladedauer aus `TEST_RIFLE` geliehen.
+Trupp: 4 Convicts, 5,1 m/s, Kampfreichweite 37 m, Neu-Zielsuche alle 5 Ticks, Nachladedauer der `kestrel-ar-01` (2,1 s). Die Feuerrate wird mit gebrochenem Intervall geplant: Dauerfeuer erreicht im Mittel genau `roundsPerSecond`, jede Stufe feuert also unterschiedlich schnell (vorher wurde jedes Intervall auf ganze Ticks aufgerundet, Stufen 1–3 und 4–6 waren gleich schnell). Vorher: Tupel-Tabelle und Magic Numbers in `mission/Convicts.ts`, Nachladedauer aus `TEST_RIFLE` geliehen.
 
 | Kit (`id`, Wire `equipmentId`) | Waffenvariante | HP | Panzerung | Schaden | Schuss/s | Magazin | Stufe |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |

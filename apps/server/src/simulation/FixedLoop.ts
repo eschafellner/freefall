@@ -17,12 +17,13 @@ export class FixedLoop {
   }
 }
 
-export function timingStats(values: number[]): { mean: number; p95: number; max: number } {
-  if (!values.length) return { mean: 0, p95: 0, max: 0 };
+export function timingStats(values: number[]): { mean: number; p95: number; p99: number; max: number } {
+  if (!values.length) return { mean: 0, p95: 0, p99: 0, max: 0 };
   const sorted = values.slice().sort((a, b) => a - b);
   return {
     mean: values.reduce((sum, ms) => sum + ms, 0) / values.length,
     p95: sorted[Math.ceil(values.length * 0.95) - 1],
+    p99: sorted[Math.ceil(values.length * 0.99) - 1],
     max: sorted[values.length - 1],
   };
 }

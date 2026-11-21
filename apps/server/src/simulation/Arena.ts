@@ -7,6 +7,8 @@ export { seededRandom } from './Battlefield.ts';
 
 export class Arena extends Battlefield {
   private refillAt = 0;
+  /** Grenade and melee kills seen so far (shots report their kills through `onShot`). */
+  private otherKills = 0;
   desired: HordeSize;
 
   constructor(seed: number, desired: HordeSize = 100) {
@@ -29,6 +31,17 @@ export class Arena extends Battlefield {
   }
 
   protected onShot(shot: ShotEvent): void {
-    if (shot.eliminated && this.refillAt <= this.tick) this.refillAt = this.tick + AI.refillTicks;
+    if (shot.eliminated) this.delayRefill();
+  }
+
+  /** Grenade and melee kills delay the refill exactly like kills by shots. */
+  protected finishTick(): void {
+    const { grenadeKills, meleeKills } = this.stats.data;
+    if (grenadeKills + meleeKills > this.otherKills) this.delayRefill();
+    this.otherKills = grenadeKills + meleeKills;
+  }
+
+  private delayRefill(): void {
+    if (this.refillAt <= this.tick) this.refillAt = this.tick + AI.refillTicks;
   }
 }

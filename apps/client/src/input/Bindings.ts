@@ -6,6 +6,14 @@ export const DEFAULT_BINDINGS = {
 } as const;
 
 export type InputAction = keyof typeof DEFAULT_BINDINGS;
+export type InputContext = 'gameplay' | 'menu' | 'settings' | 'rebinding';
+let menuContext: Exclude<InputContext, 'gameplay'> = 'menu';
+
+export function setMenuInputContext(context: typeof menuContext): void { menuContext = context; }
+
+export function inputContext(pointerLocked: boolean): InputContext {
+  return pointerLocked && menuContext === 'menu' ? 'gameplay' : menuContext;
+}
 export const INPUT_ACTIONS = Object.keys(DEFAULT_BINDINGS) as InputAction[];
 export const ACTION_LABELS: Record<InputAction, string> = {
   MOVE_FORWARD: 'Vorwärts', MOVE_BACKWARD: 'Rückwärts', MOVE_LEFT: 'Links', MOVE_RIGHT: 'Rechts',
@@ -17,16 +25,26 @@ export const ACTION_LABELS: Record<InputAction, string> = {
 
 const STORAGE_KEY = 'freefall.bindings.v1';
 const reserved = new Set(['Escape', 'Tab', 'F2', 'F3', 'F5', 'F11', 'F12', 'MetaLeft', 'MetaRight']);
+const keyboardCodes = new Set([
+  'Shift', 'Space', 'Enter', 'Backspace', 'CapsLock', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight',
+  'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown', 'Insert', 'Delete',
+  'Backquote', 'Backslash', 'BracketLeft', 'BracketRight', 'Comma', 'Equal', 'Minus', 'Period', 'Quote', 'Semicolon',
+  'Slash', 'IntlBackslash', 'IntlRo', 'IntlYen', 'KanaMode', 'Convert', 'NonConvert', 'ContextMenu', 'Pause', 'ScrollLock',
+  'NumLock', 'NumpadAdd', 'NumpadComma', 'NumpadDecimal', 'NumpadDivide', 'NumpadEnter', 'NumpadEqual', 'NumpadMultiply', 'NumpadSubtract',
+]);
 
 export const keyboardCode = (code: string): string => code.startsWith('Shift') ? 'Shift' : code;
-export const bindingLabel = (code: string): string => ({
+/** An action without a key. Happens when a stored binding is incomplete and the default key is already taken. */
+export const UNBOUND = '';
+
+export const bindingLabel = (code: string): string => code === UNBOUND ? 'nicht belegt' : ({
   Mouse0: 'LMB', Mouse1: 'MMB', Mouse2: 'RMB', Space: 'Leertaste',
   ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→',
 }[code] ?? code.replace(/^(Key|Digit)/, ''));
 
 function valid(code: unknown): code is string {
-  return typeof code === 'string' && /^[A-Za-z][A-Za-z0-9]{0,31}$/.test(code) &&
-    keyboardCode(code) === code && code !== 'Unidentified' && !reserved.has(code);
+  return typeof code === 'string' && !reserved.has(code) &&
+    (keyboardCodes.has(code) || /^(Key[A-Z]|(?:Digit|Numpad)[0-9]|F(?:[1-9]|1[0-9]|2[0-4])|Mouse[0-4])$/.test(code));
 }
 
 export class Bindings {
@@ -37,16 +55,37 @@ export class Bindings {
   constructor(storage?: Pick<Storage, 'getItem' | 'setItem'>) {
     this.storage = storage;
     try {
-      const raw = JSON.parse(storage?.getItem(STORAGE_KEY) ?? 'null') as Partial<Record<InputAction, unknown>> | null;
-      if (raw && INPUT_ACTIONS.every((action) => valid(raw[action])) &&
-          new Set(INPUT_ACTIONS.map((action) => raw[action])).size === INPUT_ACTIONS.length) {
-        for (const action of INPUT_ACTIONS) this.codes[action] = raw[action] as string;
-      }
+      const raw = JSON.parse(storage?.getItem(STORAGE_KEY) ?? 'null') as unknown;
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) this.codes = Bindings.merge(raw as Partial<Record<InputAction, unknown>>);
     } catch { /* Browser storage is optional. */ }
+  }
+
+  /**
+   * Merges a stored, possibly incomplete or partly invalid binding with the defaults. Valid stored keys win (the
+   * first action keeps a key that is stored twice). Missing actions, e.g. one added in a later version, get their
+   * default key if it is still free, otherwise they stay unbound until the player assigns a key.
+   */
+  static merge(stored: Partial<Record<InputAction, unknown>>): Record<InputAction, string> {
+    const codes = {} as Record<InputAction, string>;
+    const used = new Set<string>();
+    for (const action of INPUT_ACTIONS) {
+      const code = stored[action];
+      codes[action] = valid(code) && !used.has(code) ? code : UNBOUND;
+      if (codes[action] !== UNBOUND) used.add(codes[action]);
+    }
+    for (const action of INPUT_ACTIONS) {
+      if (codes[action] !== UNBOUND || used.has(DEFAULT_BINDINGS[action])) continue;
+      codes[action] = DEFAULT_BINDINGS[action];
+      used.add(codes[action]);
+    }
+    return codes;
   }
 
   code(action: InputAction): string { return this.codes[action]; }
   label(action: InputAction): string { return bindingLabel(this.code(action)); }
+  action(code: string): InputAction | undefined {
+    return code ? INPUT_ACTIONS.find((action) => this.codes[action] === code) : undefined;
+  }
 
   rebind(action: InputAction, code: string): string | undefined {
     if (!valid(code)) return 'Diese Taste ist reserviert.';

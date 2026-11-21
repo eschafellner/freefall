@@ -1,7 +1,6 @@
 /**
  * Browser frame-time benchmark for Milestone 7.1.
  *
- *   npm run build
  *   PLAYWRIGHT_MODULE=/path/to/playwright node --conditions=development scripts/perf-browser.mjs [out.json]
  *
  * Starts the game server in-process and the built client via `vite preview`, drives one rendering Chromium
@@ -11,27 +10,25 @@
  * Snapshot intervals are recorded by an additional SDK observer on the same loopback server.
  */
 import { writeFileSync } from 'node:fs';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { matchMaker } from '@colyseus/core';
 import { Client } from '@colyseus/sdk';
-import { preview } from 'vite';
+import { build, preview } from 'vite';
 import { startServer } from '../apps/server/src/server.ts';
 
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const out = process.argv[2];
+const combatMode = process.env.PERF_COMBAT === '1';
 process.env.FREEFALL_MISSION_DEBUG = '1';
-const PORT = 2567;
-const server = await startServer(PORT, '127.0.0.1', false);
-const web = await preview({ root: join(root, 'apps/client'), preview: { host: '127.0.0.1', port: 4186, strictPort: true }, logLevel: 'error' });
-const browser = await chromium.launch({
-  headless: process.env.HEADED ? false : true,
-  channel: process.env.CHANNEL || 'chromium',
-  args: ['--use-angle=' + (process.env.ANGLE || 'gl'), '--enable-gpu', '--ignore-gpu-blocklist', '--enable-unsafe-webgpu', '--disable-frame-rate-limit=false'],
-  chromiumSandbox: false,
-});
+const server = await startServer(0, '127.0.0.1', false);
+const PORT = server.transport.server.address().port;
+const outDir = await mkdtemp(join(tmpdir(), 'freefall-perf-'));
+let web, browser;
 const peers = [];
 const results = [];
 const errors = [];
@@ -96,7 +93,7 @@ async function openPage() {
     };
     raf(tick);
   }, Number(process.env.VSYNC || 0));
-  await page.goto('http://127.0.0.1:4186/');
+  await page.goto('http://127.0.0.1:' + web.httpServer.address().port);
   await page.getByLabel('Grafikqualität').selectOption('medium');
   return page;
 }
@@ -168,6 +165,8 @@ async function measure(page, name, room, extra = {}) {
     if (times.length) ticks.push(...times.slice(-15));
   }, 500);
   const { arrivals } = await observe(room.roomId);
+  const combat = room.arena.enemyCombat;
+  const { starts, hits } = combat.totals;
   await page.evaluate(() => window.__perf.start());
   const hudSamples = [];
   const hudTimer = setInterval(() => { void hud(page).then((h) => hudSamples.push(h)).catch(() => {}); }, 700);
@@ -182,7 +181,7 @@ async function measure(page, name, room, extra = {}) {
   const second = (key) => stats(hudSamples.map((h) => Number.parseFloat(String(h[key] ?? '').split('/')[1] ?? '')).filter(Number.isFinite));
   const gaps = (list) => stats(list.slice(1).map((t, i) => t - list[i]));
   const row = {
-    scenario: name, frames: frames.length, fps: (frames.length - 1) / duration,
+    scenario: name, duration, frames: frames.length, fps: (frames.length - 1) / duration,
     frame: stats(intervals), cpu: stats(work), over20: intervals.filter((v) => v > 20).length, over34: intervals.filter((v) => v > 34).length,
     drawCalls: number('Draw Calls / Dreiecke').median, hud: hudSamples.at(-1),
     motion: hudSamples.some((h) => h['Prediction Error']) ? {
@@ -193,6 +192,7 @@ async function measure(page, name, room, extra = {}) {
       frameP95: number('Frame P95 / P99'),
     } : undefined,
     serverTick: stats(ticks), playersInterval: gaps(arrivals.players), hordeInterval: gaps(arrivals.horde),
+    attacks: combat.totals.starts - starts, enemyHits: combat.totals.hits - hits,
     ...extra,
   };
   results.push(row);
@@ -203,6 +203,17 @@ async function measure(page, name, room, extra = {}) {
 }
 
 try {
+  process.env.VITE_FREEFALL_SERVER = 'http://127.0.0.1:' + PORT;
+  const config = { root: join(root, 'apps/client'), build: { outDir }, logLevel: 'error' };
+  await build(config);
+  web = await preview({ ...config, preview: { host: '127.0.0.1', port: 0, strictPort: true } });
+  browser = await chromium.launch({
+    headless: process.env.HEADED ? false : true,
+    channel: process.env.CHANNEL || 'chromium',
+    executablePath: process.env.CHROMIUM_EXECUTABLE,
+    args: ['--use-angle=' + (process.env.ANGLE || 'gl'), '--enable-gpu', '--ignore-gpu-blocklist', '--enable-unsafe-swiftshader'],
+    chromiumSandbox: false,
+  });
   const page = await openPage();
   const renderer = await page.evaluate(() => {
     const gl = document.createElement('canvas').getContext('webgl2');
@@ -235,7 +246,7 @@ try {
   await page.getByRole('button', { name: 'Raum verlassen' }).click().catch(() => {});
   await page.close();
 
-  // Arena: 100 / 500 / 1.000 enemies, then four operators.
+  // Arena horde matrix, then four operators.
   const arenaPage = await openPage();
   await arenaPage.getByRole('button', { name: 'Boreal Relay' }).click();
   const arenaRoomRef = await (async () => {
@@ -252,8 +263,14 @@ try {
   console.log('second room is arena:', isArena);
   await enter(arenaPage, isArena ? 'Arena betreten' : 'Carrier betreten');
   const arena = arenaRoomRef.arena;
-  const protect = setInterval(() => { for (const p of arena.players) if (p) p.protectedUntil = Infinity; }, 50);
-  for (const size of [100, 500, 1000]) {
+  const maintainCrew = setInterval(() => {
+    for (const p of arena.players) {
+      if (!p) continue;
+      if (!combatMode) p.protectedUntil = Infinity;
+      else if (p.hp > 0 && p.hp < p.loadout.maxHealth * .5) p.hp = p.loadout.maxHealth;
+    }
+  }, 50);
+  for (const size of combatMode ? [100, 250, 500, 1000] : [100, 500, 1000]) {
     arena.setHordeSize(size);
     for (let i = 0; i < 80 && arena.horde.count < size; i++) await delay(100);
     await delay(800);
@@ -276,12 +293,13 @@ try {
   await delay(1500);
   await measure(arenaPage, 'Boreal Relay, 1.000 Gegner, 4 Operator', arenaRoomRef, { enemies: arena.horde.count, operators: arena.players.filter(Boolean).length });
   for (const timer of botTimers) clearInterval(timer);
-  clearInterval(protect);
+  clearInterval(maintainCrew);
   console.log('errors', errors);
   if (out) writeFileSync(out, JSON.stringify({ chromium: browser.version(), renderer, results, errors }, null, 2));
 } finally {
   await Promise.allSettled([...peers, ...[...observers.values()].map((o) => o.observer)].map((r) => r.leave()));
-  await browser.close();
-  await web.close();
+  await browser?.close();
+  await web?.close();
   await server.gracefullyShutdown(false);
+  await rm(outDir, { recursive: true, force: true });
 }

@@ -1,4 +1,6 @@
 import * as T from 'three';
+import { groundHeight } from '@freefall/shared';
+import type { WorldDefinition } from '@freefall/shared';
 import { BALLOON, NET } from '@freefall/shared';
 import type { ExtractionSnapshot, PlayersSnapshot, PositionXZ } from '@freefall/shared';
 import { PanelBatch, emitter, metal, plate, stencil } from './ShipParts.ts';
@@ -78,16 +80,21 @@ export class RecoveryView {
     this.root.visible = false;
   }
 
+  get audioPosition(): T.Vector3 | undefined {
+    return this.root.visible && this.fighter.visible ? this.fighter.position : undefined;
+  }
+
   update(state: ExtractionSnapshot | undefined, tick: number, dt: number, players: PlayersSnapshot | undefined,
-    own: string, position: PositionXZ): void {
+    own: string, position: PositionXZ, world?: WorldDefinition): void {
     this.root.visible = state?.method === 'balloon';
     if (state?.method !== 'balloon') {
       this.ids.length = 0;
       return;
     }
+    const base = groundHeight(world, state.x, state.z);
     const age = Math.max(0, (tick - state.startedAt) / NET.tickHz);
     const fill = Math.min(1, age * .66);
-    this.top.set(state.x + Math.sin(tick * .031) * .63 * fill, .61 + BALLOON.height * Math.min(1, age / 3.4),
+    this.top.set(state.x + Math.sin(tick * .031) * .63 * fill, base + .61 + BALLOON.height * Math.min(1, age / 3.4),
       state.z + Math.cos(tick * .027) * .47 * fill);
     const t = T.MathUtils.clamp((tick - state.phaseAt) / Math.max(1, state.endsAt - state.phaseAt), 0, 1);
     const lift = state.phase === 'LIFT';
@@ -109,7 +116,7 @@ export class RecoveryView {
     this.envelope.scale.setScalar(.13 + .87 * fill);
     this.envelope.position.copy(this.top);
     this.envelope.rotation.z = Math.sin(tick * .031) * .07 - (lift ? .42 * t : 0);
-    this.canister.position.set(state.x, 0, state.z);
+    this.canister.position.set(state.x, base, state.z);
     this.lid.rotation.x = -1.9 * Math.min(1, age * 2.7);
     this.hook.rotation.x = lift ? -.2 * t : -1.32 * (1 - T.MathUtils.smoothstep(t, .59, .92));
     this.beacon.emissiveIntensity = 1.45 + .85 * Math.sin(tick * 2 * Math.PI / (NET.tickHz * 1.55));
@@ -125,7 +132,7 @@ export class RecoveryView {
       const offset = lift ? 95 * t ** 1.8 : 0;
       const x = player.x + this.path.x * offset;
       const z = player.z + this.path.z * offset;
-      const y = lift ? 1.25 + 45 * t : 1.25;
+      const y = groundHeight(world, player.x, player.z) + 1.25 + (lift ? 45 * t : 0);
       if (id !== this.ids[index] || id === own || lift) end.set(x, y, z);
       else {
         const smoothing = 1 - Math.exp(-dt * 15);

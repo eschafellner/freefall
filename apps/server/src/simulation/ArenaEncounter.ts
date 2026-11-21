@@ -8,6 +8,7 @@ export const ARENA_REINFORCEMENTS = Object.freeze({
   outerRadius: ARENA_HALF - arena.outerRadiusInset,
   ringWidth: arena.ringWidth,
   refillTicks: arena.refillTicks,
+  maxSpawnsPerTick: arena.maxSpawnsPerTick,
 });
 
 export const ARENA_SPAWN_TYPE = BALANCE.enemy(ARENA_REINFORCEMENTS.archetypeId).wireType;

@@ -1,0 +1,2910 @@
+{
+  "solo": {
+    "green-plains": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.ae49e584d5fe8b9e",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.68c909076155c5e5",
+            "planetId": "green-plains",
+            "biome": "temperate-grassland",
+            "seed": 17,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0014791166665013911,
+          "p95": 0.0021099999994476093,
+          "p99": 0.0038599999988946365,
+          "max": 0.004289999998945859
+        },
+        "navigationMs": {
+          "mean": 0.014813977777753786,
+          "p95": 0.01960999999937485,
+          "p99": 0.03225099999872327,
+          "max": 0.049019999998563435
+        },
+        "weatherServerMs": {
+          "mean": 0.002275949999956437,
+          "p95": 0.003359999998792773,
+          "p99": 0.007249999998748535,
+          "max": 0.007690000000366126
+        },
+        "collisionMs": {
+          "mean": 0.0019259499999861873,
+          "p95": 0.0025500000010652,
+          "p99": 0.005400000000008731,
+          "max": 0.006869999999253196
+        },
+        "directorMs": {
+          "mean": 0.012473200000012083,
+          "p95": 0.00976999999875261,
+          "p99": 0.020319999999628635,
+          "max": 1.276694000000134
+        },
+        "operatorAttacks": 0,
+        "movedEnemies": 0,
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 70,
+            "totalBytes": 152618,
+            "samplePackets": 30,
+            "sampleBytesPerSecond": 12232.379870983104
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 915,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1559,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 459,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 732082176,
+          "heapTotal": 142430208,
+          "heapUsed": 69063928,
+          "external": 32111032,
+          "arrayBuffers": 1144738
+        },
+        "memoryAfter": {
+          "rss": 732082176,
+          "heapTotal": 142430208,
+          "heapUsed": 80751960,
+          "external": 33088826,
+          "arrayBuffers": 2122492
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.941656515529784,
+        "payloadBytesPerSecond": 59.6499390931787,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.00365673254327,
+        "frameMs": {
+          "mean": 16.665650969529082,
+          "p95": 16.700000000000728,
+          "p99": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 361,
+            "fps": 60.00365673254327,
+            "mean": 16.665650969529082,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "4.6 / 0.1 ms",
+            "Draw Calls / Dreiecke": "43 / 47.925",
+            "Meshes / Instanzen": "9 / 1.133",
+            "Geometrien / Texturen": "168 / 53",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "audio": {
+              "voices": 3,
+              "peak": 4,
+              "dropped": 0,
+              "budget": 28,
+              "ambience": 2,
+              "combat": 0,
+              "spatial": 1,
+              "context": "running",
+              "duck": false,
+              "levels": {
+                "master": 0.8,
+                "weapons": 0.9,
+                "environment": 0.8,
+                "ambience": 0.8,
+                "weather": 0.8,
+                "ui": 0.7,
+                "muted": false,
+                "enabled": true
+              },
+              "buffers": 20,
+              "pcmMiB": 68.76290512084961,
+              "loading": 0,
+              "errors": 0,
+              "loadMs": 105.70000000298023,
+              "decodeMs": 574.8999999910593,
+              "planet": "green-plains",
+              "weather": "windy",
+              "wind": "plains-wind",
+              "rate": 0,
+              "enemyMs": 0,
+              "enemyPeakMs": 5.0999999940395355,
+              "updateMs": 0.03749999962747097,
+              "windups": 0,
+              "impacts": 0
+            },
+            "weather": {
+              "planet": "green-plains",
+              "profile": "green-plains.daylight.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy",
+              "timeOfDay": "overcast-day",
+              "audio": "ambience.green-plains.windy",
+              "seed": 1378957931,
+              "startTick": 119,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.6897807870634818,
+              "z": -0.012587520203635325,
+              "direction": 3.159839208813139,
+              "strength": 0.6898956296910376,
+              "gust": 0.03989562969103751,
+              "turbulence": 0.272,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.1393027749999419,
+          "p95": 0.18558999999913794,
+          "p99": 0.7026219999988825,
+          "max": 1.3749240000033751
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 29.82496954658935,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 6.0352115269999995,
+        "errors": []
+      }
+    ],
+    "desert": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.76fc699a1cc12bd3",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.728819ca01df0109",
+            "planetId": "desert",
+            "biome": "arid-desert",
+            "seed": 31,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.001275082872865753,
+          "p95": 0.001890000001367298,
+          "p99": 0.002899999999499414,
+          "max": 0.0033600000006117625
+        },
+        "navigationMs": {
+          "mean": 0.01625453038689642,
+          "p95": 0.023159999998824787,
+          "p99": 0.0421200000000681,
+          "max": 0.0712599999988015
+        },
+        "weatherServerMs": {
+          "mean": 0.0024394475137708756,
+          "p95": 0.002689999999347492,
+          "p99": 0.00555999999960477,
+          "max": 0.0839799999994284
+        },
+        "collisionMs": {
+          "mean": 0.0018233149172243752,
+          "p95": 0.002560000000812579,
+          "p99": 0.004109999999855063,
+          "max": 0.0069500000008702045
+        },
+        "directorMs": {
+          "mean": 0.00492558563540552,
+          "p95": 0.008329999998750282,
+          "p99": 0.00938999999925727,
+          "max": 0.010460000001330627
+        },
+        "operatorAttacks": 0,
+        "movedEnemies": 0,
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 66,
+            "totalBytes": 145868,
+            "samplePackets": 30,
+            "sampleBytesPerSecond": 11930.026246898622
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 897,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1329,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 374,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 754774016,
+          "heapTotal": 142954496,
+          "heapUsed": 70590216,
+          "external": 32264197,
+          "arrayBuffers": 1297903
+        },
+        "memoryAfter": {
+          "rss": 754905088,
+          "heapTotal": 142954496,
+          "heapUsed": 84914544,
+          "external": 33238932,
+          "arrayBuffers": 2272598
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.951225129831608,
+        "payloadBytesPerSecond": 59.70735077898964,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.00265939764643,
+        "frameMs": {
+          "mean": 16.665927977839335,
+          "p95": 16.700000000000728,
+          "p99": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 361,
+            "fps": 60.00265939764643,
+            "mean": 16.665927977839335,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "3.6 / 0.1 ms",
+            "Draw Calls / Dreiecke": "213 / 74.527",
+            "Meshes / Instanzen": "133 / 780",
+            "Geometrien / Texturen": "177 / 51",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "audio": {
+              "voices": 3,
+              "peak": 4,
+              "dropped": 0,
+              "budget": 28,
+              "ambience": 2,
+              "combat": 0,
+              "spatial": 1,
+              "context": "running",
+              "duck": false,
+              "levels": {
+                "master": 0.8,
+                "weapons": 0.9,
+                "environment": 0.8,
+                "ambience": 0.8,
+                "weather": 0.8,
+                "ui": 0.7,
+                "muted": false,
+                "enabled": true
+              },
+              "buffers": 19,
+              "pcmMiB": 69.24715042114258,
+              "loading": 0,
+              "errors": 0,
+              "loadMs": 60.900000005960464,
+              "decodeMs": 402.40000000596046,
+              "planet": "desert",
+              "weather": "light-dust-gusts",
+              "wind": "desert-wind",
+              "rate": 0,
+              "enemyMs": 0,
+              "enemyPeakMs": 0.8999999910593033,
+              "updateMs": 0.020000000794728596,
+              "windups": 0,
+              "impacts": 0
+            },
+            "weather": {
+              "planet": "desert",
+              "profile": "desert.dry-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "light-dust-gusts",
+              "timeOfDay": "day",
+              "audio": "ambience.desert.light-dust-gusts",
+              "seed": 1714364882,
+              "startTick": 97,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.10819061502240036,
+              "z": 0.7751565135894121,
+              "direction": 1.4321195875390593,
+              "strength": 0.7826703199553549,
+              "gust": 0.11267031995535484,
+              "turbulence": 0.28400000000000003,
+              "particles": 176,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.15034752500002166,
+          "p95": 0.23344099999849277,
+          "p99": 0.29466099999990547,
+          "max": 0.6452810000009777
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.01952914165868,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 6.029408361,
+        "errors": []
+      }
+    ],
+    "ice": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.d7283495de0b75ca",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.b9ec957f0a62f9c4",
+            "planetId": "ice",
+            "biome": "glacial",
+            "seed": 48,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0013491215469299247,
+          "p95": 0.0018799999998009298,
+          "p99": 0.0030999999999039574,
+          "max": 0.003479999999399297
+        },
+        "navigationMs": {
+          "mean": 0.01609498895029811,
+          "p95": 0.023869999999078573,
+          "p99": 0.03545000000121945,
+          "max": 0.11673199999859207
+        },
+        "weatherServerMs": {
+          "mean": 0.0022339337017267843,
+          "p95": 0.003020000000105938,
+          "p99": 0.006570000001374865,
+          "max": 0.007550000000264845
+        },
+        "collisionMs": {
+          "mean": 0.0018146574585941346,
+          "p95": 0.0025700000005599577,
+          "p99": 0.0033100000000558794,
+          "max": 0.007149999999455758
+        },
+        "directorMs": {
+          "mean": 0.005409662983499567,
+          "p95": 0.008651000000099884,
+          "p99": 0.01022000000011758,
+          "max": 0.03410999999869091
+        },
+        "operatorAttacks": 0,
+        "movedEnemies": 0,
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 67,
+            "totalBytes": 149896,
+            "samplePackets": 30,
+            "sampleBytesPerSecond": 12190.690656706549
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 886,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1523,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 459,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 729350144,
+          "heapTotal": 147632128,
+          "heapUsed": 102560432,
+          "external": 33880575,
+          "arrayBuffers": 2914281
+        },
+        "memoryAfter": {
+          "rss": 723849216,
+          "heapTotal": 142168064,
+          "heapUsed": 78599336,
+          "external": 32723080,
+          "arrayBuffers": 1756746
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.94468381670396,
+        "payloadBytesPerSecond": 59.66810290022376,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.00166209590295,
+        "frameMs": {
+          "mean": 16.66620498614958,
+          "p95": 16.799999999999272,
+          "p99": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 361,
+            "fps": 60.00166209590295,
+            "mean": 16.66620498614958,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "3.0 / 0.1 ms",
+            "Draw Calls / Dreiecke": "216 / 62.909",
+            "Meshes / Instanzen": "133 / 536",
+            "Geometrien / Texturen": "177 / 53",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "audio": {
+              "voices": 3,
+              "peak": 4,
+              "dropped": 0,
+              "budget": 28,
+              "ambience": 2,
+              "combat": 0,
+              "spatial": 1,
+              "context": "running",
+              "duck": false,
+              "levels": {
+                "master": 0.8,
+                "weapons": 0.9,
+                "environment": 0.8,
+                "ambience": 0.8,
+                "weather": 0.8,
+                "ui": 0.7,
+                "muted": false,
+                "enabled": true
+              },
+              "buffers": 20,
+              "pcmMiB": 68.64937973022461,
+              "loading": 0,
+              "errors": 0,
+              "loadMs": 103.69999998807907,
+              "decodeMs": 359.70000000298023,
+              "planet": "ice",
+              "weather": "windy-snow",
+              "wind": "ice-wind",
+              "rate": 0,
+              "enemyMs": 0,
+              "enemyPeakMs": 1,
+              "updateMs": 0.01999999980131785,
+              "windups": 0,
+              "impacts": 0
+            },
+            "weather": {
+              "planet": "ice",
+              "profile": "ice.overcast-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy-snow",
+              "timeOfDay": "dusk",
+              "audio": "ambience.ice.windy-snow",
+              "seed": 1786697896,
+              "startTick": 99,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.7282961987079183,
+              "z": 0.349534039464444,
+              "direction": 0.447466256386325,
+              "strength": 0.8078300550219304,
+              "gust": 0.11783005502193043,
+              "turbulence": 0.276,
+              "particles": 176,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.13780617499999911,
+          "p95": 0.21234999999978754,
+          "p99": 0.2756600000011531,
+          "max": 0.2785750000002736
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 29.99979618039028,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 6.033374324,
+        "errors": []
+      }
+    ],
+    "forest": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.4808d7ed2076dcf1",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0012818186812312757,
+          "p95": 0.0018999999992956873,
+          "p99": 0.0028199999997013947,
+          "max": 0.003299999998489511
+        },
+        "navigationMs": {
+          "mean": 0.017011192307738662,
+          "p95": 0.023090000000593136,
+          "p99": 0.07426099999975122,
+          "max": 0.39564700000119046
+        },
+        "weatherServerMs": {
+          "mean": 0.002378818681201345,
+          "p95": 0.003650000000561704,
+          "p99": 0.006289999999353313,
+          "max": 0.02877999999873282
+        },
+        "collisionMs": {
+          "mean": 0.004008296703332335,
+          "p95": 0.002749999999650754,
+          "p99": 0.008530000000973814,
+          "max": 0.38296600000103354
+        },
+        "directorMs": {
+          "mean": 0.0048169175824024114,
+          "p95": 0.008920000000216532,
+          "p99": 0.010010999998485204,
+          "max": 0.012670000000071013
+        },
+        "operatorAttacks": 0,
+        "movedEnemies": 0,
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 65,
+            "totalBytes": 145175,
+            "samplePackets": 30,
+            "sampleBytesPerSecond": 11935.901139704223
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 901,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1345,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 374,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 746835968,
+          "heapTotal": 142962688,
+          "heapUsed": 84210424,
+          "external": 33420089,
+          "arrayBuffers": 2453795
+        },
+        "memoryAfter": {
+          "rss": 747393024,
+          "heapTotal": 143224832,
+          "heapUsed": 97813472,
+          "external": 34398317,
+          "arrayBuffers": 3431983
+        },
+        "enemies": 0,
+        "packetsPerSecond": 10.122201717252295,
+        "payloadBytesPerSecond": 60.73321030351377,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.00265939764642,
+        "frameMs": {
+          "mean": 16.66592797783934,
+          "p95": 16.700000000000728,
+          "p99": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 361,
+            "fps": 60.00265939764642,
+            "mean": 16.66592797783934,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.1 / 0.1 ms",
+            "Draw Calls / Dreiecke": "38 / 50.019",
+            "Meshes / Instanzen": "3 / 748",
+            "Geometrien / Texturen": "159 / 53",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "audio": {
+              "voices": 3,
+              "peak": 4,
+              "dropped": 0,
+              "budget": 28,
+              "ambience": 2,
+              "combat": 0,
+              "spatial": 1,
+              "context": "running",
+              "duck": false,
+              "levels": {
+                "master": 0.8,
+                "weapons": 0.9,
+                "environment": 0.8,
+                "ambience": 0.8,
+                "weather": 0.8,
+                "ui": 0.7,
+                "muted": false,
+                "enabled": true
+              },
+              "buffers": 15,
+              "pcmMiB": 73.02205276489258,
+              "loading": 0,
+              "errors": 0,
+              "loadMs": 48,
+              "decodeMs": 369.69999998807907,
+              "planet": "forest",
+              "weather": "ground-mist",
+              "wind": "forest-wind",
+              "rate": 0,
+              "enemyMs": 0,
+              "enemyPeakMs": 0.7000000029802322,
+              "updateMs": 0.031249999068677425,
+              "windups": 0,
+              "impacts": 0
+            },
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "dawn",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 91,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.1690529089533397,
+              "z": -0.3388856415285334,
+              "direction": 4.249662251312417,
+              "strength": 0.3787114522427224,
+              "gust": 0.11871145224272238,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.12849529999994047,
+          "p95": 0.18646999999873515,
+          "p99": 0.4244769999986602,
+          "max": 0.46643099999892
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.200667418687175,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 6.026356884000001,
+        "errors": []
+      }
+    ]
+  },
+  "coop": [
+    {
+      "chromium": "153.0.8010.12",
+      "angle": "gl",
+      "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+      "quality": "medium",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "balanceHash": "01855759529dd588",
+      "phase": "ACTIVE_MISSION",
+      "wave": {
+        "state": "BUILDUP",
+        "stateAt": 234,
+        "waveId": 1,
+        "created": 1,
+        "region": "breach/sector-1"
+      },
+      "plan": {
+        "id": "generated.4808d7ed2076dcf1",
+        "seed": 0,
+        "templateId": "relay-defense",
+        "world": {
+          "id": "world.generated.acdc7ec0c04dd3da",
+          "planetId": "forest",
+          "biome": "temperate-forest",
+          "seed": 63,
+          "formatVersion": 1,
+          "generatorVersion": 1,
+          "profileVersion": 1,
+          "assetVersion": 1
+        }
+      },
+      "objectiveUpdateMs": {
+        "mean": 0.0015030716252115558,
+        "p95": 0.002059999998891726,
+        "p99": 0.0025499999974272214,
+        "max": 0.00638999999864609
+      },
+      "navigationMs": {
+        "mean": 0.4661130661156388,
+        "p95": 0.7013580000020738,
+        "p99": 1.655320000001666,
+        "max": 3.6365139999998064
+      },
+      "weatherServerMs": {
+        "mean": 0.0022388099173352733,
+        "p95": 0.002780000002530869,
+        "p99": 0.006000000001222361,
+        "max": 0.03145000000040454
+      },
+      "collisionMs": {
+        "mean": 0.16074496143247458,
+        "p95": 0.24153300000034506,
+        "p99": 0.3435140000001411,
+        "max": 3.161787999999433
+      },
+      "directorMs": {
+        "mean": 0.009736203856753556,
+        "p95": 0.015559999999823049,
+        "p99": 0.09185100000104285,
+        "max": 0.7624890000006417
+      },
+      "operatorAttacks": 321,
+      "movedEnemies": 204,
+      "missionNetwork": {
+        "mission-state": {
+          "totalPackets": 125,
+          "totalBytes": 291591,
+          "samplePackets": 61,
+          "sampleBytesPerSecond": 14506.617937737607
+        },
+        "atmosphere-state": {
+          "totalPackets": 3,
+          "totalBytes": 905,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        },
+        "mission-plan": {
+          "totalPackets": 1,
+          "totalBytes": 1345,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        },
+        "mission-events": {
+          "totalPackets": 19,
+          "totalBytes": 2182,
+          "samplePackets": 5,
+          "sampleBytesPerSecond": 37.26881875633224
+        }
+      },
+      "memoryBefore": {
+        "rss": 736526336,
+        "heapTotal": 145711104,
+        "heapUsed": 80986344,
+        "external": 33944662,
+        "arrayBuffers": 2978368
+      },
+      "memoryAfter": {
+        "rss": 741113856,
+        "heapTotal": 149118976,
+        "heapUsed": 86431448,
+        "external": 35854633,
+        "arrayBuffers": 2752105
+      },
+      "enemies": 250,
+      "packetsPerSecond": 10.043490132552785,
+      "payloadBytesPerSecond": 25971.63544227468,
+      "minFrameCount": 250,
+      "operators": 4,
+      "tickHz": 30,
+      "renderedClients": 4,
+      "fps": 59.336562307551475,
+      "frameMs": {
+        "mean": 16.853015427769986,
+        "p95": 16.799999999999272,
+        "p99": 33.29999999999927,
+        "max": 33.400000000001455
+      },
+      "clientFrames": [
+        {
+          "frames": 713,
+          "fps": 59.336562307551475,
+          "mean": 16.853015427769986,
+          "p95": 16.799999999999272,
+          "p99": 33.29999999999927,
+          "max": 33.400000000001455
+        },
+        {
+          "frames": 709,
+          "fps": 59.0041694060469,
+          "mean": 16.94795486600846,
+          "p95": 16.799999999999272,
+          "p99": 33.29999999999927,
+          "max": 33.400000000001455
+        },
+        {
+          "frames": 710,
+          "fps": 59.08689935254074,
+          "mean": 16.924225352112675,
+          "p95": 16.799999999999272,
+          "p99": 33.29999999999927,
+          "max": 33.400000000001455
+        },
+        {
+          "frames": 713,
+          "fps": 59.336562307551475,
+          "mean": 16.853015427769986,
+          "p95": 16.799999999999272,
+          "p99": 33.29999999999927,
+          "max": 33.400000000001455
+        }
+      ],
+      "renderStats": [
+        {
+          "CPU / GPU": "3.2 / 0.1 ms",
+          "Draw Calls / Dreiecke": "40 / 54.121",
+          "Meshes / Instanzen": "3 / 768",
+          "Geometrien / Texturen": "159 / 53",
+          "Gegner sichtbar / aktiv": "9 / 250",
+          "audio": {
+            "voices": 5,
+            "peak": 6,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 2,
+            "spatial": 3,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 19,
+            "pcmMiB": 73.4186897277832,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 68.6000000089407,
+            "decodeMs": 536.2000000029802,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 4,
+            "enemyMs": 0,
+            "enemyPeakMs": 9,
+            "updateMs": 0.07333333293596904,
+            "windups": 0,
+            "impacts": 0
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.1677347793954637,
+            "z": -0.3405831955252624,
+            "direction": 4.254765128991551,
+            "strength": 0.3796470325092032,
+            "gust": 0.11964703250920317,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "2.5 / 0.1 ms",
+          "Draw Calls / Dreiecke": "62 / 79.141",
+          "Meshes / Instanzen": "12 / 945",
+          "Geometrien / Texturen": "168 / 52",
+          "Gegner sichtbar / aktiv": "43 / 250",
+          "audio": {
+            "voices": 5,
+            "peak": 5,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 2,
+            "spatial": 3,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 18,
+            "pcmMiB": 73.3297004699707,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 54.5,
+            "decodeMs": 527.5999999940395,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 4,
+            "enemyMs": 0.10000000894069672,
+            "enemyPeakMs": 3,
+            "updateMs": 0.05333333313465118,
+            "windups": 0,
+            "impacts": 0
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.16429565812639518,
+            "z": -0.337953129671387,
+            "direction": 4.259883247907258,
+            "strength": 0.37577304471432044,
+            "gust": 0.11577304471432041,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "3.3 / 0.1 ms",
+          "Draw Calls / Dreiecke": "67 / 122.261",
+          "Meshes / Instanzen": "7 / 1.717",
+          "Geometrien / Texturen": "150 / 53",
+          "Gegner sichtbar / aktiv": "59 / 250",
+          "audio": {
+            "voices": 6,
+            "peak": 6,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 3,
+            "spatial": 4,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 19,
+            "pcmMiB": 73.4461555480957,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 92.30000001192093,
+            "decodeMs": 544.9000000059605,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 4,
+            "enemyMs": 0,
+            "enemyPeakMs": 5.5,
+            "updateMs": 0.05999999940395355,
+            "windups": 0,
+            "impacts": 0
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.16148615625503657,
+            "z": -0.33501135721900577,
+            "direction": 4.263218912149608,
+            "strength": 0.37190104615037906,
+            "gust": 0.11190104615037905,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "3.6 / 0.1 ms",
+          "Draw Calls / Dreiecke": "106 / 152.979",
+          "Meshes / Instanzen": "22 / 1.413",
+          "Geometrien / Texturen": "171 / 52",
+          "Gegner sichtbar / aktiv": "116 / 250",
+          "audio": {
+            "voices": 4,
+            "peak": 4,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 1,
+            "spatial": 2,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 18,
+            "pcmMiB": 73.3297004699707,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 66.5,
+            "decodeMs": 601.9000000059605,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 0,
+            "enemyMs": 0,
+            "enemyPeakMs": 3.7999999970197678,
+            "updateMs": 0.046666666865348816,
+            "windups": 0,
+            "impacts": 0
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.1574010133605266,
+            "z": -0.33032327498778336,
+            "direction": 4.2677126229856235,
+            "strength": 0.36590783676436256,
+            "gust": 0.10590783676436254,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        }
+      ],
+      "serverRecentTickMs": {
+        "mean": 0.6291381833335132,
+        "p95": 0.7983490000005986,
+        "p99": 1.1280929999993532,
+        "max": 1.7160599999988335
+      },
+      "droppedSteps": 0,
+      "observedTickHz": 30.130470397658357,
+      "payloadSource": "Horde broadcasts per recipient",
+      "wallSeconds": 12.047604806999999,
+      "errors": [],
+      "combatAudio": [
+        {
+          "voices": 5,
+          "peak": 10,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 2,
+          "spatial": 3,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 24,
+          "pcmMiB": 73.98244094848633,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 68.6000000089407,
+          "decodeMs": 536.2000000029802,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 4,
+          "enemyMs": 0,
+          "enemyPeakMs": 9,
+          "updateMs": 0.09333333174387613,
+          "windups": 79,
+          "impacts": 74
+        },
+        {
+          "voices": 6,
+          "peak": 11,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 3,
+          "spatial": 4,
+          "context": "running",
+          "duck": true,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 54.5,
+          "decodeMs": 527.5999999940395,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 4,
+          "enemyMs": 0,
+          "enemyPeakMs": 3,
+          "updateMs": 0.03333333333333333,
+          "windups": 80,
+          "impacts": 71
+        },
+        {
+          "voices": 3,
+          "peak": 6,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 0,
+          "spatial": 1,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 92.30000001192093,
+          "decodeMs": 544.9000000059605,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 0,
+          "enemyMs": 0,
+          "enemyPeakMs": 5.5,
+          "updateMs": 0.03125,
+          "windups": 94,
+          "impacts": 84
+        },
+        {
+          "voices": 4,
+          "peak": 7,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 1,
+          "spatial": 2,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 66.5,
+          "decodeMs": 601.9000000059605,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 4,
+          "enemyMs": 0,
+          "enemyPeakMs": 3.7999999970197678,
+          "updateMs": 0.013333333532015483,
+          "windups": 10,
+          "impacts": 8
+        }
+      ]
+    },
+    {
+      "chromium": "153.0.8010.12",
+      "angle": "gl",
+      "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+      "quality": "medium",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "balanceHash": "01855759529dd588",
+      "phase": "ACTIVE_MISSION",
+      "wave": {
+        "state": "BUILDUP",
+        "stateAt": 234,
+        "waveId": 1,
+        "created": 1,
+        "region": "breach/sector-1"
+      },
+      "plan": {
+        "id": "generated.4808d7ed2076dcf1",
+        "seed": 0,
+        "templateId": "relay-defense",
+        "world": {
+          "id": "world.generated.acdc7ec0c04dd3da",
+          "planetId": "forest",
+          "biome": "temperate-forest",
+          "seed": 63,
+          "formatVersion": 1,
+          "generatorVersion": 1,
+          "profileVersion": 1,
+          "assetVersion": 1
+        }
+      },
+      "objectiveUpdateMs": {
+        "mean": 0.0018394875345585406,
+        "p95": 0.0018600000003061723,
+        "p99": 0.0030299999998533167,
+        "max": 0.2750930000038352
+      },
+      "navigationMs": {
+        "mean": 0.6766777036008688,
+        "p95": 0.7513590000016848,
+        "p99": 1.9403940000047442,
+        "max": 4.146020000000135
+      },
+      "weatherServerMs": {
+        "mean": 0.0010224044320508619,
+        "p95": 0.0015199999979813583,
+        "p99": 0.002169999999750871,
+        "max": 0.003859999997075647
+      },
+      "collisionMs": {
+        "mean": 0.2623633324098221,
+        "p95": 0.2794030000004568,
+        "p99": 1.526588000000629,
+        "max": 3.7175250000000233
+      },
+      "directorMs": {
+        "mean": 0.005566736842363178,
+        "p95": 0.02268999999796506,
+        "p99": 0.026501000000280328,
+        "max": 0.08996100000513252
+      },
+      "operatorAttacks": 569,
+      "movedEnemies": 350,
+      "missionNetwork": {
+        "mission-state": {
+          "totalPackets": 199,
+          "totalBytes": 506546,
+          "samplePackets": 60,
+          "sampleBytesPerSecond": 14467.950538853267
+        },
+        "atmosphere-state": {
+          "totalPackets": 3,
+          "totalBytes": 905,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        },
+        "mission-plan": {
+          "totalPackets": 1,
+          "totalBytes": 1345,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        },
+        "mission-events": {
+          "totalPackets": 19,
+          "totalBytes": 2182,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        }
+      },
+      "memoryBefore": {
+        "rss": 745017344,
+        "heapTotal": 150429696,
+        "heapUsed": 84951456,
+        "external": 34526573,
+        "arrayBuffers": 3560239
+      },
+      "memoryAfter": {
+        "rss": 745672704,
+        "heapTotal": 151216128,
+        "heapUsed": 108588984,
+        "external": 36120112,
+        "arrayBuffers": 5153778
+      },
+      "enemies": 500,
+      "packetsPerSecond": 10.044593712604328,
+      "payloadBytesPerSecond": 51734.80443652536,
+      "minFrameCount": 500,
+      "operators": 4,
+      "tickHz": 30,
+      "renderedClients": 4,
+      "fps": 57.172816697458444,
+      "frameMs": {
+        "mean": 17.49082969432314,
+        "p95": 16.80000000000291,
+        "p99": 33.400000000001455,
+        "max": 50
+      },
+      "clientFrames": [
+        {
+          "frames": 687,
+          "fps": 57.172816697458444,
+          "mean": 17.49082969432314,
+          "p95": 16.80000000000291,
+          "p99": 33.400000000001455,
+          "max": 50
+        },
+        {
+          "frames": 684,
+          "fps": 56.92315374244772,
+          "mean": 17.567543859649117,
+          "p95": 33.20000000000073,
+          "p99": 33.400000000001455,
+          "max": 50.099999999998545
+        },
+        {
+          "frames": 680,
+          "fps": 56.590269802433376,
+          "mean": 17.670882352941177,
+          "p95": 33.299999999995634,
+          "p99": 33.400000000001455,
+          "max": 50
+        },
+        {
+          "frames": 692,
+          "fps": 57.588921622476306,
+          "mean": 17.364450867052028,
+          "p95": 16.80000000000291,
+          "p99": 33.400000000001455,
+          "max": 33.400000000001455
+        }
+      ],
+      "renderStats": [
+        {
+          "CPU / GPU": "3.1 / 0.1 ms",
+          "Draw Calls / Dreiecke": "45 / 72.881",
+          "Meshes / Instanzen": "3 / 838",
+          "Geometrien / Texturen": "168 / 53",
+          "Gegner sichtbar / aktiv": "41 / 500",
+          "audio": {
+            "voices": 5,
+            "peak": 6,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 2,
+            "spatial": 3,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 24,
+            "pcmMiB": 73.98244094848633,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 68.6000000089407,
+            "decodeMs": 536.2000000029802,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 8,
+            "enemyMs": 0,
+            "enemyPeakMs": 9,
+            "updateMs": 0.013333332538604737,
+            "windups": 79,
+            "impacts": 74
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.1268695798741818,
+            "z": -0.2627725318391507,
+            "direction": 4.262586546340817,
+            "strength": 0.29179666513962915,
+            "gust": 0.03179666513962913,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "5.2 / 0.1 ms",
+          "Draw Calls / Dreiecke": "67 / 98.739",
+          "Meshes / Instanzen": "12 / 1.039",
+          "Geometrien / Texturen": "177 / 52",
+          "Gegner sichtbar / aktiv": "100 / 500",
+          "audio": {
+            "voices": 4,
+            "peak": 6,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 1,
+            "spatial": 2,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 23,
+            "pcmMiB": 73.89345169067383,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 54.5,
+            "decodeMs": 527.5999999940395,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 0,
+            "enemyMs": 0,
+            "enemyPeakMs": 3,
+            "updateMs": 0.019999998807907104,
+            "windups": 80,
+            "impacts": 71
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.12996128225216666,
+            "z": -0.26461448492719386,
+            "direction": 4.2558589541708365,
+            "strength": 0.29480631017315667,
+            "gust": 0.034806310173156677,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "2.6 / 0.1 ms",
+          "Draw Calls / Dreiecke": "70 / 139.179",
+          "Meshes / Instanzen": "7 / 1.815",
+          "Geometrien / Texturen": "157 / 53",
+          "Gegner sichtbar / aktiv": "113 / 500",
+          "audio": {
+            "voices": 4,
+            "peak": 5,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 1,
+            "spatial": 2,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 23,
+            "pcmMiB": 73.89345169067383,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 92.30000001192093,
+            "decodeMs": 544.9000000059605,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 0,
+            "enemyMs": 0,
+            "enemyPeakMs": 5.5,
+            "updateMs": 0.013333332538604737,
+            "windups": 94,
+            "impacts": 84
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.1317086850271192,
+            "z": -0.26641334681587064,
+            "direction": 4.253249718960067,
+            "strength": 0.29719227626774936,
+            "gust": 0.037192276267749354,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "3.7 / 0.1 ms",
+          "Draw Calls / Dreiecke": "106 / 180.179",
+          "Meshes / Instanzen": "22 / 1.583",
+          "Geometrien / Texturen": "174 / 52",
+          "Gegner sichtbar / aktiv": "223 / 500",
+          "audio": {
+            "voices": 4,
+            "peak": 6,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 1,
+            "spatial": 2,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 23,
+            "pcmMiB": 73.89345169067383,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 66.5,
+            "decodeMs": 601.9000000059605,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 4,
+            "enemyMs": 0,
+            "enemyPeakMs": 3.7999999970197678,
+            "updateMs": 0.026666669050852458,
+            "windups": 10,
+            "impacts": 8
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.13361857381797318,
+            "z": -0.2686007370079811,
+            "direction": 4.250774088650381,
+            "strength": 0.30000046531693875,
+            "gust": 0.04000046531693872,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        }
+      ],
+      "serverRecentTickMs": {
+        "mean": 0.8931551333333725,
+        "p95": 1.722371000003477,
+        "p99": 2.3846689999991213,
+        "max": 3.3582210000022314
+      },
+      "droppedSteps": 0,
+      "observedTickHz": 30.050767966634435,
+      "payloadSource": "Horde broadcasts per recipient",
+      "wallSeconds": 12.046281160000003,
+      "errors": [],
+      "combatAudio": [
+        {
+          "voices": 5,
+          "peak": 9,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 2,
+          "spatial": 3,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 24,
+          "pcmMiB": 73.98244094848633,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 68.6000000089407,
+          "decodeMs": 536.2000000029802,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 4,
+          "enemyMs": 0,
+          "enemyPeakMs": 9,
+          "updateMs": 0.046666666865348816,
+          "windups": 136,
+          "impacts": 136
+        },
+        {
+          "voices": 4,
+          "peak": 9,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 1,
+          "spatial": 2,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 54.5,
+          "decodeMs": 527.5999999940395,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 0,
+          "enemyMs": 0,
+          "enemyPeakMs": 4.799999997019768,
+          "updateMs": 0.03333333432674408,
+          "windups": 151,
+          "impacts": 139
+        },
+        {
+          "voices": 4,
+          "peak": 6,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 0,
+          "spatial": 2,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 92.30000001192093,
+          "decodeMs": 544.9000000059605,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 0,
+          "enemyMs": 0,
+          "enemyPeakMs": 5.5,
+          "updateMs": 0.020000000794728596,
+          "windups": 156,
+          "impacts": 146
+        },
+        {
+          "voices": 4,
+          "peak": 8,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 1,
+          "spatial": 2,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 66.5,
+          "decodeMs": 601.9000000059605,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 0,
+          "enemyMs": 0,
+          "enemyPeakMs": 6.0999999940395355,
+          "updateMs": 0.046666666865348816,
+          "windups": 98,
+          "impacts": 92
+        }
+      ]
+    },
+    {
+      "chromium": "153.0.8010.12",
+      "angle": "gl",
+      "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+      "quality": "medium",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "balanceHash": "01855759529dd588",
+      "phase": "ACTIVE_MISSION",
+      "wave": {
+        "state": "BUILDUP",
+        "stateAt": 234,
+        "waveId": 1,
+        "created": 1,
+        "region": "breach/sector-1"
+      },
+      "plan": {
+        "id": "generated.4808d7ed2076dcf1",
+        "seed": 0,
+        "templateId": "relay-defense",
+        "world": {
+          "id": "world.generated.acdc7ec0c04dd3da",
+          "planetId": "forest",
+          "biome": "temperate-forest",
+          "seed": 63,
+          "formatVersion": 1,
+          "generatorVersion": 1,
+          "profileVersion": 1,
+          "assetVersion": 1
+        }
+      },
+      "objectiveUpdateMs": {
+        "mean": 0.000550775623453363,
+        "p95": 0.0007800000021234155,
+        "p99": 0.0011200000008102506,
+        "max": 0.0015399999974761158
+      },
+      "navigationMs": {
+        "mean": 1.3541513157895508,
+        "p95": 2.166620000003604,
+        "p99": 3.9807500000024447,
+        "max": 5.189830000002985
+      },
+      "weatherServerMs": {
+        "mean": 0.0009952659278789115,
+        "p95": 0.0013800000015180558,
+        "p99": 0.0022200000021257438,
+        "max": 0.0026299999954062514
+      },
+      "collisionMs": {
+        "mean": 0.5399598531857566,
+        "p95": 0.7865710000041872,
+        "p99": 2.5779899999979534,
+        "max": 3.628709999997227
+      },
+      "directorMs": {
+        "mean": 0.004415601108015523,
+        "p95": 0.010190000000875443,
+        "p99": 0.03863999999884982,
+        "max": 0.07340000000112923
+      },
+      "operatorAttacks": 581,
+      "movedEnemies": 693,
+      "missionNetwork": {
+        "mission-state": {
+          "totalPackets": 274,
+          "totalBytes": 724196,
+          "samplePackets": 60,
+          "sampleBytesPerSecond": 14472.178463075266
+        },
+        "atmosphere-state": {
+          "totalPackets": 3,
+          "totalBytes": 905,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        },
+        "mission-plan": {
+          "totalPackets": 1,
+          "totalBytes": 1345,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        },
+        "mission-events": {
+          "totalPackets": 19,
+          "totalBytes": 2182,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        }
+      },
+      "memoryBefore": {
+        "rss": 746754048,
+        "heapTotal": 152264704,
+        "heapUsed": 85240176,
+        "external": 34959867,
+        "arrayBuffers": 3993533
+      },
+      "memoryAfter": {
+        "rss": 747147264,
+        "heapTotal": 152526848,
+        "heapUsed": 111570536,
+        "external": 36698183,
+        "arrayBuffers": 5731849
+      },
+      "enemies": 1000,
+      "packetsPerSecond": 9.973934157874064,
+      "payloadBytesPerSecond": 101185.56203163238,
+      "minFrameCount": 1000,
+      "operators": 4,
+      "tickHz": 30,
+      "renderedClients": 4,
+      "fps": 57.83810324309478,
+      "frameMs": {
+        "mean": 17.28964028776979,
+        "p95": 16.80000000000291,
+        "p99": 33.400000000001455,
+        "max": 50.099999999998545
+      },
+      "clientFrames": [
+        {
+          "frames": 695,
+          "fps": 57.83810324309478,
+          "mean": 17.28964028776979,
+          "p95": 16.80000000000291,
+          "p99": 33.400000000001455,
+          "max": 50.099999999998545
+        },
+        {
+          "frames": 694,
+          "fps": 57.75536359248349,
+          "mean": 17.314409221902014,
+          "p95": 16.80000000000291,
+          "p99": 33.400000000001455,
+          "max": 33.400000000001455
+        },
+        {
+          "frames": 691,
+          "fps": 57.50617920956051,
+          "mean": 17.38943560057887,
+          "p95": 16.80000000000291,
+          "p99": 33.400000000001455,
+          "max": 50
+        },
+        {
+          "frames": 697,
+          "fps": 58.00502654749423,
+          "mean": 17.23988522238163,
+          "p95": 16.80000000000291,
+          "p99": 33.400000000001455,
+          "max": 49.900000000001455
+        }
+      ],
+      "renderStats": [
+        {
+          "CPU / GPU": "2.6 / 0.1 ms",
+          "Draw Calls / Dreiecke": "45 / 95.247",
+          "Meshes / Instanzen": "3 / 925",
+          "Geometrien / Texturen": "168 / 53",
+          "Gegner sichtbar / aktiv": "85 / 1.000",
+          "audio": {
+            "voices": 4,
+            "peak": 4,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 1,
+            "spatial": 2,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 24,
+            "pcmMiB": 73.98244094848633,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 68.6000000089407,
+            "decodeMs": 536.2000000029802,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 0,
+            "enemyMs": 0,
+            "enemyPeakMs": 9,
+            "updateMs": 0,
+            "windups": 136,
+            "impacts": 136
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.12508531226790925,
+            "z": -0.3313655667032644,
+            "direction": 4.351442039498167,
+            "strength": 0.35418847262684305,
+            "gust": 0.09418847262684303,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "3.6 / 0.1 ms",
+          "Draw Calls / Dreiecke": "67 / 122.091",
+          "Meshes / Instanzen": "12 / 1.168",
+          "Geometrien / Texturen": "177 / 52",
+          "Gegner sichtbar / aktiv": "193 / 1.000",
+          "audio": {
+            "voices": 5,
+            "peak": 5,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 2,
+            "spatial": 3,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 23,
+            "pcmMiB": 73.89345169067383,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 54.5,
+            "decodeMs": 527.5999999940395,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 0,
+            "enemyMs": 0,
+            "enemyPeakMs": 4.799999997019768,
+            "updateMs": 0.028571428997176036,
+            "windups": 151,
+            "impacts": 139
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.12663718213912928,
+            "z": -0.33100078578020403,
+            "direction": 4.346981800847933,
+            "strength": 0.35439878115937634,
+            "gust": 0.09439878115937635,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "2.6 / 0.1 ms",
+          "Draw Calls / Dreiecke": "71 / 164.975",
+          "Meshes / Instanzen": "7 / 1.962",
+          "Geometrien / Texturen": "157 / 53",
+          "Gegner sichtbar / aktiv": "222 / 1.000",
+          "audio": {
+            "voices": 4,
+            "peak": 5,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 1,
+            "spatial": 2,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 23,
+            "pcmMiB": 73.89345169067383,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 92.30000001192093,
+            "decodeMs": 544.9000000059605,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 0,
+            "enemyMs": 0,
+            "enemyPeakMs": 5.5,
+            "updateMs": 0.01999999980131785,
+            "windups": 156,
+            "impacts": 146
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.12729591357997597,
+            "z": -0.3298702081073889,
+            "direction": 4.34409919417369,
+            "strength": 0.3535796993762124,
+            "gust": 0.09357969937621242,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "4.2 / 0.1 ms",
+          "Draw Calls / Dreiecke": "106 / 218.743",
+          "Meshes / Instanzen": "22 / 1.840",
+          "Geometrien / Texturen": "174 / 52",
+          "Gegner sichtbar / aktiv": "428 / 1.000",
+          "audio": {
+            "voices": 5,
+            "peak": 6,
+            "dropped": 0,
+            "budget": 28,
+            "ambience": 2,
+            "combat": 2,
+            "spatial": 3,
+            "context": "running",
+            "duck": false,
+            "levels": {
+              "master": 0.8,
+              "weapons": 0.9,
+              "environment": 0.8,
+              "ambience": 0.8,
+              "weather": 0.8,
+              "ui": 0.7,
+              "muted": false,
+              "enabled": true
+            },
+            "buffers": 23,
+            "pcmMiB": 73.89345169067383,
+            "loading": 0,
+            "errors": 0,
+            "loadMs": 66.5,
+            "decodeMs": 601.9000000059605,
+            "planet": "forest",
+            "weather": "ground-mist",
+            "wind": "forest-wind",
+            "rate": 0,
+            "enemyMs": 0.09999999403953552,
+            "enemyPeakMs": 6.0999999940395355,
+            "updateMs": 0.046666665871938066,
+            "windups": 98,
+            "impacts": 92
+          },
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 233,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.12798398144006093,
+            "z": -0.3281536243787488,
+            "direction": 4.340522146728215,
+            "strength": 0.35222819407049005,
+            "gust": 0.09222819407049003,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        }
+      ],
+      "serverRecentTickMs": {
+        "mean": 1.5676556166667674,
+        "p95": 2.7306309999985388,
+        "p99": 5.399680000002263,
+        "max": 8.076758999995945
+      },
+      "droppedSteps": 0,
+      "observedTickHz": 30.004918591604476,
+      "payloadSource": "Horde broadcasts per recipient",
+      "wallSeconds": 12.031360755000001,
+      "errors": [],
+      "combatAudio": [
+        {
+          "voices": 6,
+          "peak": 10,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 2,
+          "spatial": 4,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 24,
+          "pcmMiB": 73.98244094848633,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 68.6000000089407,
+          "decodeMs": 536.2000000029802,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 4,
+          "enemyMs": 0,
+          "enemyPeakMs": 9,
+          "updateMs": 0.043750002048909664,
+          "windups": 201,
+          "impacts": 196
+        },
+        {
+          "voices": 4,
+          "peak": 7,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 1,
+          "spatial": 2,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 54.5,
+          "decodeMs": 527.5999999940395,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 0,
+          "enemyMs": 0.10000000894069672,
+          "enemyPeakMs": 4.799999997019768,
+          "updateMs": 0.046666666865348816,
+          "windups": 204,
+          "impacts": 193
+        },
+        {
+          "voices": 3,
+          "peak": 8,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 0,
+          "spatial": 1,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 92.30000001192093,
+          "decodeMs": 544.9000000059605,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 0,
+          "enemyMs": 0,
+          "enemyPeakMs": 6.200000002980232,
+          "updateMs": 0.046666664878527324,
+          "windups": 219,
+          "impacts": 206
+        },
+        {
+          "voices": 5,
+          "peak": 7,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 1,
+          "spatial": 3,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 66.5,
+          "decodeMs": 601.9000000059605,
+          "planet": "forest",
+          "weather": "ground-mist",
+          "wind": "forest-wind",
+          "rate": 0,
+          "enemyMs": 0,
+          "enemyPeakMs": 6.0999999940395355,
+          "updateMs": 0.0066666672627131145,
+          "windups": 161,
+          "impacts": 159
+        }
+      ]
+    },
+    {
+      "reconnectAudio": [
+        {
+          "voices": 3,
+          "peak": 3,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 0,
+          "spatial": 1,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 24,
+          "pcmMiB": 73.98244094848633,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 68.6000000089407,
+          "decodeMs": 536.2000000029802,
+          "planet": "forest",
+          "weather": "ground-mist → windy-forest",
+          "wind": "forest-wind",
+          "rate": 0,
+          "enemyMs": 0,
+          "enemyPeakMs": 9,
+          "updateMs": 0,
+          "windups": 201,
+          "impacts": 196
+        },
+        {
+          "voices": 4,
+          "peak": 4,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 1,
+          "spatial": 2,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 26,
+          "pcmMiB": 75.07059478759766,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 54.5,
+          "decodeMs": 527.5999999940395,
+          "planet": "forest",
+          "weather": "ground-mist → windy-forest",
+          "wind": "forest-wind",
+          "rate": 4,
+          "enemyMs": 0,
+          "enemyPeakMs": 0.09999999403953552,
+          "updateMs": 0.08000000019868216,
+          "windups": 0,
+          "impacts": 0
+        },
+        {
+          "voices": 4,
+          "peak": 4,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 0,
+          "spatial": 2,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 92.30000001192093,
+          "decodeMs": 544.9000000059605,
+          "planet": "forest",
+          "weather": "ground-mist → windy-forest",
+          "wind": "forest-wind",
+          "rate": 4,
+          "enemyMs": 0.09999999403953552,
+          "enemyPeakMs": 6.200000002980232,
+          "updateMs": 0.06363636390729384,
+          "windups": 219,
+          "impacts": 206
+        },
+        {
+          "voices": 5,
+          "peak": 5,
+          "dropped": 0,
+          "budget": 28,
+          "ambience": 2,
+          "combat": 2,
+          "spatial": 3,
+          "context": "running",
+          "duck": false,
+          "levels": {
+            "master": 0.8,
+            "weapons": 0.9,
+            "environment": 0.8,
+            "ambience": 0.8,
+            "weather": 0.8,
+            "ui": 0.7,
+            "muted": false,
+            "enabled": true
+          },
+          "buffers": 23,
+          "pcmMiB": 73.89345169067383,
+          "loading": 0,
+          "errors": 0,
+          "loadMs": 66.5,
+          "decodeMs": 601.9000000059605,
+          "planet": "forest",
+          "weather": "ground-mist → windy-forest",
+          "wind": "forest-wind",
+          "rate": 4,
+          "enemyMs": 0,
+          "enemyPeakMs": 6.0999999940395355,
+          "updateMs": 0.026666669050852458,
+          "windups": 161,
+          "impacts": 159
+        }
+      ]
+    },
+    {
+      "during": {
+        "instanceId": "c043268b-4be2-4934-8d8d-1ddcc384e623",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 173,
+        "timeOfDay": "dawn",
+        "revision": 3,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 1659,
+        "durationTicks": 660,
+        "target": {
+          "weather": "windy-forest",
+          "wind": {
+            "direction": 4,
+            "strength": 0.61,
+            "gust": 0.28,
+            "frequency": 0.081,
+            "turbulence": 0.272
+          }
+        }
+      },
+      "serverProgress": 0.06818181818181818,
+      "shared": [
+        {
+          "planet": "forest",
+          "profile": "forest.filtered-day.v1",
+          "version": 1,
+          "revision": 3,
+          "current": "ground-mist",
+          "target": "windy-forest",
+          "timeOfDay": "dawn",
+          "audio": "ambience.forest.ground-mist",
+          "targetAudio": "ambience.forest.windy-forest",
+          "seed": 2479544381,
+          "startTick": 1659,
+          "durationTicks": 660,
+          "progress": 0.05788939393912298,
+          "x": -0.12147063962137054,
+          "z": -0.2999833519832425,
+          "direction": 4.3276444784510915,
+          "strength": 0.32364351956609116,
+          "gust": 0.06026057706258135,
+          "turbulence": 0.2165412708005616,
+          "particles": 0,
+          "cap": 176,
+          "particleMs": 0,
+          "updateMs": 0
+        },
+        {
+          "planet": "forest",
+          "profile": "forest.filtered-day.v1",
+          "version": 1,
+          "revision": 3,
+          "current": "ground-mist",
+          "target": "windy-forest",
+          "timeOfDay": "dawn",
+          "audio": "ambience.forest.ground-mist",
+          "targetAudio": "ambience.forest.windy-forest",
+          "seed": 2479544381,
+          "startTick": 1659,
+          "durationTicks": 660,
+          "progress": 0.06253484848498408,
+          "x": -0.12122514523696612,
+          "z": -0.3003987583357942,
+          "direction": 4.328828224517293,
+          "strength": 0.32393664480482975,
+          "gust": 0.06000169162943807,
+          "turbulence": 0.21662959250806268,
+          "particles": 0,
+          "cap": 64,
+          "particleMs": 0,
+          "updateMs": 0
+        },
+        {
+          "planet": "forest",
+          "profile": "forest.filtered-day.v1",
+          "version": 1,
+          "revision": 3,
+          "current": "ground-mist",
+          "target": "windy-forest",
+          "timeOfDay": "dawn",
+          "audio": "ambience.forest.ground-mist",
+          "targetAudio": "ambience.forest.windy-forest",
+          "seed": 2479544381,
+          "startTick": 1659,
+          "durationTicks": 660,
+          "progress": 0.06621818181872365,
+          "x": -0.12107091209399966,
+          "z": -0.30079042906264414,
+          "direction": 4.329721381405049,
+          "strength": 0.3242422674034996,
+          "gust": 0.05984142706504664,
+          "turbulence": 0.21670413445415249,
+          "particles": 0,
+          "cap": 320,
+          "particleMs": 0,
+          "updateMs": 0
+        },
+        {
+          "planet": "forest",
+          "profile": "forest.filtered-day.v1",
+          "version": 1,
+          "revision": 3,
+          "current": "ground-mist",
+          "target": "windy-forest",
+          "timeOfDay": "dawn",
+          "audio": "ambience.forest.ground-mist",
+          "targetAudio": "ambience.forest.windy-forest",
+          "seed": 2479544381,
+          "startTick": 1659,
+          "durationTicks": 660,
+          "progress": 0.06393636363595726,
+          "x": -0.12116248514101409,
+          "z": -0.3005418967217984,
+          "direction": 4.329172845492389,
+          "strength": 0.3240459527454132,
+          "gust": 0.05993665519020951,
+          "turbulence": 0.2166574876088326,
+          "particles": 0,
+          "cap": 176,
+          "particleMs": 0,
+          "updateMs": 0
+        }
+      ]
+    },
+    {
+      "reconnect": true,
+      "players": 4,
+      "world": "world.generated.acdc7ec0c04dd3da",
+      "guestQualities": [
+        "low",
+        "high",
+        "medium"
+      ]
+    },
+    {
+      "missionId": "generated.4808d7ed2076dcf1",
+      "difficultyId": "freefall",
+      "balanceHash": "01855759529dd588",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      }
+    },
+    {
+      "generatedCompletion": {
+        "outcome": "extracted",
+        "method": "balloon",
+        "extracted": 4,
+        "durationTicks": 4641
+      }
+    }
+  ]
+}

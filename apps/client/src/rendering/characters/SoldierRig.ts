@@ -236,20 +236,22 @@ export class SoldierRig {
 
   pose(state: CharacterAnimation, weapon: WeaponVisualController, targetWorld: T.Vector3, pitch: number, now: number, muzzleWorld?: T.Vector3): void {
     const { aim, sprint, phase, kick, reload, flinch } = state;
-    const { crouch, prone, supine, roll, tuck } = state.tactical;
+    const { crouch, slide, prone, supine, roll, tuck, lateral, landing } = state.tactical;
     const low = Math.min(1, prone + supine);
-    const gait = Math.min(1, state.speed / 5.8);
+    const airborne = state.tactical.clip?.startsWith('dive') ?? false;
+    const gait = airborne ? 0 : Math.min(1, state.speed / 5.8);
     const fall = T.MathUtils.smoothstep(state.fall, 0, 1);
     const handling = T.MathUtils.smoothstep(reload, 0, .19) * (1 - T.MathUtils.smoothstep(reload, .81, 1));
     const breathe = Math.sin(now / 430) * .003 * (1 - fall);
     this.root.position.y = pelvisHeight - .023 - gait * (.066 + Math.cos(phase * 2) * .019) + breathe - fall * .69;
-    this.root.position.x = Math.sin(phase) * gait * .024;
-    this.root.position.y = T.MathUtils.lerp(this.root.position.y - .32 * crouch, .29 + .08 * supine + .12 * tuck, low);
+    this.root.position.x = Math.sin(phase) * gait * .024 + .18 * lateral;
+    this.root.position.y = T.MathUtils.lerp(this.root.position.y - .32 * crouch, .29 + .08 * supine + .12 * tuck - .075 * landing, low);
+    if (slide > .001) this.root.position.y -= .17 * slide;
     this.root.rotation.set(gait * .025 + sprint * .06 - fall * 1.22 + .14 * crouch - prone * 1.44 + supine * 1.44,
       fall * .31, fall * -.54 + roll);
     this.torso.rotation.set(-state.lean * .105 - sprint * .10 + aim * (pitch * .32 - .038) + kick * .033 - flinch * .15 + handling * .11,
-      -.16 - state.turn * .20 + aim * .13 + Math.sin(phase) * gait * .077 - handling * .21,
-      Math.cos(phase) * gait * .038 + flinch * .065);
+      -.16 - state.turn * .20 + aim * .13 + Math.sin(phase) * gait * .077 - handling * .21 + .23 * lateral,
+      Math.cos(phase) * gait * .038 + flinch * .065 - .15 * lateral);
     this.head.rotation.set(-this.torso.rotation.x * .55 + .61 * prone - .34 * supine, -this.torso.rotation.y * .65, -this.torso.rotation.z * .55);
     this.injector.visible = state.inject > .08;
     this.frag.visible = state.holdingGrenade;
@@ -258,7 +260,8 @@ export class SoldierRig {
     const strike = state.melee;
     gun.position.set(.182 - aim * .018 - handling * .026 - strike * .05, .213 + aim * .028 - sprint * .103 - handling * .108 - state.lower * .12 + Math.max(0, strike) * .06,
       -.175 + kick * .043 + handling * .044 - strike * .26);
-    gun.rotation.set(-.20 - state.lower * .84 - sprint * .38 - handling * .24 + kick * .10 + strike * .42, .065 + sprint * .23 - handling * .36 - strike * .25,
+    gun.rotation.set(-.20 - state.lower * .84 - sprint * .38 - handling * .24 + kick * .10 + strike * .42 - tuck * .36,
+      .065 + sprint * .23 - handling * .36 - strike * .25 - .13 * lateral,
       .055 - sprint * .18 + handling * .59);
     this.torso.rotation.x -= strike * .12;
     this.torso.rotation.y += strike * .18;
@@ -307,23 +310,28 @@ export class SoldierRig {
       const swing = Math.max(0, (fraction - state.stance) / (1 - state.stance));
       const travel = fraction < state.stance ? 1 - 2 * fraction / state.stance
         : 2 * T.MathUtils.smoothstep(swing, 0, 1) - 1;
-      const step = travel * state.stride;
+      const step = airborne ? 0 : travel * state.stride;
       const pivot = (1 - gait) * state.turn;
       const lift = Math.sin(swing * Math.PI) * (gait * (.105 + sprint * .09) + Math.abs(pivot) * .055);
       this.origin.set(side * hip, 0, 0);
       this.target.set(side * (hip + .015) + step * state.strafe - this.root.position.x, .099 - this.root.position.y + lift - fall * .52,
         -step * state.forward + side * pivot * travel * .073 + .026 - fall * .08);
       this.target.z -= .19 * crouch;
+      if (slide > .001 && this.root.parent) {
+        this.aimTarget.set(side * .19, .099, i === 0 ? -.59 : -.28);
+        this.root.worldToLocal(this.root.parent.localToWorld(this.aimTarget));
+        this.target.lerp(this.aimTarget, slide);
+      }
       if (low > .001 && this.root.parent) {
         const direction = prone > supine ? 1 : -1;
-        this.aimTarget.set(side * (.19 + .10 * tuck) + state.strafe * step, .09 + .12 * tuck + lift * .25,
-          direction * (.74 - .19 * tuck - step * state.forward * .6));
+        this.aimTarget.set(side * (.19 + .10 * tuck) + state.strafe * step - .23 * lateral, .09 + .20 * tuck + lift * .3,
+          direction * (.74 - (.20 + .09 * side) * tuck - step * state.forward * .7));
         this.root.worldToLocal(this.root.parent.localToWorld(this.aimTarget));
         this.target.lerp(this.aimTarget, low);
       }
       this.pole.set(side * .16 + state.strafe * .29, 0, -1);
       this.bend(leg, thigh, calf);
-      leg.end.rotation.set(Math.sin(swing * Math.PI * 2) * gait * .23, -side * .085, 0);
+      leg.end.rotation.set(Math.sin(swing * Math.PI * 2) * gait * .23 * (1 - slide), -side * .085, 0);
     }
   }
 

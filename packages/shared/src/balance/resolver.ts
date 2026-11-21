@@ -10,10 +10,11 @@
  * only once per resolver. Both rules make double application of a difficulty multiplier an error, not a bug.
  */
 import { SIMULATION_HZ } from '../config/limits.ts';
+import { OPERATOR_SLIDE_LIMITS } from './definitions.ts';
 import { deepFreeze } from './schema.ts';
 import type {
   CombatDefinition, ConvictKitDefinition, ConvictSquadDefinition, DamagePolicy, DifficultyDefinition, EnemyGameplay,
-  GrenadeDefinition, MedicalDefinition, MeleeDefinition, NestDefinition, ResupplyRules, SupplyContainerDefinition,
+  GrenadeDefinition, MedicalDefinition, MeleeDefinition, NestDefinition, OperatorSlideDefinition, ResupplyRules, SupplyContainerDefinition,
   SwarmDefinition, WeaponDefinition, WeaponSlot,
 } from './definitions.ts';
 import type { BalanceRegistry } from './registry.ts';
@@ -147,6 +148,8 @@ export interface EffectiveSpread {
 export interface EffectiveWeapon extends WeaponDefinition {
   /** Ticks between two shots. */
   readonly fireIntervalTicks: number;
+  /** Exact shot interval in ticks (fractional). Sustained fire averages exactly `roundsPerSecond`. */
+  readonly fireInterval: number;
   readonly reloadTicks: number;
   /** Ticks after reload start at which the old magazine leaves the weapon. */
   readonly reloadRemovalTicks: number;
@@ -184,8 +187,12 @@ export interface EffectiveLoadout {
   readonly grenade: EffectiveGrenade;
   readonly medical: EffectiveMedical;
   readonly melee: EffectiveMelee;
+  readonly slide: OperatorSlideDefinition;
   readonly switchTicks: number;
   readonly maxHealth: number;
+  /** Respawn delay and respawn protection of the operator (`operators.json`), in ticks. */
+  readonly respawnTicks: number;
+  readonly respawnProtectionTicks: number;
   /** Relation multipliers of the central damage resolver. */
   readonly damagePolicy: DamagePolicy;
   readonly operatorHitbox: CombatDefinition['operatorHitbox'];
@@ -212,6 +219,7 @@ function effectiveWeapon(resolver: StatResolver, weapon: WeaponDefinition): Effe
   return {
     ...weapon, damage, roundsPerSecond, magazineSize, reserveMagazines, maxReserveMagazines, reloadSeconds, effectiveRange,
     fireIntervalTicks: resolver.resolve(`${key}.fireIntervalTicks`, SIMULATION_HZ / roundsPerSecond, { layers: NONE, round: 'ceil', min: 1 }),
+    fireInterval: Math.max(1, SIMULATION_HZ / roundsPerSecond),
     reloadTicks, reloadRemovalTicks: Math.max(0, reloadRemovalTicks), reloadInsertionTicks,
     handling: {
       recoil: {
@@ -245,11 +253,19 @@ function effectiveMelee(resolver: StatResolver, melee: MeleeDefinition): Effecti
   };
 }
 
-/** Resolves an operator loadout. `modifiers` are equipment-layer modifiers such as future weapon attachments. */
+/** Armor resolves operator stats separately from weapon and other equipment modifiers. */
 export function resolveLoadout(registry: BalanceRegistry, loadoutId = registry.operator.loadoutId,
-  modifiers: readonly StatModifier[] = []): EffectiveLoadout {
+  modifiers: readonly StatModifier[] = [], armorModifiers: readonly StatModifier[] = []): EffectiveLoadout {
   const loadout = registry.loadout(loadoutId);
   const resolver = new StatResolver(modifiers);
+  const armor = new StatResolver(armorModifiers);
+  const slideStat = (key: keyof OperatorSlideDefinition) =>
+    armor.resolve(`operator.slide.${key}`, registry.movement.slide[key], { layers: EQUIPMENT, ...OPERATOR_SLIDE_LIMITS[key] });
+  const slide = {
+    seconds: slideStat('seconds'), distance: slideStat('distance'), decay: slideStat('decay'),
+    cooldownSeconds: slideStat('cooldownSeconds'), minSpeed: slideStat('minSpeed'),
+  };
+  armor.assertAllUsed();
   const grenade = registry.grenade(loadout.grenadeId);
   const medical = registry.medical(loadout.medicalId);
   const melee = registry.melee(loadout.meleeId);
@@ -264,7 +280,8 @@ export function resolveLoadout(registry: BalanceRegistry, loadoutId = registry.o
     grenade: {
       ...grenade,
       throwTicks: Math.ceil(grenade.throwSeconds * SIMULATION_HZ),
-      releaseTicks: Math.ceil(grenade.releaseSeconds * SIMULATION_HZ),
+      // At least one tick: the release is checked from the tick after the throw starts.
+      releaseTicks: Math.max(1, Math.ceil(grenade.releaseSeconds * SIMULATION_HZ)),
       fuseTicks: Math.ceil(grenade.fuseSeconds * SIMULATION_HZ),
     },
     medical: {
@@ -273,11 +290,14 @@ export function resolveLoadout(registry: BalanceRegistry, loadoutId = registry.o
       healAmount: maxHealth * medical.healFractionOfMaxHealth,
     },
     melee: effectiveMelee(resolver, melee),
+    slide,
     switchTicks: Math.ceil(loadout.weaponSwitchSeconds * SIMULATION_HZ),
     maxHealth,
+    respawnTicks: Math.ceil(registry.operator.respawnSeconds * SIMULATION_HZ),
+    respawnProtectionTicks: Math.ceil(registry.operator.respawnProtectionSeconds * SIMULATION_HZ),
     damagePolicy: registry.combat.damagePolicy,
     operatorHitbox: registry.combat.operatorHitbox,
-    trace: resolver.trace,
+    trace: { ...resolver.trace, ...armor.trace },
   };
   if (result.grenade.releaseTicks >= result.grenade.throwTicks) {
     throw new BalanceResolutionError(`${grenade.id}: releaseSeconds muss kleiner als throwSeconds sein`);
@@ -306,6 +326,9 @@ export interface MissionLimits {
  */
 export interface MissionBalance {
   readonly movement: BalanceRegistry['movement'];
+  readonly hordeAi: SwarmDefinition['hordeAi'];
+  readonly meleeAttack: SwarmDefinition['meleeAttack'];
+  readonly director: SwarmDefinition['director'];
   readonly configHash: string;
   readonly release: string;
   readonly difficulty: Pick<DifficultyDefinition, 'id' | 'level' | 'displayName'>;
@@ -407,6 +430,9 @@ export function resolveMissionBalance(registry: BalanceRegistry, difficultyId: s
   const balance: MissionBalance = {
     configHash: registry.version.hash,
     movement: registry.movement,
+    hordeAi: swarm.hordeAi,
+    meleeAttack: swarm.meleeAttack,
+    director: swarm.director,
     release: registry.version.release,
     difficulty: { id: difficulty.id, level: difficulty.level, displayName: difficulty.displayName },
     limits: {

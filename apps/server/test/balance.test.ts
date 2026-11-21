@@ -70,18 +70,22 @@ const LEGACY = {
 
 /**
  * Golden fingerprints of `apps/server/test/support/balance-trace.ts`. Recorded on 7.1, reproduced by 7.2A and refreshed for
- * the intended 7.2B gameplay changes (magazines, recoil, spread, friendly fire, melee, grenades). A change here means simulation results changed. Refresh only for an intended gameplay change
+ * the intended 7.2B gameplay changes (magazines, recoil, spread, friendly fire, melee, grenades), refreshed again for the bug fixes
+ * of the code review (input backlog drain, knockback distance, stagger end, convict fire rate, close-range tactical shots,
+ * arena refill after grenade and melee kills, exact pistol fire rate). A change here means simulation results changed. Refresh only for an intended gameplay change
  * (`npm run balance:trace`) and document it in docs/BALANCE_WORKFLOW.md.
  */
 const GOLDEN_TRACES = {
-  arena: '82c966fa90c7f449ef12afb805cc340cd63ca7557b83c5577a0303d44630aa75',
-  'mission.easy': 'f02328023b95c2acfa6fb6ed83141c58beb7422d2a018b87f1e79ef940b45111',
-  'mission.normal': '839fc3eab8ea2dff3db3728bb4d85471eab1886448be0ca11e84ecd8054d3b6b',
-  'mission.challenging': 'fc2f4376b99c58da271ffdb67faa1f066f7aa943b51585c3e8c27c5c5f73c520',
-  'mission.hard': 'd394b3c6cdc5e92c79a98fd225a1dfd59a1dde5b8f1beb9c8522da019247a04b',
-  'mission.extreme': 'f4886e34aab6acc558b0796545b1546289fcf883a13074532985119a19af4d92',
-  'mission.nightmare': 'cbaf221ed5c687adfccd883d0e4ce0b5fba8c278675ef13b66bb97d510979467',
-  'mission.freefall': '8b00f4b5ae5d70abca8a4ba2525c3f024707bd9d5b4cf2c07928fc153991a644',
+  // 7.4C: committed enemy melee, current contact validation and attack-sector reservations.
+  arena: '2f4d1385be645eb19ec1f56770396c25de5542001d2e000c76ee4be65dfdacfb',
+  // 7.4D: shared spawn validation and authoritative encounter snapshots on Bodenbruch.
+  'mission.easy': '47467ab3721304ce495767ae991605e0dcf60cb60e23ae9a2891e47b0468e55b',
+  'mission.normal': '3449ca5ecb67d3003358fe75de37d426468a8fd171c40af6ff0bb7822223933e',
+  'mission.challenging': 'be2cb46957ed2bc56a12e30af9cf82423a730b89fca1d08c5e7b581a1d98944a',
+  'mission.hard': '68608ca13526ac6dba00bbabfc5d555ff5171d9fb64c9cac361dd6e67d3fa1f9',
+  'mission.extreme': 'e8d6d939a5339dc566d930b90dabc6c55aacbd6bc7b9497ca78ea41bf8839827',
+  'mission.nightmare': 'acba439a2dc0658252f56d6afeec40b53ca604a4ae4b5596d13a8841c7a91d30',
+  'mission.freefall': '409b981326b2a3a9d93b1ba47748ad30603cdbf22801ed2dc375ee3fc3b8a6cf',
 };
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -153,6 +157,9 @@ test('invalid definitions are rejected with readable, located messages', () => {
   rejects((d) => { (d.difficulty.difficulties[6] as { level: number }).level = 8; }, /genau 7 Stufen/);
   rejects((d) => { (d.structures.nests[0] as { maxHealth: number }).maxHealth = 0; }, /nests\[0\]\.maxHealth: muss > 0 sein/);
   rejects((d) => { (d.swarm.reinforcements as { callSeconds: number }).callSeconds = -3; }, /swarm\.json › reinforcements\.callSeconds: muss > 0 sein/);
+  rejects((d) => { d.swarm.director.timing.peakMinTicks = 1000; }, /director\.timing: Mindestdauer/);
+  rejects((d) => { d.swarm.director.pressure.startAtMost = .9; }, /director\.pressure: startAtMost/);
+  rejects((d) => { d.swarm.director.spawn.dynamicChecksPerTick = 40; }, /director\.spawn: dynamicChecksPerTick/);
   rejects((d) => { (d.weapons.weapons[0] as { id: string }).id = 'Kestrel AR'; }, /ID aus Kleinbuchstaben/);
   // Several problems are reported together.
   rejects((d) => {
@@ -407,6 +414,18 @@ test('migrated enemy, nest, swarm, convict and difficulty values equal the 7.1 c
   }
 });
 
-test('combat, spawn and damage results match the recorded 7.2B golden traces', { timeout: 60_000 }, () => {
+test('combat, spawn and damage results match the pinned golden traces', { timeout: 60_000 }, () => {
   assert.deepEqual(allTraces(), GOLDEN_TRACES);
+});
+
+test('legacy swarm balance loads the same targeting defaults and a bounded arena refill', () => {
+  const config = sources();
+  const { targeting, ...hordeAi } = config.swarm.hordeAi;
+  const { maxSpawnsPerTick, ...arena } = config.swarm.arena;
+  const registry = createBalanceRegistry({ ...config, swarm: { ...config.swarm, hordeAi, arena } });
+  assert.deepEqual(registry.swarm.hordeAi.targeting, targeting);
+  assert.equal(registry.swarm.arena.maxSpawnsPerTick, maxSpawnsPerTick);
+  assert.equal(registry.version.hash, BALANCE.version.hash);
+  rejects((data) => { data.swarm.hordeAi.targeting.switchRatio = 2; }, /swarm\.json › hordeAi\.targeting\.switchRatio/);
+  rejects((data) => { data.swarm.arena.maxSpawnsPerTick = 0; }, /swarm\.json › arena\.maxSpawnsPerTick/);
 });

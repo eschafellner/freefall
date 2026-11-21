@@ -1,0 +1,5411 @@
+{
+  "notes": [
+    "Off disables local weather rendering. The same authoritative server clock still runs.",
+    "Native runs reach the 60 Hz display cadence. SwiftShader rows are retained as software controls.",
+    "The SwiftShader reconnect report was followed by a failed-handshake cleanup rejection. The native run used the room fix.",
+    "GPU metrics describe the entire renderer. The process RSS does not include Chromium or VRAM."
+  ],
+  "runs": {
+    "pre": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0010102614378827198,
+          "p95": 0.001479999999901338,
+          "p99": 0.004149999999754073,
+          "max": 0.005270000000564323
+        },
+        "navigationMs": {
+          "mean": 0.013031836601275323,
+          "p95": 0.021740000000136206,
+          "p99": 0.03996000000006461,
+          "max": 0.23706999999922118
+        },
+        "collisionMs": {
+          "mean": 0.0015067973856061785,
+          "p95": 0.0019700000002558227,
+          "p99": 0.00864000000001397,
+          "max": 0.019720000000233995
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 37,
+            "totalBytes": 72075,
+            "samplePackets": 25,
+            "sampleBytesPerSecond": 11613.768533597786
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 374,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 744636416,
+          "heapTotal": 138633216,
+          "heapUsed": 84654920,
+          "external": 32667700,
+          "arrayBuffers": 1701406
+        },
+        "memoryAfter": {
+          "rss": 745816064,
+          "heapTotal": 139943936,
+          "heapUsed": 80591496,
+          "external": 33090480,
+          "arrayBuffers": 2124146
+        },
+        "enemies": 0,
+        "packetsPerSecond": 10.389213500779492,
+        "payloadBytesPerSecond": 62.33528100467696,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 14.51037295580219,
+        "frameMs": {
+          "mean": 68.91621621621621,
+          "p95": 100,
+          "p99": 616.5999999999995,
+          "max": 616.5999999999995
+        },
+        "clientFrames": [
+          {
+            "frames": 74,
+            "fps": 14.51037295580219,
+            "mean": 68.91621621621621,
+            "p95": 100,
+            "p99": 616.5999999999995,
+            "max": 616.5999999999995
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.8 / 70.9 ms",
+            "Draw Calls / Dreiecke": "129 / 22.228",
+            "Meshes / Instanzen": "81 / 764",
+            "Geometrien / Texturen": "97 / 45",
+            "Gegner sichtbar / aktiv": "0 / 0"
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.15747970833344122,
+          "p95": 0.33055100000001403,
+          "p99": 0.528189999999995,
+          "max": 0.6645700000008219
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.775594709856236,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.101444878000001,
+        "errors": []
+      }
+    ],
+    "off-solo": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0011409934210596954,
+          "p95": 0.001479999999901338,
+          "p99": 0.0015899999998509884,
+          "max": 0.0024299999995491817
+        },
+        "navigationMs": {
+          "mean": 0.010909486842155945,
+          "p95": 0.013200000000324508,
+          "p99": 0.014940000000024156,
+          "max": 0.017800000000534055
+        },
+        "weatherServerMs": {
+          "mean": 0.0014600328948493992,
+          "p95": 0.0019800000000032014,
+          "p99": 0.0021299999998518615,
+          "max": 0.0024909999992814846
+        },
+        "collisionMs": {
+          "mean": 0.0013717105263738535,
+          "p95": 0.0018300000001545413,
+          "p99": 0.003780000000006112,
+          "max": 0.0052300000006653136
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 39,
+            "totalBytes": 79475,
+            "samplePackets": 26,
+            "sampleBytesPerSecond": 12304.179911040088
+          },
+          "atmosphere-state": {
+            "totalPackets": 2,
+            "totalBytes": 390,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 374,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 754499584,
+          "heapTotal": 139157504,
+          "heapUsed": 87674296,
+          "external": 32718383,
+          "arrayBuffers": 1752089
+        },
+        "memoryAfter": {
+          "rss": 755417088,
+          "heapTotal": 140468224,
+          "heapUsed": 82893776,
+          "external": 33133984,
+          "arrayBuffers": 2167650
+        },
+        "enemies": 0,
+        "packetsPerSecond": 10.095453126919214,
+        "payloadBytesPerSecond": 60.57271876151528,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 32.094729287935564,
+        "frameMs": {
+          "mean": 31.157763975155284,
+          "p95": 50.100000000000364,
+          "p99": 66.69999999999982,
+          "max": 66.70000000000027
+        },
+        "clientFrames": [
+          {
+            "frames": 161,
+            "fps": 32.094729287935564,
+            "mean": 31.157763975155284,
+            "p95": 50.100000000000364,
+            "p99": 66.69999999999982,
+            "max": 66.70000000000027
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "324.1 / 55.3 ms",
+            "Draw Calls / Dreiecke": "44 / 80.570",
+            "Meshes / Instanzen": "6 / 1.083",
+            "Geometrien / Texturen": "110 / 52",
+            "Gegner sichtbar / aktiv": "0 / 0"
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.20744966666669976,
+          "p95": 0.3665819999996529,
+          "p99": 0.4108120000000781,
+          "max": 5.154490999999325
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.28635938075764,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.051779187999999,
+        "errors": []
+      }
+    ],
+    "off-coop": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "skipped": "Timed out: first authentic wave spawn",
+          "state": "CALM",
+          "pressure": 0.5030707568587905
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0010614591189762636,
+          "p95": 0.0014299999893410131,
+          "p99": 0.0018299999937880784,
+          "max": 0.0029800000047544017
+        },
+        "navigationMs": {
+          "mean": 0.40803831446489924,
+          "p95": 0.5241220000025351,
+          "p99": 2.6281119999985094,
+          "max": 3.198714000005566
+        },
+        "weatherServerMs": {
+          "mean": 0.000782138364057865,
+          "p95": 0.001149999996414408,
+          "p99": 0.0014299999966169707,
+          "max": 0.001640000002225861
+        },
+        "collisionMs": {
+          "mean": 0.1295092767290295,
+          "p95": 0.17184099998848978,
+          "p99": 0.2757710000005318,
+          "max": 0.9370140000100946
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 336,
+            "totalBytes": 567461,
+            "samplePackets": 27,
+            "sampleBytesPerSecond": 14851.758419557216
+          },
+          "atmosphere-state": {
+            "totalPackets": 2,
+            "totalBytes": 394,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 101,
+            "totalBytes": 13662,
+            "samplePackets": 5,
+            "sampleBytesPerSecond": 96.85271437249457
+          }
+        },
+        "memoryBefore": {
+          "rss": 772878336,
+          "heapTotal": 147480576,
+          "heapUsed": 79824920,
+          "external": 32787761,
+          "arrayBuffers": 1821467
+        },
+        "memoryAfter": {
+          "rss": 773951488,
+          "heapTotal": 146685952,
+          "heapUsed": 92227584,
+          "external": 33502907,
+          "arrayBuffers": 2536573
+        },
+        "enemies": 250,
+        "packetsPerSecond": 12.295754754320601,
+        "payloadBytesPerSecond": 30813.161414327427,
+        "minFrameCount": 250,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 4.3673097372018885,
+        "frameMs": {
+          "mean": 228.973913043478,
+          "p95": 616.5999999999913,
+          "p99": 1000,
+          "max": 1000
+        },
+        "clientFrames": [
+          {
+            "frames": 23,
+            "fps": 4.3673097372018885,
+            "mean": 228.973913043478,
+            "p95": 616.5999999999913,
+            "p99": 1000,
+            "max": 1000
+          },
+          {
+            "frames": 33,
+            "fps": 6.578422773303562,
+            "mean": 152.01212121212126,
+            "p95": 233.3000000000029,
+            "p99": 233.3000000000029,
+            "max": 233.3000000000029
+          },
+          {
+            "frames": 33,
+            "fps": 6.578422773303562,
+            "mean": 152.01212121212126,
+            "p95": 216.6999999999971,
+            "p99": 233.29999999999563,
+            "max": 233.29999999999563
+          },
+          {
+            "frames": 34,
+            "fps": 6.623806740697448,
+            "mean": 150.97058823529412,
+            "p95": 216.6999999999971,
+            "p99": 216.6999999999971,
+            "max": 216.6999999999971
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.0 / 36.2 ms",
+            "Draw Calls / Dreiecke": "41 / 50.196",
+            "Meshes / Instanzen": "5 / 751",
+            "Geometrien / Texturen": "110 / 52",
+            "Gegner sichtbar / aktiv": "0 / 250"
+          },
+          {
+            "CPU / GPU": "281.9 / 35.2 ms",
+            "Draw Calls / Dreiecke": "38 / 46.108",
+            "Meshes / Instanzen": "6 / 717",
+            "Geometrien / Texturen": "112 / 51",
+            "Gegner sichtbar / aktiv": "0 / 250"
+          },
+          {
+            "CPU / GPU": "2.4 / 63.1 ms",
+            "Draw Calls / Dreiecke": "63 / 109.998",
+            "Meshes / Instanzen": "7 / 1.618",
+            "Geometrien / Texturen": "120 / 52",
+            "Gegner sichtbar / aktiv": "11 / 250"
+          },
+          {
+            "CPU / GPU": "3.1 / 220.7 ms",
+            "Draw Calls / Dreiecke": "85 / 152.246",
+            "Meshes / Instanzen": "16 / 1.792",
+            "Geometrien / Texturen": "128 / 52",
+            "Gegner sichtbar / aktiv": "71 / 250"
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.6244417166674491,
+          "p95": 0.8017929999914486,
+          "p99": 0.8874040000082459,
+          "max": 1.5200760000006994
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 37.07642972072058,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.286377396000003,
+        "errors": []
+      },
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "skipped": "Timed out: first authentic wave spawn",
+          "state": "CALM",
+          "pressure": 0.5030707568587905
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0010555962728617007,
+          "p95": 0.0012199999910080805,
+          "p99": 0.005319999996572733,
+          "max": 0.0291399999987334
+        },
+        "navigationMs": {
+          "mean": 0.7085973540367451,
+          "p95": 0.7900529999897117,
+          "p99": 1.7039780000050087,
+          "max": 3.603194999988773
+        },
+        "weatherServerMs": {
+          "mean": 0.0006988198753635787,
+          "p95": 0.0009200000058626756,
+          "p99": 0.001029999999445863,
+          "max": 0.0011700000031851232
+        },
+        "collisionMs": {
+          "mean": 0.28124417391206535,
+          "p95": 0.30622100000618957,
+          "p99": 0.4100019999896176,
+          "max": 1.292966000008164
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 372,
+            "totalBytes": 676090,
+            "samplePackets": 27,
+            "sampleBytesPerSecond": 15396.811525142732
+          },
+          "atmosphere-state": {
+            "totalPackets": 2,
+            "totalBytes": 394,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 103,
+            "totalBytes": 13886,
+            "samplePackets": 2,
+            "sampleBytesPerSecond": 42.00067931111212
+          }
+        },
+        "memoryBefore": {
+          "rss": 774082560,
+          "heapTotal": 146948096,
+          "heapUsed": 95103600,
+          "external": 34216239,
+          "arrayBuffers": 3249905
+        },
+        "memoryAfter": {
+          "rss": 770621440,
+          "heapTotal": 143163392,
+          "heapUsed": 84619792,
+          "external": 34935275,
+          "arrayBuffers": 3968941
+        },
+        "enemies": 500,
+        "packetsPerSecond": 13.312715317361432,
+        "payloadBytesPerSecond": 66643.45287871132,
+        "minFrameCount": 500,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 5.192407546298973,
+        "frameMs": {
+          "mean": 192.58888888888868,
+          "p95": 299.8999999999942,
+          "p99": 300,
+          "max": 300
+        },
+        "clientFrames": [
+          {
+            "frames": 27,
+            "fps": 5.192407546298973,
+            "mean": 192.58888888888868,
+            "p95": 299.8999999999942,
+            "p99": 300,
+            "max": 300
+          },
+          {
+            "frames": 18,
+            "fps": 3.461738177202533,
+            "mean": 288.87222222222204,
+            "p95": 1233.300000000003,
+            "p99": 1233.300000000003,
+            "max": 1233.300000000003
+          },
+          {
+            "frames": 27,
+            "fps": 5.225975031452627,
+            "mean": 191.35185185185185,
+            "p95": 266.59999999999854,
+            "p99": 300,
+            "max": 300
+          },
+          {
+            "frames": 27,
+            "fps": 5.209237714881049,
+            "mean": 191.9666666666669,
+            "p95": 300,
+            "p99": 300.09999999999854,
+            "max": 300.09999999999854
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.6 / 26.7 ms",
+            "Draw Calls / Dreiecke": "50 / 68.214",
+            "Meshes / Instanzen": "5 / 833",
+            "Geometrien / Texturen": "117 / 52",
+            "Gegner sichtbar / aktiv": "30 / 500"
+          },
+          {
+            "CPU / GPU": "1.6 / 34.1 ms",
+            "Draw Calls / Dreiecke": "36 / 52.734",
+            "Meshes / Instanzen": "4 / 743",
+            "Geometrien / Texturen": "112 / 51",
+            "Gegner sichtbar / aktiv": "13 / 500"
+          },
+          {
+            "CPU / GPU": "2.9 / 51.8 ms",
+            "Draw Calls / Dreiecke": "64 / 130.020",
+            "Meshes / Instanzen": "7 / 1.707",
+            "Geometrien / Texturen": "120 / 52",
+            "Gegner sichtbar / aktiv": "46 / 500"
+          },
+          {
+            "CPU / GPU": "3.3 / 38.9 ms",
+            "Draw Calls / Dreiecke": "86 / 163.140",
+            "Meshes / Instanzen": "16 / 1.868",
+            "Geometrien / Texturen": "128 / 52",
+            "Gegner sichtbar / aktiv": "140 / 500"
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.8014407999995455,
+          "p95": 0.8842639999929816,
+          "p99": 1.3073650000005728,
+          "max": 2.0357090000034077
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 39.7506429194454,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.333247072999991,
+        "errors": []
+      },
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "skipped": "Timed out: first authentic wave spawn",
+          "state": "CALM",
+          "pressure": 0.5030707568587905
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0005699367091299884,
+          "p95": 0.0009799999970709905,
+          "p99": 0.0011200000008102506,
+          "max": 0.001149999996414408
+        },
+        "navigationMs": {
+          "mean": 1.2699372151898238,
+          "p95": 1.3974770000058925,
+          "p99": 1.6181170000054408,
+          "max": 1.7293579999968642
+        },
+        "weatherServerMs": {
+          "mean": 0.0005415379741344059,
+          "p95": 0.0008900000102585182,
+          "p99": 0.0010900000052060932,
+          "max": 0.001189999995403923
+        },
+        "collisionMs": {
+          "mean": 0.5086263797472119,
+          "p95": 0.5735920000006445,
+          "p99": 0.5900930000061635,
+          "max": 0.6443230000004405
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 410,
+            "totalBytes": 791582,
+            "samplePackets": 26,
+            "sampleBytesPerSecond": 14954.608728319621
+          },
+          "atmosphere-state": {
+            "totalPackets": 2,
+            "totalBytes": 394,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 104,
+            "totalBytes": 13954,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 770883584,
+          "heapTotal": 143163392,
+          "heapUsed": 78425216,
+          "external": 33546805,
+          "arrayBuffers": 2580471
+        },
+        "memoryAfter": {
+          "rss": 770883584,
+          "heapTotal": 143163392,
+          "heapUsed": 91397096,
+          "external": 35045993,
+          "arrayBuffers": 4079659
+        },
+        "enemies": 1000,
+        "packetsPerSecond": 14.194897798161993,
+        "payloadBytesPerSecond": 142034.14736840889,
+        "minFrameCount": 1000,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 3.7378029587661334,
+        "frameMs": {
+          "mean": 267.536842105263,
+          "p95": 283.40000000000873,
+          "p99": 283.40000000000873,
+          "max": 283.40000000000873
+        },
+        "clientFrames": [
+          {
+            "frames": 19,
+            "fps": 3.7378029587661334,
+            "mean": 267.536842105263,
+            "p95": 283.40000000000873,
+            "p99": 283.40000000000873,
+            "max": 283.40000000000873
+          },
+          {
+            "frames": 19,
+            "fps": 3.775084442678323,
+            "mean": 264.89473684210526,
+            "p95": 283.3000000000029,
+            "p99": 283.3000000000029,
+            "max": 283.3000000000029
+          },
+          {
+            "frames": 19,
+            "fps": 3.762525248524692,
+            "mean": 265.7789473684212,
+            "p95": 283.3000000000029,
+            "p99": 283.3000000000029,
+            "max": 283.3000000000029
+          },
+          {
+            "frames": 19,
+            "fps": 3.7501233593210306,
+            "mean": 266.6578947368421,
+            "p95": 283.3999999999942,
+            "p99": 283.3999999999942,
+            "max": 283.3999999999942
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.0 / 49.3 ms",
+            "Draw Calls / Dreiecke": "49 / 88.188",
+            "Meshes / Instanzen": "5 / 910",
+            "Geometrien / Texturen": "117 / 52",
+            "Gegner sichtbar / aktiv": "70 / 1.000"
+          },
+          {
+            "CPU / GPU": "1.9 / 52.2 ms",
+            "Draw Calls / Dreiecke": "41 / 75.232",
+            "Meshes / Instanzen": "4 / 828",
+            "Geometrien / Texturen": "118 / 51",
+            "Gegner sichtbar / aktiv": "51 / 1.000"
+          },
+          {
+            "CPU / GPU": "2.2 / 65.3 ms",
+            "Draw Calls / Dreiecke": "63 / 150.602",
+            "Meshes / Instanzen": "7 / 1.788",
+            "Geometrien / Texturen": "120 / 52",
+            "Gegner sichtbar / aktiv": "86 / 1.000"
+          },
+          {
+            "CPU / GPU": "2.1 / 51.0 ms",
+            "Draw Calls / Dreiecke": "86 / 208.668",
+            "Meshes / Instanzen": "16 / 2.100",
+            "Geometrien / Texturen": "128 / 52",
+            "Gegner sichtbar / aktiv": "275 / 1.000"
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 1.3215620083335429,
+          "p95": 1.5116470000066329,
+          "p99": 1.6036400000011781,
+          "max": 2.713749000002281
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 42.96322400243696,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.283588586999991,
+        "errors": []
+      }
+    ],
+    "ground-mist-solo": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0012347368420454299,
+          "p95": 0.001659999999901629,
+          "p99": 0.001900000000205182,
+          "max": 0.0031300000000555883
+        },
+        "navigationMs": {
+          "mean": 0.01088308552629027,
+          "p95": 0.013230000000476139,
+          "p99": 0.01437999999961903,
+          "max": 0.017899999999826832
+        },
+        "weatherServerMs": {
+          "mean": 0.0017426973685073072,
+          "p95": 0.0021600000000034925,
+          "p99": 0.0036399999999048305,
+          "max": 0.02847000000110711
+        },
+        "collisionMs": {
+          "mean": 0.0015559868421453423,
+          "p95": 0.0020000000004074536,
+          "p99": 0.004109999999855063,
+          "max": 0.004200000000309956
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 48,
+            "totalBytes": 100998,
+            "samplePackets": 25,
+            "sampleBytesPerSecond": 11832.570788201467
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 899,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 374,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 741986304,
+          "heapTotal": 140857344,
+          "heapUsed": 70475920,
+          "external": 32197557,
+          "arrayBuffers": 1231263
+        },
+        "memoryAfter": {
+          "rss": 742248448,
+          "heapTotal": 140857344,
+          "heapUsed": 81482768,
+          "external": 33036664,
+          "arrayBuffers": 2070330
+        },
+        "enemies": 0,
+        "packetsPerSecond": 10.284204666407199,
+        "payloadBytesPerSecond": 61.70522799844319,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 20.861894259998806,
+        "frameMs": {
+          "mean": 47.93428571428572,
+          "p95": 50.100000000000364,
+          "p99": 50.100000000000364,
+          "max": 50.100000000000364
+        },
+        "clientFrames": [
+          {
+            "frames": 105,
+            "fps": 20.861894259998806,
+            "mean": 47.93428571428572,
+            "p95": 50.100000000000364,
+            "p99": 50.100000000000364,
+            "max": 50.100000000000364
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.2 / 52.5 ms",
+            "Draw Calls / Dreiecke": "257 / 187.009",
+            "Meshes / Instanzen": "115 / 2.058",
+            "Geometrien / Texturen": "161 / 52",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 99,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.12046781391884982,
+              "z": -0.23746322606722675,
+              "direction": 4.242909332683137,
+              "strength": 0.2662729387764394,
+              "gust": 0.006272938776439413,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.12776240000002873,
+          "p95": 0.2525999999998021,
+          "p99": 0.403440000000046,
+          "max": 1.6643199999998615
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 31.050387165883276,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.056297660999999,
+        "errors": []
+      }
+    ],
+    "ground-mist-coop": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "skipped": "Timed out: wave eligibility",
+          "state": "CALM",
+          "hold": "reinforcement",
+          "pressure": 0.5621754465033357
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0011298989895404895,
+          "p95": 0.0014400000000023283,
+          "p99": 0.001759999999194406,
+          "max": 0.002789999998640269
+        },
+        "navigationMs": {
+          "mean": 0.41935009595941997,
+          "p95": 0.5463600000002771,
+          "p99": 0.6689099999930477,
+          "max": 0.692879999995057
+        },
+        "weatherServerMs": {
+          "mean": 0.0015214141415278639,
+          "p95": 0.0022899999967194162,
+          "p99": 0.005460000000311993,
+          "max": 0.02553000000625616
+        },
+        "collisionMs": {
+          "mean": 0.15549521212082568,
+          "p95": 0.21587999999610474,
+          "p99": 0.2926399999996647,
+          "max": 0.2999999999956344
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 305,
+            "totalBytes": 479938,
+            "samplePackets": 38,
+            "sampleBytesPerSecond": 17004.443462581905
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 907,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 67,
+            "totalBytes": 8591,
+            "samplePackets": 4,
+            "sampleBytesPerSecond": 57.62474947961562
+          }
+        },
+        "memoryBefore": {
+          "rss": 751464448,
+          "heapTotal": 145457152,
+          "heapUsed": 90749208,
+          "external": 35256501,
+          "arrayBuffers": 4290207
+        },
+        "memoryAfter": {
+          "rss": 756580352,
+          "heapTotal": 144797696,
+          "heapUsed": 73744680,
+          "external": 33077272,
+          "arrayBuffers": 2110938
+        },
+        "enemies": 250,
+        "packetsPerSecond": 12.553423114981882,
+        "payloadBytesPerSecond": 31458.878326144597,
+        "minFrameCount": 250,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 4.356694457096458,
+        "frameMs": {
+          "mean": 229.53181818181838,
+          "p95": 700,
+          "p99": 700,
+          "max": 700
+        },
+        "clientFrames": [
+          {
+            "frames": 22,
+            "fps": 4.356694457096458,
+            "mean": 229.53181818181838,
+            "p95": 700,
+            "p99": 700,
+            "max": 700
+          },
+          {
+            "frames": 26,
+            "fps": 4.041660189647132,
+            "mean": 247.42307692307693,
+            "p95": 250,
+            "p99": 1466.5999999999985,
+            "max": 1466.5999999999985
+          },
+          {
+            "frames": 26,
+            "fps": 4.952569621699878,
+            "mean": 201.91538461538445,
+            "p95": 250,
+            "p99": 333.29999999999563,
+            "max": 333.29999999999563
+          },
+          {
+            "frames": 26,
+            "fps": 5.065066625107142,
+            "mean": 197.43076923076939,
+            "p95": 250,
+            "p99": 250,
+            "max": 250
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.2 / 76.3 ms",
+            "Draw Calls / Dreiecke": "42 / 50.707",
+            "Meshes / Instanzen": "5 / 753",
+            "Geometrien / Texturen": "158 / 53",
+            "Gegner sichtbar / aktiv": "1 / 250",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.0954637572414132,
+              "z": -0.2592142200745834,
+              "direction": 4.359521623845918,
+              "strength": 0.2762342137308882,
+              "gust": 0.016234213730888205,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "3.0 / 50.6 ms",
+            "Draw Calls / Dreiecke": "270 / 207.079",
+            "Meshes / Instanzen": "116 / 2.334",
+            "Geometrien / Texturen": "160 / 52",
+            "Gegner sichtbar / aktiv": "133 / 250",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.09526659833259221,
+              "z": -0.2589376825821538,
+              "direction": 4.359845800671447,
+              "strength": 0.27590659328635064,
+              "gust": 0.015906593286350617,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "2.7 / 1003.6 ms",
+            "Draw Calls / Dreiecke": "72 / 109.521",
+            "Meshes / Instanzen": "9 / 1.672",
+            "Geometrien / Texturen": "152 / 52",
+            "Gegner sichtbar / aktiv": "32 / 250",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.0953692286548024,
+              "z": -0.2595969574414596,
+              "direction": 4.360320632501793,
+              "strength": 0.27656078913518267,
+              "gust": 0.016560789135182642,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "2.5 / 57.7 ms",
+            "Draw Calls / Dreiecke": "98 / 134.235",
+            "Meshes / Instanzen": "21 / 1.301",
+            "Geometrien / Texturen": "168 / 52",
+            "Gegner sichtbar / aktiv": "88 / 250",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.10360455038880809,
+              "z": -0.2808658737339172,
+              "direction": 4.35899848240042,
+              "strength": 0.2993652315977655,
+              "gust": 0.039365231597765504,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.5063523333333554,
+          "p95": 0.6084899999987101,
+          "p99": 0.8995100000029197,
+          "max": 0.9648100000049453
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 37.50902328331936,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 6.611742409999999,
+        "errors": []
+      },
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "skipped": "Timed out: wave eligibility",
+          "state": "CALM",
+          "hold": "reinforcement",
+          "pressure": 0.5621754465033357
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.00108756874979008,
+          "p95": 0.0014599999994970858,
+          "p99": 0.0016900000046007335,
+          "max": 0.0031699999963166192
+        },
+        "navigationMs": {
+          "mean": 0.6278740750007273,
+          "p95": 0.7389910000056261,
+          "p99": 0.8225709999969695,
+          "max": 0.9270499999984168
+        },
+        "weatherServerMs": {
+          "mean": 0.0009883750010885705,
+          "p95": 0.001320000010309741,
+          "p99": 0.001560000004246831,
+          "max": 0.0017499999958090484
+        },
+        "collisionMs": {
+          "mean": 0.24482820625034946,
+          "p95": 0.2975330000044778,
+          "p99": 0.4129499999980908,
+          "max": 0.5051899999962188
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 351,
+            "totalBytes": 620100,
+            "samplePackets": 27,
+            "sampleBytesPerSecond": 15417.09363026623
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 907,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 68,
+            "totalBytes": 8659,
+            "samplePackets": 1,
+            "sampleBytesPerSecond": 12.746047013472385
+          }
+        },
+        "memoryBefore": {
+          "rss": 756842496,
+          "heapTotal": 144797696,
+          "heapUsed": 93618240,
+          "external": 35283424,
+          "arrayBuffers": 4317090
+        },
+        "memoryAfter": {
+          "rss": 756842496,
+          "heapTotal": 144797696,
+          "heapUsed": 78268576,
+          "external": 33665667,
+          "arrayBuffers": 2699333
+        },
+        "enemies": 500,
+        "packetsPerSecond": 14.05814008838866,
+        "payloadBytesPerSecond": 70375.04928247363,
+        "minFrameCount": 500,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 3.8836459668336616,
+        "frameMs": {
+          "mean": 257.4900000000001,
+          "p95": 283.3000000000029,
+          "p99": 283.3000000000029,
+          "max": 283.3000000000029
+        },
+        "clientFrames": [
+          {
+            "frames": 20,
+            "fps": 3.8836459668336616,
+            "mean": 257.4900000000001,
+            "p95": 283.3000000000029,
+            "p99": 283.3000000000029,
+            "max": 283.3000000000029
+          },
+          {
+            "frames": 20,
+            "fps": 3.8836459668336616,
+            "mean": 257.4900000000001,
+            "p95": 283.3999999999942,
+            "p99": 283.40000000000873,
+            "max": 283.40000000000873
+          },
+          {
+            "frames": 20,
+            "fps": 3.9474982729695056,
+            "mean": 253.325,
+            "p95": 283.3000000000029,
+            "p99": 283.40000000000146,
+            "max": 283.40000000000146
+          },
+          {
+            "frames": 20,
+            "fps": 3.934529430280141,
+            "mean": 254.15999999999985,
+            "p95": 266.70000000000437,
+            "p99": 283.3000000000029,
+            "max": 283.3000000000029
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.2 / 42.6 ms",
+            "Draw Calls / Dreiecke": "48 / 72.601",
+            "Meshes / Instanzen": "5 / 836",
+            "Geometrien / Texturen": "164 / 53",
+            "Gegner sichtbar / aktiv": "39 / 500",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.1416188670593536,
+              "z": -0.27781864462281824,
+              "direction": 4.24096950685645,
+              "strength": 0.31183185021295473,
+              "gust": 0.0518318502129547,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "512.1 / 592.4 ms",
+            "Draw Calls / Dreiecke": "279 / 235.987",
+            "Meshes / Instanzen": "118 / 2.518",
+            "Geometrien / Texturen": "169 / 52",
+            "Gegner sichtbar / aktiv": "275 / 500",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.1414467183688713,
+              "z": -0.27845986009619855,
+              "direction": 4.242392960527578,
+              "strength": 0.31232525966068975,
+              "gust": 0.05232525966068976,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0.10000000149011612
+            }
+          },
+          {
+            "CPU / GPU": "2.1 / 71.2 ms",
+            "Draw Calls / Dreiecke": "69 / 130.673",
+            "Meshes / Instanzen": "7 / 1.767",
+            "Geometrien / Texturen": "152 / 52",
+            "Gegner sichtbar / aktiv": "68 / 500",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.14835279325386705,
+              "z": -0.3016599594871514,
+              "direction": 4.255332406493197,
+              "strength": 0.33616555805735726,
+              "gust": 0.07616555805735727,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "2.3 / 48.9 ms",
+            "Draw Calls / Dreiecke": "100 / 163.701",
+            "Meshes / Instanzen": "21 / 1.477",
+            "Geometrien / Texturen": "171 / 52",
+            "Gegner sichtbar / aktiv": "198 / 500",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.1472449110944216,
+              "z": -0.2983074249129579,
+              "direction": 4.253873480160191,
+              "strength": 0.33266857922172954,
+              "gust": 0.07266857922172952,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.7285357499998403,
+          "p95": 0.8455399999947986,
+          "p99": 0.9023600000073202,
+          "max": 0.9308809999929508
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 41.9869783973208,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.334987383,
+        "errors": []
+      },
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "skipped": "Timed out: wave eligibility",
+          "state": "CALM",
+          "hold": "reinforcement",
+          "pressure": 0.5621754465033357
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0004613313253959136,
+          "p95": 0.0006799999973736703,
+          "p99": 0.0007199999963631853,
+          "max": 0.0009199999913107604
+        },
+        "navigationMs": {
+          "mean": 1.1885468795184988,
+          "p95": 1.3305819999950472,
+          "p99": 2.5937030000059167,
+          "max": 2.765283000000636
+        },
+        "weatherServerMs": {
+          "mean": 0.0007525301202311158,
+          "p95": 0.0010800000018207356,
+          "p99": 0.0011600000143516809,
+          "max": 0.0012600000045495108
+        },
+        "collisionMs": {
+          "mean": 0.4644258192769134,
+          "p95": 0.5275350000010803,
+          "p99": 1.2062000000005355,
+          "max": 1.8649870000081137
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 394,
+            "totalBytes": 751078,
+            "samplePackets": 28,
+            "sampleBytesPerSecond": 15362.380369439108
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 907,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 68,
+            "totalBytes": 8659,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 756973568,
+          "heapTotal": 145059840,
+          "heapUsed": 73843704,
+          "external": 32606889,
+          "arrayBuffers": 1640555
+        },
+        "memoryAfter": {
+          "rss": 756973568,
+          "heapTotal": 145059840,
+          "heapUsed": 81859688,
+          "external": 33890030,
+          "arrayBuffers": 2923696
+        },
+        "enemies": 1000,
+        "packetsPerSecond": 14.590010434346777,
+        "payloadBytesPerSecond": 145987.64440607384,
+        "minFrameCount": 1000,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 3.2076682138948622,
+        "frameMs": {
+          "mean": 311.75294117647076,
+          "p95": 333.3999999999942,
+          "p99": 333.3999999999942,
+          "max": 333.3999999999942
+        },
+        "clientFrames": [
+          {
+            "frames": 17,
+            "fps": 3.2076682138948622,
+            "mean": 311.75294117647076,
+            "p95": 333.3999999999942,
+            "p99": 333.3999999999942,
+            "max": 333.3999999999942
+          },
+          {
+            "frames": 17,
+            "fps": 3.2178077265241964,
+            "mean": 310.77058823529444,
+            "p95": 333.3000000000029,
+            "p99": 333.3000000000029,
+            "max": 333.3000000000029
+          },
+          {
+            "frames": 17,
+            "fps": 3.2178077265241964,
+            "mean": 310.77058823529444,
+            "p95": 333.3999999999942,
+            "p99": 333.3999999999942,
+            "max": 333.3999999999942
+          },
+          {
+            "frames": 17,
+            "fps": 3.2076682138948622,
+            "mean": 311.75294117647076,
+            "p95": 333.3000000000029,
+            "p99": 333.3000000000029,
+            "max": 333.3000000000029
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.6 / 48.5 ms",
+            "Draw Calls / Dreiecke": "48 / 91.009",
+            "Meshes / Instanzen": "5 / 907",
+            "Geometrien / Texturen": "164 / 53",
+            "Gegner sichtbar / aktiv": "76 / 1.000",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.11686712671300498,
+              "z": -0.3167722382176301,
+              "direction": 4.358949586345187,
+              "strength": 0.3376426753411964,
+              "gust": 0.07764267534119637,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "6.1 / 64.6 ms",
+            "Draw Calls / Dreiecke": "275 / 276.981",
+            "Meshes / Instanzen": "116 / 2.830",
+            "Geometrien / Texturen": "169 / 52",
+            "Gegner sichtbar / aktiv": "550 / 1.000",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.11412046471551342,
+              "z": -0.3101246585217323,
+              "direction": 4.3597847378509975,
+              "strength": 0.3304554195199495,
+              "gust": 0.07045541951994952,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "2.0 / 72.2 ms",
+            "Draw Calls / Dreiecke": "70 / 147.991",
+            "Meshes / Instanzen": "7 / 1.856",
+            "Geometrien / Texturen": "152 / 52",
+            "Gegner sichtbar / aktiv": "128 / 1.000",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.11516666041235127,
+              "z": -0.31270621599954906,
+              "direction": 4.3595137395607715,
+              "strength": 0.33323945924108456,
+              "gust": 0.07323945924108458,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "1.8 / 168.9 ms",
+            "Draw Calls / Dreiecke": "99 / 197.079",
+            "Meshes / Instanzen": "21 / 1.706",
+            "Geometrien / Texturen": "171 / 52",
+            "Gegner sichtbar / aktiv": "388 / 1.000",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 1194,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.11612531740724731,
+              "z": -0.3150200827995241,
+              "direction": 4.3592161265521945,
+              "strength": 0.33574207646637466,
+              "gust": 0.07574207646637464,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 1.316230616667235,
+          "p95": 1.4756620000116527,
+          "p99": 2.8863930000079563,
+          "max": 4.24394499999471
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 43.40978413182189,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.551743801999997,
+        "errors": []
+      },
+      {
+        "during": {
+          "instanceId": "0ebff2fa-4492-42e6-aabf-1bbb079fcbe0",
+          "worldId": "world.generated.acdc7ec0c04dd3da",
+          "planetId": "forest",
+          "profileId": "forest.filtered-day.v1",
+          "version": 1,
+          "seed": 2479544381,
+          "originTick": 1134,
+          "timeOfDay": "day",
+          "revision": 3,
+          "current": {
+            "weather": "ground-mist",
+            "wind": {
+              "direction": 4.3,
+              "strength": 0.26,
+              "gust": 0.14,
+              "frequency": 0.097,
+              "turbulence": 0.21600000000000003
+            }
+          },
+          "startTick": 2479,
+          "durationTicks": 660,
+          "target": {
+            "weather": "windy-forest",
+            "wind": {
+              "direction": 4,
+              "strength": 0.61,
+              "gust": 0.28,
+              "frequency": 0.081,
+              "turbulence": 0.272
+            }
+          }
+        },
+        "shared": [
+          {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 3,
+            "current": "ground-mist",
+            "target": "windy-forest",
+            "timeOfDay": "day",
+            "audio": "ambience.forest.ground-mist",
+            "targetAudio": "ambience.forest.windy-forest",
+            "seed": 2479544381,
+            "startTick": 2479,
+            "durationTicks": 660,
+            "progress": 0.8634348484849839,
+            "x": -0.47263879498594363,
+            "z": -0.4857922436160831,
+            "direction": 3.9407138939659276,
+            "strength": 0.6777769061301164,
+            "gust": 0.08557658683384622,
+            "turbulence": 0.26915205108740325,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          },
+          {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 3,
+            "current": "ground-mist",
+            "target": "windy-forest",
+            "timeOfDay": "day",
+            "audio": "ambience.forest.ground-mist",
+            "targetAudio": "ambience.forest.windy-forest",
+            "seed": 2479544381,
+            "startTick": 2479,
+            "durationTicks": 660,
+            "progress": 0.8779939393940408,
+            "x": -0.47072327687022153,
+            "z": -0.4801254361916726,
+            "direction": 3.936878670622658,
+            "strength": 0.6723844420163833,
+            "gust": 0.07674291174006272,
+            "turbulence": 0.2697026448442113,
+            "particles": 0,
+            "cap": 64,
+            "particleMs": 0,
+            "updateMs": 0
+          },
+          {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 3,
+            "current": "ground-mist",
+            "target": "windy-forest",
+            "timeOfDay": "day",
+            "audio": "ambience.forest.ground-mist",
+            "targetAudio": "ambience.forest.windy-forest",
+            "seed": 2479544381,
+            "startTick": 2479,
+            "durationTicks": 660,
+            "progress": 0.04393939393939394,
+            "x": -0.15897736400016071,
+            "z": -0.3162365515749945,
+            "direction": 4.246570453812346,
+            "strength": 0.3539482431323593,
+            "gust": 0.09198042201484809,
+            "turbulence": 0.21631485137880183,
+            "particles": 0,
+            "cap": 320,
+            "particleMs": 0,
+            "updateMs": 0
+          },
+          {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 3,
+            "current": "ground-mist",
+            "target": "windy-forest",
+            "timeOfDay": "day",
+            "audio": "ambience.forest.ground-mist",
+            "targetAudio": "ambience.forest.windy-forest",
+            "seed": 2479544381,
+            "startTick": 2479,
+            "durationTicks": 660,
+            "progress": 0.8712121212121212,
+            "x": -0.4717594077410643,
+            "z": -0.48278062592911625,
+            "direction": 3.9385364076204894,
+            "strength": 0.6750067196441151,
+            "gust": 0.08092707157944634,
+            "turbulence": 0.269452743690347,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        ]
+      }
+    ],
+    "off-native-solo": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0007234166666472043,
+          "p95": 0.0011100000010628719,
+          "p99": 0.0013900000003559398,
+          "max": 0.0019099999999525608
+        },
+        "navigationMs": {
+          "mean": 0.0075757055555312845,
+          "p95": 0.011169999999765423,
+          "p99": 0.013550000000122964,
+          "max": 0.023600000000442378
+        },
+        "weatherServerMs": {
+          "mean": 0.0010802222222562503,
+          "p95": 0.0015399999992951052,
+          "p99": 0.001870000000053551,
+          "max": 0.027170000001206063
+        },
+        "collisionMs": {
+          "mean": 0.0010432805555233749,
+          "p95": 0.0016000000005078618,
+          "p99": 0.003590000000258442,
+          "max": 0.007680000000164
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 72,
+            "totalBytes": 163764,
+            "samplePackets": 60,
+            "sampleBytesPerSecond": 11958.19928156046
+          },
+          "atmosphere-state": {
+            "totalPackets": 2,
+            "totalBytes": 390,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 374,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 720920576,
+          "heapTotal": 138895360,
+          "heapUsed": 89625632,
+          "external": 32733267,
+          "arrayBuffers": 1766973
+        },
+        "memoryAfter": {
+          "rss": 721707008,
+          "heapTotal": 140206080,
+          "heapUsed": 86232824,
+          "external": 33018010,
+          "arrayBuffers": 2051676
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.981732971996962,
+        "payloadBytesPerSecond": 59.89039783198178,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.00233018758011,
+        "frameMs": {
+          "mean": 16.666019417475727,
+          "p95": 16.799999999999272,
+          "p99": 16.800000000000182,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 721,
+            "fps": 60.00233018758011,
+            "mean": 16.666019417475727,
+            "p95": 16.799999999999272,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.0 / 0.1 ms",
+            "Draw Calls / Dreiecke": "38 / 50.030",
+            "Meshes / Instanzen": "3 / 748",
+            "Geometrien / Texturen": "108 / 53",
+            "Gegner sichtbar / aktiv": "0 / 0"
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.10474419166662301,
+          "p95": 0.22745000000031723,
+          "p99": 0.2582110000003013,
+          "max": 0.3246309999994992
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 29.94519891599089,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 12.021960549,
+        "errors": []
+      }
+    ],
+    "off-native-coop": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "state": "BUILDUP",
+          "stateAt": 73,
+          "waveId": 1,
+          "created": 1,
+          "region": "breach/sector-8"
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0011370138504225855,
+          "p95": 0.0015000000003055902,
+          "p99": 0.0020499999991443474,
+          "max": 0.002389999999650172
+        },
+        "navigationMs": {
+          "mean": 0.3407711883656977,
+          "p95": 0.47816100000000006,
+          "p99": 0.5321309999999357,
+          "max": 0.6768909999991592
+        },
+        "weatherServerMs": {
+          "mean": 0.002071556786688531,
+          "p95": 0.002531000000089989,
+          "p99": 0.0031200000012177043,
+          "max": 0.024820000000545406
+        },
+        "collisionMs": {
+          "mean": 0.11391137950141353,
+          "p95": 0.17741000000023632,
+          "p99": 0.22450100000060047,
+          "max": 0.2841500000004089
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 81,
+            "totalBytes": 199972,
+            "samplePackets": 61,
+            "sampleBytesPerSecond": 14221.412908981858
+          },
+          "atmosphere-state": {
+            "totalPackets": 2,
+            "totalBytes": 390,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 15,
+            "totalBytes": 1694,
+            "samplePackets": 7,
+            "sampleBytesPerSecond": 61.62639945374373
+          }
+        },
+        "memoryBefore": {
+          "rss": 745066496,
+          "heapTotal": 143622144,
+          "heapUsed": 87323224,
+          "external": 33311324,
+          "arrayBuffers": 2345030
+        },
+        "memoryAfter": {
+          "rss": 748818432,
+          "heapTotal": 143740928,
+          "heapUsed": 88269520,
+          "external": 34725391,
+          "arrayBuffers": 1951377
+        },
+        "enemies": 250,
+        "packetsPerSecond": 10.049588051082198,
+        "payloadBytesPerSecond": 25184.267656011987,
+        "minFrameCount": 250,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 60.00183084643359,
+        "frameMs": {
+          "mean": 16.66615811373093,
+          "p95": 16.799999999999272,
+          "p99": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 721,
+            "fps": 60.00183084643359,
+            "mean": 16.66615811373093,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          {
+            "frames": 721,
+            "fps": 60.00183084643359,
+            "mean": 16.66615811373093,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.4 / 0.1 ms",
+            "Draw Calls / Dreiecke": "39 / 50.478",
+            "Meshes / Instanzen": "3 / 754",
+            "Geometrien / Texturen": "108 / 53",
+            "Gegner sichtbar / aktiv": "2 / 250"
+          },
+          {
+            "CPU / GPU": "1.4 / 0.1 ms",
+            "Draw Calls / Dreiecke": "37 / 52.598",
+            "Meshes / Instanzen": "4 / 731",
+            "Geometrien / Texturen": "110 / 51",
+            "Gegner sichtbar / aktiv": "0 / 250"
+          },
+          {
+            "CPU / GPU": "1.5 / 0.1 ms",
+            "Draw Calls / Dreiecke": "62 / 128.498",
+            "Meshes / Instanzen": "7 / 2.005",
+            "Geometrien / Texturen": "114 / 53",
+            "Gegner sichtbar / aktiv": "12 / 250"
+          },
+          {
+            "CPU / GPU": "1.6 / 0.1 ms",
+            "Draw Calls / Dreiecke": "106 / 150.502",
+            "Meshes / Instanzen": "22 / 1.406",
+            "Geometrien / Texturen": "142 / 52",
+            "Gegner sichtbar / aktiv": "113 / 250"
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.5798329583332815,
+          "p95": 0.7449919999999111,
+          "p99": 0.844651999999769,
+          "max": 0.8998020000017277
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 29.98265525984028,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 12.040294526,
+        "errors": []
+      },
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "state": "BUILDUP",
+          "stateAt": 73,
+          "waveId": 1,
+          "created": 1,
+          "region": "breach/sector-8"
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0010019889502789797,
+          "p95": 0.0014599999994970858,
+          "p99": 0.0017299999999522697,
+          "max": 0.002829999997629784
+        },
+        "navigationMs": {
+          "mean": 0.46401315469624654,
+          "p95": 0.6018409999996948,
+          "p99": 0.6599109999988286,
+          "max": 0.8692320000009204
+        },
+        "weatherServerMs": {
+          "mean": 0.0011886519337544418,
+          "p95": 0.002090000001771841,
+          "p99": 0.0025800000003073364,
+          "max": 0.011809999999968568
+        },
+        "collisionMs": {
+          "mean": 0.1598430773480199,
+          "p95": 0.21687000000019907,
+          "p99": 0.2556909999984782,
+          "max": 0.325661000002583
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 145,
+            "totalBytes": 385662,
+            "samplePackets": 60,
+            "sampleBytesPerSecond": 14460.363167757061
+          },
+          "atmosphere-state": {
+            "totalPackets": 2,
+            "totalBytes": 390,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 16,
+            "totalBytes": 1762,
+            "samplePackets": 1,
+            "sampleBytesPerSecond": 5.648644259512863
+          }
+        },
+        "memoryBefore": {
+          "rss": 750260224,
+          "heapTotal": 144265216,
+          "heapUsed": 90261776,
+          "external": 33769764,
+          "arrayBuffers": 2803430
+        },
+        "memoryAfter": {
+          "rss": 750522368,
+          "heapTotal": 144265216,
+          "heapUsed": 91544992,
+          "external": 32960386,
+          "arrayBuffers": 1994052
+        },
+        "enemies": 500,
+        "packetsPerSecond": 10.051264050015535,
+        "payloadBytesPerSecond": 50316.62783437777,
+        "minFrameCount": 500,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 60.00282953703779,
+        "frameMs": {
+          "mean": 16.66588072122053,
+          "p95": 16.700000000000728,
+          "p99": 16.80000000000291,
+          "max": 16.80000000000291
+        },
+        "clientFrames": [
+          {
+            "frames": 721,
+            "fps": 60.00282953703779,
+            "mean": 16.66588072122053,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.700000000000728,
+            "p99": 16.799999999999272,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758011,
+            "mean": 16.666019417475727,
+            "p95": 16.700000000000728,
+            "p99": 16.799999999999272,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758011,
+            "mean": 16.666019417475727,
+            "p95": 16.700000000000728,
+            "p99": 16.799999999999272,
+            "max": 16.80000000000291
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.2 / 0.1 ms",
+            "Draw Calls / Dreiecke": "45 / 72.892",
+            "Meshes / Instanzen": "3 / 838",
+            "Geometrien / Texturen": "114 / 53",
+            "Gegner sichtbar / aktiv": "41 / 500"
+          },
+          {
+            "CPU / GPU": "1.3 / 0.3 ms",
+            "Draw Calls / Dreiecke": "44 / 74.052",
+            "Meshes / Instanzen": "4 / 812",
+            "Geometrien / Texturen": "119 / 51",
+            "Gegner sichtbar / aktiv": "36 / 500"
+          },
+          {
+            "CPU / GPU": "1.3 / 0.1 ms",
+            "Draw Calls / Dreiecke": "68 / 151.950",
+            "Meshes / Instanzen": "7 / 2.105",
+            "Geometrien / Texturen": "124 / 53",
+            "Gegner sichtbar / aktiv": "53 / 500"
+          },
+          {
+            "CPU / GPU": "1.3 / 0.1 ms",
+            "Draw Calls / Dreiecke": "107 / 176.410",
+            "Meshes / Instanzen": "22 / 1.560",
+            "Geometrien / Texturen": "146 / 52",
+            "Gegner sichtbar / aktiv": "210 / 500"
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.6812194249998963,
+          "p95": 0.8856120000018564,
+          "p99": 0.9306219999998575,
+          "max": 1.0912620000017341
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.070723852112593,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 12.038286866000002,
+        "errors": []
+      },
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "state": "BUILDUP",
+          "stateAt": 73,
+          "waveId": 1,
+          "created": 1,
+          "region": "breach/sector-8"
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0007347922436668862,
+          "p95": 0.001150000000052387,
+          "p99": 0.0016099999993457459,
+          "max": 0.024290000001201406
+        },
+        "navigationMs": {
+          "mean": 0.8249929501385079,
+          "p95": 1.073951999998826,
+          "p99": 1.2037019999988843,
+          "max": 1.632463000001735
+        },
+        "weatherServerMs": {
+          "mean": 0.0009059556785793078,
+          "p95": 0.0012100000021746382,
+          "p99": 0.001720000000204891,
+          "max": 0.0019500000053085387
+        },
+        "collisionMs": {
+          "mean": 0.2737783185594378,
+          "p95": 0.38044100000115577,
+          "p99": 0.43112099999416387,
+          "max": 0.5489210000014282
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 210,
+            "totalBytes": 574143,
+            "samplePackets": 60,
+            "sampleBytesPerSecond": 14464.314015695903
+          },
+          "atmosphere-state": {
+            "totalPackets": 2,
+            "totalBytes": 390,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 16,
+            "totalBytes": 1762,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 750653440,
+          "heapTotal": 144265216,
+          "heapUsed": 91533384,
+          "external": 34483528,
+          "arrayBuffers": 3517194
+        },
+        "memoryAfter": {
+          "rss": 751308800,
+          "heapTotal": 144789504,
+          "heapUsed": 79442816,
+          "external": 36130494,
+          "arrayBuffers": 1716426
+        },
+        "enemies": 1000,
+        "packetsPerSecond": 9.976765081870537,
+        "payloadBytesPerSecond": 99827.5114091966,
+        "minFrameCount": 1000,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 60.00282953703779,
+        "frameMs": {
+          "mean": 16.66588072122053,
+          "p95": 16.700000000004366,
+          "p99": 16.80000000000291,
+          "max": 16.80000000000291
+        },
+        "clientFrames": [
+          {
+            "frames": 721,
+            "fps": 60.00282953703779,
+            "mean": 16.66588072122053,
+            "p95": 16.700000000004366,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.700000000004366,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.799999999995634,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.002330187580114,
+            "mean": 16.666019417475724,
+            "p95": 16.799999999995634,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.3 / 0.2 ms",
+            "Draw Calls / Dreiecke": "45 / 94.130",
+            "Meshes / Instanzen": "3 / 920",
+            "Geometrien / Texturen": "117 / 53",
+            "Gegner sichtbar / aktiv": "84 / 1.000"
+          },
+          {
+            "CPU / GPU": "1.2 / 0.1 ms",
+            "Draw Calls / Dreiecke": "43 / 87.624",
+            "Meshes / Instanzen": "4 / 864",
+            "Geometrien / Texturen": "119 / 51",
+            "Gegner sichtbar / aktiv": "62 / 1.000"
+          },
+          {
+            "CPU / GPU": "1.4 / 0.1 ms",
+            "Draw Calls / Dreiecke": "68 / 173.274",
+            "Meshes / Instanzen": "7 / 2.189",
+            "Geometrien / Texturen": "124 / 53",
+            "Gegner sichtbar / aktiv": "95 / 1.000"
+          },
+          {
+            "CPU / GPU": "1.4 / 0.2 ms",
+            "Draw Calls / Dreiecke": "106 / 212.616",
+            "Meshes / Instanzen": "22 / 1.815",
+            "Geometrien / Texturen": "146 / 52",
+            "Gegner sichtbar / aktiv": "422 / 1.000"
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.9527362833329486,
+          "p95": 1.2569129999974393,
+          "p99": 1.4235029999981634,
+          "max": 1.74206299999787
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.013434954627197,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 12.027946836,
+        "errors": []
+      }
+    ],
+    "ground-mist-native-solo": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0009182777777469811,
+          "p95": 0.001339999998890562,
+          "p99": 0.0016699999996490078,
+          "max": 0.01202000000012049
+        },
+        "navigationMs": {
+          "mean": 0.008427819444424738,
+          "p95": 0.01156000000082713,
+          "p99": 0.015069999999468564,
+          "max": 0.017710000000079162
+        },
+        "weatherServerMs": {
+          "mean": 0.0011041416666961999,
+          "p95": 0.0016099999993457459,
+          "p99": 0.003980000000410655,
+          "max": 0.014210000001185108
+        },
+        "collisionMs": {
+          "mean": 0.0010757500000408982,
+          "p95": 0.0015700000003562309,
+          "p99": 0.0017900000002555316,
+          "max": 0.005209999999351567
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 82,
+            "totalBytes": 187632,
+            "samplePackets": 60,
+            "sampleBytesPerSecond": 11959.125046563378
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 899,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 374,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 742645760,
+          "heapTotal": 141516800,
+          "heapUsed": 88315496,
+          "external": 33253868,
+          "arrayBuffers": 2287574
+        },
+        "memoryAfter": {
+          "rss": 743038976,
+          "heapTotal": 141643776,
+          "heapUsed": 92626208,
+          "external": 33743190,
+          "arrayBuffers": 2776856
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.981117154475246,
+        "payloadBytesPerSecond": 59.88670292685148,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.00233018758009,
+        "frameMs": {
+          "mean": 16.66601941747573,
+          "p95": 16.799999999999272,
+          "p99": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.2 / 0.2 ms",
+            "Draw Calls / Dreiecke": "262 / 192.283",
+            "Meshes / Instanzen": "115 / 2.123",
+            "Geometrien / Texturen": "161 / 53",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 82,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.12461821652616822,
+              "z": -0.24468808221549884,
+              "direction": 4.241333701569886,
+              "strength": 0.2745941686716265,
+              "gust": 0.014594168671626509,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.08232854166658399,
+          "p95": 0.21784000000116066,
+          "p99": 0.25619000000006054,
+          "max": 0.25638099999923725
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.026527439713032,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 12.022702283,
+        "errors": []
+      }
+    ],
+    "ground-mist-native-coop": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "state": "BUILDUP",
+          "stateAt": 138,
+          "waveId": 1,
+          "created": 1,
+          "region": "breach/sector-1"
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0011882833334109616,
+          "p95": 0.0016799999993963866,
+          "p99": 0.002090000001771841,
+          "max": 0.002510000000256696
+        },
+        "navigationMs": {
+          "mean": 0.32746275000003305,
+          "p95": 0.44746999999915715,
+          "p99": 0.5406910000001517,
+          "max": 0.6400000000012369
+        },
+        "weatherServerMs": {
+          "mean": 0.0018824444445221565,
+          "p95": 0.0025400000013178214,
+          "p99": 0.003539999999702559,
+          "max": 0.004160000000410946
+        },
+        "collisionMs": {
+          "mean": 0.10699801666668615,
+          "p95": 0.17237999999997555,
+          "p99": 0.23267000000123517,
+          "max": 0.24319000000105007
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 91,
+            "totalBytes": 223573,
+            "samplePackets": 60,
+            "sampleBytesPerSecond": 13969.650616111905
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 900,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 16,
+            "totalBytes": 1865,
+            "samplePackets": 7,
+            "sampleBytesPerSecond": 60.66787403259916
+          }
+        },
+        "memoryBefore": {
+          "rss": 743911424,
+          "heapTotal": 144932864,
+          "heapUsed": 99437312,
+          "external": 33609098,
+          "arrayBuffers": 2642804
+        },
+        "memoryAfter": {
+          "rss": 749580288,
+          "heapTotal": 143478784,
+          "heapUsed": 79865032,
+          "external": 35333352,
+          "arrayBuffers": 1504334
+        },
+        "enemies": 250,
+        "packetsPerSecond": 9.972801210838218,
+        "payloadBytesPerSecond": 24991.839834360573,
+        "minFrameCount": 250,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 60.00183084643359,
+        "frameMs": {
+          "mean": 16.66615811373093,
+          "p95": 16.799999999999272,
+          "p99": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 721,
+            "fps": 60.00183084643359,
+            "mean": 16.66615811373093,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758011,
+            "mean": 16.666019417475727,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          {
+            "frames": 721,
+            "fps": 60.00183084643359,
+            "mean": 16.66615811373093,
+            "p95": 16.799999999999272,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.0 / 0.1 ms",
+            "Draw Calls / Dreiecke": "266 / 216.427",
+            "Meshes / Instanzen": "115 / 2.314",
+            "Geometrien / Texturen": "162 / 53",
+            "Gegner sichtbar / aktiv": "164 / 250",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.1256831884252455,
+              "z": -0.2466102079495255,
+              "direction": 4.241056692795304,
+              "strength": 0.27679027894354236,
+              "gust": 0.016790278943542358,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "2.0 / 0.3 ms",
+            "Draw Calls / Dreiecke": "282 / 217.969",
+            "Meshes / Instanzen": "121 / 2.472",
+            "Geometrien / Texturen": "165 / 52",
+            "Gegner sichtbar / aktiv": "172 / 250",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.12780755013654702,
+              "z": -0.25049634748079297,
+              "direction": 4.240601044201902,
+              "strength": 0.2812173358332024,
+              "gust": 0.021217335833202424,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "1.9 / 0.2 ms",
+            "Draw Calls / Dreiecke": "217 / 204.843",
+            "Meshes / Instanzen": "99 / 2.244",
+            "Geometrien / Texturen": "146 / 53",
+            "Gegner sichtbar / aktiv": "103 / 250",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.12597158938591085,
+              "z": -0.24713398679128679,
+              "direction": 4.240987761499046,
+              "strength": 0.2773879030523293,
+              "gust": 0.01738790305232929,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "2.5 / 0.1 ms",
+            "Draw Calls / Dreiecke": "224 / 166.155",
+            "Meshes / Instanzen": "100 / 1.902",
+            "Geometrien / Texturen": "161 / 52",
+            "Gegner sichtbar / aktiv": "70 / 250",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.13077454317399279,
+              "z": -0.2560146983897829,
+              "direction": 4.240131823636412,
+              "strength": 0.287481315799789,
+              "gust": 0.027481315799788988,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0.09999999776482582
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.4493962999999894,
+          "p95": 0.613350999999966,
+          "p99": 0.7337610000013228,
+          "max": 0.7437010000012378
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 29.918403632514654,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 12.032727562,
+        "errors": []
+      },
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "state": "BUILDUP",
+          "stateAt": 138,
+          "waveId": 1,
+          "created": 1,
+          "region": "breach/sector-1"
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0009758199444666267,
+          "p95": 0.0014900000023772009,
+          "p99": 0.0018500000005587935,
+          "max": 0.002799999998387648
+        },
+        "navigationMs": {
+          "mean": 0.46092933795017693,
+          "p95": 0.6096309999993537,
+          "p99": 0.6793109999998705,
+          "max": 0.8369820000007167
+        },
+        "weatherServerMs": {
+          "mean": 0.001246484764486824,
+          "p95": 0.0021199999973759986,
+          "p99": 0.0035300000017741695,
+          "max": 0.0265800000015588
+        },
+        "collisionMs": {
+          "mean": 0.15736009141275792,
+          "p95": 0.2180400000033842,
+          "p99": 0.24050999999963096,
+          "max": 0.3445510000019567
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 156,
+            "totalBytes": 411254,
+            "samplePackets": 61,
+            "sampleBytesPerSecond": 14644.946327646196
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 900,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 17,
+            "totalBytes": 1933,
+            "samplePackets": 1,
+            "sampleBytesPerSecond": 5.654258908615707
+          }
+        },
+        "memoryBefore": {
+          "rss": 749842432,
+          "heapTotal": 143740928,
+          "heapUsed": 99430976,
+          "external": 34246377,
+          "arrayBuffers": 3280043
+        },
+        "memoryAfter": {
+          "rss": 750891008,
+          "heapTotal": 144265216,
+          "heapUsed": 98942360,
+          "external": 34370883,
+          "arrayBuffers": 3404549
+        },
+        "enemies": 500,
+        "packetsPerSecond": 10.06125482268383,
+        "payloadBytesPerSecond": 50366.64164235526,
+        "minFrameCount": 500,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 60.00233018758009,
+        "frameMs": {
+          "mean": 16.66601941747573,
+          "p95": 16.799999999999272,
+          "p99": 16.799999999999272,
+          "max": 16.80000000000291
+        },
+        "clientFrames": [
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.799999999999272,
+            "p99": 16.799999999999272,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.002330187580114,
+            "mean": 16.666019417475724,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.799999999999272,
+            "p99": 16.799999999999272,
+            "max": 16.80000000000291
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.8 / 0.2 ms",
+            "Draw Calls / Dreiecke": "266 / 246.085",
+            "Meshes / Instanzen": "115 / 2.526",
+            "Geometrien / Texturen": "162 / 53",
+            "Gegner sichtbar / aktiv": "337 / 500",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.1333639621383289,
+              "z": -0.34814064382080784,
+              "direction": 4.346557757672505,
+              "strength": 0.37281074860738683,
+              "gust": 0.11281074860738685,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "2.0 / 0.2 ms",
+            "Draw Calls / Dreiecke": "289 / 254.863",
+            "Meshes / Instanzen": "121 / 2.721",
+            "Geometrien / Texturen": "175 / 52",
+            "Gegner sichtbar / aktiv": "353 / 500",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.13270560427856293,
+              "z": -0.34683435833601706,
+              "direction": 4.346954952272016,
+              "strength": 0.3713554221083829,
+              "gust": 0.11135542210838292,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "1.8 / 0.2 ms",
+            "Draw Calls / Dreiecke": "217 / 230.085",
+            "Meshes / Instanzen": "99 / 2.390",
+            "Geometrien / Texturen": "149 / 53",
+            "Gegner sichtbar / aktiv": "208 / 500",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.13562411308137579,
+              "z": -0.3525197628431966,
+              "direction": 4.345117319570502,
+              "strength": 0.3777089928028367,
+              "gust": 0.1177089928028367,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "1.7 / 0.2 ms",
+            "Draw Calls / Dreiecke": "222 / 180.351",
+            "Meshes / Instanzen": "98 / 2.017",
+            "Geometrien / Texturen": "161 / 52",
+            "Gegner sichtbar / aktiv": "146 / 500",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.1353100283246277,
+              "z": -0.3519216943805455,
+              "direction": 4.34532522942642,
+              "strength": 0.3770380388513679,
+              "gust": 0.1170380388513679,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.5786475249999664,
+          "p95": 0.8064009999980044,
+          "p99": 0.8366109999988112,
+          "max": 0.84074099999998
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.01746273544515,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 12.026332910999997,
+        "errors": []
+      },
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "state": "BUILDUP",
+          "stateAt": 138,
+          "waveId": 1,
+          "created": 1,
+          "region": "breach/sector-1"
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0006647396124376969,
+          "p95": 0.0009700000009615906,
+          "p99": 0.001600000003236346,
+          "max": 0.023930000003019813
+        },
+        "navigationMs": {
+          "mean": 0.8310655512464021,
+          "p95": 1.0841419999997015,
+          "p99": 1.2115220000050613,
+          "max": 1.3507910000043921
+        },
+        "weatherServerMs": {
+          "mean": 0.0009786426592974567,
+          "p95": 0.0013699999981326982,
+          "p99": 0.001769999995303806,
+          "max": 0.0022400000016205013
+        },
+        "collisionMs": {
+          "mean": 0.27784440997198956,
+          "p95": 0.39345099999627564,
+          "p99": 0.4657999999981257,
+          "max": 0.5140709999977844
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 220,
+            "totalBytes": 595896,
+            "samplePackets": 60,
+            "sampleBytesPerSecond": 14389.187728220473
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 900,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 17,
+            "totalBytes": 1933,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 751153152,
+          "heapTotal": 144265216,
+          "heapUsed": 72877240,
+          "external": 32527867,
+          "arrayBuffers": 1561533
+        },
+        "memoryAfter": {
+          "rss": 751415296,
+          "heapTotal": 144265216,
+          "heapUsed": 93568568,
+          "external": 33425816,
+          "arrayBuffers": 2459482
+        },
+        "enemies": 1000,
+        "packetsPerSecond": 9.975519240334481,
+        "payloadBytesPerSecond": 99815.04551878682,
+        "minFrameCount": 1000,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 60.002330187580114,
+        "frameMs": {
+          "mean": 16.666019417475724,
+          "p95": 16.700000000004366,
+          "p99": 16.80000000000291,
+          "max": 16.80000000000291
+        },
+        "clientFrames": [
+          {
+            "frames": 721,
+            "fps": 60.002330187580114,
+            "mean": 16.666019417475724,
+            "p95": 16.700000000004366,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.002330187580114,
+            "mean": 16.666019417475724,
+            "p95": 16.700000000004366,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00282953703782,
+            "mean": 16.665880721220525,
+            "p95": 16.799999999995634,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00282953703779,
+            "mean": 16.66588072122053,
+            "p95": 16.700000000004366,
+            "p99": 16.80000000000291,
+            "max": 16.80000000000291
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.9 / 0.3 ms",
+            "Draw Calls / Dreiecke": "266 / 293.731",
+            "Meshes / Instanzen": "115 / 2.912",
+            "Geometrien / Texturen": "165 / 53",
+            "Gegner sichtbar / aktiv": "680 / 1.000",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.15416715212139884,
+              "z": -0.35346596441187356,
+              "direction": 4.3011051513563,
+              "strength": 0.3856237788192507,
+              "gust": 0.12562377881925071,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "2.0 / 0.2 ms",
+            "Draw Calls / Dreiecke": "288 / 302.719",
+            "Meshes / Instanzen": "121 / 3.109",
+            "Geometrien / Texturen": "175 / 52",
+            "Gegner sichtbar / aktiv": "703 / 1.000",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.15594730880560534,
+              "z": -0.35540522604788455,
+              "direction": 4.298898540004799,
+              "strength": 0.38811394953783707,
+              "gust": 0.12811394953783703,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "1.8 / 0.2 ms",
+            "Draw Calls / Dreiecke": "217 / 271.399",
+            "Meshes / Instanzen": "99 / 2.652",
+            "Geometrien / Texturen": "149 / 53",
+            "Gegner sichtbar / aktiv": "423 / 1.000",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.15618119598338026,
+              "z": -0.35563746170112387,
+              "direction": 4.298587377500258,
+              "strength": 0.38842060983425863,
+              "gust": 0.12842060983425865,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "1.9 / 0.3 ms",
+            "Draw Calls / Dreiecke": "224 / 225.279",
+            "Meshes / Instanzen": "100 / 2.287",
+            "Geometrien / Texturen": "161 / 52",
+            "Gegner sichtbar / aktiv": "352 / 1.000",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 137,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.1527685000381896,
+              "z": -0.3517710121508394,
+              "direction": 4.302681108021439,
+              "strength": 0.38351148560837695,
+              "gust": 0.12351148560837692,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.9497297916667473,
+          "p95": 1.2155520000014803,
+          "p99": 1.2627419999989797,
+          "max": 1.3867219999956433
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.00968704800623,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 12.029449005000002,
+        "errors": []
+      },
+      {
+        "during": {
+          "instanceId": "49c86815-4b95-41d7-94f2-7ac8bd228682",
+          "worldId": "world.generated.acdc7ec0c04dd3da",
+          "planetId": "forest",
+          "profileId": "forest.filtered-day.v1",
+          "version": 1,
+          "seed": 2479544381,
+          "originTick": 77,
+          "timeOfDay": "day",
+          "revision": 3,
+          "current": {
+            "weather": "ground-mist",
+            "wind": {
+              "direction": 4.3,
+              "strength": 0.26,
+              "gust": 0.14,
+              "frequency": 0.097,
+              "turbulence": 0.21600000000000003
+            }
+          },
+          "startTick": 1307,
+          "durationTicks": 660,
+          "target": {
+            "weather": "windy-forest",
+            "wind": {
+              "direction": 4,
+              "strength": 0.61,
+              "gust": 0.28,
+              "frequency": 0.081,
+              "turbulence": 0.272
+            }
+          }
+        },
+        "serverProgress": 0.03333333333333333,
+        "shared": [
+          {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 3,
+            "current": "ground-mist",
+            "target": "windy-forest",
+            "timeOfDay": "day",
+            "audio": "ambience.forest.ground-mist",
+            "targetAudio": "ambience.forest.windy-forest",
+            "seed": 2479544381,
+            "startTick": 1307,
+            "durationTicks": 660,
+            "progress": 0.026778787878821608,
+            "x": -0.1397174315199408,
+            "z": -0.2841868748208492,
+            "direction": 4.255452287392092,
+            "strength": 0.316675133995346,
+            "gust": 0.055935617554463614,
+            "turbulence": 0.2161183226305412,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          },
+          {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 3,
+            "current": "ground-mist",
+            "target": "windy-forest",
+            "timeOfDay": "day",
+            "audio": "ambience.forest.ground-mist",
+            "targetAudio": "ambience.forest.windy-forest",
+            "seed": 2479544381,
+            "startTick": 1307,
+            "durationTicks": 660,
+            "progress": 0.03290454545461347,
+            "x": -0.13796856748411818,
+            "z": -0.2791951357515055,
+            "direction": 4.25341996068175,
+            "strength": 0.3114245485521674,
+            "gust": 0.050312642220837096,
+            "turbulence": 0.21617790501301287,
+            "particles": 0,
+            "cap": 64,
+            "particleMs": 0,
+            "updateMs": 0
+          },
+          {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 3,
+            "current": "ground-mist",
+            "target": "windy-forest",
+            "timeOfDay": "day",
+            "audio": "ambience.forest.ground-mist",
+            "targetAudio": "ambience.forest.windy-forest",
+            "seed": 2479544381,
+            "startTick": 1307,
+            "durationTicks": 660,
+            "progress": 0.0336696969697307,
+            "x": -0.1377509168215105,
+            "z": -0.27857721276724473,
+            "direction": 4.253166951184285,
+            "strength": 0.31077416005571223,
+            "gust": 0.04961054785786209,
+            "turbulence": 0.21618617795165604,
+            "particles": 0,
+            "cap": 320,
+            "particleMs": 0,
+            "updateMs": 0
+          },
+          {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 3,
+            "current": "ground-mist",
+            "target": "windy-forest",
+            "timeOfDay": "day",
+            "audio": "ambience.forest.ground-mist",
+            "targetAudio": "ambience.forest.windy-forest",
+            "seed": 2479544381,
+            "startTick": 1307,
+            "durationTicks": 660,
+            "progress": 0.03366515151504962,
+            "x": -0.13775220863204174,
+            "z": -0.2785808786203593,
+            "direction": 4.2531684535965795,
+            "strength": 0.310778018714157,
+            "gust": 0.04961471706745452,
+            "turbulence": 0.21618612826347242,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        ]
+      }
+    ],
+    "ice-horde": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "high",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "state": "BUILDUP",
+          "stateAt": 134,
+          "waveId": 1,
+          "created": 1,
+          "region": "breach/sector-1"
+        },
+        "plan": {
+          "id": "generated.d7283495de0b75ca",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.b9ec957f0a62f9c4",
+            "planetId": "ice",
+            "biome": "glacial",
+            "seed": 48,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.001112994459809239,
+          "p95": 0.0015500000008614734,
+          "p99": 0.0020700000004580943,
+          "max": 0.005470000000059372
+        },
+        "navigationMs": {
+          "mean": 0.8701447257617297,
+          "p95": 1.5014219999993657,
+          "p99": 1.824733000001288,
+          "max": 2.2928630000005796
+        },
+        "weatherServerMs": {
+          "mean": 0.0020273130194305307,
+          "p95": 0.002639999998791609,
+          "p99": 0.0035400000015215483,
+          "max": 0.006769999999960419
+        },
+        "collisionMs": {
+          "mean": 0.3399622409972198,
+          "p95": 0.6993510000011156,
+          "p99": 0.8487719999993715,
+          "max": 0.9464910000006057
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 91,
+            "totalBytes": 226921,
+            "samplePackets": 60,
+            "sampleBytesPerSecond": 14002.8902329854
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 887,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1523,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 16,
+            "totalBytes": 1963,
+            "samplePackets": 5,
+            "sampleBytesPerSecond": 42.72544405317909
+          }
+        },
+        "memoryBefore": {
+          "rss": 751513600,
+          "heapTotal": 146292736,
+          "heapUsed": 93864072,
+          "external": 35645730,
+          "arrayBuffers": 4679436
+        },
+        "memoryAfter": {
+          "rss": 753328128,
+          "heapTotal": 145051648,
+          "heapUsed": 96749368,
+          "external": 35242582,
+          "arrayBuffers": 4276248
+        },
+        "enemies": 1000,
+        "packetsPerSecond": 9.974811841209126,
+        "payloadBytesPerSecond": 99807.96728313851,
+        "minFrameCount": 1000,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 4,
+        "fps": 60.00233018758011,
+        "frameMs": {
+          "mean": 16.666019417475727,
+          "p95": 16.799999999999272,
+          "p99": 16.80000000000109,
+          "max": 16.80000000000291
+        },
+        "clientFrames": [
+          {
+            "frames": 721,
+            "fps": 60.00233018758011,
+            "mean": 16.666019417475727,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000291
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758011,
+            "mean": 16.666019417475727,
+            "p95": 16.799999999999272,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.700000000000728,
+            "p99": 16.80000000000109,
+            "max": 16.80000000000109
+          },
+          {
+            "frames": 721,
+            "fps": 60.00233018758009,
+            "mean": 16.66601941747573,
+            "p95": 16.700000000000728,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "2.0 / 0.2 ms",
+            "Draw Calls / Dreiecke": "196 / 158.679",
+            "Meshes / Instanzen": "112 / 1.327",
+            "Geometrien / Texturen": "158 / 55",
+            "Gegner sichtbar / aktiv": "590 / 1.000",
+            "weather": {
+              "planet": "ice",
+              "profile": "ice.overcast-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy-snow",
+              "timeOfDay": "dusk",
+              "audio": "ambience.ice.windy-snow",
+              "seed": 1786697896,
+              "startTick": 133,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.6939501913207239,
+              "z": 0.3684700366025772,
+              "direction": 0.48811926907881364,
+              "strength": 0.7857079838642178,
+              "gust": 0.09570798386421787,
+              "turbulence": 0.276,
+              "particles": 320,
+              "cap": 320,
+              "particleMs": 0,
+              "updateMs": 0.10000000149011612
+            }
+          },
+          {
+            "CPU / GPU": "2.0 / 0.2 ms",
+            "Draw Calls / Dreiecke": "204 / 158.961",
+            "Meshes / Instanzen": "118 / 1.343",
+            "Geometrien / Texturen": "164 / 54",
+            "Gegner sichtbar / aktiv": "586 / 1.000",
+            "weather": {
+              "planet": "ice",
+              "profile": "ice.overcast-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy-snow",
+              "timeOfDay": "dusk",
+              "audio": "ambience.ice.windy-snow",
+              "seed": 1786697896,
+              "startTick": 133,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.694611266214932,
+              "z": 0.3684794852180561,
+              "direction": 0.4877356017265866,
+              "strength": 0.7862963450120283,
+              "gust": 0.09629634501202836,
+              "turbulence": 0.276,
+              "particles": 320,
+              "cap": 320,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "1.8 / 0.2 ms",
+            "Draw Calls / Dreiecke": "173 / 126.101",
+            "Meshes / Instanzen": "94 / 1.116",
+            "Geometrien / Texturen": "141 / 55",
+            "Gegner sichtbar / aktiv": "240 / 1.000",
+            "weather": {
+              "planet": "ice",
+              "profile": "ice.overcast-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy-snow",
+              "timeOfDay": "dusk",
+              "audio": "ambience.ice.windy-snow",
+              "seed": 1786697896,
+              "startTick": 133,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.6964843624312864,
+              "z": 0.36849162682331615,
+              "direction": 0.48663521545751287,
+              "strength": 0.787957198171455,
+              "gust": 0.09795719817145505,
+              "turbulence": 0.276,
+              "particles": 320,
+              "cap": 320,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          },
+          {
+            "CPU / GPU": "2.0 / 0.2 ms",
+            "Draw Calls / Dreiecke": "191 / 150.797",
+            "Meshes / Instanzen": "102 / 1.375",
+            "Geometrien / Texturen": "155 / 54",
+            "Gegner sichtbar / aktiv": "404 / 1.000",
+            "weather": {
+              "planet": "ice",
+              "profile": "ice.overcast-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy-snow",
+              "timeOfDay": "dusk",
+              "audio": "ambience.ice.windy-snow",
+              "seed": 1786697896,
+              "startTick": 133,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.6977070763302786,
+              "z": 0.3684863547436962,
+              "direction": 0.4859046178557813,
+              "strength": 0.7890357140165725,
+              "gust": 0.0990357140165725,
+              "turbulence": 0.276,
+              "particles": 320,
+              "cap": 320,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.6821174499998961,
+          "p95": 0.880181000000448,
+          "p99": 1.0248410000021977,
+          "max": 1.161791999998968
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.007558955637453,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 12.030302116,
+        "errors": []
+      }
+    ],
+    "pair": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "wave": {
+          "state": "BUILDUP",
+          "stateAt": 83,
+          "waveId": 1,
+          "created": 1,
+          "region": "patrol/patrol-5"
+        },
+        "plan": {
+          "id": "generated.1df7f7561fcb275f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.acdc7ec0c04dd3da",
+            "planetId": "forest",
+            "biome": "temperate-forest",
+            "seed": 63,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0007248344371458231,
+          "p95": 0.0010999999994965037,
+          "p99": 0.001339999998890562,
+          "max": 0.0015700000003562309
+        },
+        "navigationMs": {
+          "mean": 1.0900736225165815,
+          "p95": 1.3588190000000395,
+          "p99": 1.6333880000001955,
+          "max": 1.6370480000005045
+        },
+        "weatherServerMs": {
+          "mean": 0.0012740397351502521,
+          "p95": 0.0019499999998515705,
+          "p99": 0.002440000000206055,
+          "max": 0.003950000000259024
+        },
+        "collisionMs": {
+          "mean": 0.33058408609273304,
+          "p95": 0.48566000000028,
+          "p99": 0.613310000000638,
+          "max": 0.9550089999993361
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 48,
+            "totalBytes": 119482,
+            "samplePackets": 26,
+            "sampleBytesPerSecond": 14150.556838050165
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 899,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1330,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 14,
+            "totalBytes": 1727,
+            "samplePackets": 3,
+            "sampleBytesPerSecond": 69.73262176078745
+          }
+        },
+        "memoryBefore": {
+          "rss": 752214016,
+          "heapTotal": 143360000,
+          "heapUsed": 73744472,
+          "external": 32967986,
+          "arrayBuffers": 1870620
+        },
+        "memoryAfter": {
+          "rss": 756670464,
+          "heapTotal": 144408576,
+          "heapUsed": 87688352,
+          "external": 33625656,
+          "arrayBuffers": 2528250
+        },
+        "enemies": 1000,
+        "packetsPerSecond": 9.933421903246076,
+        "payloadBytesPerSecond": 99393.81956388023,
+        "minFrameCount": 1000,
+        "operators": 4,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.001993421708356,
+        "frameMs": {
+          "mean": 16.666112956810633,
+          "p95": 16.700000000000728,
+          "p99": 16.800000000000182,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 301,
+            "fps": 60.001993421708356,
+            "mean": 16.666112956810633,
+            "p95": 16.700000000000728,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.4 / 0.2 ms",
+            "Draw Calls / Dreiecke": "266 / 265.353",
+            "Meshes / Instanzen": "115 / 2.810",
+            "Geometrien / Texturen": "162 / 53",
+            "Gegner sichtbar / aktiv": "647 / 1.000",
+            "weather": {
+              "planet": "forest",
+              "profile": "forest.filtered-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "ground-mist",
+              "timeOfDay": "day",
+              "audio": "ambience.forest.ground-mist",
+              "seed": 2479544381,
+              "startTick": 82,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.1305864401058115,
+              "z": -0.2556621650999401,
+              "direction": 4.240156720692601,
+              "strength": 0.2870818019364824,
+              "gust": 0.027081801936482387,
+              "turbulence": 0.21600000000000003,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 1.2446491500000092,
+          "p95": 1.5702490000003309,
+          "p99": 1.795697999999902,
+          "max": 1.7987079999993512
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 29.998934147803148,
+        "payloadSource": "Horde payload received by an SDK client",
+        "wallSeconds": 5.033512166,
+        "errors": []
+      },
+      {
+        "pairedWeather": [
+          {
+            "active": true,
+            "reports": [
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.6 / 0.2 ms",
+                "Draw Calls / Dreiecke": "274 / 307.679",
+                "Geometrien / Texturen": "170 / 53",
+                "Gegner sichtbar / aktiv": "695 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.4 / 0.2 ms",
+                "Draw Calls / Dreiecke": "274 / 309.107",
+                "Geometrien / Texturen": "170 / 53",
+                "Gegner sichtbar / aktiv": "696 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.6 / 0.2 ms",
+                "Draw Calls / Dreiecke": "276 / 313.579",
+                "Geometrien / Texturen": "172 / 53",
+                "Gegner sichtbar / aktiv": "701 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.5 / 0.3 ms",
+                "Draw Calls / Dreiecke": "276 / 315.827",
+                "Geometrien / Texturen": "172 / 53",
+                "Gegner sichtbar / aktiv": "703 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.5 / 0.2 ms",
+                "Draw Calls / Dreiecke": "276 / 317.697",
+                "Geometrien / Texturen": "172 / 53",
+                "Gegner sichtbar / aktiv": "706 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.5 / 0.3 ms",
+                "Draw Calls / Dreiecke": "276 / 320.685",
+                "Geometrien / Texturen": "172 / 53",
+                "Gegner sichtbar / aktiv": "710 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              }
+            ]
+          },
+          {
+            "active": false,
+            "reports": [
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.6 / 0.3 ms",
+                "Draw Calls / Dreiecke": "275 / 322.340",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "712 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.5 / 0.3 ms",
+                "Draw Calls / Dreiecke": "275 / 322.340",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "712 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.4 / 0.3 ms",
+                "Draw Calls / Dreiecke": "275 / 323.384",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.6 / 0.3 ms",
+                "Draw Calls / Dreiecke": "275 / 323.384",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.4 / 0.3 ms",
+                "Draw Calls / Dreiecke": "274 / 323.384",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.4 / 0.3 ms",
+                "Draw Calls / Dreiecke": "274 / 323.384",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              }
+            ]
+          },
+          {
+            "active": true,
+            "reports": [
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.5 / 0.3 ms",
+                "Draw Calls / Dreiecke": "274 / 323.373",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.4 / 0.3 ms",
+                "Draw Calls / Dreiecke": "274 / 323.373",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.4 / 0.2 ms",
+                "Draw Calls / Dreiecke": "274 / 323.373",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.4 / 0.3 ms",
+                "Draw Calls / Dreiecke": "274 / 323.373",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.4 / 0.3 ms",
+                "Draw Calls / Dreiecke": "274 / 323.373",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              },
+              {
+                "FPS / Frame": "60 / 16.7 ms",
+                "CPU / GPU": "1.4 / 0.3 ms",
+                "Draw Calls / Dreiecke": "274 / 323.373",
+                "Geometrien / Texturen": "172 / 54",
+                "Gegner sichtbar / aktiv": "714 / 1.000",
+                "Serverposition": "-159.00 / -3.65 / -200.00",
+                "Kamera / Kollisionsrückzug": "-159.86 / -0.98 / -204.77 · 0.00 m",
+                "Kameraziel": "-159.86 / -1.55 / -200.00"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "smoke": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "swiftshader",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.d7283495de0b75ca",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.b9ec957f0a62f9c4",
+            "planetId": "ice",
+            "biome": "glacial",
+            "seed": 48,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0012016447368583421,
+          "p95": 0.0015700000003562309,
+          "p99": 0.0018099999997502891,
+          "max": 0.002050000000053842
+        },
+        "navigationMs": {
+          "mean": 0.011692953947365487,
+          "p95": 0.013269999999465654,
+          "p99": 0.014710000000377477,
+          "max": 0.014710000000377477
+        },
+        "weatherServerMs": {
+          "mean": 0.0013648026315123435,
+          "p95": 0.001870000000053551,
+          "p99": 0.0020400000003064633,
+          "max": 0.0020699999995485996
+        },
+        "collisionMs": {
+          "mean": 0.0017509144736921275,
+          "p95": 0.002300000000104774,
+          "p99": 0.00304000000051019,
+          "max": 0.004579999998895801
+        },
+        "missionNetwork": {
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 886,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-state": {
+            "totalPackets": 49,
+            "totalBytes": 104829,
+            "samplePackets": 25,
+            "sampleBytesPerSecond": 12004.268187759295
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1523,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 459,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 742547456,
+          "heapTotal": 141365248,
+          "heapUsed": 88045552,
+          "external": 34244930,
+          "arrayBuffers": 3278636
+        },
+        "memoryAfter": {
+          "rss": 742047744,
+          "heapTotal": 140333056,
+          "heapUsed": 74162648,
+          "external": 32850370,
+          "arrayBuffers": 1884036
+        },
+        "enemies": 0,
+        "packetsPerSecond": 10.280673700772148,
+        "payloadBytesPerSecond": 61.68404220463289,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 35.48361374691014,
+        "frameMs": {
+          "mean": 28.18202247191011,
+          "p95": 50,
+          "p99": 50.099999999999454,
+          "max": 50.100000000000364
+        },
+        "clientFrames": [
+          {
+            "frames": 178,
+            "fps": 35.48361374691014,
+            "mean": 28.18202247191011,
+            "p95": 50,
+            "p99": 50.099999999999454,
+            "max": 50.100000000000364
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "31.5 / 46.8 ms",
+            "Draw Calls / Dreiecke": "184 / 52.269",
+            "Meshes / Instanzen": "109 / 421",
+            "Geometrien / Texturen": "152 / 52",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "weather": {
+              "planet": "ice",
+              "profile": "ice.overcast-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy-snow",
+              "timeOfDay": "dusk",
+              "audio": "ambience.ice.windy-snow",
+              "seed": 1786697896,
+              "startTick": 100,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.6766735185677164,
+              "z": 0.3677694527541275,
+              "direction": 0.4978361432735774,
+              "strength": 0.770156750999356,
+              "gust": 0.08015675099935606,
+              "turbulence": 0.276,
+              "particles": 176,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.11005020833332917,
+          "p95": 0.18039999999928114,
+          "p99": 0.22433000000000902,
+          "max": 0.7369889999990846
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.44661057536367,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.058034280000001,
+        "errors": []
+      }
+    ],
+    "low": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "low",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.94cad383c1c0d28f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.b9ec957f0a62f9c4",
+            "planetId": "ice",
+            "biome": "glacial",
+            "seed": 48,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.000757799999943624,
+          "p95": 0.001330000000052678,
+          "p99": 0.0015400000002046,
+          "max": 0.0015699999994467362
+        },
+        "navigationMs": {
+          "mean": 0.007780393333420458,
+          "p95": 0.01337000000057742,
+          "p99": 0.015350000000580621,
+          "max": 0.01601000000118802
+        },
+        "weatherServerMs": {
+          "mean": 0.001117799999962396,
+          "p95": 0.0020100000001548324,
+          "p99": 0.0024899999998524436,
+          "max": 0.013700000001335866
+        },
+        "collisionMs": {
+          "mean": 0.0011706666667062866,
+          "p95": 0.0018900000004578033,
+          "p99": 0.004750000000058208,
+          "max": 0.009410000000571017
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 46,
+            "totalBytes": 103631,
+            "samplePackets": 25,
+            "sampleBytesPerSecond": 12184.503702678974
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 884,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1508,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 459,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 724119552,
+          "heapTotal": 139808768,
+          "heapUsed": 90491704,
+          "external": 33433062,
+          "arrayBuffers": 2466768
+        },
+        "memoryAfter": {
+          "rss": 724381696,
+          "heapTotal": 140595200,
+          "heapUsed": 75159224,
+          "external": 32825100,
+          "arrayBuffers": 1858766
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.95449723262608,
+        "payloadBytesPerSecond": 59.726983395756484,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.001993421708356,
+        "frameMs": {
+          "mean": 16.666112956810633,
+          "p95": 16.700000000000728,
+          "p99": 16.800000000000182,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 301,
+            "fps": 60.001993421708356,
+            "mean": 16.666112956810633,
+            "p95": 16.700000000000728,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.3 / 0.1 ms",
+            "Draw Calls / Dreiecke": "178 / 44.989",
+            "Meshes / Instanzen": "107 / 290",
+            "Geometrien / Texturen": "150 / 51",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "weather": {
+              "planet": "ice",
+              "profile": "ice.overcast-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy-snow",
+              "timeOfDay": "day",
+              "audio": "ambience.ice.windy-snow",
+              "seed": 1786697896,
+              "startTick": 85,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.6853880211858538,
+              "z": 0.3681815433159469,
+              "direction": 0.49295279313693996,
+              "strength": 0.7780195295900822,
+              "gust": 0.0880195295900823,
+              "turbulence": 0.276,
+              "particles": 64,
+              "cap": 64,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.0701789500000056,
+          "p95": 0.12654999999995198,
+          "p99": 0.16265999999995984,
+          "max": 0.17181999999957043
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.062581642530763,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.022855381999999,
+        "errors": []
+      }
+    ],
+    "high": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "high",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.94cad383c1c0d28f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.b9ec957f0a62f9c4",
+            "planetId": "ice",
+            "biome": "glacial",
+            "seed": 48,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0006782666667641024,
+          "p95": 0.001330000000052678,
+          "p99": 0.00183999999990192,
+          "max": 0.002449999999953434
+        },
+        "navigationMs": {
+          "mean": 0.007906719999985701,
+          "p95": 0.013500000000021828,
+          "p99": 0.021700000000237196,
+          "max": 0.047739999999976135
+        },
+        "weatherServerMs": {
+          "mean": 0.0009736666666867677,
+          "p95": 0.0019400000001041917,
+          "p99": 0.002260000000205764,
+          "max": 0.025900000000547152
+        },
+        "collisionMs": {
+          "mean": 0.0013201266667116822,
+          "p95": 0.0019100000008620555,
+          "p99": 0.00544999999965512,
+          "max": 0.034370000001217704
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 47,
+            "totalBytes": 106069,
+            "samplePackets": 25,
+            "sampleBytesPerSecond": 12179.99933019059
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 884,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1508,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 459,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 740331520,
+          "heapTotal": 140333056,
+          "heapUsed": 73421696,
+          "external": 32852894,
+          "arrayBuffers": 1886600
+        },
+        "memoryAfter": {
+          "rss": 740724736,
+          "heapTotal": 140857344,
+          "heapUsed": 83286208,
+          "external": 33753901,
+          "arrayBuffers": 2787567
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.95081724987385,
+        "payloadBytesPerSecond": 59.7049034992431,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.003189538314324,
+        "frameMs": {
+          "mean": 16.665780730897012,
+          "p95": 16.700000000000728,
+          "p99": 16.800000000000182,
+          "max": 16.800000000000182
+        },
+        "clientFrames": [
+          {
+            "frames": 301,
+            "fps": 60.003189538314324,
+            "mean": 16.665780730897012,
+            "p95": 16.700000000000728,
+            "p99": 16.800000000000182,
+            "max": 16.800000000000182
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.3 / 0.2 ms",
+            "Draw Calls / Dreiecke": "184 / 60.471",
+            "Meshes / Instanzen": "107 / 539",
+            "Geometrien / Texturen": "152 / 55",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "weather": {
+              "planet": "ice",
+              "profile": "ice.overcast-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy-snow",
+              "timeOfDay": "day",
+              "audio": "ambience.ice.windy-snow",
+              "seed": 1786697896,
+              "startTick": 81,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.687176349495232,
+              "z": 0.3682602528175443,
+              "direction": 0.4919562327112308,
+              "strength": 0.7796325731463731,
+              "gust": 0.08963257314637323,
+              "turbulence": 0.276,
+              "particles": 320,
+              "cap": 320,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.059827091666663064,
+          "p95": 0.08964000000014494,
+          "p99": 0.13074000000051456,
+          "max": 0.1843490000010206
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 29.85245174962155,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.02471292,
+        "errors": []
+      },
+      {
+        "contextRestored": true,
+        "weather": "windy-snow",
+        "particles": 320
+      }
+    ],
+    "reduced": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.94cad383c1c0d28f",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.b9ec957f0a62f9c4",
+            "planetId": "ice",
+            "biome": "glacial",
+            "seed": 48,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0007046000000627828,
+          "p95": 0.0010599999986879993,
+          "p99": 0.0012700000006589107,
+          "max": 0.002300000000104774
+        },
+        "navigationMs": {
+          "mean": 0.007908399999935985,
+          "p95": 0.01291999999921245,
+          "p99": 0.014470000000073924,
+          "max": 0.016580000000431028
+        },
+        "weatherServerMs": {
+          "mean": 0.0011490666666334921,
+          "p95": 0.002089999999952852,
+          "p99": 0.0026199999992968515,
+          "max": 0.005089999998745043
+        },
+        "collisionMs": {
+          "mean": 0.0013567333333230635,
+          "p95": 0.0018000000000029104,
+          "p99": 0.0036900000004607136,
+          "max": 0.004560000000310538
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 46,
+            "totalBytes": 103629,
+            "samplePackets": 25,
+            "sampleBytesPerSecond": 12184.867925004948
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 884,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1508,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 459,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 750084096,
+          "heapTotal": 140857344,
+          "heapUsed": 71501576,
+          "external": 32713365,
+          "arrayBuffers": 1747071
+        },
+        "memoryAfter": {
+          "rss": 750477312,
+          "heapTotal": 140857344,
+          "heapUsed": 83002232,
+          "external": 33614442,
+          "arrayBuffers": 2648108
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.954794795023732,
+        "payloadBytesPerSecond": 59.72876877014239,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.001993421708356,
+        "frameMs": {
+          "mean": 16.666112956810633,
+          "p95": 16.700000000000728,
+          "p99": 16.800000000000182,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 301,
+            "fps": 60.001993421708356,
+            "mean": 16.666112956810633,
+            "p95": 16.700000000000728,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.0 / 0.1 ms",
+            "Draw Calls / Dreiecke": "180 / 52.109",
+            "Meshes / Instanzen": "107 / 421",
+            "Geometrien / Texturen": "149 / 53",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "weather": {
+              "planet": "ice",
+              "profile": "ice.overcast-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy-snow",
+              "timeOfDay": "day",
+              "audio": "ambience.ice.windy-snow",
+              "seed": 1786697896,
+              "startTick": 83,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.685520365105281,
+              "z": 0.36818756951366205,
+              "direction": 0.49287912983017623,
+              "strength": 0.7781389704406633,
+              "gust": 0.08813897044066336,
+              "turbulence": 0.276,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.07259768333323488,
+          "p95": 0.12690999999995256,
+          "p99": 0.15315000000009604,
+          "max": 0.1730889999998908
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 29.864384385071194,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.022705241999999,
+        "errors": []
+      }
+    ],
+    "desert-profile": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.76fc699a1cc12bd3",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.728819ca01df0109",
+            "planetId": "desert",
+            "biome": "arid-desert",
+            "seed": 31,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0006868666666317344,
+          "p95": 0.0009799999997994746,
+          "p99": 0.0012299999998504063,
+          "max": 0.002290000000357395
+        },
+        "navigationMs": {
+          "mean": 0.007432453333306815,
+          "p95": 0.01183000000037282,
+          "p99": 0.01487000000088301,
+          "max": 0.02411000000029162
+        },
+        "weatherServerMs": {
+          "mean": 0.001104060000040287,
+          "p95": 0.0016400000004068715,
+          "p99": 0.00503000000026077,
+          "max": 0.016190000000278815
+        },
+        "collisionMs": {
+          "mean": 0.0011408599999776926,
+          "p95": 0.0016390000000683358,
+          "p99": 0.004560000000310538,
+          "max": 0.004780000000209839
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 47,
+            "totalBytes": 103702,
+            "samplePackets": 25,
+            "sampleBytesPerSecond": 11915.451830399646
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 897,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1329,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 374,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 737640448,
+          "heapTotal": 140595200,
+          "heapUsed": 95177240,
+          "external": 33399944,
+          "arrayBuffers": 2433650
+        },
+        "memoryAfter": {
+          "rss": 738164736,
+          "heapTotal": 141381632,
+          "heapUsed": 81150688,
+          "external": 33362397,
+          "arrayBuffers": 2396063
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.954262944979739,
+        "payloadBytesPerSecond": 59.72557766987843,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.00318953831433,
+        "frameMs": {
+          "mean": 16.66578073089701,
+          "p95": 16.700000000000728,
+          "p99": 16.800000000000182,
+          "max": 16.800000000000182
+        },
+        "clientFrames": [
+          {
+            "frames": 301,
+            "fps": 60.00318953831433,
+            "mean": 16.66578073089701,
+            "p95": 16.700000000000728,
+            "p99": 16.800000000000182,
+            "max": 16.800000000000182
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.1 / 0.1 ms",
+            "Draw Calls / Dreiecke": "181 / 68.975",
+            "Meshes / Instanzen": "107 / 731",
+            "Geometrien / Texturen": "151 / 51",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "weather": {
+              "planet": "desert",
+              "profile": "desert.dry-day.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "light-dust-gusts",
+              "timeOfDay": "day",
+              "audio": "ambience.desert.light-dust-gusts",
+              "seed": 1714364882,
+              "startTick": 81,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": 0.0692210514562281,
+              "z": 0.7701794128630184,
+              "direction": 1.481160634007539,
+              "strength": 0.7732838301443588,
+              "gust": 0.10328383014435867,
+              "turbulence": 0.28400000000000003,
+              "particles": 176,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.0808836249999331,
+          "p95": 0.1174989999999525,
+          "p99": 0.13914999999906286,
+          "max": 0.14760999999998603
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 30.06187409383881,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.0229736019999995,
+        "errors": []
+      }
+    ],
+    "green-plains-profile": [
+      {
+        "chromium": "153.0.8010.12",
+        "angle": "gl",
+        "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+        "quality": "medium",
+        "viewport": {
+          "width": 800,
+          "height": 500
+        },
+        "balanceHash": "01855759529dd588",
+        "phase": "ACTIVE_MISSION",
+        "plan": {
+          "id": "generated.6f76f2fdaf964c84",
+          "seed": 0,
+          "templateId": "relay-defense",
+          "world": {
+            "id": "world.generated.68c909076155c5e5",
+            "planetId": "green-plains",
+            "biome": "temperate-grassland",
+            "seed": 17,
+            "formatVersion": 1,
+            "generatorVersion": 1,
+            "profileVersion": 1,
+            "assetVersion": 1
+          }
+        },
+        "objectiveUpdateMs": {
+          "mean": 0.0007875999999608515,
+          "p95": 0.001089999999749125,
+          "p99": 0.002320000000509026,
+          "max": 0.006400000000212458
+        },
+        "navigationMs": {
+          "mean": 0.007463726666665025,
+          "p95": 0.010089999999763677,
+          "p99": 0.016769999999269203,
+          "max": 0.03596999999990658
+        },
+        "weatherServerMs": {
+          "mean": 0.0009867933332740602,
+          "p95": 0.0013799999996990664,
+          "p99": 0.0036700000000564614,
+          "max": 0.022479999999632128
+        },
+        "collisionMs": {
+          "mean": 0.0010810666666778465,
+          "p95": 0.0015400000002046,
+          "p99": 0.0033699999994496466,
+          "max": 0.005460000000311993
+        },
+        "missionNetwork": {
+          "mission-state": {
+            "totalPackets": 47,
+            "totalBytes": 106465,
+            "samplePackets": 25,
+            "sampleBytesPerSecond": 12232.426902998846
+          },
+          "atmosphere-state": {
+            "totalPackets": 3,
+            "totalBytes": 897,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-plan": {
+            "totalPackets": 1,
+            "totalBytes": 1536,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          },
+          "mission-events": {
+            "totalPackets": 1,
+            "totalBytes": 459,
+            "samplePackets": 0,
+            "sampleBytesPerSecond": 0
+          }
+        },
+        "memoryBefore": {
+          "rss": 741208064,
+          "heapTotal": 139546624,
+          "heapUsed": 74345648,
+          "external": 32843414,
+          "arrayBuffers": 1877120
+        },
+        "memoryAfter": {
+          "rss": 741601280,
+          "heapTotal": 140070912,
+          "heapUsed": 83951752,
+          "external": 33753961,
+          "arrayBuffers": 2787627
+        },
+        "enemies": 0,
+        "packetsPerSecond": 9.95704335541859,
+        "payloadBytesPerSecond": 59.74226013251154,
+        "minFrameCount": 0,
+        "operators": 1,
+        "tickHz": 30,
+        "renderedClients": 1,
+        "fps": 60.001993421708356,
+        "frameMs": {
+          "mean": 16.666112956810633,
+          "p95": 16.799999999999272,
+          "p99": 16.800000000000182,
+          "max": 16.80000000000109
+        },
+        "clientFrames": [
+          {
+            "frames": 301,
+            "fps": 60.001993421708356,
+            "mean": 16.666112956810633,
+            "p95": 16.799999999999272,
+            "p99": 16.800000000000182,
+            "max": 16.80000000000109
+          }
+        ],
+        "renderStats": [
+          {
+            "CPU / GPU": "1.0 / 0.1 ms",
+            "Draw Calls / Dreiecke": "159 / 87.165",
+            "Meshes / Instanzen": "86 / 1.524",
+            "Geometrien / Texturen": "139 / 53",
+            "Gegner sichtbar / aktiv": "0 / 0",
+            "weather": {
+              "planet": "green-plains",
+              "profile": "green-plains.daylight.v1",
+              "version": 1,
+              "revision": 2,
+              "current": "windy",
+              "timeOfDay": "day",
+              "audio": "ambience.green-plains.windy",
+              "seed": 1378957931,
+              "startTick": 82,
+              "durationTicks": 0,
+              "progress": 0,
+              "x": -0.7784479059163585,
+              "z": -0.05996895135130589,
+              "direction": 3.2184773626535303,
+              "strength": 0.7807543899023168,
+              "gust": 0.13075438990231675,
+              "turbulence": 0.272,
+              "particles": 0,
+              "cap": 176,
+              "particleMs": 0,
+              "updateMs": 0
+            }
+          }
+        ],
+        "serverRecentTickMs": {
+          "mean": 0.0594596666666727,
+          "p95": 0.09193999999934022,
+          "p99": 0.12351000000035128,
+          "max": 0.1243400000003021
+        },
+        "droppedSteps": 0,
+        "observedTickHz": 29.87113006625577,
+        "payloadSource": "Horde broadcasts per recipient",
+        "wallSeconds": 5.021570984000001,
+        "errors": []
+      }
+    ]
+  }
+}

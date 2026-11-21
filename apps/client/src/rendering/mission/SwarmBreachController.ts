@@ -1,4 +1,6 @@
 import * as T from 'three';
+import { groundHeight } from '@freefall/shared';
+import type { WorldDefinition } from '@freefall/shared';
 import { NET, NEST_COLLAPSE_TICKS, NEST_EXITS, NEST_EXIT_RADIUS, NEST_RADIUS } from '@freefall/shared';
 import type { NestSnapshot } from '@freefall/shared';
 import { randomSource, smoothstep } from '../environment/noise.ts';
@@ -71,6 +73,7 @@ export class SwarmBreachController {
   private readonly matrix = new T.Object3D();
   private readonly offsets = Array.from({ length: 36 }, (_, i) => (i * .61803398875) % 1);
   private count = 0;
+  world?: WorldDefinition;
 
   constructor(materials: SurfaceMaterials) {
     const batches = (geometry: T.BufferGeometry, material: T.Material, factor = 1) => {
@@ -128,7 +131,7 @@ export class SwarmBreachController {
 
   private place(mesh: T.InstancedMesh, x: number, y: number, z: number, sx: number, sy: number, sz: number, yaw = 0, pitch = 0): void {
     const matrix = this.matrix;
-    matrix.position.set(x, y, z);
+    matrix.position.set(x, y + groundHeight(this.world, x, z), z);
     matrix.scale.set(sx, sy, sz);
     matrix.rotation.set(pitch, yaw, 0, 'YXZ');
     matrix.updateMatrix();
@@ -141,7 +144,7 @@ export class SwarmBreachController {
       const life = ((tick * (.38 + this.offsets[(i + 1) % 36] * .9) + this.offsets[(i + 18) % 36]) % 1 + 1) % 1;
       const reach = life * force * (.45 + this.offsets[(i + 6) % 36]);
       const y = .08 + (Math.sin(life * 2.62) * (.58 + this.offsets[(i + 9) % 36]) * force) / 2.7;
-      this.dustPosition.setXYZ(this.count, x + Math.sin(angle) * reach, y, z + Math.cos(angle) * reach);
+      this.dustPosition.setXYZ(this.count, x + Math.sin(angle) * reach, y + groundHeight(this.world, x, z), z + Math.cos(angle) * reach);
       this.dustShape.setXY(this.count, .22 + life * force * .43, density * (1 - life) * .61);
       this.count++;
     }

@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { NET, NEST_HIT_HEIGHT, clearGroundLine, distanceSquared } from '@freefall/shared';
+import { NET, NEST_HIT_HEIGHT, clearGroundLine, distanceSquared, groundHeight, missionObjectives } from '@freefall/shared';
 import type { HordeFrame, MissionDefinition, MissionSnapshot, NestSnapshot, PositionXZ } from '@freefall/shared';
 
 interface Marker {
@@ -8,6 +8,11 @@ interface Marker {
   icon: HTMLSpanElement;
   meter: HTMLSpanElement;
   shown: boolean;
+  px?: number;
+  py?: number;
+  width?: number;
+  arrow?: number;
+  progress?: number;
 }
 
 export class MissionMarkers {
@@ -58,40 +63,61 @@ export class MissionMarkers {
       else this.p.y = -.69;
     }
     this.used++;
-    marker.shown = true;
-    marker.node.hidden = false;
-    const px = (T.MathUtils.clamp(this.p.x, -.86, .86) * .5 + .5) * this.width;
-    const py = (.5 - T.MathUtils.clamp(this.p.y, -.69, .69) * .5) * this.height;
+    if (!marker.shown) {
+      marker.shown = true;
+      marker.node.hidden = false;
+    }
+    const px = Math.round((T.MathUtils.clamp(this.p.x, -.86, .86) * .5 + .5) * this.width);
+    const py = Math.round((.5 - T.MathUtils.clamp(this.p.y, -.69, .69) * .5) * this.height);
     const classes = 'world-marker ' + kind + (blocked ? ' at-edge' : '');
     if (marker.node.className !== classes) marker.node.className = classes;
     // Percentages refer to the caption's width. Keep long labels inside narrow viewports without a layout read.
-    const left = `clamp(6px, calc(${Math.round(px)}px - 50%), calc(${this.width - 6}px - 100%))`;
-    marker.node.style.transform = `translate(${left},calc(${Math.round(py)}px - 50%))`;
-    const angle = Math.atan2(this.p.x * this.width, this.p.y * this.height);
-    marker.icon.style.transform = blocked ? `rotate(${angle}rad)` : '';
+    if (marker.px !== px || marker.py !== py || marker.width !== this.width) {
+      const left = `clamp(6px, calc(${px}px - 50%), calc(${this.width - 6}px - 100%))`;
+      marker.node.style.transform = `translate(${left},calc(${py}px - 50%))`;
+      marker.px = px;
+      marker.py = py;
+      marker.width = this.width;
+    }
+    const angle = blocked ? Math.atan2(this.p.x * this.width, this.p.y * this.height) : undefined;
+    if (marker.arrow !== angle) {
+      marker.icon.style.transform = angle === undefined ? '' : `rotate(${angle}rad)`;
+      marker.arrow = angle;
+    }
     if (marker.caption.textContent !== label) marker.caption.textContent = label;
-    marker.meter.hidden = progress < 0;
-    if (progress >= 0) marker.meter.style.setProperty('--progress', String(T.MathUtils.clamp(progress, 0, 1)));
+    const fraction = progress < 0 ? -1 : T.MathUtils.clamp(progress, 0, 1);
+    if (marker.progress !== fraction) {
+      marker.meter.hidden = fraction < 0;
+      if (fraction >= 0) marker.meter.style.setProperty('--progress', String(fraction));
+      marker.progress = fraction;
+    }
   }
 
   update(definition: MissionDefinition, state: MissionSnapshot, camera: T.Camera, position: PositionXZ, tick: number,
     horde: HordeFrame | undefined, enabled: boolean): void {
     this.used = 0;
-    this.root.hidden = !enabled;
+    if (this.root.hidden === enabled) this.root.hidden = !enabled;
     if (!enabled) return;
-    for (const objective of definition.objectives) {
-      if (objective.kind !== 'activate') continue;
+    const base = (x: number, z: number) => groundHeight(definition.world, x, z);
+    for (const objective of missionObjectives(state)) {
+      const target = objective.kind === 'activate' ? objective : objective.target;
+      if (!target) continue;
       const entry = state.objectives.find((item) => item.id === objective.id);
       if (entry?.state !== 'available' && entry?.state !== 'defending') continue;
-      const distance = Math.round(Math.sqrt(distanceSquared(position, objective)));
+      const distance = Math.round(Math.sqrt(distanceSquared(position, target)));
       const label = objective.label.replace('Kommunikationsanlage ', '');
-      this.place(camera, objective.x, 2.7, objective.z, 'objective', `${label} · ${distance} m`, -1, true);
+      this.place(camera, target.x, base(target.x, target.z) + 2.7, target.z, 'objective', `${label} · ${distance} m`, -1, true);
     }
     if (state.primaryObjectivesCompleted && (state.extraction || state.albatross?.extractionAvailable)) {
       const zone = state.extraction ?? state.albatross!;
       const distance = Math.round(Math.sqrt(distanceSquared(position, zone)));
-      this.place(camera, zone.x, state.extraction?.method === 'balloon' ? 8.5 : 4.4, zone.z, 'extraction',
+      this.place(camera, zone.x, base(zone.x, zone.z) + (state.extraction?.method === 'balloon' ? 8.5 : 4.4), zone.z, 'extraction',
         `${state.extraction?.method === 'balloon' ? 'Rettungssignal' : 'Albatross 02'} · ${distance} m`, -1, true);
+    }
+    const pickup = state.plan?.extraction.balloon;
+    if (pickup && state.state === 'EXTRACTION_AVAILABLE') {
+      const distance = Math.round(Math.sqrt(distanceSquared(position, pickup)));
+      this.place(camera, pickup.x, base(pickup.x, pickup.z) + 2.6, pickup.z, 'extraction', `Ballon · ${pickup.label} · ${distance} m`, -1, true);
     }
     if (horde) {
       for (const alarm of state.alarms) {
@@ -102,7 +128,7 @@ export class MissionMarkers {
         if ((x - position.x) ** 2 + (z - position.z) ** 2 > 83 ** 2) continue;
         const progress = (tick - alarm.startedAt) / (alarm.endsAt - alarm.startedAt);
         if (progress > 1.07 || !clearGroundLine(definition.world, position.x, position.z, x, z)) continue;
-        this.place(camera, x, 2.1, z, 'alarm', 'Verstärkungsruf', 1 - progress, false);
+        this.place(camera, x, base(x, z) + 2.1, z, 'alarm', 'Verstärkungsruf', 1 - progress, false);
       }
     }
     let markedBreach = false;
@@ -111,11 +137,11 @@ export class MissionMarkers {
     for (const nest of state.nests) {
       if (nest.hp === 0 || distanceSquared(nest, position) > 90 ** 2) continue;
       if (nest.state === 'EMERGING') {
-        if (!markedBreach) this.place(camera, nest.x, 1.9, nest.z, 'alarm', 'Schwarmdurchbruch', -1, true);
+        if (!markedBreach) this.place(camera, nest.x, base(nest.x, nest.z) + 1.9, nest.z, 'alarm', 'Schwarmdurchbruch', -1, true);
         markedBreach = true;
         continue;
       }
-      this.p.set(nest.x, NEST_HIT_HEIGHT, nest.z).project(camera);
+      this.p.set(nest.x, base(nest.x, nest.z) + NEST_HIT_HEIGHT, nest.z).project(camera);
       const alignment = (this.p.x / .15) ** 2 + (this.p.y / .20) ** 2;
       const aimed = this.p.z > -1 && this.p.z < 1 && alignment < 1;
       const hit = tick - nest.lastHitAt < NET.tickHz * 3;
@@ -126,7 +152,7 @@ export class MissionMarkers {
     }
     if (selectedNest) {
       const { x, z, hp, maxHp } = selectedNest;
-      this.place(camera, x, 4, z, 'nest', 'Schwarmnest', hp / maxHp, false);
+      this.place(camera, x, base(x, z) + 4, z, 'nest', 'Schwarmnest', hp / maxHp, false);
     }
     for (let i = this.used; i < this.slots.length; i++) {
       const marker = this.slots[i];

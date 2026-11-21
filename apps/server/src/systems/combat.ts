@@ -1,9 +1,10 @@
 import {
-  BALANCE, CAMERA_BACK, ENEMY_TYPES, MAX_PITCH, MUZZLE_HEIGHT, NET, PLAYER, aimRay, applyShotRecoil, clearGroundLine,
-  obstacleIntersection, recoverRecoil, resetRecoil, spreadCone, allowsPostureAction, groundedBodyHit, isGroundPosture,
-  newPosture, postureCollider, postureDistanceSquared, postureRayHit, postureYaw, tacticalAimPitch, tacticalAimYaw, tacticalMuzzle,
+  BALANCE, BASE_LOADOUT, CAMERA_BACK, ENEMY_TYPES, MAX_PITCH, MUZZLE_HEIGHT, NET, aimRay, nextShotAt, applyShotRecoil, clearGroundLine,
+  diveElevation, groundHeight, impactNormal, impactSurface, obstacleIntersection, recoverRecoil, resetRecoil, spreadCone, allowsPostureAction, groundedBodyHit, isGroundPosture,
+  newPosture, postureCollider, postureRayHit, postureYaw, shotWorldLimit, tacticalAimPitch, tacticalAimYaw,
+  tacticalMuzzle, tacticalShotLimit,
 } from '@freefall/shared';
-import type { AimRay, CombatEvent, DamagePolicy, EnemyGameplay, ShotEvent, WorldDefinition } from '@freefall/shared';
+import type { AimRay, CombatEvent, DamagePolicy, PostureCollider, ShotEvent, ShotImpact, ShotWorldContact, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import type { StaggerComponent } from '../ecs/StaggerComponent.ts';
 import type { UniformGrid } from '../ecs/UniformGrid.ts';
@@ -19,17 +20,20 @@ export function damageEnemy(h: HordeManager, slot: number, amount: number): bool
   return true;
 }
 
-/** Applies already resolved damage to an operator. Returns the health actually removed. */
-export function damagePlayer(player: SimPlayer, amount: number, tick: number, respawns = true): number {
+/**
+ * Applies already resolved damage to an operator. Returns the health actually removed. With a combat context, a
+ * reload cut short by death is published (`RELOAD_INTERRUPTED`) and counted like any other interruption.
+ */
+export function damagePlayer(player: SimPlayer, amount: number, tick: number, respawns = true, context?: CombatContext): number {
   if (player.hp <= 0 || tick < player.protectedUntil || !(amount > 0)) return 0;
   const before = player.hp;
   player.hp = Math.max(0, player.hp - amount);
   if (player.hp === 0) {
     cancelEquipment(player, tick);
-    player.y = 0;
+    if (player.posture.dive) player.y -= diveElevation(player.posture.dive, tick);
     player.posture = newPosture(player.yaw);
-    player.respawnTick = respawns ? tick + NET.tickHz * PLAYER.respawnSeconds : 0;
-    interruptReload(player, tick);
+    player.respawnTick = respawns ? tick + player.loadout.respawnTicks : 0;
+    interruptReload(player, tick, context);
     player.reloadRequested = false;
   }
   return before - player.hp;
@@ -60,33 +64,6 @@ export interface CombatContext {
   stagger?: StaggerComponent;
   /** Fallback policy when the attacker left the battlefield (e.g. a grenade of a disconnected operator). */
   policy?: DamagePolicy;
-}
-
-/** Enemy melee against operators and secondary targets. Staggered enemies do not attack. */
-export function meleeSystem(h: HordeManager, players: readonly (SimPlayer | undefined)[], tick: number, world?: WorldDefinition, respawns = true, secondary?: SecondaryTarget,
-  enemies: readonly EnemyGameplay[] = ENEMY_TYPES, stagger?: StaggerComponent, balance = BALANCE.movement): void {
-  for (let index = 0; index < h.count; index++) {
-    const i = h.active[index];
-    if (tick < h.attackAt[i] || (stagger && tick < stagger.active(h, i))) continue;
-    const player = players[h.target[i]];
-    const target = player && player.hp > 0 ? player : secondary?.(i);
-    if (!target || target.hp <= 0 || ('protectedUntil' in target && tick < target.protectedUntil)) continue;
-    const enemy = enemies[h.type[i]];
-    const dx = target.x - h.x[i];
-    const dz = target.z - h.z[i];
-    if (dx * dx + dz * dz > (enemy.meleeRange + (player?.posture.current !== 'STANDING' && target === player ? 2 : 0)) ** 2) continue;
-    if (target === player && player.posture.current !== 'STANDING') {
-      const shape = postureCollider(player.posture, tick, balance);
-      if (enemy.hitHeight + balance.enemyAttackHalfHeight < player.y ||
-          enemy.hitHeight - balance.enemyAttackHalfHeight > player.y + shape.height ||
-          postureDistanceSquared(player, shape, postureYaw(player.posture, player.yaw), h.x[i], h.z[i]) > enemy.meleeRange ** 2) continue;
-      const endY = Math.max(player.y, Math.min(player.y + shape.height, enemy.hitHeight));
-      if (world?.obstacles.some((o) => obstacleIntersection(o, h.x[i], enemy.hitHeight, h.z[i], dx, endY - enemy.hitHeight, dz, 0, 1) <= 1)) continue;
-    } else if (world && !clearGroundLine(world, h.x[i], h.z[i], target.x, target.z)) continue;
-    h.attackAt[i] = tick + Math.ceil(enemy.meleeCooldown * NET.tickHz);
-    if ('damage' in target) target.damage(enemy.meleeDamage, tick);
-    else damagePlayer(target, enemy.meleeDamage, tick, respawns);
-  }
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -174,11 +151,12 @@ export function updateReload(player: SimPlayer, tick: number, context?: CombatCo
 
 export interface CombatTargets {
   intersect(ray: AimRay, max: number, min?: number): { nestId: number; distance: number } | undefined;
-  hit(nestId: number, amount: number, tick: number, shooter: string): void;
+  /** Returns the health actually removed. */
+  hit(nestId: number, amount: number, tick: number, shooter: string): number;
 }
 
 /** Ray against a vertical cylinder standing on the ground. Returns the entry distance or Infinity. */
-export function cylinderHit(ray: AimRay, x: number, z: number, radius: number, height: number, min: number, max: number): number {
+export function cylinderHit(ray: AimRay, x: number, z: number, radius: number, height: number, min: number, max: number, baseY = 0): number {
   const ox = ray.x - x, oz = ray.z - z;
   const a = ray.dx * ray.dx + ray.dz * ray.dz;
   if (a < 1e-9) return Infinity;
@@ -190,16 +168,16 @@ export function cylinderHit(ray: AimRay, x: number, z: number, radius: number, h
   const near = (-b - root) / a, far = (-b + root) / a;
   for (const t of [Math.max(near, min), far]) {
     if (t < min || t >= max || t > far) continue;
-    const y = ray.y + ray.dy * t;
+    const y = ray.y + ray.dy * t - baseY;
     if (y >= 0 && y <= height) return t;
   }
   return Infinity;
 }
 
-function enemyHit(ray: AimRay, h: HordeManager, i: number, min: number): number {
+function enemyHit(ray: AimRay, h: HordeManager, i: number, min: number, world?: WorldDefinition): number {
   const definition = ENEMY_TYPES[h.type[i]];
   const ox = h.x[i] - ray.x;
-  const oy = definition.hitHeight - ray.y;
+  const oy = groundHeight(world, h.x[i], h.z[i]) + definition.hitHeight - ray.y;
   const oz = h.z[i] - ray.z;
   const projection = ox * ray.dx + oy * ray.dy + oz * ray.dz;
   const inside = definition.hitRadius ** 2 - (ox * ox + oy * oy + oz * oz - projection * projection);
@@ -208,24 +186,16 @@ function enemyHit(ray: AimRay, h: HordeManager, i: number, min: number): number 
   return projection + root < min ? Infinity : Math.max(min, projection - root);
 }
 
-function worldHit(ray: AimRay, min: number, max: number, world?: WorldDefinition): number {
-  if (ray.dy < 0) max = Math.min(max, -ray.y / ray.dy);
-  for (const o of world?.obstacles ?? []) {
-    max = Math.min(max, obstacleIntersection(o, ray.x, ray.y, ray.z, ray.dx, ray.dy, ray.dz, min, max));
-  }
-  return max;
-}
-
 function operatorHit(ray: AimRay, player: SimPlayer, min: number, max: number, tick: number,
-  balance: typeof BALANCE.movement): number {
+  balance: typeof BALANCE.movement, world?: WorldDefinition): number {
   if (player.posture.current === 'STANDING') {
     const box = player.loadout.operatorHitbox;
-    return cylinderHit(ray, player.x, player.z, box.radius, box.height, min, max);
+    return cylinderHit(ray, player.x, player.z, box.radius, box.height, min, max, player.y);
   }
   const shape = postureCollider(player.posture, tick, balance);
   const yaw = postureYaw(player.posture, player.yaw);
   if (isGroundPosture(player.posture.current)) {
-    return groundedBodyHit(ray, player, shape, yaw, player.posture.current === 'SUPINE', min, max);
+    return groundedBodyHit(ray, player, shape, yaw, player.posture.current === 'SUPINE', min, max, world);
   }
   return postureRayHit(ray, player, shape, yaw, min, max);
 }
@@ -240,7 +210,7 @@ export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick
   recoverRecoil(player.recoil, recoil, spread, tick);
   if (!allowsPostureAction(player.posture, 'fire', balance) || player.equipment.action || !player.activeInput || !player.input.fire || player.hp <= 0 || !player.ammo || reloading(player) || tick < player.fireAt) return;
   player.ammo--;
-  player.fireAt = tick + weapon.fireIntervalTicks;
+  player.fireAt = nextShotAt(player.fireAt, tick, weapon.fireInterval);
   const random = context.random ?? noRandom;
   const input = player.input;
   // Direction: point of aim + authoritative recoil offset + spread cone. The client only predicts the recoil.
@@ -253,7 +223,7 @@ export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick
   const tactical = player.posture.current !== 'STANDING';
   applyShotRecoil(player.recoil, recoil, spread, tick);
   const shape = postureCollider(player.posture, tick, balance);
-  aimRay(ray, player, yaw, pitch, tactical ? shape.lookHeight : undefined, player.y);
+  aimRay(ray, player, yaw, pitch, tactical ? shape.lookHeight : undefined, player.y, !!world?.terrain);
   const stats = context.stats?.data;
   if (stats) stats.shots[slot]++;
 
@@ -266,36 +236,32 @@ export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick
   if (tactical) tacticalMuzzle(muzzle, player, player.posture, muzzleYaw, shape);
   const { x: fromX, y: fromY, z: fromZ } = muzzle;
   let min = CAMERA_BACK;
-  let end = worldHit(ray, min, weapon.effectiveRange + CAMERA_BACK, world);
-  if (tactical) {
+  const contact: ShotWorldContact = { distance: Infinity };
+  let end = shotWorldLimit(ray, min, weapon.effectiveRange + CAMERA_BACK, world, contact);
+  const box = player.loadout.operatorHitbox;
+  const allies = context.allies?.() ?? [];
+  if (tactical || world?.terrain) {
+    const cover = end;
     // Aim from the shoulder camera and trace the actual shot from the low barrel toward its point of aim.
-    for (let index = 0; index < h.count; index++) end = Math.min(end, enemyHit(ray, h, h.active[index], min));
+    for (let index = 0; index < h.count; index++) end = Math.min(end, enemyHit(ray, h, h.active[index], min, world));
     for (const other of context.players ?? []) {
-      if (other && other !== player && other.hp > 0) end = Math.min(end, operatorHit(ray, other, min, end, tick, balance));
+      if (other && other !== player && other.hp > 0) end = Math.min(end, operatorHit(ray, other, min, end, tick, balance, world));
+    }
+    for (const ally of allies) {
+      if (ally.hp > 0) end = Math.min(end, cylinderHit(ray, ally.x, ally.z, box.radius, box.height, min, end, groundHeight(world, ally.x, ally.z)));
     }
     const aimNest = targets?.intersect(ray, end);
     if (aimNest) end = Math.min(end, aimNest.distance);
-    const dx = ray.x + ray.dx * end - fromX;
-    const dy = ray.y + ray.dy * end - fromY;
-    const dz = ray.z + ray.dz * end - fromZ;
-    const forward = dx * Math.sin(muzzleYaw) - dz * Math.cos(muzzleYaw);
-    const length = Math.hypot(dx, dy, dz);
-    ray.x = fromX; ray.y = fromY; ray.z = fromZ;
+    contact.distance = Infinity;
+    end = tacticalShotLimit(ray, player, muzzle, player.posture, shape, end, weapon.effectiveRange, end < cover, world, contact);
     min = 0;
-    if (forward > 1e-6) {
-      ray.dx = dx / length; ray.dy = dy / length; ray.dz = dz / length;
-      end = worldHit(ray, min, weapon.effectiveRange, world);
-      if (isGroundPosture(player.posture.current) && groundedBodyHit(ray, player, shape, player.posture.yaw,
-        player.posture.current === 'SUPINE', 0, shape.halfLength * 2) !== Infinity) end = 0;
-    } else end = 0; // Very close cover can put the camera aim point behind the barrel.
-  }
-  if (world?.obstacles.some((o) => obstacleIntersection(o, player.x, fromY, player.z,
+  } else if (world?.obstacles.some((o) => obstacleIntersection(o, player.x, fromY, player.z,
     fromX - player.x, 0, fromZ - player.z, 0, 1) <= 1)) end = min;
 
   let closest = -1;
   for (let index = 0; index < h.count; index++) {
     const i = h.active[index];
-    const near = enemyHit(ray, h, i, min);
+    const near = enemyHit(ray, h, i, min, world);
     if (near >= end) continue;
     end = near;
     closest = i;
@@ -303,18 +269,17 @@ export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick
   // Friendly fire: other operators and allied convicts block and take reduced damage.
   let allyOperator: SimPlayer | undefined;
   let allyConvict: AllyTarget | undefined;
-  const box = player.loadout.operatorHitbox;
   for (const other of context.players ?? []) {
     if (!other || other === player || other.hp <= 0) continue;
-    const t = operatorHit(ray, other, min, end, tick, balance);
+    const t = operatorHit(ray, other, min, end, tick, balance, world);
     if (t >= end) continue;
     end = t;
     closest = -1;
     allyOperator = other;
   }
-  for (const convict of context.allies?.() ?? []) {
+  for (const convict of allies) {
     if (convict.hp <= 0) continue;
-    const t = cylinderHit(ray, convict.x, convict.z, box.radius, box.height, min, end);
+    const t = cylinderHit(ray, convict.x, convict.z, box.radius, box.height, min, end, groundHeight(world, convict.x, convict.z));
     if (t >= end) continue;
     end = t;
     closest = -1;
@@ -324,40 +289,55 @@ export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick
   const nest = targets?.intersect(ray, end, min);
   const policy = player.loadout.damagePolicy;
   let ally: string | undefined;
+  let impact: ShotImpact | undefined;
   if (nest && nest.distance < end) {
     closest = -1;
     allyOperator = allyConvict = undefined;
     end = nest.distance;
     const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'structure', base: weapon.damage });
-    targets?.hit(nest.nestId, amount, tick, player.id);
-    if (stats) { stats.hits[slot]++; stats.damage[slot] += amount; }
+    const dealt = targets?.hit(nest.nestId, amount, tick, player.id) ?? 0;
+    if (dealt > 0) impact = { kind: 'nest' };
+    if (stats) { stats.hits[slot]++; stats.damage[slot] += dealt; }
   } else if (allyOperator) {
     ally = allyOperator.id;
     const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'operator', base: weapon.damage });
-    const dealt = damagePlayer(allyOperator, amount, tick, context.respawns ?? true);
+    const dealt = damagePlayer(allyOperator, amount, tick, context.respawns ?? true, context);
     if (dealt) {
+      impact = { kind: 'operator', life: allyOperator.life };
       if (stats) stats.friendlyFireDamage.bullet += dealt;
-      context.events?.push({ type: 'friendly-fire', tick, attacker: player.id, target: ally, amount: dealt, source: 'bullet', self: false });
+      context.events?.push({ type: 'friendly-fire', tick, attacker: player.id, target: ally, amount: dealt,
+        source: 'bullet', self: false, life: allyOperator.life, direction: { x: -ray.dx, z: -ray.dz } });
     }
   } else if (allyConvict) {
     ally = allyConvict.id;
     const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'convict', base: weapon.damage });
     const before = allyConvict.hp;
     allyConvict.damage(amount, tick);
+    if (allyConvict.hp < before) impact = { kind: 'convict' };
     if (stats) stats.convictFriendlyDamage += before - allyConvict.hp;
   }
+  const toX = ray.x + ray.dx * end, toY = ray.y + ray.dy * end, toZ = ray.z + ray.dz * end;
   const enemy = closest === -1 ? 0 : h.id[closest];
   let eliminated = false;
   if (closest !== -1) {
     const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'enemy', base: weapon.damage });
     if (stats) { stats.hits[slot]++; stats.damage[slot] += Math.min(h.hp[closest], amount); }
+    const x = h.x[closest], z = h.z[closest];
+    const nx = toX - x, ny = toY - groundHeight(world, x, z) - ENEMY_TYPES[h.type[closest]].hitHeight, nz = toZ - z;
+    const length = Math.hypot(nx, ny, nz);
+    if (amount > 0) impact = { kind: 'enemy', ...(length > 1e-5 && { normal: [nx / length, ny / length, nz / length] }) };
     eliminated = damageEnemy(h, closest, amount);
   }
   if (eliminated) player.kills++;
+  if (!impact && !ally && !nest && !enemy && end > min && end === contact.distance) {
+    impact = { kind: 'world', surface: impactSurface(world, toX, toZ, contact.obstacle),
+      normal: impactNormal(world, toX, toY, toZ, contact.obstacle) };
+  }
   return {
     shooter: player.id, ...(tactical && { tactical }), fromX, fromY, fromZ, enemy, eliminated, slot,
+    ...(min > 0 && { traceFrom: { x: ray.x + ray.dx * min, y: ray.y + ray.dy * min, z: ray.z + ray.dz * min } }),
     ...(nest && end === nest.distance ? { nest: nest.nestId } : {}), ...(ally ? { ally } : {}),
-    toX: ray.x + ray.dx * end, toY: ray.y + ray.dy * end, toZ: ray.z + ray.dz * end,
+    toX, toY, toZ, ...(impact && { impact }),
   };
 }
 
@@ -372,8 +352,10 @@ export function staggerEnemy(h: HordeManager, stagger: StaggerComponent, i: numb
   immunityTicks: number, knockbackDistance: number, dirX: number, dirZ: number): boolean {
   if (!staggerTicks || stagger.immune(h, i, tick)) return false;
   stagger.begin(h, i, tick + staggerTicks, tick + staggerTicks + immunityTicks);
-  // Linear decay over the stagger: travel = v0 / Hz × (T + 1) / 2 = knockbackDistance.
-  const v0 = 2 * knockbackDistance * NET.tickHz / (staggerTicks + 1);
+  // Linear decay: the strike resolves after this tick's movement, so the impulse moves the enemy on the T - 1 ticks
+  // before the stagger ends with velocities v0 × (T - k) / (T - 1). Travel = v0 / Hz × T / 2 = knockbackDistance.
+  // A one-tick stagger has no movement tick and therefore no knockback.
+  const v0 = staggerTicks > 1 ? 2 * knockbackDistance * NET.tickHz / staggerTicks : 0;
   h.vx[i] = dirX * v0;
   h.vz[i] = dirZ * v0;
   h.attackAt[i] = Math.max(h.attackAt[i], tick + staggerTicks);
@@ -430,7 +412,8 @@ export function meleeStrike(h: HordeManager, player: SimPlayer, tick: number, wo
     if (!other || other === player || other.hp <= 0) continue;
     if (other.posture.current !== 'STANDING') {
       const shape = postureCollider(other.posture, tick, balance);
-      if (balance.operatorMeleeHeight < other.y || balance.operatorMeleeHeight > other.y + shape.height) continue;
+      const height = groundHeight(world, player.x, player.z) + balance.operatorMeleeHeight;
+      if (height < other.y || height > other.y + shape.height) continue;
     }
     const score = consider(other.x, other.z, box.radius);
     if (score === Infinity) continue;
@@ -443,11 +426,15 @@ export function meleeStrike(h: HordeManager, player: SimPlayer, tick: number, wo
     bestScore = score; convict = ally; operator = undefined; enemy = -1;
   }
   const policy = player.loadout.damagePolicy;
-  const base = { tick, attacker: player.id, x: player.x, z: player.z, yaw: player.yaw };
+  const y = player.y + Math.min(balance.operatorMeleeHeight, postureCollider(player.posture, tick, balance).height);
+  const base = { tick, attacker: player.id, x: player.x, y, z: player.z, yaw: player.yaw };
   if (enemy !== -1) {
     const dx = h.x[enemy] - player.x, dz = h.z[enemy] - player.z;
     const length = Math.hypot(dx, dz) || 1;
     const id = h.id[enemy];
+    const radius = Math.min(Math.hypot(dx, dz), ENEMY_TYPES[h.type[enemy]].hitRadius * .72);
+    const contact = { x: h.x[enemy] - dx / length * radius, y: groundHeight(world, h.x[enemy], h.z[enemy]) + .5,
+      z: h.z[enemy] - dz / length * radius };
     const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'operator', target: 'enemy', base: melee.damage });
     if (stats) stats.meleeHits++;
     const eliminated = damageEnemy(h, enemy, amount);
@@ -459,23 +446,29 @@ export function meleeStrike(h: HordeManager, player: SimPlayer, tick: number, wo
       staggered = !!context.stagger && staggerEnemy(h, context.stagger, enemy, tick, melee.staggerTicks, melee.staggerImmunityTicks, melee.knockbackDistance, dx / length, dz / length);
       if (staggered && stats) stats.staggers++;
     }
-    return { type: 'melee', ...base, enemy: id, damage: amount, staggered, eliminated };
+    return { type: 'melee', ...base, enemy: id, damage: amount, staggered, eliminated, contact: amount > 0 ? contact : undefined };
   }
   if (operator) {
+    const height = postureCollider(operator.posture, tick, balance).height;
+    const contact = { x: operator.x, y: Math.max(operator.y + .1, Math.min(y, operator.y + height)), z: operator.z };
     const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'operator', target: 'operator', base: melee.damage });
-    const dealt = damagePlayer(operator, amount, tick, context.respawns ?? true);
+    const dealt = damagePlayer(operator, amount, tick, context.respawns ?? true, context);
     if (dealt) {
       if (stats) stats.friendlyFireDamage.melee += dealt;
-      context.events?.push({ type: 'friendly-fire', tick, attacker: player.id, target: operator.id, amount: dealt, source: 'melee', self: false });
+      context.events?.push({ type: 'friendly-fire', tick, attacker: player.id, target: operator.id, amount: dealt,
+        source: 'melee', self: false, life: operator.life, direction: { x: player.x - operator.x, z: player.z - operator.z } });
     }
-    return { type: 'melee', ...base, enemy: 0, ally: operator.id, damage: dealt, staggered: false, eliminated: false };
+    return { type: 'melee', ...base, enemy: 0, ally: operator.id, damage: dealt, staggered: false, eliminated: false,
+      contact: dealt > 0 ? contact : undefined };
   }
   if (convict) {
     const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'operator', target: 'convict', base: melee.damage });
     const before = convict.hp;
     convict.damage(amount, tick);
     if (stats) stats.convictFriendlyDamage += before - convict.hp;
-    return { type: 'melee', ...base, enemy: 0, ally: convict.id, damage: before - convict.hp, staggered: false, eliminated: false };
+    const dealt = before - convict.hp;
+    return { type: 'melee', ...base, enemy: 0, ally: convict.id, damage: dealt, staggered: false, eliminated: false,
+      contact: dealt > 0 ? { x: convict.x, y: groundHeight(world, convict.x, convict.z) + .95, z: convict.z } : undefined };
   }
   return { type: 'melee', ...base, enemy: 0, damage: 0, staggered: false, eliminated: false };
 }
