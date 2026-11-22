@@ -42,6 +42,19 @@ import { createSurfaceMaterials } from './environment/SurfaceMaterials.ts';
 
 const FLIGHT_PHASES = new Set(['DROPPING', 'ATMOSPHERIC_ENTRY', 'BRAKING']);
 
+/** Camera offset from the lander [x, y, z] and look target offset [y, z] per flight phase and progress. */
+function dropCamera(phase: string, e: number): [number, number, number, number, number] {
+  switch (phase) {
+    // Above and behind: the carrier recedes overhead, the planet waits below.
+    case 'DROPPING': return [8 + 3 * e, 7.5 - 4 * e, 15 - 3 * e, .6, -.5];
+    // Below the leading edge looking up at the glowing belly and the plasma sheath.
+    case 'ATMOSPHERIC_ENTRY': return [-10 + 3 * e, -7 + 2 * e, -12 + 2 * e, 1.2, -.8];
+    // Wide flank shot that sinks with the lander until it frames the slam at ground level.
+    case 'BRAKING': return [17 - 6 * e, 6 - 4.7 * e, 19 - 6 * e, 1.4, -.6];
+    default: return [11, 1.3, 13, 1.6, -.6];
+  }
+}
+
 export class ArenaView {
   readonly canvas: HTMLCanvasElement;
   readonly renderer: T.WebGLRenderer;
@@ -394,20 +407,26 @@ export class ArenaView {
         operation.recovery.update(state.result || state.state === 'RETURN_TO_CARRIER' ? undefined : state.extraction,
           missionTick, dt, latest, own, position, mission.surface);
         const ship = operation.ship.root;
-        if (groundBelow) {
-          const t = T.MathUtils.clamp((missionTick - state.phaseAt) / Math.max(1, state.phaseUntil - state.phaseAt), 0, 1);
-          ship.position.set(groundBelow.x, 9 + 24 * (1 - t) ** 1.6, groundBelow.z);
-        }
+        // The braking lander descends over its landing pad; the height comes from the drop choreography.
+        if (groundBelow) ship.position.set(groundBelow.x, ship.position.y, groundBelow.z);
         // Flight turbulence follows the camera settings: scaled by "Wackeln", off with reduced motion.
         const turbulence = cameraPreferences.reducedMotion ? 0 : cameraPreferences.shake;
-        if (state.state === 'DEPLOYMENT' && (flying || state.phase === 'TOUCHDOWN')) {
-          const scale = flying ? groundBelow ? 1.25 : 1 : .55;
-          this.camera.position.set(ship.position.x + 12.8 * scale, ship.position.y + (groundBelow ? 8.3 : 5.5) * scale,
-            ship.position.z + (flying ? 13 : 16));
-          this.camera.position.x += Math.sin(missionTick * .7) * (flying ? .13 : .035) * turbulence;
-          this.camera.lookAt(ship.position.x, ship.position.y + 1.7, ship.position.z - .7);
+        const pose = operation.ship.pose;
+        if (state.state === 'DEPLOYMENT' && pose && (flying || state.phase === 'TOUCHDOWN')) {
+          const e = T.MathUtils.clamp((missionTick - state.phaseAt) / Math.max(1, state.phaseUntil - state.phaseAt), 0, 1);
+          const shot = dropCamera(state.phase, e);
+          const ground = mission ? groundHeight(mission.surface, ship.position.x + shot[0], ship.position.z + shot[2]) : 0;
+          this.camera.position.set(ship.position.x + shot[0], ship.position.y + shot[1], ship.position.z + shot[2]);
+          if (!flying || state.phase === 'BRAKING') this.camera.position.y = Math.max(this.camera.position.y, ground + 1.6);
+          const jolt = pose.shake * turbulence;
+          this.camera.position.x += (Math.sin(missionTick * 1.9) * .11 + Math.sin(missionTick * 4.3) * .05) * jolt;
+          this.camera.position.y += (Math.sin(missionTick * 2.6 + 1) * .09 + Math.sin(missionTick * 5.1) * .04) * jolt;
+          this.camera.lookAt(ship.position.x, ship.position.y + shot[3], ship.position.z + shot[4]);
+          this.camera.rotateZ(Math.sin(missionTick * 1.3) * .006 * jolt);
         } else if (state.state === 'DEPLOYMENT' && state.phase === 'LOCKED') {
-          this.camera.position.y += Math.sin(missionTick * 1.5) * .022 * turbulence;
+          const jolt = (pose?.shake ?? .2) * turbulence;
+          this.camera.position.y += Math.sin(missionTick * 1.5) * .03 * jolt;
+          this.camera.position.x += Math.sin(missionTick * 3.7) * .015 * jolt;
         }
         const extraction = state.extraction;
         if (extraction?.phase === 'LIFT' && !state.result) {
@@ -452,7 +471,8 @@ export class ArenaView {
       this.refreshShadows();
     }
     this.renderer.toneMappingExposure = this.light.exposure;
-    operation?.descent.update(flying && state ? state : undefined, missionTick, low, this.scene, groundBelow);
+    operation?.descent.update(flying && state ? state : undefined, missionTick, low, this.scene, groundBelow,
+      operation.ship.root.position.y);
     if (!mission) this.details.update(this.camera, this.quality.gravelDistance, this.quality.brushDistance);
     this.horde.draw(this.camera, carrier ? undefined : h1, carrier ? undefined : h2, hAlpha, now, this.quality, this.contact, world);
     this.contact.end();

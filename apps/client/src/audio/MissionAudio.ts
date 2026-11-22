@@ -4,6 +4,7 @@ import { FlightAudio } from '../rendering/mission/FlightAudio.ts';
 import type { AudioEngine, AudioPosition } from './AudioEngine.ts';
 import { AudioLayers, Takes } from './Soundscape.ts';
 import { PRIORITY } from './VoiceBudget.ts';
+import { MusicPlayer, musicCue } from './Music.ts';
 
 export interface AudioTransport {
   ship?: AudioPosition;
@@ -19,6 +20,7 @@ export class MissionAudio {
   private readonly flight: FlightAudio;
   private readonly layers: AudioLayers;
   private readonly takes = new Takes();
+  readonly music: MusicPlayer;
   private previous?: MissionSnapshot;
   private pendingAlert?: { id: string; expires: number; urgent: boolean };
   private nextNest = 0;
@@ -28,6 +30,7 @@ export class MissionAudio {
     this.engine = engine;
     this.flight = new FlightAudio(engine);
     this.layers = new AudioLayers(engine);
+    this.music = new MusicPlayer(engine);
   }
 
   warm(): void { this.engine.preload(['radio', 'confirm', 'lander', 'recovery', 'hull-impact']); }
@@ -97,6 +100,7 @@ export class MissionAudio {
 
   update(now: number, tick: number, state: MissionSnapshot, transport: AudioTransport, listener: AudioPosition, world: WorldDefinition): void {
     this.flushAlert(now);
+    this.music.update(musicCue(state, tick, this.music.current), state.instanceId);
     const flying = state.state === 'DEPLOYMENT' && state.phase !== 'DOCKED';
     const lifting = state.extraction?.method === 'albatross' && state.extraction.phase === 'LIFT';
     const operational = state.albatross?.lifecycleState === 'OPERATIONAL' || state.albatross?.lifecycleState === 'DAMAGED';
@@ -136,6 +140,7 @@ export class MissionAudio {
 
   clear(): void {
     this.flight.clear();
+    this.music.stop();
     this.layers.clear();
     this.takes.clear();
     this.previous = this.pendingAlert = undefined;

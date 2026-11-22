@@ -8,3 +8,7 @@
 - **Abholung.** Nach dem Countdown fliegt der Extraction Fighter drei Sekunden auf die Hülle zu. Nach dem festen Servertick werden die gesicherten lebenden Operator in der zweisekündigen Hebephase dargestellt. Ein Abbruch der Verbindung nach dem Einfangen ändert den gutgeschriebenen Rettungsmoment nicht.
 
 Die vier Seile verwenden kurze, geglättete Linien mit berechnetem Durchhang. Ein gepoolter mechanischer Fallback stellt Jäger, Schub und Fangvorrichtung dar. Namen, Flugkurve, Seilradius, Countdown und endgültige Audio-/Modelldaten stehen zur Designfreigabe aus.
+
+## Musik
+
+Mit der Aktivierung des Ballons beginnt „Last Stand“ und begleitet Countdown, Anflug und Abholung. Mit dem Missionsergebnis blendet das Stück über 5 Sekunden aus. Die Albatross-Extraktion behält den regulären Mix. [Quellen](music-sources.json)

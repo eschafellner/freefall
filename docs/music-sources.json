@@ -1,0 +1,44 @@
+[
+  {
+    "id": "drop-larree-triomphale",
+    "title": "L'Arrée Triomphale",
+    "role": "drop",
+    "rights": "Vom Projektinhaber bereitgestellt (eigene Werke), keine Drittlizenz",
+    "sourceFile": "L'Arrée Triomphale.mp3",
+    "sourceSha256": "6c1bf1a6ec55903d6b4fe394cd6a7aed3cf1952ad7054d2f3722bfdcef318561",
+    "seconds": 149.6,
+    "sampleRate": 48000,
+    "channels": 2,
+    "lufs": -14.5,
+    "peakDbtp": -3.1,
+    "encoding": {
+      "ogg": "Vorbis q5, Metadaten und Cover entfernt",
+      "mp3": "Audiostrom unverändert kopiert, Metadaten und Cover entfernt"
+    },
+    "sha256": {
+      "ogg": "dff0d38bbc66a21e557daa0a2cb87d34e9c2267c44f2327d81e06cf021d7c3af",
+      "mp3": "cddfa552b06e2aa6306f177bbf95b1bd21568c175ed71585281d56223fcb2d05"
+    }
+  },
+  {
+    "id": "extraction-last-stand",
+    "title": "Last Stand",
+    "role": "balloon-extraction",
+    "rights": "Vom Projektinhaber bereitgestellt (eigene Werke), keine Drittlizenz",
+    "sourceFile": "Last Stand.mp3",
+    "sourceSha256": "25a8b2819260717e74e233589e4c80e2cb1ac3bdeda5f16796faeca19500166d",
+    "seconds": 179.6,
+    "sampleRate": 48000,
+    "channels": 2,
+    "lufs": -14.3,
+    "peakDbtp": -2.9,
+    "encoding": {
+      "ogg": "Vorbis q5, Metadaten und Cover entfernt",
+      "mp3": "Audiostrom unverändert kopiert, Metadaten und Cover entfernt"
+    },
+    "sha256": {
+      "ogg": "f7826ebcded6f868591dd52bcd17eddf45152ae1583773d3f9e45c343e0af86c",
+      "mp3": "8304bea7596762aa3376e4c0db59aed3240ee411a34d8b0655ca422db986d8d9"
+    }
+  }
+]

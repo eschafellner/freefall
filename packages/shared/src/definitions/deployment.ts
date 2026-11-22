@@ -36,8 +36,12 @@ export const ALBATROSS = {
   ],
 } as const;
 
+/**
+ * Flight phases in server ticks (30 Hz), about 20 s in total: clamps and siren, release and free fall, re-entry,
+ * retro burn down to the touchdown slam, settling and ramp. The client choreography scales with these durations.
+ */
 export const DEPLOYMENT_PHASES = [
-  ['LOCKED', 25], ['DROPPING', 47], ['ATMOSPHERIC_ENTRY', 76], ['BRAKING', 54], ['TOUCHDOWN', 47],
+  ['LOCKED', 75], ['DROPPING', 105], ['ATMOSPHERIC_ENTRY', 180], ['BRAKING', 150], ['TOUCHDOWN', 96],
 ] as const;
 export const BOARDING_TICKS = 3 * NET.tickHz;
 export const RECONNECT_SECONDS = 12;

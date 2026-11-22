@@ -15,3 +15,7 @@ Am 21. November 2026 wurden alle 16 Freesound-Quellen einzeln gegen die CC0-Anga
 ## Waffenaufnahmen 7.9A.1
 
 Quellen, Lizenzen, Ausschnitte und Prüfsummen sind im [Waffen-Audiobericht](WEAPON_AUDIO_7_9A.md) und in den gemeinsamen JSON-Manifesten dokumentiert. Die ausgewählten Aufnahmen und Foley-Dateien stehen unter CC0 1.0. Das Spiel liefert die bearbeiteten Ausschnitte in Ogg und MP3 aus.
+
+## Musik
+
+„L'Arrée Triomphale“ (Drop) und „Last Stand“ (Ballonextraktion) sind eigene Werke, die der Projektinhaber bereitgestellt hat. Sie fallen nicht unter die CC0-Effektbibliothek und liegen deshalb getrennt in `apps/client/public/music` mit eigenem Manifest. Das Manifest enthält Prüfsummen der Quelle und beider Auslieferungsformate, Lautheit und Kodierung. Die MP3-Fassung ist der unveränderte Audiostrom ohne Metadaten und Cover, die Ogg-Fassung ist Vorbis q5. [Manifest](music-sources.json)

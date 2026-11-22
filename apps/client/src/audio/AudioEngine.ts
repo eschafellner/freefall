@@ -3,13 +3,13 @@ import type { AudioEnvironmentId, EnvironmentAudioProfile } from '@freefall/shar
 import { PRIORITY, VOICE_LIMIT, VoiceBudget } from './VoiceBudget.ts';
 import { AudioAssets } from './AudioAssets.ts';
 
-const BUSES = ['weapons', 'environment', 'ambience', 'weather', 'ui'] as const;
+const BUSES = ['weapons', 'environment', 'ambience', 'weather', 'ui', 'music'] as const;
 export type AudioBus = (typeof BUSES)[number];
 export type VolumeChannel = 'master' | AudioBus;
 export type AudioSettings = Record<VolumeChannel, number> & { muted: boolean; enabled: boolean };
 
 const STORAGE_KEY = 'freefall.audio.v1';
-const DEFAULTS: AudioSettings = { master: .8, weapons: .9, environment: .8, ambience: .8, weather: .8, ui: .7, muted: false, enabled: true };
+const DEFAULTS: AudioSettings = { master: .8, weapons: .9, environment: .8, ambience: .8, weather: .8, ui: .7, music: .75, muted: false, enabled: true };
 
 function loadSettings(): AudioSettings {
   try {
@@ -93,7 +93,7 @@ export class AudioEngine {
     this.master.connect(this.limiter).connect(context.destination);
     for (const bus of BUSES) {
       const gain = context.createGain();
-      if (bus === 'ambience' || bus === 'weather') {
+      if (bus === 'ambience' || bus === 'weather' || bus === 'music') {
         const duck = context.createGain();
         gain.connect(duck).connect(this.master);
         this.duckGains.push(duck);

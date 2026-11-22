@@ -77,14 +77,16 @@ const LEGACY = {
  */
 const GOLDEN_TRACES = {
   // 7.9B: the longer Schabe windup changes contact, damage, and downstream simulation.
+  // 2026-11-22: the drop sequence takes 606 instead of 249 ticks; mission traces shift in time only
+  // (the old phase durations reproduce the previous mission fingerprints exactly), the arena is unchanged.
   arena: 'f52a57b052421856f0b7b5a5e783d5760bb6397e8c54799d1def266cbf03967f',
-  'mission.easy': '7fbcbd4b5861e63ce3c67c58f477181c7d5c0891428f30aac9d242495e627bde',
-  'mission.normal': '502d8ffee79a7ce0fd91bf17ddef04d112e11e98abbb400305847db20711641c',
-  'mission.challenging': '9c0d95c3e6dd126fc89e40aff3d87f545de8224dd48d390c261c6ebc15b06915',
-  'mission.hard': '22685f445eaebea61742f346604011d9591d8f648dcf565e5c8fbf8e5f3a3439',
-  'mission.extreme': '9ae835642775873295ba74018fdf73d0de1477651180b33a2b7818ad6385faaf',
-  'mission.nightmare': 'dd1064f26073cc829ff4d10e07088bf7925f06489b9ec0839096f0f1e250b2a6',
-  'mission.freefall': 'e75da3a96b25ad79e0894385a45c23cf3fb1aca0c51373190e26c62aea4660ae',
+  'mission.easy': 'ec8818b06f272a59c912227e2d41160a260efa2a522e8651a6c4f2d4210902e3',
+  'mission.normal': '0314627f0f8df3612caed11c731c72edb7912b41073bd18b553a714a4bd02878',
+  'mission.challenging': 'dc9a0ee4205b8c7690a7e65950db89f6825a023794e3e7d2c9fefdafc6ad4267',
+  'mission.hard': '5f64e3134a53db2fba0084d83b595791e2c7a996c6819299e3e99a513e58ba3a',
+  'mission.extreme': '99a5c7e8d933b6a50111f5772a38ddbdfcf21478490e43507f25c791e2e0cc3c',
+  'mission.nightmare': 'cdd3767d4667759cda7080580c5a5fa358f3fe516842247ef6bde7909dc24380',
+  'mission.freefall': '578242d4cff2d87cfdca5b806d4c139e8717e1a45e5859f9b2d76a29b710e006',
 };
 
 // ---------------------------------------------------------------------------------------------------------------

@@ -227,7 +227,7 @@ function AudioSettings({ game }: { game: Game | null }) {
   const settings = game?.audio.settings;
   if (!game || !settings) return null;
   const channels = [['master', 'Master'], ['weapons', 'Kampf'], ['environment', 'Welt'],
-    ['ambience', 'Ambience'], ['weather', 'Wetter'], ['ui', 'Interface']] as const;
+    ['ambience', 'Ambience'], ['weather', 'Wetter'], ['ui', 'Interface'], ['music', 'Musik']] as const;
   return <fieldset className="audio-settings"><legend>Audio</legend>
     <div className="audio-toggles">
       <label><input type="checkbox" checked={settings.enabled}
