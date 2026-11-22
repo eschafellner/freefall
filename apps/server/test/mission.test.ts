@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  ALBATROSS, BALANCE, BALLOON, FRAG, BOARDING_TICKS, BODENBRUCH, CARRIER_ROOMS, CARRIER_SHIP, DIFFICULTIES, LANDING_STAGE_TICKS, HordeFrame, MAX_ENEMIES, NET, SCHABE_TYPE, WIDE_POSITION_SCALE, decodeHorde,
+  ALBATROSS, BALANCE, BALLOON, FRAG, BOARDING_TICKS, BODENBRUCH, CARRIER_ROOM_SIZE, CARRIER_ROOMS, CARRIER_SHIP, DIFFICULTIES, LANDING_STAGE_TICKS, HordeFrame, MAX_ENEMIES, NET, SCHABE_TYPE, WIDE_POSITION_SCALE, decodeHorde,
   distanceSquared, inAlbatross, missionGround, newPosture, openGround, resolveMissionBalance,
 } from '@freefall/shared';
 import type { DifficultyDefinition, MissionDefinition, MissionEvent, PatrolRegion, PositionXZ } from '@freefall/shared';
@@ -68,7 +68,8 @@ test('each side room can be entered and left through its doorway with regular in
       }
     };
     walk(Math.sign(room.x) * Math.PI / 2, 62);
-    assert.ok(Math.abs(player.x - room.x) < 1);
+    assert.ok(Math.abs(player.x) > CARRIER_ROOM_SIZE.inner + 4 && Math.abs(player.x) < CARRIER_ROOM_SIZE.outer, 'inside the room');
+    assert.ok(Math.hypot(player.x - room.x, player.z - room.z) < 5, 'within reach of the station');
     walk(-Math.sign(room.x) * Math.PI / 2, 62);
     assert.ok(Math.abs(player.x) < 1);
   }

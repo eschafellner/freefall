@@ -1,6 +1,7 @@
 import { ALBATROSS, NET, groundHeight } from '@freefall/shared';
 import type { MissionEvent, MissionSnapshot, PositionXZ, WorldDefinition } from '@freefall/shared';
 import { FlightAudio } from '../rendering/mission/FlightAudio.ts';
+import { CarrierAlarm } from './CarrierAlarm.ts';
 import type { AudioEngine, AudioPosition } from './AudioEngine.ts';
 import { AudioLayers, Takes } from './Soundscape.ts';
 import { PRIORITY } from './VoiceBudget.ts';
@@ -18,6 +19,7 @@ const AIR_RANGE = [ALBATROSS.halfWidth * 3, 152] as const;
 export class MissionAudio {
   private readonly engine: AudioEngine;
   private readonly flight: FlightAudio;
+  private readonly alarm: CarrierAlarm;
   private readonly layers: AudioLayers;
   private readonly takes = new Takes();
   readonly music: MusicPlayer;
@@ -29,6 +31,7 @@ export class MissionAudio {
   constructor(engine: AudioEngine) {
     this.engine = engine;
     this.flight = new FlightAudio(engine);
+    this.alarm = new CarrierAlarm(engine);
     this.layers = new AudioLayers(engine);
     this.music = new MusicPlayer(engine);
   }
@@ -100,6 +103,7 @@ export class MissionAudio {
 
   update(now: number, tick: number, state: MissionSnapshot, transport: AudioTransport, listener: AudioPosition, world: WorldDefinition): void {
     this.flushAlert(now);
+    this.alarm.update(state.result ? undefined : state);
     this.music.update(musicCue(state, tick, this.music.current), state.instanceId);
     const flying = state.state === 'DEPLOYMENT' && state.phase !== 'DOCKED';
     const lifting = state.extraction?.method === 'albatross' && state.extraction.phase === 'LIFT';
@@ -140,6 +144,7 @@ export class MissionAudio {
 
   clear(): void {
     this.flight.clear();
+    this.alarm.clear();
     this.music.stop();
     this.layers.clear();
     this.takes.clear();

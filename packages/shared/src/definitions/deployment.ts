@@ -20,9 +20,11 @@ export const PLANET_REGISTRY: ReadonlyMap<string, PlanetDefinition> = new Map([
 export const CARRIER_CONSOLE = { x: 0, z: 0, radius: 5 };
 export const CARRIER_SPAWN = { x: 0, z: 12, radius: 4, facing: 0 };
 export const CARRIER_SHIP = { x: 0, z: -31 };
+/** Side rooms: 17 m wide (x 12–29 from the mess wall to the hull), 12 m deep, with a window band in the hull. */
+export const CARRIER_ROOM_SIZE = { inner: 12, outer: 29, halfDepth: 6 } as const;
 export const CARRIER_ROOMS = [
-  { x: -19, z: 9, label: 'AUSRÜSTUNG' }, { x: 19, z: 9, label: 'WAFFENKAMMER' },
-  { x: -19, z: -9, label: 'RÜSTUNG' }, { x: 19, z: -9, label: 'FORSCHUNG' },
+  { x: -20.5, z: 9, label: 'AUSRÜSTUNG' }, { x: 20.5, z: 9, label: 'WAFFENKAMMER' },
+  { x: -20.5, z: -9, label: 'RÜSTUNG' }, { x: 20.5, z: -9, label: 'FORSCHUNG' },
 ] as const;
 
 const albatross = BALANCE.vehicle(ALBATROSS_VEHICLE_ID);
@@ -77,11 +79,27 @@ export function albatrossCollision(ship: PositionXZ): Obstacle[] {
 // Service frame beside the mess, outside the deployment route.
 const serviceFrame = { ...block(-6.5, 12.4, 1.4, .42, 1.64), bottom: 1.37 };
 
+const { outer, halfDepth } = CARRIER_ROOM_SIZE;
+const roomHalfX = (outer - CARRIER_ROOM_SIZE.inner) / 2;
+/**
+ * Hull walls with a window band towards space. Collision stays solid; the client draws them as framed glass.
+ * Rear wall of the mess, the outer hull of each side room and the two hangar walls of the boarding deck.
+ */
+/** Locker rows along the room wall away from the centre line. */
+export const CARRIER_LOCKERS: readonly Obstacle[] = [-1, 1].flatMap((side) =>
+  [-9, 9].map((z) => block(side * 20.5, z + Math.sign(z) * (halfDepth - .62), 5.4, .38, 2.5)));
+export const CARRIER_WINDOW_WALLS: readonly Obstacle[] = [
+  block(0, 17, 13, .3),
+  ...[-1, 1].flatMap((side) => [-9, 9].map((z) => block(side * outer, z, .24, halfDepth))),
+  block(-7.35, -29, .23, 11), block(7.35, -29, .23, 11),
+];
+
 export const CARRIER_WORLD: WorldDefinition = {
   id: 'world.skyfall_carrier', half: 42, deployment: CARRIER_SPAWN,
   patrolRegions: [], breachRegions: [], initialNests: [],
   obstacles: [
-    block(0, 17, 13, .3), block(-7.7, -17, 4.5, .3), block(7.7, -17, 4.5, .3),
+    ...CARRIER_WINDOW_WALLS,
+    block(-7.7, -17, 4.5, .3), block(7.7, -17, 4.5, .3),
     block(-3.1, -21.4, .25, 4.5), block(3.1, -21.4, .25, 4.5),
     block(0, 0, 1.58, 1.58, 1.06),
     ...CARRIER_BENCHES,
@@ -90,13 +108,16 @@ export const CARRIER_WORLD: WorldDefinition = {
     ...[-1, 1].flatMap((side) => [
       ...[-15, 0, 15].map((z) => block(side * 12, z, .3, z === 0 ? 5.8 : 2)),
       ...[-9, 9].flatMap((z) => [
-        block(side * 18.65, z - 4.5, 6.6, .24), block(side * 18.65, z + 4.5, 6.6, .24), block(side * 25, z, .24, 4.5),
-        block(side * 21.7, z - 2.3, 1.9, .8, 1.18), block(side * 7.7, z, 2.25, 1.2, .85),
+        // Room walls, the station desk in the middle and the locker row along the wall away from the centre line.
+        block(side * (12 + roomHalfX), z - halfDepth, roomHalfX, .24), block(side * (12 + roomHalfX), z + halfDepth, roomHalfX, .24),
+        block(side * 21.5, z - Math.sign(z) * 1.2, 2.1, .8, 1.18),
+        ...CARRIER_LOCKERS.filter((locker) => Math.sign(locker.x) === side && Math.sign(locker.z) === Math.sign(z)),
+        block(side * 7.7, z, 2.25, 1.2, .85),
       ]),
       block(side * 12, -12.9, .3, .85), block(side * 12, -5.1, .3, .85),
       block(side * 12, 5.1, .3, .85), block(side * 12, 12.9, .3, .85),
     ]),
-    block(-7.35, -29, .23, 11), block(7.35, -29, .23, 11), block(0, -39.8, 7.6, .25),
+    block(0, -39.8, 7.6, .25),
     block(-5.3, -18.15, 2.1, .25), block(5.3, -18.15, 2.1, .25),
     ...albatrossCollision(CARRIER_SHIP),
   ],

@@ -25,10 +25,8 @@ export class FlightAudio {
     const length = seconds(cue);
     switch (cue) {
       case 'LOCKED':
-        // Ramp slam, siren and three docking clamps letting go in sequence.
+        // Ramp slam and three docking clamps letting go in sequence; the klaxon comes from CarrierAlarm.
         this.tone('triangle', 119, 31, .55, .19);
-        this.tone('sine', 530, 360, .63, .065, .30);
-        this.tone('sine', 530, 360, .62, .055, 1.02);
         for (const [i, delay] of [1.6, 1.95, 2.25].entries()) {
           this.noise('bandpass', 1900 - i * 300, 900, .09, .24, delay);
           this.tone('triangle', 92, 48, .3, .16, delay);

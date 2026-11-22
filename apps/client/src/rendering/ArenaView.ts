@@ -3,6 +3,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import type { AtmosphereState, Circle, ExplosionEvent, HordeFrame, MeleeEvent, MissionDefinition, MissionSnapshot, OperatorPosition, PlanetAtmosphereProfile, PlayerState, PlayersSnapshot, PositionXZ, PostureState, ShotEvent, WeaponSlot, WorldDefinition } from '@freefall/shared';
 import { MissionEnvironment } from './mission/MissionEnvironment.ts';
@@ -101,7 +102,7 @@ export class ArenaView {
   private readonly overview = { x: -1.8, z: 7.7 };
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
   private debugMarkers?: { server: T.Mesh; predicted: T.Mesh; collider: T.LineSegments; zones: T.Group };
-  private post?: { composer: EffectComposer; render: RenderPass; output: OutputPass; fxaa: ShaderPass };
+  private post?: { composer: EffectComposer; render: RenderPass; bloom: UnrealBloomPass; output: OutputPass; fxaa: ShaderPass };
 
   private readonly container: HTMLElement;
 
@@ -210,7 +211,7 @@ export class ArenaView {
     this.terrain.simplify(name === 'low');
     this.mission?.environment.configureQuality(this.quality);
     const floatColor = this.renderer.extensions.has('EXT_color_buffer_float');
-    const { shadowMapSize, fxaa } = this.quality;
+    const { shadowMapSize, fxaa, carrierBloom } = this.quality;
     const { sun } = this.light;
     this.renderer.shadowMap.enabled = sun.castShadow = shadowMapSize > 0;
     if (sun.shadow.mapSize.x !== shadowMapSize || !shadowMapSize) {
@@ -220,17 +221,25 @@ export class ArenaView {
     }
     this.refreshShadows();
 
-    if (fxaa && floatColor && !this.post) {
+    // The composer runs for FXAA (high) and for the carrier bloom (medium and high, carrier only).
+    const wantPost = (fxaa || carrierBloom > 0) && floatColor;
+    if (wantPost && !this.post) {
       const composer = new EffectComposer(this.renderer);
       const render = new RenderPass(this.scene, this.camera);
+      const bloom = new UnrealBloomPass(new T.Vector2(256, 256), carrierBloom, .28, 1.5);
       const output = new OutputPass();
       const fxaaPass = new ShaderPass(FXAAShader);
       composer.addPass(render);
+      composer.addPass(bloom);
       composer.addPass(output);
       composer.addPass(fxaaPass);
-      this.post = { composer, render, output, fxaa: fxaaPass };
-    } else if (!fxaa || !floatColor) {
+      this.post = { composer, render, bloom, output, fxaa: fxaaPass };
+    } else if (!wantPost) {
       this.disposePost();
+    }
+    if (this.post) {
+      this.post.fxaa.enabled = fxaa;
+      this.post.bloom.strength = carrierBloom;
     }
     this.resize();
   }
@@ -402,7 +411,7 @@ export class ArenaView {
     if (operation) {
       PlayerRigBatches.setTransport(this.scene, undefined);
       if (mission && state) {
-        operation.carrier.update(now, state, low);
+        operation.carrier.update(now, state, low, this.renderer.getPixelRatio());
         operation.ship.update(state, missionTick, this.quality, latest, mission.surface, cameraPreferences.reducedMotion);
         operation.recovery.update(state.result || state.state === 'RETURN_TO_CARRIER' ? undefined : state.extraction,
           missionTick, dt, latest, own, position, mission.surface);
@@ -467,7 +476,9 @@ export class ArenaView {
       ? this.weather.finish(state.instanceId)
       : this.weather.update(state?.result ? undefined : weatherState, mission?.surface, mission?.atmosphere, missionTick, dt, this.camera,
         this.quality, cameraPreferences.reducedMotion, this.renderer.getPixelRatio(), mode === 'surface' && !flying, Boolean(state?.debug));
-    if (this.light.update(mode, Boolean(this.post), this.camera.position.x, this.camera.position.z, mission?.atmosphere, weather)) {
+    const post = this.post && (this.quality.fxaa || (renderCarrier && this.quality.carrierBloom > 0)) ? this.post : undefined;
+    if (this.post) this.post.bloom.enabled = renderCarrier && this.quality.carrierBloom > 0;
+    if (this.light.update(mode, Boolean(post), this.camera.position.x, this.camera.position.z, mission?.atmosphere, weather)) {
       this.refreshShadows();
     }
     this.renderer.toneMappingExposure = this.light.exposure;
@@ -485,7 +496,7 @@ export class ArenaView {
     this.renderer.info.reset();
     this.gpuTimer.begin();
     try {
-      if (this.post) this.post.composer.render(dt);
+      if (post) post.composer.render(dt);
       else this.renderer.render(this.scene, this.camera);
     } finally {
       this.gpuTimer.end();
@@ -633,6 +644,7 @@ export class ArenaView {
   private disposePost(): void {
     if (!this.post) return;
     this.post.render.dispose();
+    this.post.bloom.dispose();
     this.post.output.dispose();
     this.post.fxaa.dispose();
     this.post.composer.dispose();

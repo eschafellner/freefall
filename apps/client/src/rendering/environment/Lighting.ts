@@ -15,7 +15,18 @@ const ARENA: AtmosphereSettings = {
   sky: { zenith: 0x869eac, clouds: 0xd3d4cf, cloudShadow: 0x697a84, belowHorizon: 0x5b5546,
     cloudThreshold: .33, cloudScale: 1, hazeHeight: .32, sunGlow: 1 },
 };
-const CARRIER_FOG = { color: 0x1d2b2e, density: .009 };
+const CARRIER_FOG = { color: 0x0c1418, density: .0075 };
+/**
+ * Carrier interior: low ambient so the practical lights carry the scene; the directional light is the cool
+ * shine of Dev' Ault coming in from starboard.
+ */
+const CARRIER: AtmosphereSettings = {
+  ...ARENA,
+  exposure: 1,
+  sun: { offset: [80, 34, 52], color: 0x8fbbe8, intensity: .62 },
+  fill: { sky: 0x6d8796, ground: 0x2a2522, intensity: .5 },
+  environmentIntensity: .22,
+};
 const FIXED_SURFACE_FOG = { color: ARENA.fog.color, density: .0041 };
 
 function skyTexture(hdr: boolean, profile: AtmosphereSettings): T.DataTexture {
@@ -166,7 +177,7 @@ export function sunOffset(profile: AtmosphereSettings, elevation: number, azimut
 
 export function createLighting(scene: T.Scene, hdr: boolean) {
   const legacySky = skyTexture(hdr, ARENA);
-  const carrierBackground = new T.Color(0x101b1f);
+  const carrierBackground = new T.Color(0x010206);
   const fog = new T.FogExp2(ARENA.fog.color, ARENA.fog.density);
   scene.fog = fog;
   const fill = new T.HemisphereLight();
@@ -192,7 +203,7 @@ export function createLighting(scene: T.Scene, hdr: boolean) {
 
   function update(mode: LightingScene, post: boolean, x: number, z: number, atmosphere?: PlanetAtmosphereProfile, weather?: AtmosphereLighting): boolean {
     const planet = mode === 'surface' ? atmosphere : undefined;
-    const profile = planet ?? ARENA;
+    const profile = planet ?? (mode === 'carrier' ? CARRIER : ARENA);
     const applied = Boolean(planet && weather);
     const changed = current !== profile || currentMode !== mode || currentPost !== post || weatherActive !== applied;
     if (changed) {
