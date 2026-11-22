@@ -195,7 +195,8 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
   border: 1px solid #e1b6759c; color: #fff0cf; font-size: 13px; pointer-events: none;
 }
 .world-markers { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.world-marker[hidden], .marker-meter[hidden] { display: none; }
+.world-marker[hidden], .world-marker > span[hidden] { display: none; }
+.world-marker.compact { opacity: .88; }
 .world-marker {
   display: grid; justify-items: center; position: absolute; top: 0; left: 0; color: #ffdfac;
   font: 650 11px var(--mono); white-space: nowrap; text-shadow: 0 1px 3px #1a1714;

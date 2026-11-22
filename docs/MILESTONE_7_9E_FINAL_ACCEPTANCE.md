@@ -197,7 +197,7 @@ Befehle und Konsolenausgaben sind im Evidenzordner aufgeführt. Das optionale `a
 | FF78E-6 P1, Performancefreigabe | Native Radeon-Messung liegt vor. Client-Zielgeräte und Grenzwerte bestätigen, anschließend Last und Netzwerk auf diesen Geräten reproduzieren. |
 | FF79E-3 Hör- und Spielabnahme | Subjektive Audioqualität, Rollenunterschiede, Fairness, Ressourcen und Wiederholungsmotivation bleiben offen. |
 | FF79E-4 Ressourcengrenzen | Browser-Speicher über wiederholte vollständige Missionen sowie VRAM, Audio-Allokationen, Transportverlust und weitere Browser offen. |
-| FF79E-5 Markerlesbarkeit | In der Waldansicht bei 800 × 450 überlappt die Beschriftung des optionalen Nests das Primärziel. Der vollständige Zielname bleibt im HUD sichtbar. [Aufnahme](playtest/7-9e/forest.png) |
+| FF79E-5 Markerlesbarkeit | In der Waldansicht bei 800 × 450 überlappt die Beschriftung des optionalen Nests das Primärziel. Der vollständige Zielname bleibt im HUD sichtbar. [Aufnahme](playtest/7-9e/forest.png) **Nachtrag:** Behoben durch priorisierte Marker-Entzerrung (`MarkerLayout.ts`, Test `marker-layout.test.ts`). Nachrangige Marker weichen vertikal aus oder zeigen nur die Entfernung. Browserprüfung der Waldszene steht aus. |
 | FF78E-8 P3, Bundle | Vite meldet den Haupt-Chunk über 500 kB. Build erfolgreich. |
 
 ## 19. Abnahmeentscheidung

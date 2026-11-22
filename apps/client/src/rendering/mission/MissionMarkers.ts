@@ -1,6 +1,17 @@
 import * as T from 'three';
 import { NET, NEST_HIT_HEIGHT, clearGroundLine, distanceSquared, groundHeight, missionObjectives } from '@freefall/shared';
 import type { HordeFrame, MissionDefinition, MissionSnapshot, NestSnapshot, PositionXZ } from '@freefall/shared';
+import { MARKER_PRIORITY, MarkerLayout } from './MarkerLayout.ts';
+import type { MarkerPlacement, MarkerRequest } from './MarkerLayout.ts';
+
+type MarkerKind = 'objective' | 'extraction' | 'alarm' | 'nest';
+
+interface PendingMarker extends MarkerRequest {
+  kind: MarkerKind;
+  progress: number;
+  blocked: boolean;
+  angle?: number;
+}
 
 interface Marker {
   node: HTMLDivElement;
@@ -18,6 +29,10 @@ interface Marker {
 export class MissionMarkers {
   readonly root = document.createElement('div');
   private readonly slots: Marker[] = [];
+  private readonly requests: PendingMarker[] = [];
+  private readonly pending: PendingMarker[] = [];
+  private readonly placements: MarkerPlacement[] = [];
+  private readonly layout = new MarkerLayout();
   private readonly p = new T.Vector3();
   private readonly local = new T.Vector3();
   private used = 0;
@@ -38,6 +53,8 @@ export class MissionMarkers {
       node.append(icon, caption, meter);
       this.root.append(node);
       this.slots.push({ node, caption, icon, meter, shown: false });
+      this.requests.push({ key: '', priority: 0, x: 0, y: 0, label: '', compactLabel: '', meter: false, kind: 'objective',
+        progress: -1, blocked: false });
     }
   }
 
@@ -46,9 +63,10 @@ export class MissionMarkers {
     this.height = height;
   }
 
-  private place(camera: T.Camera, x: number, y: number, z: number, kind: string, label: string, progress: number, offscreen: boolean): void {
-    const marker = this.slots[this.used];
-    if (!marker) return;
+  private place(camera: T.Camera, x: number, y: number, z: number, kind: MarkerKind, key: string, label: string,
+    compactLabel: string, progress: number, offscreen: boolean): void {
+    const request = this.requests[this.used];
+    if (!request) return;
     this.p.set(x, y, z);
     this.local.copy(this.p).applyMatrix4(camera.matrixWorldInverse);
     const behind = this.local.z > 0;
@@ -63,33 +81,56 @@ export class MissionMarkers {
       else this.p.y = -.69;
     }
     this.used++;
-    if (!marker.shown) {
-      marker.shown = true;
-      marker.node.hidden = false;
-    }
-    const px = Math.round((T.MathUtils.clamp(this.p.x, -.86, .86) * .5 + .5) * this.width);
-    const py = Math.round((.5 - T.MathUtils.clamp(this.p.y, -.69, .69) * .5) * this.height);
-    const classes = 'world-marker ' + kind + (blocked ? ' at-edge' : '');
-    if (marker.node.className !== classes) marker.node.className = classes;
-    // Percentages refer to the caption's width. Keep long labels inside narrow viewports without a layout read.
-    if (marker.px !== px || marker.py !== py || marker.width !== this.width) {
-      const left = `clamp(6px, calc(${px}px - 50%), calc(${this.width - 6}px - 100%))`;
-      marker.node.style.transform = `translate(${left},calc(${py}px - 50%))`;
-      marker.px = px;
-      marker.py = py;
-      marker.width = this.width;
-    }
-    const angle = blocked ? Math.atan2(this.p.x * this.width, this.p.y * this.height) : undefined;
-    if (marker.arrow !== angle) {
-      marker.icon.style.transform = angle === undefined ? '' : `rotate(${angle}rad)`;
-      marker.arrow = angle;
-    }
-    if (marker.caption.textContent !== label) marker.caption.textContent = label;
-    const fraction = progress < 0 ? -1 : T.MathUtils.clamp(progress, 0, 1);
-    if (marker.progress !== fraction) {
-      marker.meter.hidden = fraction < 0;
-      if (fraction >= 0) marker.meter.style.setProperty('--progress', String(fraction));
-      marker.progress = fraction;
+    request.kind = kind;
+    request.priority = MARKER_PRIORITY[kind === 'extraction' && key === 'pickup' ? 'pickup' : kind];
+    request.key = key;
+    request.label = label;
+    request.compactLabel = compactLabel;
+    request.progress = progress < 0 ? -1 : T.MathUtils.clamp(progress, 0, 1);
+    request.meter = request.progress >= 0;
+    request.blocked = blocked;
+    request.x = Math.round((T.MathUtils.clamp(this.p.x, -.86, .86) * .5 + .5) * this.width);
+    request.y = Math.round((.5 - T.MathUtils.clamp(this.p.y, -.69, .69) * .5) * this.height);
+    request.angle = blocked ? Math.atan2(this.p.x * this.width, this.p.y * this.height) : undefined;
+  }
+
+  /** Resolves overlaps between the collected markers and writes only changed DOM state. */
+  private flush(): void {
+    this.pending.length = this.used;
+    for (let i = 0; i < this.used; i++) this.pending[i] = this.requests[i];
+    this.layout.layout(this.pending, this.width, this.height, this.placements);
+    for (let i = 0; i < this.used; i++) {
+      const request = this.requests[i];
+      const { offset, compact } = this.placements[i];
+      const marker = this.slots[i];
+      if (!marker.shown) {
+        marker.shown = true;
+        marker.node.hidden = false;
+      }
+      const classes = 'world-marker ' + request.kind + (request.blocked ? ' at-edge' : '') + (compact ? ' compact' : '');
+      if (marker.node.className !== classes) marker.node.className = classes;
+      const px = request.x;
+      const py = request.y + offset;
+      // Percentages refer to the caption's width. Keep long labels inside narrow viewports without a layout read.
+      if (marker.px !== px || marker.py !== py || marker.width !== this.width) {
+        const left = `clamp(6px, calc(${px}px - 50%), calc(${this.width - 6}px - 100%))`;
+        marker.node.style.transform = `translate(${left},calc(${py}px - 50%))`;
+        marker.px = px;
+        marker.py = py;
+        marker.width = this.width;
+      }
+      if (marker.arrow !== request.angle) {
+        marker.icon.style.transform = request.angle === undefined ? '' : `rotate(${request.angle}rad)`;
+        marker.arrow = request.angle;
+      }
+      const label = compact ? request.compactLabel : request.label;
+      if (marker.caption.textContent !== label) marker.caption.textContent = label;
+      if (marker.caption.hidden !== (label === '')) marker.caption.hidden = label === '';
+      if (marker.progress !== request.progress) {
+        marker.meter.hidden = request.progress < 0;
+        if (request.progress >= 0) marker.meter.style.setProperty('--progress', String(request.progress));
+        marker.progress = request.progress;
+      }
     }
   }
 
@@ -106,18 +147,21 @@ export class MissionMarkers {
       if (entry?.state !== 'available' && entry?.state !== 'defending') continue;
       const distance = Math.round(Math.sqrt(distanceSquared(position, target)));
       const label = objective.label.replace('Kommunikationsanlage ', '');
-      this.place(camera, target.x, base(target.x, target.z) + 2.7, target.z, 'objective', `${label} · ${distance} m`, -1, true);
+      this.place(camera, target.x, base(target.x, target.z) + 2.7, target.z, 'objective', objective.id, `${label} · ${distance} m`,
+        `${distance} m`, -1, true);
     }
     if (state.primaryObjectivesCompleted && (state.extraction || state.albatross?.extractionAvailable)) {
       const zone = state.extraction ?? state.albatross!;
       const distance = Math.round(Math.sqrt(distanceSquared(position, zone)));
       this.place(camera, zone.x, base(zone.x, zone.z) + (state.extraction?.method === 'balloon' ? 8.5 : 4.4), zone.z, 'extraction',
-        `${state.extraction?.method === 'balloon' ? 'Rettungssignal' : 'Albatross 02'} · ${distance} m`, -1, true);
+        'extraction', `${state.extraction?.method === 'balloon' ? 'Rettungssignal' : 'Albatross 02'} · ${distance} m`,
+        `${distance} m`, -1, true);
     }
     const pickup = state.plan?.extraction.balloon;
     if (pickup && state.state === 'EXTRACTION_AVAILABLE') {
       const distance = Math.round(Math.sqrt(distanceSquared(position, pickup)));
-      this.place(camera, pickup.x, base(pickup.x, pickup.z) + 2.6, pickup.z, 'extraction', `Ballon · ${pickup.label} · ${distance} m`, -1, true);
+      this.place(camera, pickup.x, base(pickup.x, pickup.z) + 2.6, pickup.z, 'extraction', 'pickup',
+        `Ballon · ${pickup.label} · ${distance} m`, `${distance} m`, -1, true);
     }
     if (horde) {
       for (const alarm of state.alarms) {
@@ -128,7 +172,8 @@ export class MissionMarkers {
         if ((x - position.x) ** 2 + (z - position.z) ** 2 > 83 ** 2) continue;
         const progress = (tick - alarm.startedAt) / (alarm.endsAt - alarm.startedAt);
         if (progress > 1.07 || !clearGroundLine(definition.world, position.x, position.z, x, z)) continue;
-        this.place(camera, x, base(x, z) + 2.1, z, 'alarm', 'Verstärkungsruf', 1 - progress, false);
+        this.place(camera, x, base(x, z) + 2.1, z, 'alarm', `alarm:${alarm.enemyId}`, 'Verstärkungsruf', '',
+          1 - progress, false);
       }
     }
     let markedBreach = false;
@@ -137,7 +182,8 @@ export class MissionMarkers {
     for (const nest of state.nests) {
       if (nest.hp === 0 || distanceSquared(nest, position) > 90 ** 2) continue;
       if (nest.state === 'EMERGING') {
-        if (!markedBreach) this.place(camera, nest.x, base(nest.x, nest.z) + 1.9, nest.z, 'alarm', 'Schwarmdurchbruch', -1, true);
+        if (!markedBreach) this.place(camera, nest.x, base(nest.x, nest.z) + 1.9, nest.z, 'alarm', 'breach', 'Schwarmdurchbruch', '', -1,
+          true);
         markedBreach = true;
         continue;
       }
@@ -152,8 +198,9 @@ export class MissionMarkers {
     }
     if (selectedNest) {
       const { x, z, hp, maxHp } = selectedNest;
-      this.place(camera, x, base(x, z) + 4, z, 'nest', 'Schwarmnest', hp / maxHp, false);
+      this.place(camera, x, base(x, z) + 4, z, 'nest', 'nest', 'Schwarmnest', '', hp / maxHp, false);
     }
+    this.flush();
     for (let i = this.used; i < this.slots.length; i++) {
       const marker = this.slots[i];
       if (!marker.shown) continue;
