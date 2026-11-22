@@ -6,10 +6,10 @@ const MUSIC_PATH = (import.meta.env?.BASE_URL ?? '/') + 'music/';
 
 /**
  * Score cues. Levels sit the -14.5 LUFS masters under the -23 LUFS effect mix; the music bus adds the player volume.
- * `tail`: seconds the drop score keeps playing after the squad has deployed before it fades.
+ * `tail`: seconds after the Albatross touchdown at which the drop score starts to fade.
  */
 export const MUSIC_TRACKS = {
-  drop: { file: 'drop-larree-triomphale', level: .85, fadeIn: 1.2, fadeOut: 9, tail: 22 },
+  drop: { file: 'drop-larree-triomphale', level: .85, fadeIn: 1.2, fadeOut: 6, tail: 15 },
   balloon: { file: 'extraction-last-stand', level: .7, fadeIn: 2.5, fadeOut: 5, tail: 0 },
 } as const;
 export type MusicTrack = keyof typeof MUSIC_TRACKS;
@@ -43,7 +43,9 @@ export function musicCue(state: MissionSnapshot | undefined, tick: number, playi
   if (state.state === 'DEPLOYMENT' && state.phase !== 'DOCKED' && state.phase !== 'BOARDING') {
     return { track: 'drop', offset: (BOARDING_TICKS + phaseStart(state.phase) + Math.max(0, tick - state.phaseAt)) / NET.tickHz };
   }
-  if (playing === 'drop' && state.phase === 'DEPLOYED' && tick - state.phaseAt < MUSIC_TRACKS.drop.tail * NET.tickHz) {
+  // DEPLOYED begins when the touchdown phase ends; the tail counts from the touchdown itself.
+  const touchdown = state.phaseAt - (DEPLOYMENT_PHASES.find(([phase]) => phase === 'TOUCHDOWN')?.[1] ?? 0);
+  if (playing === 'drop' && state.phase === 'DEPLOYED' && tick - touchdown < MUSIC_TRACKS.drop.tail * NET.tickHz) {
     return { track: 'drop', offset: 0 };
   }
 }

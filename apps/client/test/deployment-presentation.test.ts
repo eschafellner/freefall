@@ -30,7 +30,11 @@ test('drop score starts once every operator is ready and follows the flight for 
   const deployed = snapshot({ state: 'ACTIVE_MISSION', phase: 'DEPLOYED', phaseAt: 1000 });
   assert.equal(musicCue(deployed, 1010), undefined);
   assert.equal(musicCue(deployed, 1010, 'drop')?.track, 'drop');
-  assert.equal(musicCue(deployed, 1000 + MUSIC_TRACKS.drop.tail * NET.tickHz + 1, 'drop'), undefined, 'fades after the tail');
+  // Touchdown happened one TOUCHDOWN phase before DEPLOYED; the fade starts 15 s after it.
+  const touchdown = 1000 - DEPLOYMENT_PHASES.find(([phase]) => phase === 'TOUCHDOWN')![1];
+  assert.equal(MUSIC_TRACKS.drop.tail, 15);
+  assert.equal(musicCue(deployed, touchdown + 15 * NET.tickHz - 1, 'drop')?.track, 'drop');
+  assert.equal(musicCue(deployed, touchdown + 15 * NET.tickHz, 'drop'), undefined, 'fades 15 s after touchdown');
 });
 
 test('balloon extraction plays Last Stand from activation until the result', () => {
