@@ -100,6 +100,7 @@ function blendedSky() {
     bakedSun: { value: new T.Vector3() }, directSun: { value: new T.Vector3() },
     bakedSunColor: { value: new T.Color() }, directSunColor: { value: new T.Color() },
     glow: { value: 0 }, shiftSun: { value: 0 },
+    horizonGlow: { value: new T.Color() }, horizonAmount: { value: 0 }, zenithTint: { value: new T.Color() }, zenithAmount: { value: 0 },
   };
   const material = new T.ShaderMaterial({
     uniforms, depthWrite: false, depthFunc: T.LessEqualDepth,
@@ -116,6 +117,8 @@ function blendedSky() {
       uniform sampler2D sourceSky;
       uniform vec3 tint, horizon, bakedSun, directSun, bakedSunColor, directSunColor;
       uniform float amount, brightness, glow, shiftSun;
+      uniform vec3 horizonGlow, zenithTint;
+      uniform float horizonAmount, zenithAmount;
       varying vec2 screen;
       void main() {
         vec3 ray = normalize(transpose(mat3(viewMatrix)) * vec3(screen.x / projectionMatrix[0][0],
@@ -129,6 +132,16 @@ function blendedSky() {
         }
         vec3 gray = vec3(dot(sky, vec3(.2126, .7152, .0722)));
         vec3 shaded = mix(sky, gray * .60 + tint * .40, amount) * brightness;
+        // Dawn and dusk: cooler, deeper zenith and a warm band along the horizon, strongest toward the sun.
+        float up = clamp(ray.y, 0., 1.);
+        shaded = mix(shaded, zenithTint * brightness, zenithAmount * smoothstep(.06, .75, up));
+        vec2 rayFlat = ray.xz / max(length(ray.xz), 1e-4);
+        vec2 sunFlat = directSun.xz / max(length(directSun.xz), 1e-4);
+        float toward = max(0., dot(rayFlat, sunFlat));
+        float band = 1. - smoothstep(-.04, .32 + .18 * toward, ray.y);
+        shaded += horizonGlow * horizonAmount * band * band * (.35 + .65 * toward * toward * toward);
+        // Low sun colours the whole sky, clouds included, most on the sun side.
+        shaded = mix(shaded, shaded * (.55 + horizonGlow * .6), horizonAmount * .55 * (.35 + .65 * toward));
         float horizonBlend = (1. - smoothstep(.012, .18, abs(ray.y))) * min(1., amount * 3.);
         gl_FragColor = vec4(mix(shaded, horizon, horizonBlend), 1.);
         #include <tonemapping_fragment>
@@ -142,6 +155,13 @@ function blendedSky() {
   mesh.renderOrder = 100;
   mesh.visible = false;
   return { mesh, uniforms, dispose() { mesh.removeFromParent(); geometry.dispose(); material.dispose(); } };
+}
+
+/** Sun offset of a profile, lowered by `elevation` and turned by `azimuth` around the vertical axis. */
+export function sunOffset(profile: AtmosphereSettings, elevation: number, azimuth: number, out: T.Vector3): T.Vector3 {
+  const [x, y, z] = profile.sun.offset;
+  const c = Math.cos(azimuth), s = Math.sin(azimuth);
+  return out.set(x * c - z * s, y * elevation, x * s + z * c);
 }
 
 export function createLighting(scene: T.Scene, hdr: boolean) {
@@ -168,6 +188,7 @@ export function createLighting(scene: T.Scene, hdr: boolean) {
   let weatherActive = false;
   let exposure = 1;
   let sunElevation = 1;
+  let sunAzimuth = 0;
 
   function update(mode: LightingScene, post: boolean, x: number, z: number, atmosphere?: PlanetAtmosphereProfile, weather?: AtmosphereLighting): boolean {
     const planet = mode === 'surface' ? atmosphere : undefined;
@@ -207,7 +228,8 @@ export function createLighting(scene: T.Scene, hdr: boolean) {
       weatherActive = applied;
     }
     // DescentView may replace the sky for a cinematic frame; always start from the active profile.
-    blend.mesh.visible = Boolean(planet && weather && planetSky && weather.skyAmount > .0001);
+    blend.mesh.visible = Boolean(planet && weather && planetSky &&
+      (weather.skyAmount > .0001 || weather.glowAmount > .0001 || weather.zenithAmount > .0001));
     scene.background = blend.mesh.visible ? null : background;
     if (planet && weather && planetSky) {
       exposure = profile.exposure * weather.exposure;
@@ -217,17 +239,23 @@ export function createLighting(scene: T.Scene, hdr: boolean) {
       sun.color.setHex(profile.sun.color).multiply(weather.sunTint);
       sun.intensity = profile.sun.intensity * weather.sun;
       fill.intensity = profile.fill.intensity * weather.fill;
+      fill.color.copy(weather.fillSky);
+      fill.groundColor.copy(weather.fillGround);
+      scene.environmentIntensity = profile.environmentIntensity * weather.environment;
       if (blend.mesh.visible) {
         blend.uniforms.sourceSky.value = planetSky.texture;
         blend.uniforms.tint.value.copy(weather.skyTint);
         blend.uniforms.horizon.value.copy(weather.fog);
         blend.uniforms.amount.value = weather.skyAmount;
         blend.uniforms.brightness.value = weather.skyBrightness;
-        blend.uniforms.shiftSun.value = Number(weather.elevation < .8);
+        blend.uniforms.shiftSun.value = Number(weather.elevation < .8 || weather.azimuth !== 0);
         blend.uniforms.glow.value = profile.sky.sunGlow * .34;
-        const offset = profile.sun.offset;
-        blend.uniforms.directSun.value.set(offset[0], offset[1] * weather.elevation, offset[2]).normalize();
+        sunOffset(profile, weather.elevation, weather.azimuth, blend.uniforms.directSun.value).normalize();
         blend.uniforms.directSunColor.value.copy(sun.color);
+        blend.uniforms.horizonGlow.value.copy(weather.glow);
+        blend.uniforms.horizonAmount.value = weather.glowAmount;
+        blend.uniforms.zenithTint.value.copy(weather.zenith);
+        blend.uniforms.zenithAmount.value = weather.zenithAmount;
       }
     } else {
       blend.uniforms.sourceSky.value = null;
@@ -236,12 +264,13 @@ export function createLighting(scene: T.Scene, hdr: boolean) {
     const shadowX = planet ? Math.round(x / 24) * 24 : 0;
     const shadowZ = planet ? Math.round(z / 24) * 24 : 0;
     const elevation = weather?.elevation ?? 1;
-    if (!changed && sunElevation === elevation && sun.target.position.x === shadowX && sun.target.position.z === shadowZ) return false;
+    const azimuth = weather?.azimuth ?? 0;
+    if (!changed && sunElevation === elevation && sunAzimuth === azimuth && sun.target.position.x === shadowX &&
+        sun.target.position.z === shadowZ) return false;
     sun.target.position.set(shadowX, 0, shadowZ);
     sunElevation = elevation;
-    sun.position.fromArray(profile.sun.offset);
-    sun.position.y *= sunElevation;
-    sun.position.add(sun.target.position);
+    sunAzimuth = azimuth;
+    sunOffset(profile, elevation, azimuth, sun.position).add(sun.target.position);
     return true;
   }
 
