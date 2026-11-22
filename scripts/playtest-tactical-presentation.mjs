@@ -92,7 +92,7 @@ try {
       if (method === 'albatross') await page.screenshot({ path: join(output, 'deployment.jpg') });
       await page.locator('.deployment-brief').getByText('Aufsetzen', { exact: true }).waitFor();
       if (method === 'albatross') await page.screenshot({ path: join(output, 'touchdown.jpg') });
-      await page.locator('.field-objectives').waitFor();
+      await page.locator('.field-objectives').waitFor({ state: 'attached' });
       const world = missionGround(mission.definition.world);
       const place = (player, x, z) => {
         mission.place(player, x, z, 0);
@@ -191,7 +191,7 @@ try {
         await until(() => room.clients.some((client) => client.sessionId === own.id && client !== old), 'browser reconnect');
         const resume = page.getByRole('button', { name: 'Einsatz betreten' });
         if (await resume.isVisible()) await resume.click();
-        await page.locator('.field-objectives').waitFor();
+        await page.locator('.field-objectives').waitFor({ state: 'attached' });
         broadcast('mission-events', [nest, nest]);
         await delay(700);
         assert.equal(await page.locator('.combat-notice').getByText('Schwarmnest zerstört').count(), 0);

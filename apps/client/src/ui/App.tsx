@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import type { CSSProperties, FormEvent } from 'react';
-import { BODENBRUCH, DIFFICULTY_REGISTRY, isCarrierScene, HORDE_SIZES, MAX_PLAYERS, NET, PLAYER, TEAM_COLORS, PLAYER_MOTION, planetWeather } from '@freefall/shared';
+import type { FormEvent } from 'react';
+import { BODENBRUCH, DIFFICULTY_REGISTRY, isCarrierScene, HORDE_SIZES, MAX_PLAYERS, NET, PLAYER_MOTION, planetWeather } from '@freefall/shared';
 import { Game, INITIAL_STATUS } from '../game/Game.ts';
 import type { GameStatus } from '../game/Game.ts';
 import { DAMAGE_DIRECTIONS } from '../game/DamageFeedback.ts';
@@ -8,7 +8,8 @@ import { cameraPreferences } from '../rendering/CameraPreferences.ts';
 import { initialQuality, rememberQuality } from '../rendering/GraphicsQuality.ts';
 import type { QualityName } from '../rendering/GraphicsQuality.ts';
 import type { MissionDebugAction } from '@freefall/shared';
-import { VitalSigns, WeaponReadout } from './EquipmentHud.tsx';
+import { CombatLoadout } from './EquipmentHud.tsx';
+import { TeamPanel } from './FieldHud.tsx';
 import { MissionHud, seconds } from './MissionHud.tsx';
 import { CarrierConsole, OperatorManifest } from './CarrierConsole.tsx';
 import type { GameMode, JoinMode } from '../networking/Match.ts';
@@ -268,6 +269,9 @@ export function App() {
   const reward = result?.rewards.find(({ operatorId }) => operatorId === status.ownId);
   const objectivesCompleted = result?.objectives?.filter(({ state }) => state === 'complete').length;
   const own = status.players.find((player) => player.id === status.ownId);
+  // TAB (held) shows mission intel and the team's equipment; ESC releases the pointer and opens the pause menu.
+  const [intel, setIntel] = useState(false);
+  const showIntel = intel && status.locked && !result;
 
   useEffect(() => {
     if (!surface.current) return;
@@ -292,9 +296,25 @@ export function App() {
         setTelemetry((show) => !show);
       }
     };
+    const tab = (event: KeyboardEvent) => {
+      if (event.code !== 'Tab') return;
+      if (event.type === 'keyup') { setIntel(false); return; }
+      if (!document.pointerLockElement) return;
+      event.preventDefault();
+      setIntel(true);
+    };
+    const release = () => setIntel(false);
     window.addEventListener('keydown', toggle);
+    window.addEventListener('keydown', tab);
+    window.addEventListener('keyup', tab);
+    window.addEventListener('blur', release);
+    document.addEventListener('pointerlockchange', release);
     return () => {
       window.removeEventListener('keydown', toggle);
+      window.removeEventListener('keydown', tab);
+      window.removeEventListener('keyup', tab);
+      window.removeEventListener('blur', release);
+      document.removeEventListener('pointerlockchange', release);
       game.current?.dispose();
       game.current = null;
     };
@@ -350,7 +370,7 @@ export function App() {
     </header>
 
     {telemetry && <Metrics status={status}/>}
-    {status.locked && mission && <MissionHud mission={mission} status={status}/>}
+    {status.locked && mission && <MissionHud mission={mission} status={status} intel={showIntel}/>}
     {status.locked && !result && status.notice && <div className="combat-notice" role="status"><div>{status.notice}</div></div>}
     {!status.locked && <section className={result ? 'operations results' : 'operations'}
       aria-label={result ? 'Einsatzergebnis' : active ? 'Einsatzsteuerung' : 'Koop-Lobby'}>
@@ -466,30 +486,14 @@ export function App() {
     {active && status.respawn > 0 && <div className="respawn" role="status"><strong>Außer Gefecht</strong><span>Respawn in {status.respawn.toFixed(1)} s</span></div>}
 
     {!result && <footer className="bottom">
-      {active && own && <div className="operator-hud">
-        {status.locked && !cinematic && <VitalSigns player={own} tick={status.serverTick}/>}
-        <div className="squad" aria-label="Spieler im Einsatz">
-        {Array.from({ length: MAX_PLAYERS }, (_, slot) => {
-          const player = status.players.find((entry) => entry.slot === slot);
-          const secured = player && mission?.extraction?.securedIds.includes(player.id);
-          const connection = player && mission?.operators.find((op) => op.id === player.id);
-          return <div className={`squad-slot ${player ? '' : 'vacant'}`} key={slot} style={{ '--slot-color': `#${TEAM_COLORS[slot].toString(16)}` } as CSSProperties}>
-            <div className="slot-index">{slot + 1}</div>
-            <div className="slot-body"><span>{!player ? 'Frei' : player.id === status.ownId ? 'Du' : `OP ${String(slot + 1).padStart(2, '0')}`}</span>
-              {player && <small>{connection?.connected === false ? 'Offline' : !player.hp ? 'Gefallen' :
-                mission?.extraction ? secured ? 'Gesichert' : 'Ungesichert' : ''}</small>}
-              <div className="slot-hp"><i style={{ width: `${(player?.hp ?? 0) / PLAYER.health * 100}%` }}/></div></div>
-            {player && <strong className="hp">{player.hp}</strong>}
-          </div>;
-        })}
-      </div></div>}
+      {active && own && (!status.locked || !cinematic) && <TeamPanel status={status} mission={mission} expanded={showIntel}/>}
       {!status.locked && !cinematic && <div className="controls">
         <span><kbd>{(['MOVE_FORWARD', 'MOVE_LEFT', 'MOVE_BACKWARD', 'MOVE_RIGHT'] as const).map((action) => bindings.label(action)).join(' ')}</kbd> Bewegen</span>
         <span><kbd>{bindings.label('CROUCH')}</kbd> Ducken</span><span><kbd>{bindings.label('DIVE')}</kbd> Hechtsprung</span>
         <span><kbd>{bindings.label('STAND_UP')}</kbd> Aufstehen</span><span><kbd>{bindings.label('AIM')}</kbd> Zielen</span>
         <span><kbd>{bindings.label('FIRE')}</kbd> Feuern</span><span><kbd>Esc</kbd> Menü</span>
       </div>}
-      {active && own && status.locked && !inCarrier && !cinematic && <WeaponReadout player={own} tick={status.serverTick}
+      {active && own && status.locked && !inCarrier && !cinematic && <CombatLoadout player={own} tick={status.serverTick}
         dryFireTick={status.dryFireTick} resupply={status.missionRoom}/>}
     </footer>}
   </main>;

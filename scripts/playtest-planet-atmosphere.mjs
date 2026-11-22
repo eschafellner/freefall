@@ -110,7 +110,7 @@ try {
     assert.ok(look, planet);
     placeOperator(look.x + 12, look.z + 16, Math.atan2(-12, 16));
     if (!(await page.locator('.in-game').count())) await enter('Einsatz betreten');
-    await page.locator('.field-objectives').getByText(mission.plan.objectives[0].definition.label).waitFor();
+    await page.locator('.field-objectives').getByText(mission.plan.objectives[0].definition.label).waitFor({ state: 'attached' });
     await delay(450);
     if (weatherPlaytest) {
       assert.equal(mission.atmosphere.timeOfDay, time);

@@ -9,3 +9,15 @@ Die Lebensanzeige hält „Kritisch“ als Text sichtbar. Schadenspfeile sind ei
 - [Serverbestätigte Treffer](SERVER_VALIDATED_HIT_FEEDBACK.md)
 - [Schadensrichtung und Eigenbeschuss](OPERATOR_DAMAGE_FEEDBACK.md)
 - [Priorisierte Meldungen](MISSION_NOTIFICATION_SYSTEM.md)
+
+## Einsatz-HUD (Überarbeitung)
+
+Im Feld bleiben nur Trupp, eigene Ausrüstung und dringende Hinweise sichtbar. Ziele und Lage öffnen sich mit **Tab** (gedrückt halten). **Esc** gibt den Mauszeiger frei und öffnet das Pausenmenü.
+
+- **Links, Trupp (`TeamPanel`, `FieldHud.tsx`).** Eine Karte pro Operator mit Teamfarbe, Name, Lebensbalken und Status (Offline, Gefallen, Gesichert). Level und Rang sind Platzhalter (`OPERATOR_RANK`: Level 1 · Operator), bis es Fortschritt gibt. Mit Tab zeigt jede Karte die Ausrüstung: beide Waffen mit Magazin und Reserve, Granaten und Heilstims.
+- **Rechts unten, eigene Ausrüstung (`CombatLoadout`, `EquipmentHud.tsx`).** Lebenspunkte und Heilstims oben, darunter die gezogene Waffe groß mit Icon, Munition, Reservemagazinen und Magazinbalken. Die geholsterte Waffe und die Granaten folgen als kompakte Zeilen. Nahkampf bleibt belegt, erscheint aber nicht im HUD. Nachlade- und Aktionsfortschritt sowie Munitionshinweise stehen unter der Waffe.
+- **Oben Mitte (`FieldAlerts`).** Nur dringende Hinweise: Extraktionstimer, Ballon einsetzen, Schwarmdurchbrüche, dazu der Hinweis „Tab Einsatzinfo“.
+- **Tab-Übersicht (`IntelOverlay`).** Missionsname, Fortschritt der Primärziele, Zielliste mit Status und die Lageparameter: Bedrohung, Einsatzzeit, Planet, Schwierigkeit, Tageszeit, Wetter (mit Telemetrie), aktive Nester, Durchbrüche, Zustand des Albatross und Sammelpunkt.
+- **Icons (`HudIcons.tsx`).** Jede Waffe und jedes Ausrüstungsteil hat ein eigenes SVG-Icon, verknüpft über die Waffen-ID. Unbekannte Waffen fallen auf das Icon ihres Slots zurück.
+
+`scripts/playtest-field-hud.mjs` landet direkt im Einsatz und nimmt das HUD normal und mit gehaltener Tab-Taste auf.

@@ -174,7 +174,7 @@ try {
       assert.ok(mission.debug(own.id, 'land'));
       assert.ok(mission.debug(own.id, 'weather:' + weather));
       await enter(page);
-      await page.locator('.field-objectives').getByText(mission.plan.objectives[0].definition.label).waitFor();
+      await page.locator('.field-objectives').getByText(mission.plan.objectives[0].definition.label).waitFor({ state: 'attached' });
       if (!(await page.locator('[data-audio]').count())) await page.keyboard.press('F2');
       const world = missionGround(mission.definition.world);
       const center = mission.definition.world.patrolRegions[0];

@@ -269,9 +269,7 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
 .readout > strong { margin: 4px 0; }
 .kit-progress { margin-top: 5px; color: #e3cea2; }
 .kit-progress progress { accent-color: #d6be8d; }
-.in-game .squad-slot.vacant { display: none; }
 .slot-body small { display: block; font: 10px var(--mono); color: #e7cc9f; }
-.in-game .squad { grid-template-columns: repeat(2, minmax(85px, 1fr)); max-width: 250px; }
 .aiming .field-orders:not(:has(.extraction-orders)) { opacity: .8; }
 @media (max-width: 600px) {
   .in-game .bottom { gap: 6px; inset-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right)); }
@@ -322,3 +320,120 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
 .audio-lab fieldset { display: flex; flex-wrap: wrap; align-items: center; gap: .8em; margin: 1em 0; }
 .audio-lab label { display: inline-flex; align-items: center; gap: .5em; }
 .audio-lab output { display: block; min-height: 2em; }
+
+/* ── Field HUD: team left, kit right, intel on TAB ─────────────────────────────────────────────── */
+.freefall { --hud-ink: #eef1e8; --hud-dim: #9fb0aa; --hud-line: #ffffff1f; --hud-glass: linear-gradient(100deg, #0b1214d9, #0b121499 70%, #0b121400); }
+.kit-icon { width: 46px; height: 17px; flex: none; color: #dfe6dd; filter: drop-shadow(0 1px 1px #0008); }
+.kit-icon.large { width: 92px; height: 34px; color: #f6f3e6; }
+.pips { display: inline-flex; gap: 3px; }
+.pips i { width: 7px; height: 7px; transform: skewX(-18deg); background: #ffffff24; }
+.pips i.on { background: var(--accent); box-shadow: 0 0 6px #f2b46466; }
+
+/* Team */
+.squad.team { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; width: min(300px, 34vw); pointer-events: none; align-self: flex-end; }
+.team-heading { display: flex; justify-content: space-between; font: 600 10px var(--mono); letter-spacing: .18em; text-transform: uppercase;
+  color: var(--hud-dim); padding: 0 2px 3px; border-bottom: 1px solid var(--hud-line); }
+.team-heading b { color: var(--hud-ink); font-weight: 600; }
+.member { position: relative; padding: 8px 14px 9px 15px; background: var(--hud-glass); color: var(--hud-ink);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+.member::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--slot-color); box-shadow: 0 0 10px var(--slot-color); }
+.member.own { background: linear-gradient(100deg, #17221fe6, #12191899 70%, #0b121400); }
+.member.down, .member.offline { opacity: .62; }
+.member-head { display: flex; align-items: center; gap: 10px; }
+.member-slot { font: 700 18px var(--mono); color: var(--slot-color); min-width: 14px; }
+.member-name { display: grid; flex: 1; min-width: 0; }
+.member-name strong { font-size: 15px; font-weight: 700; letter-spacing: .02em; }
+.member-name small { font: 10px var(--mono); color: var(--hud-dim); letter-spacing: .06em; }
+.member-state { font: normal 600 9px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: #f0c48b; }
+.member .hp { font: 700 17px var(--mono); }
+.member-hp { height: 4px; margin-top: 7px; background: #ffffff1c; }
+.member-hp i { display: block; height: 100%; background: var(--slot-color); transition: width .25s; }
+.member.down .member-hp i { background: #d0705a; }
+.member-kit { list-style: none; margin: 9px 0 0; padding: 8px 0 0; border-top: 1px solid var(--hud-line); display: grid; gap: 5px; }
+.member-kit li { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 9px; font-size: 11px; color: var(--hud-dim); }
+.member-kit li.drawn { color: var(--hud-ink); }
+.member-kit li b { font: 600 10px var(--mono); color: inherit; }
+.member-kit .kit-icon { width: 40px; height: 15px; }
+.squad.team.expanded .member { clip-path: none; background: linear-gradient(100deg, #0b1214f0, #0b1214c4 80%, #0b121488); }
+
+/* Own kit, bottom right */
+.loadout { display: grid; gap: 8px; width: min(330px, 40vw); margin-left: auto; pointer-events: none; color: var(--hud-ink); }
+.loadout .vitals, .loadout .readout { max-width: none; min-width: 0; border: 0; padding: 10px 14px; text-align: left;
+  background: linear-gradient(260deg, #0b1214dd, #0b121499 70%, #0b121400); clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%); }
+.loadout .vital-heading { display: flex; align-items: baseline; justify-content: space-between; }
+.loadout .vital-heading strong { font: 700 28px/1 var(--mono); color: var(--hud-ink); }
+.loadout .vital-heading small { font: 600 11px var(--mono); color: var(--hud-dim); }
+.vital-label { font: 600 10px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--hud-dim); }
+.vitals.critical .vital-label, .vitals.critical .vital-heading strong { color: #ff9f86; }
+.health-bar { height: 6px; margin: 7px 0 4px; background: #ffffff1c; transform: skewX(-18deg); }
+.health-bar i { display: block; height: 100%; background: linear-gradient(90deg, #8fcf9f, #d6f0c8); transition: width .25s; }
+.vitals.critical .health-bar i { background: linear-gradient(90deg, #e0674c, #ffb08f); }
+.kit-row { display: grid; grid-template-columns: 46px 1fr auto auto; align-items: center; gap: 9px; padding-top: 6px; font-size: 12px; }
+.kit-row b { font: 600 11px var(--mono); color: var(--hud-dim); }
+.kit-row.holstered, .kit-row.locked { color: var(--hud-dim); }
+.kit-row.holstered { grid-template-columns: 46px 1fr auto; border-top: 1px solid var(--hud-line); margin-top: 8px; padding-top: 8px; }
+.kit-row.posture { grid-template-columns: 1fr auto; font: 11px var(--mono); }
+.kit-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kit-name kbd { margin-right: 4px; }
+.weapon-active { display: flex; align-items: center; gap: 12px; }
+.weapon-meta { display: grid; flex: 1; justify-items: end; gap: 2px; min-width: 0; }
+.weapon-meta .kit-name { font-size: 12px; color: var(--hud-dim); max-width: 100%; }
+.loadout strong.ammo { display: flex; align-items: baseline; gap: 4px; margin: 0; font: 700 34px/1 var(--mono); color: #fff6e4; }
+.loadout strong.ammo small { font: 600 13px var(--mono); color: var(--hud-dim); }
+.loadout strong.ammo em { margin-left: 8px; font: normal 600 11px var(--mono); color: var(--accent); letter-spacing: .08em; }
+.loadout strong.ammo.low { color: #ffd38e; }
+.loadout strong.ammo.empty { color: #ff9a7a; }
+.mag-bar { height: 3px; margin-top: 7px; background: #ffffff18; }
+.mag-bar i { display: block; height: 100%; background: var(--accent); }
+.loadout .kit-progress { color: #f1d9a6; font: 11px var(--mono); }
+.loadout .kit-progress progress { height: 4px; }
+
+/* Alerts and TAB hint */
+.field-alerts { position: absolute; top: 94px; left: 50%; transform: translateX(-50%); display: grid; justify-items: center; gap: 5px; pointer-events: none; }
+.field-alert { display: flex; gap: 12px; align-items: baseline; padding: 6px 22px; color: var(--hud-ink);
+  background: linear-gradient(90deg, #0b121400, #0b1214e0 18%, #0b1214e0 82%, #0b121400); font-size: 12px; }
+.field-alert span { font: 600 10px var(--mono); letter-spacing: .16em; text-transform: uppercase; }
+.field-alert.extract span { color: #9fe0bf; }
+.field-alert.warn span { color: #ffbe83; }
+.field-alert strong { font: 600 12px var(--mono); }
+.intel-hint { font: 10px var(--mono); color: #ffffffa0; letter-spacing: .08em; text-shadow: 0 1px 2px #000; }
+.intel-hint kbd { font-size: 9px; padding: 1px 4px; }
+
+/* Intel overlay (TAB) */
+.intel { position: absolute; z-index: 3; left: 50%; top: 47%; width: min(780px, calc(100vw - 2 * min(320px, 36vw) - 40px));
+  transform: translate(-50%, -48%) scale(.98); opacity: 0; visibility: hidden; transition: opacity .12s, transform .12s, visibility 0s .12s;
+  pointer-events: none; color: var(--hud-ink); background: linear-gradient(160deg, #0d1618f2, #0a1113e8); backdrop-filter: blur(6px);
+  border-top: 2px solid var(--accent); box-shadow: 0 30px 80px #0009; }
+.intel.open { opacity: 1; visibility: visible; transform: translate(-50%, -50%); transition: opacity .12s, transform .12s; }
+[data-reduced-motion='true'] .intel { transition: none; }
+.intel-head { padding: 18px 24px 14px; border-bottom: 1px solid var(--hud-line); }
+.intel-head > span { font: 600 10px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+.intel-head h2 { margin: 4px 0 12px; font-size: clamp(22px, 2.4vw, 32px); letter-spacing: -.02em; }
+.intel-progress, .threat { position: relative; display: flex; justify-content: space-between; padding-bottom: 9px; font: 600 11px var(--mono);
+  color: var(--hud-dim); letter-spacing: .1em; text-transform: uppercase; }
+.intel-progress b { color: var(--hud-ink); }
+.intel-progress::after, .threat::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: #ffffff18; }
+.intel-progress i, .threat i { position: absolute; left: 0; bottom: 0; height: 3px; z-index: 1; background: var(--accent); }
+.intel-body { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; padding: 16px 24px 22px; }
+.intel h3 { margin: 0 0 12px; font: 600 10px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--hud-dim); }
+.intel .field-objectives { padding: 0; gap: 11px; }
+.intel .field-objectives li { grid-template-columns: 12px 1fr auto; gap: 11px; font-size: 13px; align-items: center; }
+.intel .field-objectives li i { width: 9px; height: 9px; border: 2px solid var(--accent); transform: rotate(45deg); }
+.intel .field-objectives li.complete i { background: #9fe0bf; border-color: #9fe0bf; }
+.intel .field-objectives li.failed i { border-color: #ff9a7a; }
+.intel .field-objectives li.defending i { background: var(--accent); }
+.intel .field-objectives li em { font: normal 9px var(--mono); color: var(--hud-dim); letter-spacing: .1em; text-transform: uppercase; margin-left: 6px; }
+.intel .field-objectives small { font: 11px var(--mono); color: var(--hud-dim); }
+.intel .field-objectives li.complete small { color: #9fe0bf; }
+.threat { margin-bottom: 12px; }
+.threat b { color: #ffbe83; }
+.threat i { background: linear-gradient(90deg, #f2b464, #ff7f5c); }
+.intel-params { display: grid; margin: 0; }
+.intel-params div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid #ffffff10; font-size: 12px; }
+.intel-params dt { color: var(--hud-dim); }
+.intel-params dd { margin: 0; font: 600 12px var(--mono); text-align: right; }
+@media (max-width: 900px) {
+  .intel { width: calc(100vw - 32px); }
+  .intel-body { grid-template-columns: 1fr; }
+  .squad.team, .loadout { width: min(280px, 46vw); }
+}

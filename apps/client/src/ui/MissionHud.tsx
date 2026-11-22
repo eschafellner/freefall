@@ -1,33 +1,26 @@
 import { bindings } from '../input/Bindings.ts';
-import { BALLOON, DIFFICULTY_REGISTRY, MISSION_REGISTRY, NET, PLANET_REGISTRY, distanceSquared, isCarrierScene, isOptionalObjective, missionObjectives } from '@freefall/shared';
+import { DIFFICULTY_REGISTRY, MISSION_REGISTRY, PLANET_REGISTRY, isCarrierScene } from '@freefall/shared';
 import type { DeploymentPhase, MissionSnapshot } from '@freefall/shared';
 import type { GameStatus } from '../game/Game.ts';
 import { OperatorManifest } from './CarrierConsole.tsx';
+import { FieldAlerts, IntelOverlay, seconds } from './FieldHud.tsx';
+
+export { seconds };
 
 const phaseText: Partial<Record<DeploymentPhase, string>> = {
   DOCKED: 'Am Carrier angedockt', BOARDING: 'Trupp an Bord', LOCKED: 'Rampe verriegelt', DROPPING: 'Fallflug', ATMOSPHERIC_ENTRY: 'Atmosphäreneintritt',
   BRAKING: 'Bremsschub', TOUCHDOWN: 'Aufsetzen',
 };
 
-export function seconds(until: number, status: GameStatus): number {
-  return Math.max(0, Math.ceil((until - Math.max(status.mission?.tick ?? 0, status.serverTick)) / NET.tickHz));
-}
-
-export function MissionHud({ mission, status }: { mission: MissionSnapshot; status: GameStatus }) {
+/** Mission overlays. In the field only urgent alerts stay on screen; objectives and parameters open with TAB. */
+export function MissionHud({ mission, status, intel = false }: { mission: MissionSnapshot; status: GameStatus; intel?: boolean }) {
   const name = mission.plan?.displayName ?? MISSION_REGISTRY.get(mission.missionId)?.displayName;
   if (!name || mission.result) return null;
-  const objectives = missionObjectives(mission);
   const difficulty = DIFFICULTY_REGISTRY.get(mission.difficultyId);
   const selection = mission.selection;
   const own = status.players.find((player) => player.id === status.ownId);
   const carrier = isCarrierScene(mission.state, mission.phase);
   const deployment = mission.state === 'DEPLOYMENT';
-  const extraction = mission.extraction;
-  const remaining = extraction ? seconds(extraction.endsAt, status) : 0;
-  const tethered = extraction?.method === 'balloon' && extraction.securedIds.includes(status.ownId);
-  const completed = mission.objectives.filter((obj) => obj.state === 'complete' &&
-    objectives.some((item) => item.id === obj.id && !isOptionalObjective(item))).length;
-  const total = objectives.filter((item) => !isOptionalObjective(item)).length;
 
   return <>
     {carrier && !deployment && <aside className="field-orders carrier-orders">
@@ -45,43 +38,10 @@ export function MissionHud({ mission, status }: { mission: MissionSnapshot; stat
       <strong>{phaseText[mission.phase]}</strong><p>{name} · {PLANET_REGISTRY.get(selection?.planetId ?? '')?.displayName}</p>
       {mission.phaseUntil > 0 && <p>{seconds(mission.phaseUntil, status)} s</p>}
     </div>}
-    {!carrier && !deployment && <aside className="field-orders" aria-label="Missionsziele">
-      <div className="field-heading"><strong>{name}</strong><span>{difficulty?.displayName}</span></div>
-      <div className="field-counter"><span>{mission.primaryObjectivesCompleted ? 'EXTRAKTION' : 'PRIMÄRZIELE'}</span><strong>{completed} / {total}</strong></div>
-      <ol className="field-objectives">
-        {objectives.map((objective) => {
-          const entry = mission.objectives.find((item) => item.id === objective.id);
-          if (!entry) return null;
-          const detail = entry.state === 'failed' ? 'Gescheitert' : entry.state === 'cancelled' ? 'Beendet' :
-            objective.kind === 'destroy-nests' ? `${entry.progress} / ${objective.count}`
-            : entry.state === 'defending' ? (entry.completeAt ? `Verbindung · ${seconds(entry.completeAt, status)} s` :
-              `Relais besetzen · ${Math.round(entry.progress * 100)} %`)
-            : entry.state === 'complete' ? 'Erfüllt' : entry.state === 'locked' ? 'Gesperrt' : 'Bereit';
-          return <li key={entry.id} className={entry.state}>
-            <i aria-hidden="true">{entry.state === 'complete' ? '✓' : '◇'}</i><span>{objective.label}</span><small>{detail}{isOptionalObjective(objective) && ' · optional'}</small>
-          </li>;
-        })}
-      </ol>
-      {mission.activeBreaches > 0 && <small className="breach-warning">Schwarmdurchbrüche aktiv · {mission.activeBreaches}</small>}
-      {mission.albatross && <div className="field-extract">
-        <span>ALBATROSS 02</span>
-        <strong>{mission.albatross.lifecycleState === 'DESTROYED' ? 'Zerstört' : mission.albatross.extractionAvailable ? 'Flugfähig' : 'Flugunfähig'} ·
-          {mission.albatross.thrusters.filter(({ state }) => state !== 'DESTROYED').length}/4 Düsen</strong>
-      </div>}
-      {mission.primaryObjectivesCompleted && <div className="extraction-orders">
-        <strong>Hauptziele erfüllt</strong>
-        {extraction ? <>
-          <span>{extraction.method === 'balloon' ? BALLOON.displayName : 'Albatross 02'} · {extraction.securedIds.length} gesichert</span>
-          <span>{extraction.phase === 'LIFT' ? 'Abflug' : extraction.phase === 'APPROACH' ? 'Rettungsjäger im Anflug'
-            : extraction.method === 'balloon' ? `Abholung in ${remaining} s` : `Start in ${remaining} s`}</span>
-          {extraction.method === 'balloon' && extraction.phase === 'COUNTDOWN' && extraction.phaseAt > extraction.startedAt &&
-            <strong>Neuer Anflug · Am Seil sichern</strong>}
-          {tethered && own && distanceSquared(extraction, own) >= (extraction.radius - 1.25) ** 2 && <strong>Seil gespannt · Zonengrenze</strong>}
-        </> : <>
-          <span><kbd>{bindings.label('BALLOON')}</kbd> Extraktionsballon {mission.plan ? `am Sammelpunkt ${mission.plan.extraction.balloon.label} einsetzen` : 'einsetzen'}</span>
-        </>}
-      </div>}
-    </aside>}
+    {!carrier && !deployment && <>
+      <FieldAlerts mission={mission} status={status}/>
+      <IntelOverlay mission={mission} status={status} open={intel}/>
+    </>}
     {status.interaction && !deployment && <div className="interact-hint"><kbd>{bindings.label('INTERACT')}</kbd> {status.interaction}</div>}
     {own?.hp === 0 && <div className="respawn" role="status"><strong>Außer Gefecht</strong><span>Der Einsatztrupp bleibt im Feld.</span></div>}
   </>;

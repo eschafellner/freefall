@@ -215,7 +215,7 @@ try {
   }
   await page.setViewportSize({width:760,height:460});
   await page.locator('.readout').getByText('0/2', {exact:true}).waitFor();
-  for (const selector of ['.vitals','.readout','.squad','.field-orders']) {
+  for (const selector of ['.vitals','.readout','.squad','.field-alerts']) {
     const box = await page.locator(selector).boundingBox();
     assert.ok(box && box.x>=0 && box.y>=0 && box.x+box.width<=761 && box.y+box.height<=461, selector);
   }

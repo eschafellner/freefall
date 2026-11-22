@@ -15,6 +15,8 @@ export interface AudioTransport {
 export { EventHistory as AudioEventHistory } from '../networking/EventHistory.ts';
 
 const CARRIER_ALARM_SOUND = false;
+/** Drop sequence effects (clamps, rumble, re-entry roar, retro burn, lander engine loop, touchdown slam). Off: only the score plays. */
+const DEPLOYMENT_SOUND = false;
 const AIR_RANGE = [ALBATROSS.halfWidth * 3, 152] as const;
 
 export class MissionAudio {
@@ -64,7 +66,7 @@ export class MissionAudio {
   snapshot(state: MissionSnapshot): void {
     const previous = this.previous;
     this.previous = state;
-    this.flight.update(state);
+    if (DEPLOYMENT_SOUND) this.flight.update(state);
     if (!previous) return;
     if (state.result && state.result.id !== previous.result?.id) this.alert(state.result.extractionSucceeded ? 'confirm' : 'radio', true);
     else if (state.extraction && (state.extraction.method !== previous.extraction?.method ||
@@ -94,7 +96,7 @@ export class MissionAudio {
         break;
       }
       case 'AlbatrossTouchdown':
-        this.hull(event.position, listener, world, .88, .76);
+        if (DEPLOYMENT_SOUND) this.hull(event.position, listener, world, .88, .76);
         break;
       case 'AlbatrossDamaged':
         if (state.albatross) this.hull(state.albatross, listener, world, .56, .92);
@@ -110,7 +112,7 @@ export class MissionAudio {
     const flying = state.state === 'DEPLOYMENT' && state.phase !== 'DOCKED';
     const lifting = state.extraction?.method === 'albatross' && state.extraction.phase === 'LIFT';
     const operational = state.albatross?.lifecycleState === 'OPERATIONAL' || state.albatross?.lifecycleState === 'DAMAGED';
-    const ship = !state.result && (flying || lifting || operational) ? transport.ship : undefined;
+    const ship = !state.result && ((flying && DEPLOYMENT_SOUND) || lifting || (operational && state.state !== 'DEPLOYMENT')) ? transport.ship : undefined;
     this.layers.set('ship', ship ? 'lander' : undefined, 'environment',
       (flying || lifting ? .85 : state.albatross?.lifecycleState === 'DAMAGED' ? .23 : .30), 1.2, ship, AIR_RANGE);
     const recovery = state.result ? undefined : transport.recovery;

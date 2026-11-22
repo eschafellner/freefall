@@ -225,7 +225,7 @@ try {
     await page.keyboard.press('Enter');
     await page.locator('.in-game').waitFor();
   }
-  if (mission.plan) await page.locator('.field-objectives').getByText(mission.plan.objectives[0].definition.label).waitFor();
+  if (mission.plan) await page.locator('.field-objectives').getByText(mission.plan.objectives[0].definition.label).waitFor({ state: 'attached' });
   await until(() => mission.snapshot().encounter?.state === 'CALM', 'CALM');
   let wave;
   if (targets[0] > 0 && requireWave) {

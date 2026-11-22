@@ -28,6 +28,8 @@ Die Flugphasen dauern zusammen 606 Ticks, also rund 20 Sekunden statt bisher 8,3
 | `BRAKING` | 150 | Bremsschub ab 140 m über dem Landeplatz mit abklingender Sinkrate bis zu einem kurzen Schweben auf 4 m. Das Fahrwerk fährt aus, die Triebwerke drosseln, der Lander fällt auf sein Fahrwerk. Abwind wirbelt ab 30 m Staub auf. |
 | `TOUCHDOWN` | 96 | Der Aufschlag liegt exakt auf dem Phasenwechsel und damit auf `AlbatrossTouchdown`. Die Federung taucht 0,42 m ein und schwingt gedämpft aus, die Füße bleiben am Boden. Es folgen ein Kamerastoß, ein Druckwellenring, geworfene Trümmer, eine dichte Staubwolke und danach die Rampe. |
 
+**Derzeit stumm** (`DEPLOYMENT_SOUND` in `MissionAudio.ts`): Während der Drop-Sequenz spielt nur die Musik. Klammern, Rumpeln, Eintrittsdröhnen, Bremsschub, der Triebwerks-Loop des Landers und der Aufschlag sind abgeschaltet. Der Leerlauf des gelandeten Albatross und das Triebwerk bei der Albatross-Extraktion bleiben hörbar.
+
 Kamera-Erschütterung und Federung folgen der Einstellung „Wackeln“. Reduzierte Bewegung schaltet Erschütterung, Ring und Trümmer ab. Die Flugeffekte sind gefilterte Rausch- und Oszillatorschichten (`FlightAudio.ts`): Klammern, Fallrumpeln, Eintrittsdröhnen, Bremsschub und der Aufschlag mit Abschalten der Triebwerke. Dazu kommt das bestehende `hull-impact`-Sample. Spawnabstand und Schutzfenster ab Touchdown sind unverändert.
 
 ## Musik
