@@ -1238,5 +1238,338 @@
       "ogg": "33006c82b1b6a71161a0770f5e8ff11aaa9797eb98614cf91c55ab7fd2de185f",
       "mp3": "75f5dc1328a7a2144b771478d0fdcf34f1455915d6d95530d5945b803964cc08"
     }
+  },
+  {
+    "id": "kestrel-shot-1",
+    "source": "weapon-d31",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-d31",
+        "start": 0.495,
+        "seconds": 0.226,
+        "hpfHz": 52,
+        "lpfHz": 13000,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.226,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": 1.48,
+    "rmsDbfs": -31.55,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "f7d4150be913a16259674e45997b8c8e95b5bfbf422b5ecc2e7f29c89faf2deb",
+      "mp3": "316d830920ad68df87be6f5cab9f57ec8670c096ab9d465b63aa45877086c08d"
+    }
+  },
+  {
+    "id": "kestrel-shot-2",
+    "source": "weapon-d30",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-d30",
+        "start": 0.495,
+        "seconds": 0.226,
+        "hpfHz": 52,
+        "lpfHz": 13000,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.226,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": 3.35,
+    "rmsDbfs": -36.16,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "21fc3da1abb88555c342bbf3aa1c04847b669d7c31965275fae512ec76865bf6",
+      "mp3": "cbddf73b883b12065ddaa77880acb746f727daab92fa9e89fafab43db6c60d95"
+    }
+  },
+  {
+    "id": "kestrel-shot-distant",
+    "source": "weapon-d23",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-d23",
+        "start": 0.521,
+        "seconds": 0.24,
+        "hpfHz": 64,
+        "lpfHz": 5400,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.24,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -3.33,
+    "rmsDbfs": -32.56,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "be8f531329b82397a825975180f0dd895450596e573823e7878cbe925e38cc21",
+      "mp3": "8011b348f38c656bc422c5006ba3dd696036d0833d55cf0b7504a05f7d97410b"
+    }
+  },
+  {
+    "id": "p01-shot-1",
+    "source": "weapon-x39",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-x39",
+        "start": 1.402,
+        "seconds": 0.184,
+        "hpfHz": 76,
+        "lpfHz": 13500,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.184,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -4.57,
+    "rmsDbfs": -32.26,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "f54a9ac4bff5848cd3a08ed44bac6cab5a7fa42fa48642e4982bf404bc7796c3",
+      "mp3": "1818a1ef79a0efdf69c843a2f0212644fbc9ecc60e02d85976da97bfd14557d7"
+    }
+  },
+  {
+    "id": "p01-shot-2",
+    "source": "weapon-x39-alt",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-x39-alt",
+        "start": 6.441,
+        "seconds": 0.184,
+        "hpfHz": 76,
+        "lpfHz": 13500,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.184,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -1.88,
+    "rmsDbfs": -31.97,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "9effb142a424ca926920a7bfc10701a38aca92249fda71c8b439bc37ce4530d7",
+      "mp3": "fb51e8aa159d9d9c8192b8df483fa9cf2ab64c0a36f2d4db9bc131715816fd89"
+    }
+  },
+  {
+    "id": "p01-shot-distant",
+    "source": "weapon-x31",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-x31",
+        "start": 5.238,
+        "seconds": 0.236,
+        "hpfHz": 88,
+        "lpfHz": 5500,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.236,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -3.38,
+    "rmsDbfs": -30.47,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "e337071ae6c35b2d00e838afb90776333ab53164f78abc9da4b5b90d8ba2db4b",
+      "mp3": "66e1e6bf01574f58e4978c2876ef7394a95f3e24246bd5eca84d04ae3768322a"
+    }
+  },
+  {
+    "id": "kestrel-mag-out",
+    "source": "weapon-d5",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-d5",
+        "start": 1.218,
+        "seconds": 0.239,
+        "hpfHz": 135,
+        "lpfHz": 10700,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.239,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -3.89,
+    "rmsDbfs": -29.19,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "46edabeb0f4274a5167c79a939fc2a04905fc15ea184a7bb1f2828601ac6e2a5",
+      "mp3": "a23671863b6058517b47cdda3fa8e3b2a9ecd03905a79237e776fcd15ad7164c"
+    }
+  },
+  {
+    "id": "kestrel-mag-in",
+    "source": "weapon-d4",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-d4",
+        "start": 1.254,
+        "seconds": 0.15,
+        "hpfHz": 118,
+        "lpfHz": 10500,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.15,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -1.49,
+    "rmsDbfs": -28.01,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "e330d1c726bf088e240989db5adda493fa0875362b556728723a33bbf846d050",
+      "mp3": "2609b0af2ab5855ab1bc6d3d93427ef007155763c20ad12c924e2781f098c33b"
+    }
+  },
+  {
+    "id": "kestrel-reload-finish",
+    "source": "weapon-d13",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-d13",
+        "start": 0.35,
+        "seconds": 0.15,
+        "hpfHz": 130,
+        "lpfHz": 10100,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.15,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -0.61,
+    "rmsDbfs": -30.59,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "ae7b5fd4d543f1f7322989a7c2deb1bb8ad362919cfd05e1de71e21e9d600043",
+      "mp3": "ec0f71a75f70848d97819bd36a93d774c728b1bed67a1223145a374ac490a15d"
+    }
+  },
+  {
+    "id": "p01-mag-out",
+    "source": "weapon-x5",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-x5",
+        "start": 1.35,
+        "seconds": 0.16,
+        "hpfHz": 155,
+        "lpfHz": 10500,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.16,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -1.53,
+    "rmsDbfs": -31.78,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "60975e65eb18441753981e08647fc542a976a9ee7b7062868b559295f6338527",
+      "mp3": "40e26e0d860da40f32501f946dce61581c968a4359921ad6ba0ec2514d5d0fbe"
+    }
+  },
+  {
+    "id": "p01-mag-in-slide",
+    "source": "weapon-x4",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-x4",
+        "start": 0.874,
+        "seconds": 0.132,
+        "hpfHz": 140,
+        "lpfHz": 11200,
+        "offset": 0
+      },
+      {
+        "source": "weapon-x17",
+        "start": 1.145,
+        "seconds": 0.125,
+        "hpfHz": 140,
+        "lpfHz": 11200,
+        "offset": 0.076
+      }
+    ],
+    "seconds": 0.201,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -1.69,
+    "rmsDbfs": -29.16,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "29cc338ab97d047aed264a512aeb46a67eb21f84bb5b0fbc2af4010d37b3f9e6",
+      "mp3": "37d4a02646778f4d3d72cc8780bcd43f907674d5397dcace8ed812c6a7e0819d"
+    }
+  },
+  {
+    "id": "weapon-switch-foley",
+    "source": "weapon-switch-source",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-switch-source",
+        "start": 2.375,
+        "seconds": 0.144,
+        "hpfHz": 115,
+        "lpfHz": 8500,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.144,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -5.08,
+    "rmsDbfs": -29.17,
+    "peakDbfs": -6.0,
+    "sha256": {
+      "ogg": "4324abe7cb671fc87284555d5cb957f1ba7ff8ba81e93d21787bc447eac748be",
+      "mp3": "f1e28c1e92c307b3accc3abf993735a86b6aef61595de751458103a06b530c51"
+    }
+  },
+  {
+    "id": "weapon-casing-hard",
+    "source": "weapon-casing-source",
+    "category": "weapon",
+    "layers": [
+      {
+        "source": "weapon-casing-source",
+        "start": 0.11,
+        "seconds": 0.142,
+        "hpfHz": 420,
+        "lpfHz": 10800,
+        "offset": 0
+      }
+    ],
+    "seconds": 0.142,
+    "channels": 1,
+    "crossfade": 0,
+    "gainDb": -15.16,
+    "rmsDbfs": -31.0,
+    "peakDbfs": -18.06,
+    "sha256": {
+      "ogg": "c35f9e096617be6e9409d7a0dd1dfe9d2e0394cb020b50ebeb8bc9636b3884e0",
+      "mp3": "19c250d71ab3e11eaf5593243a4a0a8a999871cd87bba4d8a0d77fb0dd6973e7"
+    }
   }
 ]

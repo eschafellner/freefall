@@ -29,7 +29,7 @@ Die Audio-IDs werden als lokale Dateien unter `public/audio` ausgeliefert. Der B
 
 Der Match-Lifecycle beendet beim Verbindungsabbruch Stimmen und Positionsverfolgung. Er behält Context, Einstellungen und den begrenzten Buffer-Cache. Beim Wiederbeitritt werden Mission, Wetter und Sichtposition aus aktuellen Snapshots aufgebaut. Die zuletzt vor dem Abbruch gesehene Tickgrenze unterdrückt alte Ereignisse, der erste Zustand setzt die Basis für Landungen und Missionsphasen. Planetenwechsel mischen Layer über ihre Fade-Zeit und beenden den auslaufenden Source-Node. Dispose schließt den Context und leert Cache und Graph.
 
-Die vorhandene Waffensynthese, eigene Schuss-Prediction, Hall, Echo und Flugphasen-Synthese bleiben Bestandteile der Mischung. Reload nutzt die Ereignisse und Ticks der vorhandenen Waffen. Resupply wird aus dem autoritativen Grant gespielt, mit Weltposition des Containers und einem Signal für den versorgten Operator. Der gelandete Albatross stellt seine Container stationär bereit. Anflug und Abflug folgen dem vorhandenen Deployment und den Extraktionsphasen.
+Seit 7.9A.1 spielen Waffen Aufnahmen über denselben Mixer, die lokale Schuss-Prediction und die bestehenden Hall- und Echo-Sends. Magazin- und Wechselgeräusche folgen bestätigten Operator-Snapshots. Resupply wird aus dem autoritativen Grant gespielt, mit Weltposition des Containers und einem Signal für den versorgten Operator. Der gelandete Albatross stellt seine Container stationär bereit. Anflug und Abflug folgen dem vorhandenen Deployment und den Extraktionsphasen.
 
 Siehe [Waffen-Audio](WEAPON_AUDIO.md), [Mischung](AUDIO_MIXING.md), [räumliches Audio](SPATIAL_AUDIO.md) und [Audio-Asset-Katalog](AUDIO_ASSET_CATALOG.md).
 

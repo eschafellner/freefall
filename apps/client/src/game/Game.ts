@@ -1,6 +1,6 @@
 import {
   ALBATROSS, BALANCE, BASE_LOADOUT, BODENBRUCH, BODENBRUCH_ROOM, CARRIER_CONSOLE, CARRIER_ROOMS, CARRIER_SHIP, CARRIER_WORLD,
-  NET, PLAYER, PLAYER_MOTION, WEAPONS, allowsPostureAction, applyShotRecoil, canSecureExtraction, createRecoilState, distanceSquared, inAlbatross, isCarrierScene,
+  NET, PLAYER, PLAYER_MOTION, WEAPONS, allowsPostureAction, applyShotRecoil, canSecureExtraction, createRecoilState, distanceSquared, impactSurface, inAlbatross, isCarrierScene,
   isOperatorGrounded, missionGround, missionObjectives, postureCollider, postureProgress,
   nextShotAt, recoverRecoil, resetRecoil, restoreWorld,
 } from '@freefall/shared';
@@ -122,6 +122,7 @@ export interface GameStatus {
   audio: { voices: number; peak: number; dropped: number; diagnostics?: ReturnType<AudioEngine['metrics']> & {
     planet?: string; weather?: string; wind?: string; rate: number; enemyMs: number; enemyPeakMs: number; updateMs: number;
     windups: number; impacts: number;
+    weapon: ReturnType<WeaponAudio['metrics']>;
   } };
   motion?: MotionTelemetry;
 }
@@ -177,10 +178,9 @@ export class Game {
   private recoilFireAt = 0;
   private recoilSlot: WeaponSlot = 'primary';
   /** Unacknowledged predicted fire cues, matched in firing order within the same life and weapon slot. */
-  private readonly predictedShots: { seq: number; life: number; slot: WeaponSlot }[] = [];
+  private readonly predictedShots: { seq: number; life: number; slot: WeaponSlot; audible: boolean }[] = [];
   /** Own shot echoes received since the last player snapshot (that snapshot's ammo does not include them yet). */
   private echoedShots = 0;
-  private readonly lastActions = new Map<string, string | undefined>();
   private tickAt = 0;
   private readonly notices = new PresentationNotices();
   private readonly missionPresentation = new MissionPresentation(this.notices);
@@ -272,19 +272,9 @@ export class Game {
             this.recoilSlot = own.equipment.slot;
             resetRecoil(this.recoil);
           }
-          for (const player of packet.players) {
-            const action = player.equipment?.action;
-            const last = this.lastActions.get(player.id);
-            if (this.status.ready && this.lastActions.has(player.id) && action !== last &&
-                (action === 'primary' || action === 'secondary')) {
-              this.weaponAudio.switchWeapon(player.id, player, this.listener, player.id === this.status.ownId);
-            }
-            this.lastActions.set(player.id, action);
-          }
+          this.weaponAudio.handling(packet, this.listener, this.status.ownId, true,
+            this.status.ready && packet.tick > this.audioFloor && !this.incompatibleWorld && !this.status.mission?.result);
           this.movementAudio.prune(packet.players);
-          for (const id of this.lastActions.keys()) {
-            if (!packet.players.some((player) => player.id === id)) this.lastActions.delete(id);
-          }
           if (own.life !== this.lastLife) {
             if (this.lastLife) this.resetHitFeedback(packet.tick);
             this.input.yaw = own.yaw;
@@ -390,10 +380,15 @@ export class Game {
           const lateLocalEcho = own && shot.tick <= this.tick;
           const pending = own && !lateLocalEcho ? this.predictedShots.findIndex((entry) => entry.life === life && entry.slot === slot) : -1;
           const predicted = pending !== -1 || lateLocalEcho;
+          const audible = lateLocalEcho || (pending !== -1 && this.predictedShots[pending].audible);
+          const shotTick = shot.tick;
           if (pending !== -1) this.predictedShots.splice(pending, 1);
           if (own && !lateLocalEcho) this.echoedShots++;
           this.view.shot(shot.slot === undefined ? { ...shot, slot } : shot, shooter, own, predicted, now, () => {
-            if (!predicted) this.weaponAudio.shot(slot, shot.shooter, { x: shot.fromX, y: shot.fromY, z: shot.fromZ }, this.listener, own);
+            if (!audible && this.status.ready && shotTick > this.impactFloor && !this.status.mission?.result) {
+              this.weaponAudio.shot(slot, shot.shooter, { x: shot.fromX, y: shot.fromY, z: shot.fromZ },
+                this.listener, own, own && slot === 'primary' && this.hardCasingFloor());
+            }
             this.impactAudio.play(shot, this.audioListener, own || shot.ally === this.status.ownId, performance.now());
           });
           if (this.telemetry) {
@@ -416,7 +411,6 @@ export class Game {
           this.combatPresentation.suspend(this.audioFloor);
           this.resetAudio();
           this.missionPresentation.reset();
-          this.lastActions.clear();
           this.prediction.awaitSnapshot();
           this.predictedShots.length = 0;
           this.resetHitFeedback(this.audioFloor);
@@ -564,13 +558,8 @@ export class Game {
         }
         if (this.telemetry) console.debug('[friendly-fire]', event);
       } else if (event.type === 'reload') {
-        const player = this.status.players.find((p) => p.id === event.operator);
-        if (!player) continue;
-        const weapon = BASE_LOADOUT.weapons[event.slot];
-        const removal = weapon.reloadRemovalTicks / NET.tickHz;
-        const chamber = (weapon.reloadTicks - weapon.reloadInsertionTicks) / NET.tickHz * .6;
-        this.weaponAudio.reload(event.operator, event.slot, event.phase, player, this.listener, event.operator === ownId, removal, chamber);
-        if (event.operator === ownId && event.phase === 'MAGAZINE_INSERTION' && event.discarded > 0)
+        if (event.operator === ownId && this.status.players.some((p) => p.id === event.operator) &&
+            event.phase === 'MAGAZINE_INSERTION' && event.discarded > 0)
           this.notices.offer(`Magazin gewechselt · ${event.discarded} Schuss verworfen`, 'information', now, 1700);
       } else if (event.type === 'resupply') {
         const container = this.status.mission?.albatross?.supply?.find(({ id }) => id === event.container);
@@ -607,16 +596,25 @@ export class Game {
     if (!allowsPostureAction(this.prediction.posture, 'fire') || !input.fire || busy || ammo <= 0 || this.recoilTick < this.recoilFireAt) return;
     applyShotRecoil(this.recoil, recoil, spread, this.recoilTick);
     this.recoilFireAt = nextShotAt(this.recoilFireAt, this.recoilTick, weapon.fireInterval);
-    this.predictedShots.push({ seq: input.seq, life: own.life, slot });
+    const listener = this.listener;
+    const audible = this.weaponAudio.shot(slot, this.status.ownId, listener, listener, true,
+      slot === 'primary' && this.hardCasingFloor());
+    this.predictedShots.push({ seq: input.seq, life: own.life, slot, audible });
     if (this.predictedShots.length > 64) this.predictedShots.shift();
     this.view.predictFire(own, slot, now);
-    this.weaponAudio.shot(slot, this.status.ownId, this.listener, this.listener, true);
+  }
+
+  private hardCasingFloor(): boolean {
+    const { x, z } = this.prediction.position;
+    const surface = impactSurface(this.prediction.world, x, z);
+    return surface === 'metal' || surface === 'concrete' || surface === 'rock' || surface === 'frozen-rock' || surface === 'ice';
   }
 
   lock(): void {
     if (!this.match || !this.status.ready || this.incompatibleWorld || (this.status.missionRoom &&
         (!this.status.mission || this.status.mission.result))) return;
     this.audio.resume();
+    this.weaponAudio.warm();
     if (typeof this.view.canvas.requestPointerLock !== 'function') {
       this.error('Dieser Browser unterstützt keine Mauserfassung. Verwende einen Desktop-Browser mit Pointer Lock.');
       return;
@@ -684,7 +682,6 @@ export class Game {
 
   private resetMatch(): void {
     this.match = undefined;
-    this.lastActions.clear();
     this.missionPresentation.reset();
     this.damage.clear();
     this.resetAudio();
@@ -717,7 +714,7 @@ export class Game {
     this.soundscape.clear();
     this.movementAudio.clear();
     this.hordeAudio.clear();
-    this.weaponAudio.reset();
+    this.weaponAudio.clearTransient();
     this.impactAudio.clear();
     this.audioWorld = undefined;
     this.audioPreloaded = false;
@@ -742,6 +739,7 @@ export class Game {
     if (!this.audioPreloaded) {
       this.audioPreloaded = true;
       this.sampleEvents = this.audio.played;
+      this.weaponAudio.warm();
       this.missionAudio.warm();
       this.hordeAudio.warm();
       this.impactAudio.warm();
@@ -754,6 +752,8 @@ export class Game {
     }
 
     const { players, horde } = this.timeline;
+    if (players.before) this.weaponAudio.handling(players.before, { ...listener, yaw: this.input.yaw }, this.status.ownId, false,
+      players.before.tick > this.audioFloor && !mission?.result);
     if (!mission?.result && mission?.state !== 'DEPLOYMENT' && mission?.extraction?.phase !== 'LIFT') {
       // A fresh packet can arrive while presentation is still playing pre-drop snapshots.
       if (!carrier && horde.before && horde.after && horde.tick > this.audioFloor)
@@ -831,6 +831,9 @@ export class Game {
     const steps = Math.floor(this.elapsed / STEP);
     this.elapsed -= steps * STEP;
     const online = this.status.ready && !this.incompatibleWorld && this.match?.room.connection.isOpen;
+    const mission = this.status.mission;
+    this.weaponAudio.setEnvironment(!mission ? 'outpost' : isCarrierScene(mission.state, mission.phase) ? 'carrier' : 'open-field',
+      this.surface.planetId);
     if (online && this.match) {
       for (let i = 0; i < steps; i++) {
         const input = this.input.sample(++this.seq, false, this.lastLife);
@@ -860,12 +863,10 @@ export class Game {
       this.lastRendered.z = rendered.z;
       this.timelineFrames++;
       const own = players.latest?.players.find((player) => player.id === this.status.ownId);
-      if (own) this.view.debugPositions(own, this.prediction.position, players.latest?.tick);
+      if (own) this.view.debugPositions(own, this.prediction.position, players.latest?.tick, this.prediction.world);
       else this.view.debugPositions();
     }
-    const mission = this.status.mission;
     this.view.setRecoil(this.recoil.pitch, this.recoil.yaw);
-    this.weaponAudio.setEnvironment(!mission ? 'outpost' : isCarrierScene(mission.state, mission.phase) ? 'carrier' : 'open-field');
     const missionTick = Math.max(mission?.tick ?? 0, this.tick + Math.min(3, Math.max(0, (now - this.tickAt) / STEP)));
     this.view.draw(
       now, dt, this.prediction.rendered, this.input.yaw, this.input.pitch, this.status.ownId, this.hp > 0,
@@ -917,6 +918,7 @@ export class Game {
         rate: Math.round((this.audio.played - this.sampleEvents) * 1000 / (now - this.sampleAt)),
         enemyMs: this.hordeAudio.updateMs, enemyPeakMs: this.hordeAudio.peakMs, updateMs: this.audioUpdateTotal / this.frames,
         windups: this.hordeAudio.windups, impacts: this.hordeAudio.impacts,
+        weapon: this.weaponAudio.metrics(),
       } : undefined;
       this.sampleEvents = this.audio.played;
       this.audioUpdateTotal = 0;

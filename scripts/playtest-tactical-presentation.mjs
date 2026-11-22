@@ -65,10 +65,11 @@ try {
         peer.onMessage('mission-events', (events) => record.events.push(...events));
         peer.onMessage('mission-state', (state) => { record.state = state; });
       }
-      const events = [], combat = [];
+      const events = [], combat = [], shots = [], movement = [];
       const broadcast = room.broadcast.bind(room);
       room.broadcast = (type, payload, options) => {
         if (type === 'combat') combat.push(...payload);
+        if (type === 'shot') shots.push(payload);
         if (type === 'mission-events') {
           events.push(...payload);
           for (const event of payload.filter(({ type }) => type === 'SwarmNestDestroyed')) {
@@ -113,14 +114,30 @@ try {
           place(own, pickup.x, pickup.z);
           await until(() => own.activeInput, 'input after dive placement');
           await page.keyboard.down(key);
+          const sentAt = performance.now();
           await page.keyboard.press('KeyX');
           await until(() => own.posture.current === 'DIVING', 'authoritative dive');
+          const serverObservedMs = performance.now() - sentAt;
+          const startedTick = own.posture.started;
           await page.keyboard.up(key);
           await until(() => own.posture.current === posture, posture);
+          const ticksToLand = own.posture.started - startedTick;
           await page.getByText(posture === 'PRONE' ? 'Bauchlage' : 'Rückenlage', { exact: true }).waitFor();
+          const hudObservedMs = performance.now() - sentAt;
           await page.screenshot({ path: join(output, posture.toLowerCase() + '.jpg') });
+          const offset = shots.length;
+          await page.mouse.down({ button: 'right' });
+          await page.mouse.down();
+          try {
+            const shot = await until(() => shots.slice(offset).find(({ shooter }) => shooter === own.id), `confirmed ${posture} shot`);
+            assert.ok(Math.abs(shot.fromY - own.y - mission.movementBalance.colliders[posture].muzzleHeight) < 1e-8);
+          } finally {
+            await page.mouse.up();
+            await page.mouse.up({ button: 'right' });
+          }
           await page.keyboard.press('Space');
           await until(() => own.posture.current === 'STANDING', 'get-up from ' + posture);
+          movement.push({ posture, serverObservedMs, hudObservedMs, ticksToLand, stoodAt: own.posture.started, serverShot: true });
           const cooldown = Math.ceil(mission.movementBalance.diveCooldownSeconds * NET.tickHz);
           await until(() => mission.tick >= (own.posture.lastDive ?? 0) + cooldown, 'dive cooldown');
         }
@@ -213,7 +230,8 @@ try {
       await page.screenshot({ path: join(output, method + '-result.jpg') });
       report[method] = { planetId, quality, operators: 4, reducedMotion, result: network[0].state.result,
         sharedPhases: events.filter(({ type }) => ['MissionStarted', 'AlbatrossTouchdown', 'ExtractionStarted', 'MissionCompleted'].includes(type)),
-        resupply: combat.filter(({ type }) => type === 'resupply'), damage: combat.filter(({ type }) => type === 'friendly-fire'), errors };
+        resupply: combat.filter(({ type }) => type === 'resupply'), damage: combat.filter(({ type }) => type === 'friendly-fire'),
+        ...(movement.length && { movement }), errors };
       await writeFile(join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
       console.log(method, planetId, 'deployment and extraction verified with', peers.length + 1, 'connections');
     } finally {

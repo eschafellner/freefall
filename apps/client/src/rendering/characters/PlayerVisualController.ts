@@ -1,5 +1,6 @@
 import { EventHistory } from '../../networking/EventHistory.ts';
-import { BASE_LOADOUT, FRAG, NET, WEAPONS, aimRay, allowsPostureAction, postureCollider, postureYaw, tacticalAimPitch, tacticalAimYaw, tacticalMuzzle, wrapAngle } from '@freefall/shared';
+import { BASE_LOADOUT, CAMERA_BACK, FRAG, NET, WEAPONS, aimRay, allowsPostureAction, postureCollider, postureYaw,
+  tacticalAimPitch, tacticalAimYaw, tacticalMuzzle, terrainIntersection, wrapAngle } from '@freefall/shared';
 import * as T from 'three';
 import { EQUIPMENT_SLOTS } from '../AssetRegistry.ts';
 import type { EquipmentSlot, SoldierAsset } from '../AssetRegistry.ts';
@@ -12,7 +13,7 @@ import { SoldierRig } from './SoldierRig.ts';
 import type { createSoldierParts } from './SoldierRig.ts';
 import { CLIP_REQUIREMENT } from './animation/ClipLibrary.ts';
 
-import type { EquipmentState, PostureState, ReloadState, ShotEvent } from '@freefall/shared';
+import type { EquipmentState, PostureState, ReloadState, ShotEvent, WorldDefinition } from '@freefall/shared';
 
 export type WeaponCue = Pick<ShotEvent, 'shooter' | 'tick' | 'life' | 'slot'>;
 export type PresentShot = (weapon: WeaponVisualController | undefined, now: number) => void;
@@ -122,7 +123,7 @@ export class PlayerVisualController {
 
   draw(id: string, life: number, hp: number, x: number, z: number, yaw: number, pitch: number,
     aim: boolean, sprint: boolean, reloadUntil: number, tick: number, now: number, dt: number, local: boolean, gear?: EquipmentState,
-    posture?: PostureState, y = 0, interpolatedYaw?: number, reload?: ReloadState, actionTick = tick): void {
+    posture?: PostureState, y = 0, interpolatedYaw?: number, reload?: ReloadState, actionTick = tick, world?: WorldDefinition): void {
     const bodyYaw = posture ? postureYaw(posture, yaw) : yaw;
     const heading = posture?.current === 'PRONE' || posture?.current === 'SUPINE' ? interpolatedYaw ?? bodyYaw : bodyYaw;
     const fresh = this.id !== id || this.life !== life;
@@ -194,11 +195,20 @@ export class PlayerVisualController {
     if (this.animation.aim > .001 || tactical) {
       const aimYaw = tactical ? tacticalAimYaw(posture, yaw) : yaw;
       const shape = tactical ? postureCollider(posture, tick) : undefined;
-      aimRay(this.ray, this.root.position, aimYaw, tactical ? tacticalAimPitch(posture, pitch) : pitch, shape?.lookHeight, y);
-      if (shape && posture) tacticalMuzzle(this.muzzleWorld, this.root.position, posture, aimYaw, shape);
+      aimRay(this.ray, this.root.position, aimYaw, tactical ? tacticalAimPitch(posture, pitch) : pitch, shape?.lookHeight, y, !!world?.terrain);
       const { x: ox, y: oy, z: oz, dx: vx, dy: vy, dz: vz } = this.ray;
-      const distance = vy < 0 ? Math.min(22, -oy / vy) : 22;
-      this.target.set(ox + vx * distance, oy + vy * distance, oz + vz * distance);
+      if (shape && posture) {
+        tacticalMuzzle(this.muzzleWorld, this.root.position, posture, aimYaw, shape);
+        const distance = Math.min(22, terrainIntersection(world, ox, oy, oz, vx, vy, vz, CAMERA_BACK, 22));
+        this.target.set(ox + vx * distance, oy + vy * distance, oz + vz * distance);
+        // A steep bank can occlude the shoulder ray before it reaches the barrel. Keep the rig facing downrange.
+        if ((this.target.x - this.muzzleWorld.x) * vx + (this.target.z - this.muzzleWorld.z) * vz <= 1e-7) {
+          this.target.set(this.muzzleWorld.x + vx * 22, this.muzzleWorld.y + vy * 22, this.muzzleWorld.z + vz * 22);
+        }
+      } else {
+        const distance = vy < 0 ? Math.min(22, (y - oy) / vy) : 22;
+        this.target.set(ox + vx * distance, oy + vy * distance, oz + vz * distance);
+      }
     }
 
     const { clip, fallback } = this.animation.tactical;

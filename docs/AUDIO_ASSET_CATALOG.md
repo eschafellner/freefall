@@ -1,6 +1,6 @@
-# Audio-Asset-Katalog 7.7D
+# Audio-Asset-Katalog
 
-Der Client liefert **62 hörbare Master** in je Ogg Vorbis und MP3 aus. Jede ID bezeichnet lokale Dateien unter `apps/client/public/audio`. Die SHA-256-Werte beziehen sich auf die tatsächlich ausgelieferten Bytes.
+Der Client liefert **75 hörbare Master** in je Ogg Vorbis und MP3 aus. Auf die 62 Master aus 7.7D entfallen 124 Dateien. Die 13 Waffen-Master aus 7.9A.1 ergänzen 26 Dateien. Jede ID bezeichnet lokale Dateien unter `apps/client/public/audio`. Die SHA-256-Werte beziehen sich auf die ausgelieferten Bytes. [Waffen-Zuordnung und Quellen](WEAPON_AUDIO_7_9A.md)
 
 - [Quellen und Eingangsdateien](audio-sources.json) erfasst Originaltitel oder Archivpfad, Anbieter, Download-URL, Lizenznachweis, Abrufdatum, Eingangs-Hash, Kategorie und Planet.
 - [Master und Bearbeitung](audio-masters.json) verbindet jede Asset-ID mit ihrer Eingangsdatei und protokolliert Ausschnitt, Kanäle, Filter, Überblendung, Pegel und die Hashes der beiden Zieldateien.

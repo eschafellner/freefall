@@ -5,7 +5,7 @@
     "timing": {
       "calmTicks": 810, "calmJitterTicks": 180, "buildupTicks": 180,
       "assaultMinTicks": 240, "assaultMaxTicks": 600,
-      "peakMinTicks": 120, "peakMaxTicks": 360,
+      "peakMinTicks": 210, "peakMaxTicks": 360,
       "recoveryMinTicks": 480, "recoveryMaxTicks": 900
     },
     "pressure": {
@@ -19,7 +19,7 @@
     "spawn": { "visibilityDot": 0.35, "maxChecksPerTick": 32, "dynamicChecksPerTick": 4,
       "priorityHeadroom": 24, "patrolSeedWindowTicks": 900 }
   },
-  "meleeAttack": { "windupTicks": 11, "activeTicks": 3, "recoveryTicks": 8, "halfAngleDegrees": 60, "decisionTicks": 2 },
+  "meleeAttack": { "windupTicks": 14, "activeTicks": 3, "recoveryTicks": 8, "halfAngleDegrees": 60, "decisionTicks": 2 },
   "hordeAi": {
     "targetTicks": 6, "steeringTicks": 2,
     "targeting": { "commitmentTicks": 30, "switchMeters": 2, "switchRatio": 0.8 },

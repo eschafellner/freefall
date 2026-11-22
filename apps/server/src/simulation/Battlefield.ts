@@ -1,4 +1,5 @@
-import { ARENA_HALF, BALANCE, ENEMY_TYPES, MAX_PLAYERS, MOVEMENT_INPUT, NET, advancePosture, applyPostureInput, resolveLoadout } from '@freefall/shared';
+import { ARENA_HALF, BALANCE, ENEMY_TYPES, MAX_PLAYERS, MOVEMENT_INPUT, NET, advancePosture, allowsPostureAction,
+  applyPostureInput, resolveLoadout } from '@freefall/shared';
 import type {
   BalanceRegistry, CombatEvent, EffectiveGrenade, EffectiveLoadout, EnemyGameplay, EnemyAIMetrics, EnemyAISample, GrenadeState, MovementDefinition, MovementBoundary, ShotEvent,
   WorldDefinition,
@@ -22,7 +23,7 @@ import type { SimPlayer } from './Player.ts';
 import { updateEquipment } from '../systems/equipment.ts';
 import type { EquipmentHooks, ResupplyHooks } from '../systems/equipment.ts';
 import { Grenades } from '../systems/grenades.ts';
-import { CombatStats } from '../systems/telemetry.ts';
+import { CombatStats, MovementStats } from '../systems/telemetry.ts';
 
 export function seededRandom(seed: number): () => number {
   return () => {
@@ -113,6 +114,8 @@ export class Battlefield {
   /** Albatross resupply. Only missions provide containers. */
   protected get resupply(): ResupplyHooks | undefined { return undefined; }
 
+  enableMovementProfiling(): MovementStats { return this.combat.movementStats ??= new MovementStats(); }
+
   addPlayer(id: string): SimPlayer {
     const slot = this.players.indexOf(undefined);
     if (slot === -1) throw new Error('Battlefield is full');
@@ -144,7 +147,9 @@ export class Battlefield {
     if (player.moves.length > MOVEMENT_INPUT.queue) {
       // Keep one-shot commands on their original input so a queued dive retains its axes, camera and ID.
       const expendable = player.moves.findIndex((move, i) => !move.posture && i < player.moves.length - 1);
-      player.moves.splice(expendable < 0 ? 0 : expendable, 1);
+      const index = expendable < 0 ? 0 : expendable;
+      if (player.moves[index].posture && this.combat.movementStats) this.combat.movementStats.droppedCommands++;
+      player.moves.splice(index, 1);
     }
     return true;
   }
@@ -217,7 +222,7 @@ export class Battlefield {
    * Inputs of an earlier life (sent before the client learned about a respawn or placement) are acknowledged
    * but do not move the operator; the client drops them from its prediction as well.
    */
-  private consumeMoves(player: SimPlayer): void {
+  private consumeMoves(player: SimPlayer, stats?: MovementStats): void {
     player.moveCredit = Math.min(MOVEMENT_INPUT.credit, player.moveCredit + 1 + MOVEMENT_INPUT.drift);
     if (!player.moves.length) {
       if (!player.moveWaiting) player.moveStarvedAt = this.tick;
@@ -238,19 +243,26 @@ export class Battlefield {
     if (player.moveWaiting && player.moves.length <= player.moveCushion &&
         this.tick - player.inputTick <= NET.inputTimeoutTicks) return;
     player.moveWaiting = false;
+    // These transition ticks accept no locomotion. Preserve later queued moves for the first mobile tick.
+    const { posture } = player;
+    const landing = posture.started === this.tick && (posture.from === 'DIVING' || posture.from === 'SLIDING');
+    const budget = landing ? 1 : MOVEMENT_INPUT.budget;
     let consumed = 0;
-    while (player.moves.length && player.moveCredit >= 1 && consumed < MOVEMENT_INPUT.budget &&
+    while (player.moves.length && player.moveCredit >= 1 && consumed < budget &&
         (!consumed || (player.moves.length > player.moveCushion + MOVEMENT_INPUT.backlog && !player.moves[0].posture))) {
       const move = player.moves.shift()!;
       player.moveCredit--;
       consumed++;
       player.ack = move.seq;
       if (player.hp > 0 && this.canMove(player) && (move.life === undefined || move.life === player.life)) {
+        const from = player.posture.current;
         applyPostureInput(player, player.posture, move, this.tick, this.movementBalance,
           this.movementWorld, this.movementBoundary(player), this.registry.operator, player.loadout.slide);
-        if (player.posture.dive?.id === move.seq && player.posture.started === this.tick) {
+        const acceptedDive = player.posture.dive?.id === move.seq && player.posture.started === this.tick;
+        if (acceptedDive) {
           player.protectedUntil = Math.min(player.protectedUntil, this.tick);
         }
+        if (move.posture) stats?.input(move.posture, from, player.posture, acceptedDive);
       }
     }
   }
@@ -264,7 +276,9 @@ export class Battlefield {
     this.combat.respawns = this.respawns;
     this.hooks.resupply = this.resupply;
     this.prepareTick();
+    const movementStats = this.combat.movementStats;
     if (this.simulatesMovement) {
+      const before = movementStats ? performance.now() : 0;
       for (const player of this.players) {
         if (!player) continue;
         if (this.respawns && player.hp <= 0 && this.tick >= player.respawnTick) respawnPlayer(player, this.tick);
@@ -273,9 +287,19 @@ export class Battlefield {
           player.yaw = player.input.yaw;
           player.pitch = player.input.pitch;
         }
-        if (player.hp > 0) advancePosture(player, player.posture, this.tick, this.movementBalance,
-          this.movementWorld, this.movementBoundary(player), this.canMove(player));
-        this.consumeMoves(player);
+        if (player.hp > 0) {
+          const { current, started, dive } = player.posture;
+          const hadImpact = !!dive?.impact;
+          advancePosture(player, player.posture, this.tick, this.movementBalance,
+            this.movementWorld, this.movementBoundary(player), this.canMove(player));
+          movementStats?.advance(current, started, player.posture.current, this.tick, dive, hadImpact);
+        }
+        this.consumeMoves(player, movementStats);
+        if (movementStats && player.hp > 0) movementStats.postureTicks[player.posture.current]++;
+      }
+      if (movementStats) {
+        movementStats.movementMs += performance.now() - before;
+        movementStats.measuredTicks++;
       }
     }
     if (this.profileEnemyAI) {
@@ -315,6 +339,8 @@ export class Battlefield {
         updateEquipment(player, this.tick, this.hooks, this.movementBalance);
         updateReload(player, this.tick, this.combat, this.movementBalance);
         const shot = fireWeapon(this.horde, player, this.ray, this.tick, this.movementWorld, this.combatTargets, this.combat, this.movementBalance);
+        movementStats?.combat(player, this.tick, !!shot, player.activeInput && !!player.input.aim &&
+          allowsPostureAction(player.posture, 'aim', this.movementBalance));
         if (!shot) continue;
         this.shots.push(shot);
         this.onShot(shot);

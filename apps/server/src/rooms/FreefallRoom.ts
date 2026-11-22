@@ -155,6 +155,12 @@ export class FreefallRoom extends Room {
       }
       const events = this.arena.drainEvents();
       if (events.length) this.broadcast('mission-events', events);
+      if (this.arena.captureMissionTelemetry) {
+        const completed = events.find((event) => event.type === 'MissionCompleted');
+        if (completed) console.info('[mission-telemetry] %s', JSON.stringify({
+          result: completed.result, telemetry: this.arena.missionTelemetry(),
+        }));
+      }
       for (const { id, code } of this.arena.drainFeedback()) this.clients.getById(id)?.send('mission-feedback', code);
       if (this.atmosphere !== this.arena.atmosphere) {
         this.atmosphere = this.arena.atmosphere;
@@ -210,7 +216,11 @@ export class FreefallRoom extends Room {
 }
 
 export class BodenbruchRoom extends FreefallRoom {
-  protected createSimulation(seed: number): MissionInstance { return new MissionInstance(seed, BODENBRUCH); }
+  protected createSimulation(seed: number): MissionInstance {
+    const mission = new MissionInstance(seed, BODENBRUCH);
+    mission.captureMissionTelemetry = process.env.FREEFALL_MISSION_TELEMETRY === '1';
+    return mission;
+  }
 }
 
 export class LocalMissionDebugRoom extends BodenbruchRoom {

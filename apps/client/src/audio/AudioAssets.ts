@@ -6,6 +6,7 @@ export class AudioAssets {
   private readonly buffers = new Map<string, AudioBuffer>();
   private readonly pending = new Map<string, Promise<AudioBuffer | undefined>>();
   private readonly missing = new Set<string>();
+  private readonly retained = new Set<string>();
   private readonly abort = new AbortController();
   private bytes = 0;
   private preferMp3?: boolean;
@@ -23,6 +24,11 @@ export class AudioAssets {
   }
 
   failed(id: string): boolean { return this.missing.has(id); }
+
+  /** Keep the small, latency-critical weapon bank resident within the same PCM limit. */
+  retain(ids: Iterable<string>): void {
+    for (const id of ids) this.retained.add(id);
+  }
 
   load(context: AudioContext, id: string): Promise<AudioBuffer | undefined> {
     const buffer = this.get(id);
@@ -49,11 +55,13 @@ export class AudioAssets {
         this.decodeMs = Math.max(this.decodeMs, performance.now() - fetched);
         const bytes = pcmBytes(buffer);
         if (bytes > CACHE_LIMIT) break;
-        while (this.bytes + bytes > CACHE_LIMIT) {
-          const older = this.buffers.keys().next().value!;
-          this.bytes -= pcmBytes(this.buffers.get(older)!);
+        for (const [older, cached] of this.buffers) {
+          if (this.bytes + bytes <= CACHE_LIMIT) break;
+          if (this.retained.has(older)) continue;
+          this.bytes -= pcmBytes(cached);
           this.buffers.delete(older);
         }
+        if (this.bytes + bytes > CACHE_LIMIT) break;
         this.buffers.set(id, buffer);
         this.bytes += bytes;
         return buffer;
@@ -75,6 +83,7 @@ export class AudioAssets {
     this.buffers.clear();
     this.pending.clear();
     this.missing.clear();
+    this.retained.clear();
     this.bytes = 0;
   }
 }

@@ -1,4 +1,5 @@
-import { BALANCE, NET, PLAYER, divePeakStep, diveTravel, groundHeight, isGroundPosture, lerpAngle, sampleDive, slidePeakStep } from '@freefall/shared';
+import { BALANCE, NET, PLAYER, divePeakStep, diveTravel, groundHeight, isGroundPosture, lerpAngle,
+  postureCollider, postureSweep, sampleDive, slidePeakStep } from '@freefall/shared';
 import type { DiveState, PlayerState, PlayersSnapshot, PostureState, WorldDefinition } from '@freefall/shared';
 
 /** Faster than any legal movement between two snapshots: treated as a teleport, never interpolated. */
@@ -114,6 +115,20 @@ export function remotePose(player: PlayerState, a: PlayersSnapshot, b: PlayersSn
   const interpolatingGroundTurn = continuous && source && destination && isGroundPosture(source.current) &&
     source.current === destination.current && source.started === destination.started;
   out.bodyYaw = interpolatingGroundTurn ? lerpAngle(source.yaw, destination.yaw, angle) : out.posture?.yaw;
+  if (continuous && to.hp > 0 && out.posture && isGroundPosture(out.posture.current)) {
+    if (t > 1 && destination && isGroundPosture(destination.current)) {
+      // A partial crawl step can end at an obstacle. Never extrapolate the body through that obstacle.
+      const origin = { x: to.x, y: to.y ?? 0, z: to.z };
+      const dx = out.x - origin.x, dz = out.z - origin.z;
+      if (dx || dz) {
+        const shape = postureCollider(destination, b.tick);
+        const fraction = postureSweep(origin, dx, dz, origin.y + shape.height, shape, destination.yaw, world);
+        out.x = origin.x + dx * fraction;
+        out.z = origin.z + dz * fraction;
+      }
+    }
+    if (world?.terrain) out.y = groundHeight(world, out.x, out.z);
+  }
   out.yaw = lerpAngle(player.yaw, to.yaw, angle);
   out.pitch = (player.pitch ?? 0) + ((to.pitch ?? player.pitch ?? 0) - (player.pitch ?? 0)) * angle;
   out.tick = tick;

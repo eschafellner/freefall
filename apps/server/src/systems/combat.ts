@@ -11,7 +11,7 @@ import type { UniformGrid } from '../ecs/UniformGrid.ts';
 import { cancelEquipment, readyReload, reloading } from '../simulation/Player.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
 import { resolveDamage } from './damage.ts';
-import type { CombatStats } from './telemetry.ts';
+import type { CombatStats, MovementStats } from './telemetry.ts';
 
 export function damageEnemy(h: HordeManager, slot: number, amount: number): boolean {
   h.hp[slot] = Math.max(0, h.hp[slot] - amount);
@@ -28,6 +28,11 @@ export function damagePlayer(player: SimPlayer, amount: number, tick: number, re
   if (player.hp <= 0 || tick < player.protectedUntil || !(amount > 0)) return 0;
   const before = player.hp;
   player.hp = Math.max(0, player.hp - amount);
+  const movement = context?.movementStats;
+  if (movement) {
+    movement.damage[player.posture.current] += before - player.hp;
+    if (player.hp === 0) movement.deaths[player.posture.current]++;
+  }
   if (player.hp === 0) {
     cancelEquipment(player, tick);
     if (player.posture.dive) player.y -= diveElevation(player.posture.dive, tick);
@@ -58,6 +63,7 @@ export interface CombatContext {
   /** Uniform random in [0, 1). Spread is rolled only on the server. */
   random?: () => number;
   stats?: CombatStats;
+  movementStats?: MovementStats;
   events?: CombatEvent[];
   respawns?: boolean;
   grid?: UniformGrid;
@@ -188,7 +194,8 @@ function enemyHit(ray: AimRay, h: HordeManager, i: number, min: number, world?: 
 
 function operatorHit(ray: AimRay, player: SimPlayer, min: number, max: number, tick: number,
   balance: typeof BALANCE.movement, world?: WorldDefinition): number {
-  if (player.posture.current === 'STANDING') {
+  const { dive } = player.posture;
+  if (player.posture.current === 'STANDING' || (dive?.from === 'STANDING' && tick < dive.takeoff)) {
     const box = player.loadout.operatorHitbox;
     return cylinderHit(ray, player.x, player.z, box.radius, box.height, min, max, player.y);
   }

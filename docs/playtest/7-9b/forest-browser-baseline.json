@@ -1,0 +1,443 @@
+{
+  "revision": "ffc81913055f9673ffb55fa027b7488ef0ec9d71",
+  "workspace": "7.9A working tree",
+  "fixtureSeed": 421337,
+  "roomSeed": null,
+  "reports": [
+    {
+      "chromium": "153.0.8010.12",
+      "angle": "gl",
+      "renderer": "ANGLE (AMD, AMD Radeon RX 9070 XT (radeonsi gfx1201 ACO), OpenGL ES 3.2)",
+      "quality": "medium",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "balanceHash": "8cf1c12067347de6",
+      "phase": "ACTIVE_MISSION",
+      "wave": {
+        "state": "BUILDUP",
+        "stateAt": 132,
+        "waveId": 1,
+        "created": 1,
+        "region": "breach/sector-1"
+      },
+      "plan": {
+        "id": "generated.a742da63bf83dbe5",
+        "seed": 0,
+        "templateId": "relay-defense",
+        "world": {
+          "id": "world.generated.acdc7ec0c04dd3da",
+          "planetId": "forest",
+          "biome": "temperate-forest",
+          "seed": 63,
+          "formatVersion": 1,
+          "generatorVersion": 1,
+          "profileVersion": 1,
+          "assetVersion": 1
+        }
+      },
+      "objectiveUpdateMs": {
+        "mean": 0.001051988950171585,
+        "p95": 0.0014900000005582115,
+        "p99": 0.00232999999934691,
+        "max": 0.004100000000107684
+      },
+      "navigationMs": {
+        "mean": 1.0001967016575606,
+        "p95": 1.3355289999999513,
+        "p99": 1.5007690000002185,
+        "max": 2.223277999999482
+      },
+      "weatherServerMs": {
+        "mean": 0.0018213259668325575,
+        "p95": 0.002599999999802094,
+        "p99": 0.003740000000107102,
+        "max": 0.0062800000014249235
+      },
+      "collisionMs": {
+        "mean": 0.3310332375690827,
+        "p95": 0.5064500000007683,
+        "p99": 0.6828889999997045,
+        "max": 0.71690899999885
+      },
+      "directorMs": {
+        "mean": 0.0052144088398191485,
+        "p95": 0.020489999998972053,
+        "p99": 0.04907000000093831,
+        "max": 0.07642000000032567
+      },
+      "operatorAttacks": 0,
+      "movedEnemies": 998,
+      "missionNetwork": {
+        "mission-state": {
+          "totalPackets": 61,
+          "totalBytes": 137835,
+          "samplePackets": 30,
+          "sampleBytesPerSecond": 13636.73676166933
+        },
+        "atmosphere-state": {
+          "totalPackets": 3,
+          "totalBytes": 902,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        },
+        "mission-plan": {
+          "totalPackets": 1,
+          "totalBytes": 1350,
+          "samplePackets": 0,
+          "sampleBytesPerSecond": 0
+        },
+        "mission-events": {
+          "totalPackets": 13,
+          "totalBytes": 2779,
+          "samplePackets": 4,
+          "sampleBytesPerSecond": 115.93470412048691
+        }
+      },
+      "memoryBefore": {
+        "rss": 774971392,
+        "heapTotal": 145981440,
+        "heapUsed": 98633544,
+        "external": 34532645,
+        "arrayBuffers": 3566351
+      },
+      "memoryAfter": {
+        "rss": 776933376,
+        "heapTotal": 145838080,
+        "heapUsed": 79092504,
+        "external": 33076840,
+        "arrayBuffers": 2110506
+      },
+      "enemies": 1000,
+      "packetsPerSecond": 9.937260353184593,
+      "payloadBytesPerSecond": 99432.22709396503,
+      "minFrameCount": 1000,
+      "operators": 4,
+      "tickHz": 30,
+      "renderedClients": 4,
+      "fps": 60.00365673254327,
+      "frameMs": {
+        "mean": 16.665650969529082,
+        "p95": 16.799999999999272,
+        "p99": 16.800000000000182,
+        "max": 16.80000000000109
+      },
+      "clientFrames": [
+        {
+          "frames": 361,
+          "fps": 60.00365673254327,
+          "mean": 16.665650969529082,
+          "p95": 16.799999999999272,
+          "p99": 16.800000000000182,
+          "max": 16.80000000000109
+        },
+        {
+          "frames": 361,
+          "fps": 60.00166209590294,
+          "mean": 16.666204986149584,
+          "p95": 16.700000000000728,
+          "p99": 16.800000000000182,
+          "max": 16.80000000000109
+        },
+        {
+          "frames": 361,
+          "fps": 60.00265939764642,
+          "mean": 16.66592797783934,
+          "p95": 16.700000000000728,
+          "p99": 16.800000000000182,
+          "max": 16.80000000000109
+        },
+        {
+          "frames": 361,
+          "fps": 60.00265939764643,
+          "mean": 16.665927977839335,
+          "p95": 16.700000000000728,
+          "p99": 16.800000000000182,
+          "max": 16.80000000000109
+        }
+      ],
+      "renderStats": [
+        {
+          "CPU / GPU": "2.0 / 0.1 ms",
+          "Draw Calls / Dreiecke": "43 / 54.917",
+          "Meshes / Instanzen": "5 / 773",
+          "Geometrien / Texturen": "159 / 51",
+          "Gegner sichtbar / aktiv": "16 / 1.000",
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 131,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.13012179448337108,
+            "z": -0.25479280919914593,
+            "direction": 4.240220838794638,
+            "strength": 0.2860962373383562,
+            "gust": 0.026096237338356212,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "1.4 / 0.1 ms",
+          "Draw Calls / Dreiecke": "61 / 77.281",
+          "Meshes / Instanzen": "12 / 967",
+          "Geometrien / Texturen": "165 / 50",
+          "Gegner sichtbar / aktiv": "75 / 1.000",
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 131,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.13045565812506207,
+            "z": -0.25541725921154274,
+            "direction": 4.240174387466148,
+            "strength": 0.28680421028984127,
+            "gust": 0.026804210289841267,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "1.4 / 0.1 ms",
+          "Draw Calls / Dreiecke": "65 / 128.239",
+          "Meshes / Instanzen": "7 / 1.816",
+          "Geometrien / Texturen": "144 / 51",
+          "Gegner sichtbar / aktiv": "167 / 1.000",
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 131,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.1301217944836103,
+            "z": -0.25479280919959196,
+            "direction": 4.2402208387946025,
+            "strength": 0.28609623733886225,
+            "gust": 0.02609623733886222,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        },
+        {
+          "CPU / GPU": "1.8 / 0.1 ms",
+          "Draw Calls / Dreiecke": "107 / 184.651",
+          "Meshes / Instanzen": "22 / 1.724",
+          "Geometrien / Texturen": "168 / 50",
+          "Gegner sichtbar / aktiv": "421 / 1.000",
+          "weather": {
+            "planet": "forest",
+            "profile": "forest.filtered-day.v1",
+            "version": 1,
+            "revision": 2,
+            "current": "ground-mist",
+            "timeOfDay": "dawn",
+            "audio": "ambience.forest.ground-mist",
+            "seed": 2479544381,
+            "startTick": 131,
+            "durationTicks": 0,
+            "progress": 0,
+            "x": -0.12879370510261953,
+            "z": -0.2523199932528881,
+            "direction": 4.2404259066194445,
+            "strength": 0.28328995299727455,
+            "gust": 0.023289952997274533,
+            "turbulence": 0.21600000000000003,
+            "particles": 0,
+            "cap": 176,
+            "particleMs": 0,
+            "updateMs": 0
+          }
+        }
+      ],
+      "serverRecentTickMs": {
+        "mean": 1.2064670333333651,
+        "p95": 1.5646490000017366,
+        "p99": 1.7555480000009993,
+        "max": 2.472026999999798
+      },
+      "droppedSteps": 0,
+      "observedTickHz": 29.977402065440188,
+      "payloadSource": "Horde broadcasts per recipient",
+      "wallSeconds": 6.037881455,
+      "errors": []
+    },
+    {
+      "during": {
+        "instanceId": "27c6ee28-9778-4391-890c-94b095c9f2d2",
+        "worldId": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "profileId": "forest.filtered-day.v1",
+        "version": 1,
+        "seed": 2479544381,
+        "originTick": 71,
+        "timeOfDay": "dawn",
+        "revision": 3,
+        "current": {
+          "weather": "ground-mist",
+          "wind": {
+            "direction": 4.3,
+            "strength": 0.26,
+            "gust": 0.14,
+            "frequency": 0.097,
+            "turbulence": 0.21600000000000003
+          }
+        },
+        "startTick": 344,
+        "durationTicks": 660,
+        "target": {
+          "weather": "windy-forest",
+          "wind": {
+            "direction": 4,
+            "strength": 0.61,
+            "gust": 0.28,
+            "frequency": 0.081,
+            "turbulence": 0.272
+          }
+        }
+      },
+      "serverProgress": 0.030303030303030304,
+      "shared": [
+        {
+          "planet": "forest",
+          "profile": "forest.filtered-day.v1",
+          "version": 1,
+          "revision": 3,
+          "current": "ground-mist",
+          "target": "windy-forest",
+          "timeOfDay": "dawn",
+          "audio": "ambience.forest.ground-mist",
+          "targetAudio": "ambience.forest.windy-forest",
+          "seed": 2479544381,
+          "startTick": 344,
+          "durationTicks": 660,
+          "progress": 0.024292424242424265,
+          "x": -0.12783798783581188,
+          "z": -0.30814328454585904,
+          "direction": 4.319133646406897,
+          "strength": 0.3336088052564252,
+          "gust": 0.07299921213074191,
+          "turbulence": 0.21609753490010936,
+          "particles": 0,
+          "cap": 176,
+          "particleMs": 0,
+          "updateMs": 0
+        },
+        {
+          "planet": "forest",
+          "profile": "forest.filtered-day.v1",
+          "version": 1,
+          "revision": 3,
+          "current": "ground-mist",
+          "target": "windy-forest",
+          "timeOfDay": "dawn",
+          "audio": "ambience.forest.ground-mist",
+          "targetAudio": "ambience.forest.windy-forest",
+          "seed": 2479544381,
+          "startTick": 344,
+          "durationTicks": 660,
+          "progress": 0.029651515150702367,
+          "x": -0.12732954182213888,
+          "z": -0.30851120981343544,
+          "direction": 4.320963204072662,
+          "strength": 0.3337543689619439,
+          "gust": 0.07284944497851184,
+          "turbulence": 0.21614478783734917,
+          "particles": 0,
+          "cap": 64,
+          "particleMs": 0,
+          "updateMs": 0
+        },
+        {
+          "planet": "forest",
+          "profile": "forest.filtered-day.v1",
+          "version": 1,
+          "revision": 3,
+          "current": "ground-mist",
+          "target": "windy-forest",
+          "timeOfDay": "dawn",
+          "audio": "ambience.forest.ground-mist",
+          "targetAudio": "ambience.forest.windy-forest",
+          "seed": 2479544381,
+          "startTick": 344,
+          "durationTicks": 660,
+          "progress": 0.004545454545454545,
+          "x": -0.12996029065553114,
+          "z": -0.30685611969612114,
+          "direction": 4.311770952254491,
+          "strength": 0.3332421872185909,
+          "gust": 0.07322055874375993,
+          "turbulence": 0.21600346055597297,
+          "particles": 0,
+          "cap": 320,
+          "particleMs": 0,
+          "updateMs": 0
+        },
+        {
+          "planet": "forest",
+          "profile": "forest.filtered-day.v1",
+          "version": 1,
+          "revision": 3,
+          "current": "ground-mist",
+          "target": "windy-forest",
+          "timeOfDay": "dawn",
+          "audio": "ambience.forest.ground-mist",
+          "targetAudio": "ambience.forest.windy-forest",
+          "seed": 2479544381,
+          "startTick": 344,
+          "durationTicks": 660,
+          "progress": 0.030406060606602402,
+          "x": -0.12725877575971933,
+          "z": -0.3085598306189145,
+          "direction": 4.321214761513641,
+          "strength": 0.333772325215012,
+          "gust": 0.07282124815650146,
+          "turbulence": 0.2161521723293617,
+          "particles": 0,
+          "cap": 176,
+          "particleMs": 0,
+          "updateMs": 0
+        }
+      ]
+    },
+    {
+      "reconnect": true,
+      "players": 4,
+      "world": "world.generated.acdc7ec0c04dd3da",
+      "guestQualities": [
+        "low",
+        "high",
+        "medium"
+      ]
+    }
+  ]
+}

@@ -318,7 +318,7 @@ test('Convicts fire, take fatal melee damage, never respawn and have declining e
   }
   assert.ok(shots > 0);
   for (let i = 0; i < 35; i++) mission.horde.spawn(first.x - .2 + i * .013, first.z + .9, SCHABE_TYPE);
-  advance(mission, 90);
+  advance(mission, 3 * NET.tickHz + mission.enemyCombat.timing.windupTicks);
   assert.equal(mission.snapshot().convicts[0].state, 'DEAD');
   advance(mission, 300);
   assert.equal(mission.snapshot().convicts[0].hp, 0);

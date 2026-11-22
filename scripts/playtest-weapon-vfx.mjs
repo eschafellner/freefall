@@ -88,6 +88,11 @@ try {
   };
   await enter();
   await page.keyboard.press('F2');
+  const weaponAudio = () => page.evaluate(() => JSON.parse(document.querySelector('[data-audio]')?.dataset.audio || 'null'));
+  await until(async () => {
+    const audio = await weaponAudio();
+    return audio?.context === 'running' && audio.buffers >= 13 && audio.loading === 0 && !audio.errors;
+  }, 'dekodierte Waffenbank');
   const hud = () => page.locator('.telemetry .metrics dt').evaluateAll((items) =>
     Object.fromEntries(items.map((item) => [item.textContent, item.nextElementSibling?.textContent ?? ''])));
   const casingCount = (metrics) => Number.parseInt(metrics['Hülsen / Lauflicht'], 10);
@@ -97,6 +102,7 @@ try {
   const burst = async (state, slot, effects = false) => {
     await posture(state);
     const start = packets.length;
+    const audioBefore = (await weaponAudio()).weapon;
     await page.mouse.down();
     try {
       await until(() => packets.slice(start).filter((packet) => packet.shooter === own.id && packet.slot === slot).length >= 2, state + ' ' + slot);
@@ -107,7 +113,21 @@ try {
     } finally { await page.mouse.up(); }
     const ownPackets = packets.slice(start).filter((packet) => packet.shooter === own.id);
     assert.ok(ownPackets.every((packet) => packet.slot === slot && Number.isInteger(packet.tick) && packet.life === own.life));
-    cases.push({ state, slot, shots: ownPackets.length, hud: await hud() });
+    let played = 0;
+    await until(async () => (played = (await weaponAudio()).weapon.own - audioBefore.own) >= 2, 'aufgenommene Schüsse ' + state);
+    const result = { state, slot, shots: ownPackets.length, played, hud: await hud() };
+    if (state === 'PRONE' || state === 'SUPINE') {
+      const before = (await weaponAudio()).weapon;
+      await page.keyboard.press('KeyR');
+      await until(() => own.reload.phase === 'RELOAD_COMPLETE', 'Bodenreload ' + state);
+      let handling;
+      await until(async () => {
+        handling = (await weaponAudio()).weapon;
+        return handling.remove === before.remove + 1 && handling.insert === before.insert + 1;
+      }, 'aufgenommenes Magazin ' + state);
+      result.handling = { out: handling.remove - before.remove, in: handling.insert - before.insert };
+    }
+    cases.push(result);
   };
   await burst('STANDING', 'primary', true);
   await page.keyboard.press('KeyC');

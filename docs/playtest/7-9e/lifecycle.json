@@ -1,0 +1,1088 @@
+{
+  "buildVersion": "0.1.0",
+  "revision": "ffc81913055f9673ffb55fa027b7488ef0ec9d71",
+  "sourceBalance": {
+    "schemaVersion": 2,
+    "release": "7.9B",
+    "hash": "390e375eec0bf943"
+  },
+  "defaultDifficultyId": "normal",
+  "simulationSeed": 51296,
+  "tickHz": 30,
+  "host": {
+    "cpu": "AMD Ryzen 7 9700X 8-Core Processor",
+    "logicalCpus": 16,
+    "kernel": "7.3.3-300.fc45.x86_64",
+    "ramBytes": 66985082880,
+    "node": "v24.18.0"
+  },
+  "lifecycle": {
+    "cycles": 6,
+    "baselineMemory": {
+      "rss": 103161856,
+      "heapTotal": 21303296,
+      "heapUsed": 11215096,
+      "external": 10069147,
+      "arrayBuffers": 744406
+    },
+    "forcedGC": true,
+    "results": [
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3193,
+        "carrierTick": 3891,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 123215872,
+          "heapTotal": 36769792,
+          "heapUsed": 13754464,
+          "external": 11199073,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5374,
+        "carrierTick": 9963,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 128458752,
+          "heapTotal": 37294080,
+          "heapUsed": 14271160,
+          "external": 11217357,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3655,
+        "carrierTick": 14316,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 145301504,
+          "heapTotal": 53022720,
+          "heapUsed": 14566944,
+          "external": 11371021,
+          "arrayBuffers": 975540
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5607,
+        "carrierTick": 20621,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 146481152,
+          "heapTotal": 53809152,
+          "heapUsed": 14545288,
+          "external": 11371021,
+          "arrayBuffers": 975540
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1955,
+        "carrierTick": 23274,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 144760832,
+          "heapTotal": 51712000,
+          "heapUsed": 14471952,
+          "external": 11332605,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5003,
+        "carrierTick": 28975,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 145285120,
+          "heapTotal": 51974144,
+          "heapUsed": 14698184,
+          "external": 11255773,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1900,
+        "carrierTick": 31573,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 179036160,
+          "heapTotal": 85790720,
+          "heapUsed": 14811560,
+          "external": 11294189,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4522,
+        "carrierTick": 36793,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 179658752,
+          "heapTotal": 86315008,
+          "heapUsed": 14965664,
+          "external": 11793597,
+          "arrayBuffers": 1436532
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3196,
+        "carrierTick": 40687,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 180314112,
+          "heapTotal": 86577152,
+          "heapUsed": 14940680,
+          "external": 11793597,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5378,
+        "carrierTick": 46763,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 180707328,
+          "heapTotal": 87363584,
+          "heapUsed": 14875672,
+          "external": 11255773,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3660,
+        "carrierTick": 51121,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 180838400,
+          "heapTotal": 86839296,
+          "heapUsed": 14966928,
+          "external": 11294189,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5607,
+        "carrierTick": 57426,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 181100544,
+          "heapTotal": 87101440,
+          "heapUsed": 15106360,
+          "external": 11409437,
+          "arrayBuffers": 1090788
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1955,
+        "carrierTick": 60079,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 180477952,
+          "heapTotal": 85790720,
+          "heapUsed": 14981480,
+          "external": 11447853,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4996,
+        "carrierTick": 65773,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 180871168,
+          "heapTotal": 87363584,
+          "heapUsed": 15126496,
+          "external": 11255773,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1900,
+        "carrierTick": 68371,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 180355072,
+          "heapTotal": 85790720,
+          "heapUsed": 15073480,
+          "external": 11294189,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4526,
+        "carrierTick": 73595,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 181776384,
+          "heapTotal": 87101440,
+          "heapUsed": 15141392,
+          "external": 11908845,
+          "arrayBuffers": 1551780
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3199,
+        "carrierTick": 77492,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250064896,
+          "heapTotal": 154996736,
+          "heapUsed": 15179560,
+          "external": 11917363,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5371,
+        "carrierTick": 83561,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250327040,
+          "heapTotal": 154734592,
+          "heapUsed": 15097088,
+          "external": 11217357,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3657,
+        "carrierTick": 87916,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250458112,
+          "heapTotal": 154472448,
+          "heapUsed": 15034528,
+          "external": 11294189,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5607,
+        "carrierTick": 94221,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250851328,
+          "heapTotal": 154210304,
+          "heapUsed": 15226128,
+          "external": 11530519,
+          "arrayBuffers": 1167620
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1955,
+        "carrierTick": 96874,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250261504,
+          "heapTotal": 153686016,
+          "heapUsed": 15138296,
+          "external": 11524685,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4998,
+        "carrierTick": 102570,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250785792,
+          "heapTotal": 153686016,
+          "heapUsed": 15113120,
+          "external": 11255773,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1900,
+        "carrierTick": 105168,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250519552,
+          "heapTotal": 153161728,
+          "heapUsed": 15304696,
+          "external": 11542661,
+          "arrayBuffers": 1129204
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4522,
+        "carrierTick": 110388,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250654720,
+          "heapTotal": 154210304,
+          "heapUsed": 15395528,
+          "external": 11793597,
+          "arrayBuffers": 1244452
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3194,
+        "carrierTick": 114280,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250916864,
+          "heapTotal": 154734592,
+          "heapUsed": 15045384,
+          "external": 11563101,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5367,
+        "carrierTick": 120345,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250916864,
+          "heapTotal": 154472448,
+          "heapUsed": 15156144,
+          "external": 11229069,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3655,
+        "carrierTick": 124698,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250707968,
+          "heapTotal": 153686016,
+          "heapUsed": 15131000,
+          "external": 11398141,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5614,
+        "carrierTick": 131010,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250556416,
+          "heapTotal": 153948160,
+          "heapUsed": 15110160,
+          "external": 11581987,
+          "arrayBuffers": 1167620
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1955,
+        "carrierTick": 133663,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250556416,
+          "heapTotal": 153686016,
+          "heapUsed": 15035216,
+          "external": 11582919,
+          "arrayBuffers": 1171578
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4992,
+        "carrierTick": 139353,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250687488,
+          "heapTotal": 153948160,
+          "heapUsed": 15119360,
+          "external": 11285973,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1900,
+        "carrierTick": 141951,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250306560,
+          "heapTotal": 153161728,
+          "heapUsed": 15253296,
+          "external": 11294189,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4526,
+        "carrierTick": 147175,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250966016,
+          "heapTotal": 153948160,
+          "heapUsed": 15392056,
+          "external": 11793597,
+          "arrayBuffers": 1436532
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3197,
+        "carrierTick": 151070,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 251228160,
+          "heapTotal": 154734592,
+          "heapUsed": 15163616,
+          "external": 11755181,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5369,
+        "carrierTick": 157137,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 251490304,
+          "heapTotal": 154472448,
+          "heapUsed": 15201440,
+          "external": 11232247,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3656,
+        "carrierTick": 161491,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250499072,
+          "heapTotal": 153161728,
+          "heapUsed": 15186712,
+          "external": 11294189,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5610,
+        "carrierTick": 167799,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 251154432,
+          "heapTotal": 154472448,
+          "heapUsed": 15098080,
+          "external": 11524685,
+          "arrayBuffers": 1206036
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1955,
+        "carrierTick": 170452,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250212352,
+          "heapTotal": 153161728,
+          "heapUsed": 15077296,
+          "external": 11563101,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4995,
+        "carrierTick": 176145,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250343424,
+          "heapTotal": 153423872,
+          "heapUsed": 15213264,
+          "external": 11255773,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1900,
+        "carrierTick": 178743,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250634240,
+          "heapTotal": 154210304,
+          "heapUsed": 15173256,
+          "external": 11619825,
+          "arrayBuffers": 1244452
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4522,
+        "carrierTick": 183963,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250953728,
+          "heapTotal": 154472448,
+          "heapUsed": 15373520,
+          "external": 11908845,
+          "arrayBuffers": 1244452
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3194,
+        "carrierTick": 187855,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250953728,
+          "heapTotal": 154210304,
+          "heapUsed": 15174896,
+          "external": 11563101,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "green-plains",
+          "worldSeed": 76,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5370,
+        "carrierTick": 193923,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 251346944,
+          "heapTotal": 154472448,
+          "heapUsed": 15086976,
+          "external": 11217357,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 3657,
+        "carrierTick": 198278,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250404864,
+          "heapTotal": 153161728,
+          "heapUsed": 15268440,
+          "external": 11371021,
+          "arrayBuffers": 975540
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "desert",
+          "worldSeed": 31,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 5607,
+        "carrierTick": 204583,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250535936,
+          "heapTotal": 153948160,
+          "heapUsed": 15317112,
+          "external": 11371021,
+          "arrayBuffers": 975540
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1955,
+        "carrierTick": 207236,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250535936,
+          "heapTotal": 153423872,
+          "heapUsed": 15277672,
+          "external": 11360911,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "ice",
+          "worldSeed": 48,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4993,
+        "carrierTick": 212927,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 251056128,
+          "heapTotal": 153948160,
+          "heapUsed": 15054496,
+          "external": 11285539,
+          "arrayBuffers": 898708
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1900,
+        "carrierTick": 215525,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250597376,
+          "heapTotal": 153161728,
+          "heapUsed": 15236072,
+          "external": 11294189,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "balloon"
+        },
+        "outcome": "extracted",
+        "durationTicks": 4522,
+        "carrierTick": 220745,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 250802176,
+          "heapTotal": 153686016,
+          "heapUsed": 15474600,
+          "external": 11601517,
+          "arrayBuffers": 1244452
+        }
+      }
+    ]
+  }
+}

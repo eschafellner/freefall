@@ -5,7 +5,7 @@ import {
   LANDING_STAGE_TICKS, MAX_ENEMIES, MISSION_TEMPLATES, NET, PROCEDURAL_CONTRACT_ID, SCHABE_TYPE, WORLD_REGISTRY,
   distanceSquared, groundHeight, isOptionalObjective, missionGround, openGround,
 } from '@freefall/shared';
-import type { MissionDefinition, MissionEvent, MissionPlan, ObjectiveDefinition, PlanetMissionProfile, PositionXZ } from '@freefall/shared';
+import type { MissionDefinition, MissionEvent, MissionPlan, ObjectiveDefinition, PlanetMissionProfile, PositionXZ, PostureCommand } from '@freefall/shared';
 import { GroundNavigation } from '../src/mission/GroundNavigation.ts';
 import { MissionGenerator, validateObjectiveGraph } from '../src/mission/MissionGenerator.ts';
 import { MissionInstance } from '../src/mission/MissionInstance.ts';
@@ -42,8 +42,14 @@ test('v1 plans have stable identities, survive JSON serialization and freeze the
   assert.equal(generator.validate({ ...reconstructed, id: 'generated.changed' }), 'invalid-plan-id');
   assert.equal(generator.validate({ ...reconstructed, formatVersion: 0 }), 'invalid-version-or-seed');
   assert.equal(generator.validate({ ...reconstructed, balance: { ...plan.balance, hash: 'old' } }), 'invalid-balance-reference');
-  assert.equal(plan.modifiers[0], 'early-extraction-pressure');
-  assert.ok(balance.extraction.initialPressureTicks < generated(2).balance.extraction.initialPressureTicks);
+});
+
+test('generated plans apply early extraction pressure when the current balance seed selects it', () => {
+  const results = Array.from({ length: 24 }, (_, seed) => generated(seed, 'relay-chain'));
+  const early = results.find(({ plan }) => plan.modifiers.includes('early-extraction-pressure'));
+  const regular = results.find(({ plan }) => plan.modifiers.length === 0);
+  assert.ok(early && regular);
+  assert.ok(early.balance.extraction.initialPressureTicks < regular.balance.extraction.initialPressureTicks);
 });
 
 test('512 sequential seeds across all seven difficulties produce independently validated, varied Dev’ Ault plans', (t) => {
@@ -216,13 +222,15 @@ for (const [seed, type, count, method, planetId = 'dev-ault', worldSeed, difficu
 ] as const) {
   test(`${planetId} ${type}, seed ${seed}, completes via ${method} with ${count} operators using gameplay inputs`, (t) => {
     const mission = new MissionInstance(51296, BODENBRUCH);
+    mission.captureMissionTelemetry = true;
     const crew = Array.from({ length: count }, (_, i) => mission.addPlayer('operator-' + i));
     const [lead] = crew;
     walk(mission, [lead], { x: 0, z: 4 }, .6);
-    const replay = () => select(mission, lead, seed, difficulty, worldSeed === undefined ? undefined : type, planetId, worldSeed);
+    // The balance hash salts template selection. These completion routes require the named template.
+    const replay = () => select(mission, lead, seed, difficulty, type, planetId, worldSeed);
     const plan = replay();
     assert.equal(plan.templateId, type);
-    if (worldSeed === undefined) assert.deepEqual(plan, generated(seed).plan);
+    if (worldSeed === undefined) assert.deepEqual(plan, generated(seed, type).plan);
     else assert.equal(plan.world?.seed, worldSeed);
     assert.ok(mission.start(lead.id));
     for (const operator of crew) {
@@ -246,6 +254,32 @@ for (const [seed, type, count, method, planetId = 'dev-ault', worldSeed, difficu
       travelTicks += leg.ticks;
     };
     travel({ x: ship.x, z: ship.z + 9 }, 1);
+    const tacticalRoute = planetId === 'forest' && count === 4;
+    const command = (posture: PostureCommand, forward = 0) => {
+      const seq = lead.lastInputSeq + 1;
+      assert.ok(mission.receiveInput(lead.id, { seq, life: lead.life,
+        yaw: 0, pitch: -.1, forward, strafe: 0, sprint: false, fire: false, posture }));
+      for (let ticks = 0; lead.ack < seq && ticks < NET.tickHz; ticks++) {
+        mission.step();
+        if (lead.ack < seq) input(mission, lead, 0, 0);
+      }
+      assert.ok(lead.ack >= seq);
+    };
+    if (tacticalRoute) {
+      input(mission, lead, 0, 0);
+      mission.step();
+      command('dive', -1);
+      assert.equal(lead.posture.current, 'DIVING');
+      advance(mission, Math.ceil(mission.movementBalance.diveSeconds * NET.tickHz) + 1);
+      assert.equal(lead.posture.current, 'SUPINE');
+      input(mission, lead, 0, 0, -.1, true);
+      mission.step();
+      assert.ok(mission.shots.some(({ shooter }) => shooter === lead.id));
+      command('stand');
+      assert.equal(lead.posture.current, 'GETTING_UP');
+      advance(mission, Math.ceil(mission.movementBalance.supineGetUpSeconds * NET.tickHz));
+      assert.equal(lead.posture.current, 'STANDING');
+    }
     for (const { definition } of plan.objectives.filter(({ definition }) => !isOptionalObjective(definition))) {
       if (definition.kind === 'activate') {
         travel(definition, 3);
@@ -286,6 +320,10 @@ for (const [seed, type, count, method, planetId = 'dev-ault', worldSeed, difficu
     const assembly = method === 'albatross' ? { x: ship.x, z: ship.z + 1 } : plan.extraction.balloon;
     if (method === 'balloon') assert.equal(mission.action(lead.id, 'balloon'), false);
     travel(assembly, 1.5);
+    if (tacticalRoute) {
+      command('crouch');
+      assert.equal(lead.posture.current, 'CROUCHING');
+    }
     if (method === 'balloon') {
       assert.equal(mission.action(lead.id, 'albatross'), false);
     }
@@ -293,7 +331,7 @@ for (const [seed, type, count, method, planetId = 'dev-ault', worldSeed, difficu
     for (const operator of crew.slice(1)) assert.ok(mission.action(operator.id, 'secure'));
     const maxTicks = (method === 'albatross' ? ALBATROSS.launchTicks : BALLOON.countdownTicks + BALLOON.approachTicks) + BALLOON.liftTicks + 1;
     for (let i = 0; i < maxTicks && (mission.state as string) !== 'MISSION_RESULTS'; i++) {
-      if (worldSeed !== undefined && method === 'balloon' && mission.snapshot().extraction?.phase !== 'LIFT') {
+      if (method === 'balloon' && mission.snapshot().extraction?.phase !== 'LIFT') {
         for (const operator of crew) {
           if (!operator.hp) continue;
           let enemy = -1, nearest = 24 ** 2;
@@ -320,16 +358,34 @@ for (const [seed, type, count, method, planetId = 'dev-ault', worldSeed, difficu
     assert.equal(snapshot.result?.outcome, 'extracted', JSON.stringify({ hp: crew.map((p) => p.hp), state: snapshot.state, tick: snapshot.tick, nests: snapshot.activeNests }));
     assert.equal(snapshot.result?.procedural?.planId, plan.id);
     assert.deepEqual(snapshot.result.extractedOperatorIds, crew.map(({ id }) => id));
+    const telemetry = mission.missionTelemetry()!;
+    assert.equal(telemetry.operatorsAtDeployment, count);
+    assert.equal(telemetry.stateTicks.DEPLOYMENT, LANDING_STAGE_TICKS);
+    assert.equal(Object.values(telemetry.stateTicks).reduce((total, ticks) => total + ticks, 0), snapshot.result.durationTicks);
+    assert.equal(telemetry.extraction[method].starts, 1);
+    assert.equal(telemetry.extraction[method].liftTicks, BALLOON.liftTicks);
+    for (const { definition } of plan.objectives) {
+      const timing = telemetry.objectives[definition.id];
+      assert.equal(timing.state, isOptionalObjective(definition) ? 'cancelled' : 'complete');
+      if (definition.kind === 'activate' && definition.defenseSeconds) {
+        assert.equal(timing.staffedTicks, Math.ceil(definition.defenseSeconds * NET.tickHz));
+      }
+    }
     const events = mission.drainEvents();
     assert.equal(events.filter((event) => event.type === 'MissionCompleted').length, 1);
     assert.equal(events.filter((event) => event.type === 'ExtractionAvailable').length, 1);
     assert.ok(mission.horde.count <= plan.encounter.maxActiveEnemies);
     t.diagnostic(JSON.stringify({ seed, worldSeed, worldId: plan.worldId, id: plan.id, objectives: snapshot.result.objectives,
       pickup: method === 'albatross' ? 'albatross' : assembly, durationTicks: snapshot.result.durationTicks,
-      routeMetres: Number(routeMetres.toFixed(1)), travelTicks, enemiesAtResult: mission.horde.count, convictsSurvived: snapshot.result.convictsSurvived }));
+      routeMetres: Number(routeMetres.toFixed(1)), travelTicks, enemiesAtResult: mission.horde.count, convictsSurvived: snapshot.result.convictsSurvived,
+      balanceHash: snapshot.result.balanceHash, combat: snapshot.result.combat,
+      ammoAtResult: crew.map(({ ammo, equipment, hp }) => ({ ammo, inactiveAmmo: equipment.inactiveAmmo,
+        magazines: equipment.magazines, grenades: equipment.grenades, stims: equipment.stims, hp })),
+      supplyChargesAtResult: snapshot.albatross?.supply?.map(({ charges }) => charges) }));
     for (const operator of crew) assert.ok(mission.action(operator.id, 'return-vote'));
     advance(mission, NET.tickHz + 1);
     assert.equal(mission.state, 'CARRIER_HUB');
+    assert.equal(mission.missionTelemetry(), undefined);
     assert.equal(mission.plan, undefined);
     assert.equal(mission.horde.count, 0);
     walk(mission, [lead], { x: 0, z: 4 }, .6);
@@ -339,6 +395,7 @@ for (const [seed, type, count, method, planetId = 'dev-ault', worldSeed, difficu
 
 test('teamwipe settles one failed result and reconnect does not reopen the mission', () => {
   const mission = new MissionInstance(73, BODENBRUCH);
+  mission.captureMissionTelemetry = true;
   const operator = mission.addPlayer('host');
   Object.assign(operator, { x: 0, z: 3 });
   const plan = select(mission, operator, 0);
@@ -356,6 +413,11 @@ test('teamwipe settles one failed result and reconnect does not reopen the missi
   assert.equal(result.baseExperience, 0);
   assert.ok(result.objectives?.some(({ state }) => state === 'failed'));
   assert.equal(mission.drainEvents().filter((event) => event.type === 'MissionCompleted').length, 1);
+  const telemetry = mission.missionTelemetry()!;
+  assert.equal(telemetry.stateTicks.ACTIVE_MISSION, 1);
+  assert.equal(telemetry.combat.deaths, 1);
+  assert.deepEqual(telemetry.party, { disconnects: 1, reconnects: 1 });
+  assert.deepEqual(Object.values(telemetry.objectives).map(({ state }) => state), result.objectives?.map(({ state }) => state));
 });
 
 for (const [id, worldSeed] of [['dev-ault', undefined], ['forest', 63]] as const)

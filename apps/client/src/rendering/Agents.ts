@@ -81,7 +81,7 @@ export class PlayerView {
       const gear = me.equipment?.action && me.equipment.action !== 'grenade' && me.equipment.action !== 'melee' ? me.equipment :
         delayed?.action === 'grenade' || delayed?.action === 'melee' ? delayed : me.equipment;
       model.draw(me.id, me.life, me.hp, local.x, local.z, yaw, pitch, aim, sprint, me.reloadUntil ?? 0,
-        localTick, now, dt, true, gear, localPosture, local.y, undefined, me.reload, actionTick);
+        localTick, now, dt, true, gear, localPosture, local.y, undefined, me.reload, actionTick, world);
       this.localSprint = model.animation.sprint;
       this.localModel = model;
       const ground = localPosture && isGroundPosture(localPosture.current);
@@ -102,7 +102,8 @@ export class PlayerView {
       const gear = nextGear && (switched || nextGear.action && nextGear.started <= tick) ? nextGear : currentGear;
       const reload = later?.reload && later.reload.started <= tick && tick < later.reload.until && later.reloadUntil ? later : frame;
       this.models[player.slot].draw(frame.id, frame.life, frame.hp, x, z, heading, playerPitch,
-        Boolean(motion & PLAYER_MOTION.aim), Boolean(motion & PLAYER_MOTION.sprint), reload.reloadUntil ?? 0, tick, now, dt, false, gear, posture, y, bodyYaw, reload.reload);
+        Boolean(motion & PLAYER_MOTION.aim), Boolean(motion & PLAYER_MOTION.sprint), reload.reloadUntil ?? 0, tick, now, dt,
+        false, gear, posture, y, bodyYaw, reload.reload, tick, world);
       shadows.add(x, z, -(bodyYaw ?? heading), .95, !frame.hp || posture && isGroundPosture(posture.current) ? 1.65 : 1.19);
     }
   }

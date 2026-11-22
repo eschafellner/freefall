@@ -165,6 +165,9 @@ function Metrics({ status }: { status: GameStatus }) {
         <dt>Audio CPU / Horde-Spitze</dt><dd>{audio.updateMs.toFixed(2)} <span>/ {audio.enemyPeakMs.toFixed(2)} ms</span></dd>
         <dt>Audio-Cache</dt><dd>{audio.buffers} <span>· {audio.pcmMiB.toFixed(1)} MiB PCM · {audio.loading} laden</span></dd>
         <dt>Audio Laden / Dekodieren / Fehler</dt><dd>{audio.loadMs.toFixed(0)} / {audio.decodeMs.toFixed(0)} ms <span>/ {audio.errors}</span></dd>
+        <dt>Waffen-Audio lokal / remote</dt><dd>{audio.weapon.own} / {audio.weapon.remote} <span>· {audio.weapon.unavailable} Samples nicht bereit</span></dd>
+        <dt>Magazin raus / rein / Abschluss / Wechsel / Hülse</dt>
+        <dd>{audio.weapon.remove} / {audio.weapon.insert} / {audio.weapon.finish} / {audio.weapon.switch} / {audio.weapon.casing}</dd>
         <dt>Master / Kampf / Welt / Amb. / Wetter / UI</dt><dd>{[audio.levels.master, audio.levels.weapons, audio.levels.environment,
           audio.levels.ambience, audio.levels.weather, audio.levels.ui].map((v) => Math.round(100 * v)).join(' / ')} %
           {audio.levels.muted ? ' · stumm' : ''}</dd>

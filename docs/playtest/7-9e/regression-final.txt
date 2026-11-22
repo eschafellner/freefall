@@ -1,0 +1,549 @@
+
+$ npm run typecheck
+
+> project-freefall@0.1.0 typecheck
+> npm run typecheck --workspaces --if-present
+
+
+> @freefall/shared@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @freefall/client@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @freefall/server@0.1.0 typecheck
+> tsc -p tsconfig.test.json
+
+EXIT 0
+
+$ npm test
+
+> project-freefall@0.1.0 test
+> node --conditions=development --test --test-isolation=none apps/server/test/*.test.ts apps/client/test/*.test.ts
+
+✔ humanoid roles are detected from presets, including glTF-sanitized names, and can be overridden (2.4338ms)
+✔ retargeting transfers root-space rotation deltas onto a rig with other names, rest poses and proportions (4.60477ms)
+✔ packs on the same skeleton are used as they are, other skeletons are retargeted (2.45323ms)
+✔ an upper-body reload layer replaces the arms while the legs keep the locomotion clip (1.39905ms)
+✔ server-timed clips follow server progress and the pistol reload falls back to the rifle clip (0.60784ms)
+✔ slide start, loop and end use their own server-driven clip time (0.66359ms)
+✔ base clips crossfade linearly and gait changes keep the step phase (1.099511ms)
+✔ the look overlay pitches the head with the view and two-bone IK reaches its target (0.60956ms)
+✔ foot IK lifts a foot that a clip pushes into the ground and leaves planted feet alone (0.2961ms)
+✔ the procedural rig stays the fallback for states whose GLB clip is missing (14.38517ms)
+✔ the clip contract covers every tactical clip once and reports gaps per group (0.19266ms)
+✔ sparse ground overlays leave gait and unkeyed upper-body tracks on the base layer (0.35683ms)
+✔ invalid clip bindings and root transforms cannot satisfy required coverage (0.26946ms)
+✔ remote shot animation waits for its render tick and drops shot echoes from other lives (8.696231ms)
+✔ spatial audio accepts Web Audio listeners with legacy setters (0.31465ms)
+✔ audio catalog covers every weather profile and the encoded assets match their source manifest (14.27489ms)
+✔ 1,000 simultaneous voices leave protected seats and clean up at expiration (0.803501ms)
+✔ soundscape follows authoritative weather interpolation without restarting its layers (12.8089ms)
+✔ loop replacement crossfades once and disposal releases both layers (0.07858ms)
+✔ surface steps use displacement, vary successive takes and play each confirmed landing once (0.35945ms)
+✔ authoritative enemy windups prioritize nearby threats under 250, 500 and 1,000 records (1.84279ms)
+✔ recent repeated combat and mission events are deduplicated across stream replay (0.05462ms)
+✔ a cancelled or removed enemy cannot start an audio cue from the older horde frame (0.20946ms)
+✔ reconnect rejects unseen historical shots, blasts and damage while a later swing still plays (0.20852ms)
+✔ a full feedback window retains original identities without crowding out confirmed action cues (0.98321ms)
+✔ out-of-order detonations supersede queued and late throw cues for the same grenade (0.12726ms)
+✔ authoritative actions deduplicate every channel across jitter, bursts and reconnect fences (0.0918ms)
+✔ snapshots interpolate a single canister from release and never start a blast (3.29316ms)
+✔ pooled core, soil, smoke and lights obey quality, accessibility and cleanup (2.32934ms)
+✔ melee shares the impact pool and never emits a tracer or protected-target hit (1.709601ms)
+✔ camera impulses are bounded by posture and accessibility, independent of weapon FOV kick (1.74765ms)
+✔ the telegraph follows the server clock with delayed, reordered and dropped presentation frames (0.47634ms)
+✔ four planet material sets use valid packed mipmapped data and dielectric PBR props (302.480615ms)
+✔ detail streams replay independently per chunk, vary across seeds and exclude every mission reservation (420.12939ms)
+ℹ green-plains seed 17 · 36112 · {"grass":18787,"pebble":5613,"scree":3638,"forb":8074}
+ℹ desert seed 31 · 15887 · {"pebble":8380,"scree":5317,"scrub":2190}
+ℹ ice seed 48 · 9541 · {"drift":2812,"scree":2903,"ice-chip":3826}
+ℹ forest seed 63 · 32751 · {"litter":14448,"forb":4130,"pebble":7414,"fern":5260,"deadwood":1499}
+✔ catalog geometry has finite unit normals, a grounded pivot and a measured footprint (2.192211ms)
+ℹ drift · 80 triangles
+ℹ ice-chip · 40 triangles
+ℹ scree · 80 triangles
+ℹ pebble · 40 triangles
+ℹ scrub · 56 triangles
+ℹ grass · 22 triangles
+ℹ forb · 56 triangles
+ℹ fern · 144 triangles
+ℹ litter · 28 triangles
+ℹ deadwood · 20 triangles
+✔ quality changes keep terrain vertices, collision prop instances and shared assets while releasing owned GPU resources (128.910726ms)
+✔ the existing Three GLB pipeline imports an in-memory metre-scale mesh and rejects an invalid asset (2.67183ms)
+✔ markers distinguish confirmed damage, enemy death and friendly fire (0.07919ms)
+✔ receive window permits reordering and cuts off pre-join and pre-reconnect contacts (0.05376ms)
+✔ pooled particles exit the contact plane, obey quality budgets and expire independently of tracers (1.50321ms)
+✔ impact audio uses the confirmed coordinates, applies cooldown and falls back with no decoded asset (1.24294ms)
+✔ every generated planet has a distinct, readable atmosphere and retains its 7.6 world identity (55.056883ms)
+✔ surface, carrier and arena reuse one light rig and replace the active sky without leaking textures (50.899682ms)
+✔ LDR keeps the planetary sky and fixed surfaces can render without an atmosphere profile (33.224172ms)
+✔ animation resolves movement directions, upper-body actions and death independently (0.45495ms)
+✔ aim zoom, sprint and visual recoil preserve the server reticle axis at pitch limits (1.23437ms)
+✔ fallback rifle aims from the muzzle and keeps gameplay position independent of pose (5.97896ms)
+✔ mixer accepts in-place packs and filters horizontal root motion (0.47462ms)
+✔ a dive clip poses the body without adding vertical or horizontal root motion (0.26077ms)
+✔ visual sprint survives rendering 144 frames per second from 30 Hz prediction (0.13474ms)
+✔ articulated parts share instanced draws and exclude hidden rigs and replaced pieces (0.58416ms)
+✔ external rig attaches the primary weapon and a late magazine import returns to the seated transform (4.364151ms)
+✔ stance travels at ground speed and stationary or dead rigs stop stepping (0.16273ms)
+✔ an incomplete stored binding keeps the player keys and fills new actions with free defaults (0.25047ms)
+✔ a missing action whose default key is taken stays unbound until the player assigns one (0.14537ms)
+✔ invalid or duplicate stored keys fall back instead of discarding the whole binding (0.10735ms)
+✔ prediction ignores inputs of an earlier life like the server does (0.36348ms)
+✔ local operator moves the same distance every frame at 60 and 144 Hz from 30 Hz steps (0.50456ms)
+✔ a reconciliation correction is blended without a visible jump and never kept (0.11568ms)
+✔ new life and large desync snap to the authoritative position (0.08939ms)
+✔ timeline adapts its delay to measured jitter and runs at real time without stalls (2.69492ms)
+✔ timeline extrapolates a bounded distance past the newest snapshot, then holds (0.22907ms)
+✔ remote poses never interpolate across a respawn or a teleport (0.20316ms)
+✔ camera collision pulls in at once and eases back out (0.40568ms)
+✔ ground combat weapon pose follows aim above and below the global zero plane (6.09674ms)
+✔ remote ground combat follows triangle height and stops extrapolation at solid cover (0.30577ms)
+✔ pending crawl, turn and get-up replay against authoritative snapshots in either ground posture (4.42784ms)
+✔ remote ground orientation wraps independently and get-up freezes position through its end tick (0.17889ms)
+✔ a snapshot gap across landing and get-up stops remote movement at the rise tick (0.17835ms)
+✔ duplicate and older player snapshots are rejected before consumers update local state (0.04986ms)
+✔ late crawl reconciliation keeps the rendered collider behind a wall after dive history expires (0.13775ms)
+✔ ground camera stays under a canopy, eases out and keeps its bearing through a change of posture (0.24902ms)
+✔ prediction replays a pending slide bit for bit with the server before and after confirmation (0.827361ms)
+✔ remote interpolation accepts a fast slide step and still snaps on teleport or life change (0.09717ms)
+✔ prediction replays unacknowledged analog dive, then matches the server through landing (0.43881ms)
+✔ server rejection rolls back a locally predicted dive without retaining an action (0.08595ms)
+✔ reconnect waits for a snapshot and discards unconfirmed dives from the old connection (0.04732ms)
+✔ a remote remains airborne until the server landing tick, and reconnect restores ground posture (0.08299ms)
+✔ remote reconstruction follows server preparation, impact, and landing across a snapshot gap (0.6028ms)
+✔ reconnect midflight resumes a confirmed impact path and reconciles to its landing (0.6006ms)
+✔ dive visuals choose heading variants and preserve the server landing even near the side boundary (0.19493ms)
+✔ touchdown plays once on the existing clock and is interrupted by get-up or death (0.12469ms)
+✔ camera follows posture clocks, keeps a backward-dive bearing and converges independently of frame cadence (0.64151ms)
+✔ reduced motion suppresses positional and FOV effects and malformed options use safe defaults (0.1347ms)
+✔ rebinding detects a conflict, persists a replacement, and resets to defaults (0.16584ms)
+✔ desktop controls isolate bindings, menu and focus loss from gameplay and expose bounded analog input (0.86288ms)
+✔ four clients converge after tactical movement and ground combat under LAN (13.145151ms)
+ℹ {"simulatedTicks":375,"playerSnapshotJsonBytesPerClient":488067,"dropped":0,"rejected":0,"primaryShots":28,"corrected":0,"maxCorrectionM":0,"snaps":0}
+✔ four clients converge after tactical movement and ground combat under WAN (10.97753ms)
+ℹ {"simulatedTicks":375,"playerSnapshotJsonBytesPerClient":488442,"dropped":0,"rejected":0,"primaryShots":28,"corrected":0,"maxCorrectionM":0,"snaps":0}
+✔ four clients converge after tactical movement and ground combat under high latency (11.29979ms)
+ℹ {"simulatedTicks":375,"playerSnapshotJsonBytesPerClient":485578,"dropped":0,"rejected":0,"primaryShots":28,"corrected":0,"maxCorrectionM":0,"snaps":0}
+✔ four clients converge after tactical movement and ground combat under ordered jitter with a 300 ms stall (12.469171ms)
+ℹ {"simulatedTicks":375,"playerSnapshotJsonBytesPerClient":485525,"dropped":0,"rejected":0,"primaryShots":29,"corrected":6,"maxCorrectionM":0.015466666666664963,"snaps":0}
+✔ four clients converge after tactical movement and ground combat under application snapshot drops and replays (9.436431ms)
+ℹ {"simulatedTicks":375,"playerSnapshotJsonBytesPerClient":430391,"dropped":108,"rejected":192,"primaryShots":28,"corrected":0,"maxCorrectionM":0,"snaps":0}
+✔ higher-priority notices preempt, keep their lifetime, and fit in one slot (0.20017ms)
+✔ mission events reject duplicates, stale packets and prior instances while accepting fresh reordering (0.24033ms)
+✔ both extraction methods read authoritative phases; reconnect only restores the persistent state (0.13379ms)
+✔ damage directions use camera-relative cardinal bearings, cap simultaneous hits and expire (0.19586ms)
+✔ aiming suppresses cosmetic positional motion and priority keeps weaker cues from extending damage (0.19695ms)
+✔ low postures and steep pitch keep the camera above generated terrain on every planet (32.747821ms)
+✔ each registered operator weapon has an auditable sample bank within the sustained-fire budget (0.73976ms)
+✔ four rifles submit 80 one-shots to bounded audio voices, with near variations and a spatial distant sample (1.06021ms)
+✔ missing or suspended samples never schedule a fallback or a deferred ghost shot (0.09464ms)
+✔ environment decoding cannot evict retained weapon PCM and cleanup still clears the shared cache (1.64318ms)
+✔ handling accepts exact server phases on the ground and rejects interrupted, stale and invalid-life transitions (0.19364ms)
+✔ a fresh snapshot or duplicate cannot replay handling sounds after reconnect (0.20299ms)
+✔ a firing cue uses the posed weapon in allowed postures and never fires an echo twice (7.035261ms)
+✔ muzzle VFX use the imported socket transform, cap output and recycle casings and light (3.20711ms)
+✔ tracers stop at the confirmed endpoint, hide a blocked ray and clip legacy paths against cover (0.59359ms)
+✔ weather draws through the existing scene and releases its batch at mission change (36.567632ms)
+✔ vegetation uses shared uniforms with stable instanced variants and preserves existing shader hooks (0.2499ms)
+✔ all time presets stay within readable light and fog bounds on all four planets (104.319755ms)
+✔ registry loads the published files, freezes them and exposes a stable version (0.58039ms)
+✔ IDs are unique across all definitions and every cross reference resolves (0.10836ms)
+✔ invalid definitions are rejected with readable, located messages (5.99316ms)
+✔ duplicate IDs, wire types and broken cross references are rejected (1.32016ms)
+✔ seven difficulty levels exist in order and FREEFALL is level 7 (0.09727ms)
+✔ magazines, reserves, healing and spawn budgets are valid (0.11094ms)
+✔ modifiers follow add → multiply → divide, apply once and reject stacking errors (0.53436ms)
+✔ difficulty multipliers are applied exactly once per mission snapshot (0.58699ms)
+✔ balance versions are reproducible and react to every value change (4.895061ms)
+✔ a running mission keeps its balance snapshot while other configurations differ (101.963735ms)
+✔ the server answers the client balance version check over a real connection (31.034191ms)
+✔ weapon, equipment, operator and vehicle values equal the 7.1 constants except the documented 7.2B changes (0.17071ms)
+✔ migrated enemy, nest, swarm, convict and difficulty values equal the 7.1 constants (0.44173ms)
+✔ combat, spawn and damage results match the pinned golden traces (2361.786676ms)
+✔ legacy swarm balance loads the same targeting defaults and a bounded arena refill (2.427481ms)
+✔ release, projectile and fuse share an ID; detonation uses the server contact and radius (1.35086ms)
+✔ blocked and interrupted equipment produces no release or strike presentation (0.55793ms)
+✔ only a damaging melee hit carries a presentation contact (0.95555ms)
+✔ rifle has 45 rounds and 8 spare magazines, pistol 4 spare magazines and +20 % damage (0.70108ms)
+✔ recoil and spread come from the registry and stay server-authoritative (1.96677ms)
+✔ the server controls the fire rate regardless of how often the client sends fire (0.33794ms)
+✔ Kestrel starts recovering on its next regular firing tick and still climbs under held fire (0.29035ms)
+✔ flat-world standing shots replicate the validated shoulder ray and the original muzzle separately (0.3595ms)
+✔ a reload discards the partial magazine and uses exactly one spare magazine (0.43926ms)
+✔ full magazines and empty reserves cannot be reloaded, an empty magazine can (0.40682ms)
+✔ interruptions before the insertion keep the ammunition, after it no second transaction happens (0.75893ms)
+✔ switching weapons and reloading in the same input never duplicates ammunition (0.28806ms)
+✔ death during a reload leaves the magazine counts untouched (0.51268ms)
+✔ grenade damage, radius and falloff use the central configuration (0.10841ms)
+✔ grenades damage and destroy swarm nests on Normal in two to four well placed throws (0.1663ms)
+✔ grenades destroy a nest in a mission and the destroyed nest stops spawning (38.634372ms)
+✔ grenade blasts respect friendly fire and self damage, and only query cells inside the radius (0.62554ms)
+✔ melee hits one target in front within range, for the configured damage (0.48038ms)
+✔ melee misses targets behind, out of range or behind cover (0.66205ms)
+✔ melee cooldown, stagger, bounded knockback and stun-lock immunity (0.41951ms)
+✔ knockback never pushes an enemy through a wall (0.35433ms)
+✔ the damage resolver applies the friendly-fire multiplier exactly once and in order (0.08913ms)
+✔ operators hurt each other with reduced bullet and melee damage (0.34579ms)
+✔ two shared containers exist at the Albatross with the configured charges (13.087761ms)
+✔ resupply refills magazines, grenades and stims up to capacity and only charges when something is added (14.313081ms)
+✔ simultaneous use of the last charge grants it exactly once (14.69558ms)
+✔ out of range, destroyed containers and a destroyed Albatross block resupply, a disabled one does not (14.463261ms)
+✔ leaving the container or firing cancels the interaction without a transaction (12.607611ms)
+✔ four operators reload, throw and strike at once without duplicating anything (1.21629ms)
+✔ reconnect during a reload and after a resupply keeps consistent ammunition and grants nothing twice (18.686841ms)
+✔ a disconnect during the resupply interaction cancels it without a transaction (15.063081ms)
+✔ local pursuit distributes over four operators, retains comparable targets and switches for a large distance advantage (0.515469ms)
+✔ four mission operators take simultaneous authoritative hits across postures and reconnect without stale aggro (13.292071ms)
+✔ a disconnect and reconnect between ticks cancels an old windup and releases its sector (0.58642ms)
+✔ patrol cleanup releases dead memberships without removing a reused slot from its new group (0.24561ms)
+✔ patrol perception discards a visible operator across an impassable low wall and leaves expired search (0.58197ms)
+✔ contact and cooldown follow STANDING (0.24243ms)
+✔ contact and cooldown follow CROUCHING (0.14151ms)
+✔ contact and cooldown follow DIVING (0.13968ms)
+✔ contact and cooldown follow PRONE (0.13307ms)
+✔ contact and cooldown follow SUPINE (0.12099ms)
+✔ contact and cooldown follow GETTING_UP (0.12407ms)
+✔ contact and cooldown follow SLIDING (0.10743ms)
+✔ cover blocks at strike height, while elevation, stagger and death cancel contact (0.21339ms)
+✔ ground navigation goes around low collision footprints and permits a direct narrow corridor (0.5638ms)
+✔ a patrol skips a waypoint across a disconnected ground region (0.23973ms)
+✔ sustained world clipping is counted once and an invalid origin is repaired without stale slot state (0.19102ms)
+✔ bounded grid samples include nearby cells, follow moving slots and rotate dense contacts (0.13159ms)
+✔ forty converging attackers keep flowing into several sectors without collapsing onto the operator (7.023661ms)
+✔ a horde clears a bent 1.2 m passage without world clipping or jumping between waypoints (3.09229ms)
+✔ distance fields are shared, cached and budgeted and invalid destinations allocate no field (0.15533ms)
+✔ blocked progress uses bounded recovery stages and reacts to a new goal, while arrival remains intentional (0.17092ms)
+✔ route refresh ignores small goal changes and immediately follows a materially displaced goal (0.1602ms)
+✔ separation against cover and a terrain boundary stays deterministic and respects both obstacles (5.34588ms)
+✔ battlefield holds the attack pose, consumes one event, recovers and preserves the sustained cooldown (1.04044ms)
+✔ the impact revalidates range after a valid windup (0.68765ms)
+✔ the impact revalidates angle after a valid windup (0.59376ms)
+✔ the impact revalidates cover after a valid windup (0.60414ms)
+✔ the impact revalidates volume after a valid windup (0.57323ms)
+✔ an operator entering contact on the last active tick takes a single hit (0.64082ms)
+✔ a miss requests a different attack position through the existing approach system (0.65456ms)
+✔ a lethal interruption frees the same sector for a recycled enemy slot (0.70915ms)
+✔ attack cancellation handles death in windup (0.6592ms)
+✔ attack cancellation handles death in active (0.56537ms)
+✔ attack cancellation handles stagger (1.67543ms)
+✔ attack cancellation handles operator death (0.544851ms)
+✔ attack cancellation handles new life (0.51548ms)
+✔ attack cancellation handles slot reuse (0.54116ms)
+✔ actual left and right dives can escape the locked strike, and an overlapping airborne dive takes damage (1.65539ms)
+✔ one operator can receive multiple simultaneous attacks from separate sectors (0.632161ms)
+✔ secondary targets keep their own range, cover and damage path (0.29961ms)
+✔ low cover that intersects the strike blocks Convict and Albatross impacts (0.34729ms)
+✔ horde snapshots encode attack start in each phase and reject malformed extensions (0.78072ms)
+✔ a seeded natural wave passes through five states, varies region, and leaves living enemies in recovery (67.059803ms)
+✔ validation rejects invalid ground, living bodies, visibility, overlap and disconnected navigation (3.72987ms)
+✔ spawn producers share caps, authored work can reclaim slots, and a freed entity slot is reusable (0.91624ms)
+✔ a fully occluded candidate can use the existing ground route around cover (0.85878ms)
+✔ an entirely visible spawn area expires with bounded retries and releases its reservations (5.932411ms)
+✔ a group whose first spawn dies still dispatches its remaining members through live patrol AI (1.85275ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ a live wave yields to defense, nest destruction and mission results without deleting its cohort (6.08906ms)
+✔ pressure rises gradually after damage and concentration, while disconnect and reconnect preserve the wave ID (2.15784ms)
+✔ hitscan sends no impact for range misses or a rejected shot (0.1559ms)
+✔ the same validated ray supplies contacts on floor and metal wall (0.14979ms)
+✔ only actual damage to an operator is confirmed and it carries the target life (0.19788ms)
+✔ Schabe contact uses the sphere normal and a despawned ID cannot die twice (0.13708ms)
+✔ dominant finishes, props and neutral fallback are sourced from all four worlds (53.708103ms)
+✔ triangle normal traverses the same sloped terrain as the collision, including a cell boundary (0.30779ms)
+✔ each side room can be entered and left through its doorway with regular inputs (29.869651ms)
+✔ the carrier service frame blocks standing and permits crouching underneath (7.547061ms)
+✔ one to four operators require host selection and complete the same deployment once (64.327813ms)
+✔ disconnect and leaving the boarding footprint clear readiness without blocking departure (13.94269ms)
+✔ a mission reconnect restores an airborne dive, which lands without a second request (16.03012ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"easy","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ Alpha gates Bravo and an Albatross departure rewards only secured living passengers (44.030033ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"easy","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"easy","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ only a teamwipe or successful extraction ends a mission and grants earned rewards (42.936732ms)
+✔ nearby Schaben damage an individual Albatross nozzle through the shared melee path (14.24959ms)
+✔ independent engine and hull damage disable ship extraction but preserve balloon recovery (14.152561ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"easy","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ balloon takeover, server tether, eligibility, disconnect and capture are snapshot-safe (23.415801ms)
+✔ Convicts fire, take fatal melee damage, never respawn and have declining equipment (114.685126ms)
+✔ patrol movement follows authored routes and economy seeds bounded groups (18.223061ms)
+✔ group perception reacts to sound through walls, confirms sight and interrupts its caller (1.03897ms)
+✔ surviving caller triggers one legal breach and exactly one permanent linked nest (121.758236ms)
+✔ rifle hits persistent nest, destroys it and leaves spawned enemies alive (19.706781ms)
+✔ difficulty parameters and per-tick enemy budgets apply at all seven levels (364.773138ms)
+✔ successful reinforcement effects respect global, concurrent and lifetime budgets (14.248911ms)
+✔ a cleared breach region remains on cooldown independently of the current nest cap (13.91449ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ 1 operators complete Operation Bodenbruch via albatross without debug (255.942333ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ 2 operators complete Operation Bodenbruch via balloon without debug (584.287838ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ 4 operators complete Operation Bodenbruch via albatross without debug (258.349633ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ 4 operators complete Operation Bodenbruch via balloon without debug (583.651999ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ four personal stim supplies complete once, cancel on death and disconnect, and reset on new deployment (30.823922ms)
+✔ three synchronized throws destroy a normal nest once and stop its spawn budget (18.944941ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"easy","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ an empty launch is cancelled and a missed balloon pickup returns for the surviving operator (120.431926ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"easy","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ albatross checks stance when securing and again at pickup (19.43364ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"easy","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ balloon checks stance when securing and again at pickup (116.433926ms)
+✔ every movement input moves the operator exactly once and is acknowledged in order (0.39144ms)
+✔ client replay of acknowledged inputs reproduces the server position bit for bit (0.49843ms)
+✔ a flood of inputs cannot move faster than the tick rate allows (0.23703ms)
+✔ short input gaps grow a small cushion so steady senders move once per tick (0.48882ms)
+✔ a long pause does not grow the cushion and the next input is applied at once (0.15693ms)
+✔ four real connections share state, reject a fifth, and transfer host on disconnect (5798.325346ms)
+✔ mission reconnect restores prone and an in-progress supine get-up on its original clock (3620.202648ms)
+[combat-telemetry] {"missionId":"mission.operation_bodenbruch","difficultyId":"freefall","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ four networked operators share mission selection, deployment and a reconnectable rescue state (11040.096794ms)
+📶️❗ Colyseus latency simulation enabled → 140ms latency for round trip.
+📶️❗ Colyseus latency simulation disabled.
+📶️❗ Colyseus latency simulation disabled.
+✔ four Colyseus peers share authoritative enemy timing at 140 ms simulated RTT and recover an in-flight attack (1533.458215ms)
+✔ four clients receive one authoritative wave and reconnect twice at the 1,000-enemy cap (3226.747573ms)
+✔ production mission room rejects host debug actions even if local debug is requested (545.518486ms)
+[combat-telemetry] {"missionId":"generated.03fb60ea128445e3","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ Fixed world generated contract replicates to four WebSocket peers across contested relay, reconnect and result (14339.640312ms)
+ℹ {"planId":"generated.03fb60ea128445e3","peers":4,"reconnectSessionRetained":true,"extracted":4}
+[combat-telemetry] {"missionId":"generated.ba937c03b16608c7","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ Green Plains generated contract replicates to four WebSocket peers across contested relay, reconnect and result (14477.841017ms)
+ℹ {"planId":"generated.ba937c03b16608c7","peers":4,"reconnectSessionRetained":true,"extracted":4}
+✔ planet weather data validates its light profile, ranges, resources and biome (0.23496ms)
+✔ equal seeds reproduce the sequence, including transitions and their completion on the shared tick (16.003035ms)
+✔ a replacement transition waits for a continuous endpoint and applies bounded debug wind (0.2066ms)
+✔ optional time of day preserves the generated mission geometry and rejects incompatible settings (44.826875ms)
+✔ v1 plans have stable identities, survive JSON serialization and freeze their runtime content (62.72642ms)
+✔ generated plans apply early extraction pressure when the current balance seed selects it (11.418654ms)
+✔ 512 sequential seeds across all seven difficulties produce independently validated, varied Dev’ Ault plans (331.957317ms)
+ℹ {"valid":512,"templates":{"nest-purge":157,"relay-defense":174,"relay-chain":181},"rejections":{},"variants":497,"coldGenerationMs":30.21593999999459,"coldValidationMs":30.07738000000245,"generationMs":{"mean":0.3644350624998225,"p95":0.39407999999821186,"p99":0.502359999998589,"max":30.21593999999459},"validationMs":{"mean":0.2534149999998192,"p95":0.27014999999664724,"p99":0.34232999999949243,"max":30.07738000000245},"planBytes":{"mean":1598.921875,"p95":1957,"p99":1962,"max":1969},"rssBefore":257298432,"rssAfter":257691648,"heapBefore":49405648,"heapAfter":42452136}
+✔ invalid profiles, missing content, missing anchors and candidate limit return explicit reasons (174.010486ms)
+✔ validator rejects plan tampering in graph, locations, spawns, extraction and modifier dependencies (1.707121ms)
+✔ objective graph handles optional dependencies, defended time, duplicate events and failure (0.29248ms)
+[combat-telemetry] {"missionId":"generated.9ab366633714f082","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":15,"secondary":0},"hits":{"primary":15,"secondary":0},"damage":{"primary":360,"secondary":0},"magazinesUsed":{"primary":1,"secondary":0},"roundsDiscarded":{"primary":30,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":1,"refilled":{"primaryMagazines":1,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ dev-ault nest-purge, seed 4, completes via albatross with 1 operators using gameplay inputs (198.867694ms)
+ℹ {"seed":4,"worldId":"world.bodenbruch","id":"generated.9ab366633714f082","objectives":[{"id":"west-crater-nest","state":"complete","progress":1,"completeAt":0,"optional":false}],"pickup":"albatross","durationTicks":1325,"routeMetres":230.2,"travelTicks":753,"enemiesAtResult":42,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":15,"secondary":0},"hits":{"primary":15,"secondary":0},"damage":{"primary":360,"secondary":0},"magazinesUsed":{"primary":1,"secondary":0},"roundsDiscarded":{"primary":30,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":1,"refilled":{"primaryMagazines":1,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":84}],"supplyChargesAtResult":[3,4]}
+[combat-telemetry] {"missionId":"generated.03fb60ea128445e3","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ dev-ault relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs (237.502127ms)
+ℹ {"seed":0,"worldId":"world.bodenbruch","id":"generated.03fb60ea128445e3","objectives":[{"id":"alpha","state":"complete","progress":1,"completeAt":0,"optional":false},{"id":"west-crater-nest","state":"cancelled","progress":0,"completeAt":0,"optional":true}],"pickup":"albatross","durationTicks":1707,"routeMetres":317.7,"travelTicks":1036,"enemiesAtResult":56,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[4,4]}
+[combat-telemetry] {"missionId":"generated.3144c34e527d7b57","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ dev-ault relay-chain, seed 3, completes via balloon with 4 operators using gameplay inputs (968.488883ms)
+ℹ {"seed":3,"worldId":"world.bodenbruch","id":"generated.3144c34e527d7b57","objectives":[{"id":"bravo","state":"complete","progress":1,"completeAt":0,"optional":false},{"id":"alpha","state":"complete","progress":1,"completeAt":0,"optional":false},{"id":"west-crater-nest","state":"cancelled","progress":0,"completeAt":0,"optional":true}],"pickup":{"x":-145,"z":178,"radius":5,"id":"south-flats-pickup","tag":"balloon","label":"Südliche Ebene"},"durationTicks":6184,"routeMetres":869.1,"travelTicks":2841,"enemiesAtResult":106,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[4,4]}
+[combat-telemetry] {"missionId":"generated.4e9c3f9786dcf5e4","difficultyId":"easy","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":54,"secondary":0},"hits":{"primary":12,"secondary":0},"damage":{"primary":288,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ green-plains relay-chain, seed 20, completes via balloon with 4 operators using gameplay inputs (249.38376ms)
+ℹ {"seed":20,"worldSeed":76,"worldId":"world.generated.3782000242f3d521","id":"generated.4e9c3f9786dcf5e4","objectives":[{"id":"relay-2","state":"complete","progress":1,"completeAt":0,"optional":false},{"id":"relay-0","state":"complete","progress":1,"completeAt":0,"optional":false}],"pickup":{"x":-65,"z":-155,"radius":6,"id":"pickup-0","tag":"balloon","label":"Nordwest"},"durationTicks":5915,"routeMetres":787.8,"travelTicks":2572,"enemiesAtResult":63,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":54,"secondary":0},"hits":{"primary":12,"secondary":0},"damage":{"primary":288,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":30,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":30,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":30,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":36,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[4,4]}
+[combat-telemetry] {"missionId":"generated.d9464dd361d00014","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":15,"secondary":0},"hits":{"primary":15,"secondary":0},"damage":{"primary":360,"secondary":0},"magazinesUsed":{"primary":1,"secondary":0},"roundsDiscarded":{"primary":30,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":1,"refilled":{"primaryMagazines":1,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ green-plains nest-purge, seed 4, completes via albatross with 1 operators using gameplay inputs (113.516917ms)
+ℹ {"seed":4,"worldSeed":17,"worldId":"world.generated.68c909076155c5e5","id":"generated.d9464dd361d00014","objectives":[{"id":"start-nest-0","state":"complete","progress":1,"completeAt":0,"optional":false}],"pickup":"albatross","durationTicks":1734,"routeMetres":355.7,"travelTicks":1162,"enemiesAtResult":40,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":15,"secondary":0},"hits":{"primary":15,"secondary":0},"damage":{"primary":360,"secondary":0},"magazinesUsed":{"primary":1,"secondary":0},"roundsDiscarded":{"primary":30,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":1,"refilled":{"primaryMagazines":1,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[3,4]}
+[combat-telemetry] {"missionId":"generated.7b4dff08b0f615b7","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ desert relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs (186.96048ms)
+ℹ {"seed":0,"worldSeed":31,"worldId":"world.generated.728819ca01df0109","id":"generated.7b4dff08b0f615b7","objectives":[{"id":"relay-1","state":"complete","progress":1,"completeAt":0,"optional":false},{"id":"start-nest-0","state":"cancelled","progress":0,"completeAt":0,"optional":true}],"pickup":"albatross","durationTicks":3655,"routeMetres":915.1,"travelTicks":2984,"enemiesAtResult":57,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[4,4]}
+[combat-telemetry] {"missionId":"generated.03c906fd6766f2cb","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ ice relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs (119.163629ms)
+ℹ {"seed":0,"worldSeed":48,"worldId":"world.generated.b9ec957f0a62f9c4","id":"generated.03c906fd6766f2cb","objectives":[{"id":"relay-0","state":"complete","progress":1,"completeAt":0,"optional":false}],"pickup":"albatross","durationTicks":1955,"routeMetres":393.7,"travelTicks":1284,"enemiesAtResult":44,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[4,4]}
+[combat-telemetry] {"missionId":"generated.4486f562a4aea006","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ forest relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs (153.204339ms)
+ℹ {"seed":0,"worldSeed":63,"worldId":"world.generated.acdc7ec0c04dd3da","id":"generated.4486f562a4aea006","objectives":[{"id":"relay-0","state":"complete","progress":1,"completeAt":0,"optional":false},{"id":"start-nest-0","state":"cancelled","progress":0,"completeAt":0,"optional":true}],"pickup":"albatross","durationTicks":1898,"routeMetres":376.3,"travelTicks":1227,"enemiesAtResult":48,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[4,4]}
+[combat-telemetry] {"missionId":"generated.7b4dff08b0f615b7","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ desert relay-defense, seed 0, completes via albatross with 4 operators using gameplay inputs (225.804362ms)
+ℹ {"seed":0,"worldSeed":31,"worldId":"world.generated.728819ca01df0109","id":"generated.7b4dff08b0f615b7","objectives":[{"id":"relay-1","state":"complete","progress":1,"completeAt":0,"optional":false},{"id":"start-nest-0","state":"cancelled","progress":0,"completeAt":0,"optional":true}],"pickup":"albatross","durationTicks":3660,"routeMetres":915.1,"travelTicks":2989,"enemiesAtResult":61,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[4,4]}
+[combat-telemetry] {"missionId":"generated.03c906fd6766f2cb","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ ice relay-defense, seed 0, completes via albatross with 4 operators using gameplay inputs (133.102653ms)
+ℹ {"seed":0,"worldSeed":48,"worldId":"world.generated.b9ec957f0a62f9c4","id":"generated.03c906fd6766f2cb","objectives":[{"id":"relay-0","state":"complete","progress":1,"completeAt":0,"optional":false}],"pickup":"albatross","durationTicks":1960,"routeMetres":393.7,"travelTicks":1289,"enemiesAtResult":44,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[4,4]}
+[combat-telemetry] {"missionId":"generated.4486f562a4aea006","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":1,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":3,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ forest relay-defense, seed 0, completes via albatross with 4 operators using gameplay inputs (187.344131ms)
+ℹ {"seed":0,"worldSeed":63,"worldId":"world.generated.acdc7ec0c04dd3da","id":"generated.4486f562a4aea006","objectives":[{"id":"relay-0","state":"complete","progress":1,"completeAt":0,"optional":false},{"id":"start-nest-0","state":"cancelled","progress":0,"completeAt":0,"optional":true}],"pickup":"albatross","durationTicks":1975,"routeMetres":381.2,"travelTicks":1244,"enemiesAtResult":44,"convictsSurvived":4,"balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":1,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":3,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0},"ammoAtResult":[{"ammo":44,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100},{"ammo":45,"inactiveAmmo":12,"magazines":{"primary":8,"secondary":4},"grenades":2,"stims":5,"hp":100}],"supplyChargesAtResult":[4,4]}
+[combat-telemetry] {"missionId":"generated.0bda0dcd6a5f4c02","difficultyId":"normal","balanceHash":"390e375eec0bf943","combat":{"shots":{"primary":0,"secondary":0},"hits":{"primary":0,"secondary":0},"damage":{"primary":0,"secondary":0},"magazinesUsed":{"primary":0,"secondary":0},"roundsDiscarded":{"primary":0,"secondary":0},"reloadsInterrupted":0,"grenadesThrown":0,"grenadeDamageEnemies":0,"grenadeDamageNests":0,"grenadeKills":0,"meleeAttacks":0,"meleeHits":0,"meleeKills":0,"staggers":0,"friendlyFireDamage":{"bullet":0,"explosion":0,"melee":0},"selfDamage":0,"convictFriendlyDamage":0,"resupplyUses":0,"refilled":{"primaryMagazines":0,"secondaryMagazines":0,"grenades":0,"stims":0},"blasts":0,"blastQueryMsTotal":0,"blastQueryMsMax":0}}
+✔ teamwipe settles one failed result and reconnect does not reopen the mission (59.160039ms)
+✔ measure a dev-ault relay defense with four operators at the 1,000-enemy cap (745.480791ms)
+ℹ {"plan":"generated.e9ddb7c308c96f93","tickMs":{"mean":1.9045916722222804,"p95":2.0259310000110418,"p99":2.072360000005574,"max":2.0881510000035632},"objectiveUpdateMs":{"mean":0.00023586111068046495,"p95":0.00039000000106170774,"p99":0.0011000000085914508,"max":0.014960000000428408},"navigationMs":{"mean":1.8457460499999192,"p95":1.9710809999960475,"p99":2.0149099999980535,"max":2.025491000007605},"collisionMs":{"mean":0.7863632944446888,"p95":0.8497300000017276,"p99":0.8848900000011781,"max":0.8957899999950314},"rssBefore":298405888,"rssAfter":298405888,"heapBefore":63282440,"heapAfter":76309272,"maxActiveEnemies":1000,"finalEnemyCount":1000}
+✔ measure a forest relay defense with four operators at the 1,000-enemy cap (469.773662ms)
+ℹ {"plan":"generated.114facf2c7adff57","tickMs":{"mean":1.1780190194451683,"p95":3.096021000004839,"p99":3.2794209999992745,"max":3.318790999997873},"objectiveUpdateMs":{"mean":0.00029530555519967393,"p95":0.0005399999936344102,"p99":0.0012500000011641532,"max":0.009829999995417893},"navigationMs":{"mean":0.8559256194441534,"p95":1.0183499999984633,"p99":1.3009299999976065,"max":1.5005400000081863},"collisionMs":{"mean":0.28837001111112637,"p95":0.35659000001032837,"p99":0.3982700000051409,"max":0.4966509999940172},"rssBefore":298541056,"rssAfter":299327488,"heapBefore":69068232,"heapAfter":59528944,"maxActiveEnemies":1000,"finalEnemyCount":1000}
+✔ world identity survives serialization and is independent of mission seed (53.818947ms)
+✔ v1 world IDs do not depend on the JavaScript engine’s Math.hypot implementation (35.358452ms)
+✔ 100 green-plains seeds produce walkable terrain and validated missions (775.84887ms)
+ℹ {"valid":100,"reliefMeters":{"mean":21.27189999999999,"p95":27.369999999999997,"p99":29.68,"max":29.93},"generationMs":{"mean":7.504565409999632,"p95":9.071002999990014,"p99":9.749743000007584,"max":9.824892999997246},"validationMs":{"mean":1.0770881499996177,"p95":1.3924800000095274,"p99":1.590570000000298,"max":2.907030999995186}}
+✔ 100 desert seeds produce walkable terrain and validated missions (797.728247ms)
+ℹ {"valid":100,"reliefMeters":{"mean":16.409199999999995,"p95":19.6,"p99":21.020000000000003,"max":21.03},"generationMs":{"mean":7.726235009999654,"p95":8.049922999998671,"p99":8.158142999993288,"max":8.190463000006275},"validationMs":{"mean":1.0387973300003797,"p95":1.2472100000013597,"p99":1.4627500000060536,"max":1.4789500000042608}}
+✔ 100 ice seeds produce walkable terrain and validated missions (764.514047ms)
+ℹ {"valid":100,"reliefMeters":{"mean":19.296499999999995,"p95":24.27,"p99":27.55,"max":30.840000000000003},"generationMs":{"mean":7.390748920000333,"p95":7.798082000008435,"p99":8.257803000000422,"max":8.477723000003607},"validationMs":{"mean":1.0703013799991459,"p95":1.2748799999972107,"p99":1.4510409999929834,"max":1.5267100000055507}}
+✔ 100 forest seeds produce walkable terrain and validated missions (1356.040428ms)
+ℹ {"valid":100,"reliefMeters":{"mean":21.3411,"p95":27.150000000000002,"p99":29.54,"max":30.59},"generationMs":{"mean":13.307934790000582,"p95":13.807224000003771,"p99":14.100534999990487,"max":15.166434999991907},"validationMs":{"mean":2.1759016999999585,"p95":2.5278910000051837,"p99":2.6678509999910602,"max":2.755311000000802}}
+✔ terrain triangle diagonal and chunk borders agree with heights and hitscan (5.530402ms)
+✔ green-plains tactical movement follows terrain during crouch, dive and get-up (5.717602ms)
+✔ desert tactical movement follows terrain during crouch, dive and get-up (5.842302ms)
+✔ ice tactical movement follows terrain during crouch, dive and get-up (5.617991ms)
+✔ forest tactical movement follows terrain during crouch, dive and get-up (9.815794ms)
+✔ forest trunks block player and enemy motion and keep an alternate route open (11.917704ms)
+✔ reload uses server ticks, publishes the timeline and latches a tap between ticks (0.74643ms)
+✔ empty magazines auto-reload on held fire and death discards a pending reload (0.73591ms)
+✔ slot transactions preserve ammo, cancel reload and reject stale life and sequence (0.558171ms)
+✔ empty consumables stay empty and cancelling a stim before the end tick preserves the charge (0.85097ms)
+✔ a backlog after a network stall drains actively instead of adding permanent latency (0.41767ms)
+✔ a client clock that runs slightly fast does not build an ever-growing backlog (3.004681ms)
+✔ the average movement rate stays bounded by the tick rate (no speed hack) (0.79476ms)
+✔ a posture command survives queue overflow and drained extra inputs never carry one (0.39829ms)
+✔ inputs of a previous life are acknowledged without moving, aiming, firing or reloading (0.31167ms)
+✔ enemy melee goes through the damage resolver and operators keep whole hit points (0.27316ms)
+✔ death during a reload publishes the interruption and counts it (0.23466ms)
+✔ a crouched operator hits a Schabe pressing against the barrel (0.360511ms)
+✔ knockback travels the configured distance and the enemy moves again on the end tick (0.12519ms)
+✔ arena kills by grenades delay the refill like kills by shots (0.71304ms)
+✔ convicts fire at the configured rate on average (1.27536ms)
+✔ the host can call off boarding and restart without selecting again (117.505079ms)
+✔ resupply reports why it cannot start while reloading or firing (60.591649ms)
+✔ enemy damage multiplier zero is rejected by the schema with a located message (0.58483ms)
+✔ operator weapons fire at their configured rate on average, the pistol included (1.948241ms)
+✔ arena spawns the approved Schabe on legacy wire type zero (0.4078ms)
+✔ Schabe procedural visual and ECS source match the approved baseline (0.40879ms)
+✔ horde changes live, reaches capacity and allocates fresh identities for reused slots (2.739071ms)
+✔ targeting selects the nearest living player and reacts to death and departure (0.2691ms)
+✔ grid separation spreads overlapping neighbors and velocity stays bounded (0.10467ms)
+✔ server validates inputs, normalizes movement, clamps bounds and expires held input (0.32461ms)
+✔ hitscan damages the nearest visible target, enforces rate and emits an elimination (0.26571ms)
+✔ melee respects cooldown, player death is authoritative, and respawn starts a new life (0.319511ms)
+✔ binary snapshot handles quantization, offsets, malformed length and despawn (0.11562ms)
+✔ fixed loop limits catch-up and discards old backlog (0.05894ms)
+✔ simultaneous blasts in a full grid credit each kill once and respect distance and cover (0.86088ms)
+✔ diving preparation uses the standing friendly-fire profile until takeoff (0.33927ms)
+✔ friendly-fire hits the interpolated get-up volume from either ground posture (0.5187ms)
+✔ dive landing consumes one input without draining subsequent crawl input in its lock tick (0.32301ms)
+✔ green-plains stops dives at generated rock and resolves ground motion and rising on the heightfield (5.965692ms)
+✔ desert stops dives at generated arch-pier and resolves ground motion and rising on the heightfield (6.689472ms)
+✔ ice stops dives at generated ice and resolves ground motion and rising on the heightfield (5.537722ms)
+✔ forest stops dives at generated tree and resolves ground motion and rising on the heightfield (10.214773ms)
+✔ committed Schabe strikes use authoritative dive and rise volumes at the active tick (1.197631ms)
+✔ crouch shortens the collider, scales walk speed, and ignores sprint (0.20629ms)
+✔ sliding requires a recent sprint at speed, held sprint, and standing (0.6113ms)
+✔ sliding follows balance distance and deceleration on the server clock (0.30337ms)
+✔ slide cooldown remains in standing snapshots and expires at the configured tick (0.31423ms)
+✔ a thin obstacle stops a slide early, with no movement input needed to finish (0.22186ms)
+✔ sliding may finish under a low ceiling and needs clearance to stand (0.2444ms)
+✔ sliding retains crouched weapon permissions and can fire from its lower muzzle (0.18282ms)
+✔ four operators have independent slide directions and clocks, and stale lives cannot start slides (0.472251ms)
+✔ slide tuning is validated and resolves through armor independently of weapon modifiers (0.58364ms)
+✔ dives preserve the full analog vector and select landing relative to initial aim (4.602281ms)
+✔ button-edge camera axes survive overflow and use the last simulated body heading for landing (0.33712ms)
+✔ a neutral dive keeps the current body heading when the camera turns (0.185321ms)
+✔ rejects bad commands, stale lives, invalid analog values and premature repeat dives (1.76162ms)
+✔ an active dive, slide, get-up and a dead operator cannot start a new dive (0.25321ms)
+✔ swept dive stops at thin geometry and lands on the approach side (0.17791ms)
+✔ dive validates the swept envelope at takeoff and stops at a low ceiling or tether without clipping (0.443771ms)
+✔ a dive loses spawn protection and receives normal grenade damage while airborne (0.25522ms)
+✔ low clearance blocks standing and cancels get-up when an obstacle appears (0.35714ms)
+✔ PRONE persists and crawls along the body axes at bounded speed and turn rate (0.70875ms)
+✔ PRONE get-up checks the real standing footprint on the final tick and admits only one command (0.41009ms)
+✔ PRONE aim stays within the body arc and downward shots end at the floor (0.29023ms)
+✔ SUPINE persists and crawls along the body axes at bounded speed and turn rate (0.62246ms)
+✔ SUPINE get-up checks the real standing footprint on the final tick and admits only one command (0.322671ms)
+✔ SUPINE aim stays within the body arc and downward shots end at the floor (0.17197ms)
+✔ Schabe attacks must reach a valid body zone and stop at cover in either ground posture (0.2417ms)
+✔ hitscan distinguishes crouch, flight, and oriented low profiles (0.24754ms)
+✔ head and lower body profiles are reversed between belly and back (0.05758ms)
+✔ low muzzle converges onto a valid target and close cover blocks it (0.40236ms)
+✔ ground combat preserves both weapons, tactical reload and stims without spending blocked actions (0.76834ms)
+✔ shots from a standing ally pass above a grounded player and can hit the same player in flight (0.25262ms)
+✔ melee validates attack height, and damage and death apply during dive and get-up (0.43243ms)
+✔ four operators own independent dive clocks and snapshots while a grenade is active (0.402071ms)
+ℹ tests 357
+ℹ suites 0
+ℹ pass 357
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70779.288181
+EXIT 0
+
+$ npm run build
+
+> project-freefall@0.1.0 build
+> npm run build -w @freefall/shared && npm run build -w @freefall/server && npm run build -w @freefall/client
+
+
+> @freefall/shared@0.1.0 build
+> tsc
+
+
+> @freefall/server@0.1.0 build
+> tsc
+
+
+> @freefall/client@0.1.0 build
+> vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 212 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                 0.77 kB │ gzip:   0.48 kB
+dist/assets/basis_transcoder-o4Hde_L7.js       57.52 kB
+dist/assets/basis_transcoder-VXdx5NbI.wasm    527.33 kB │ gzip: 248.94 kB
+dist/assets/index-dfN2EoaE.css                 19.47 kB │ gzip:   5.52 kB
+dist/assets/SkeletonUtils-CpSq33jK.js           4.01 kB │ gzip:   1.53 kB
+dist/assets/GLTFLoader-BCUusSFB.js             45.08 kB │ gzip:  13.19 kB
+dist/assets/KTX2Loader-DjU74fW9.js             59.39 kB │ gzip:  24.33 kB
+dist/assets/index-uf1s_033.js               1,471.70 kB │ gzip: 435.00 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 241ms
+EXIT 0
+
+$ npm run balance:check
+
+> project-freefall@0.1.0 balance:check
+> node --conditions=development scripts/balance-check.ts
+
+Balance 7.9B · Schema 2 · Hash 390e375eec0bf943
+2 Waffen, 2 Ausrüstung, 1 Gegner, 1 Nester, 7 Schwierigkeitsgrade
+1 Leicht          Gegner ≤  120 · Nest-HP 306 · Nest-Intervall 260 Ticks · Sicht 25.42 m · Convict-Kit security-surplus
+2 Normal          Gegner ≤  200 · Nest-HP 360 · Nest-Intervall 202 Ticks · Sicht 31.00 m · Convict-Kit field-standard
+3 Herausfordernd  Gegner ≤  320 · Nest-HP 360 · Nest-Intervall 168 Ticks · Sicht 33.17 m · Convict-Kit light-webbing
+4 Schwer          Gegner ≤  450 · Nest-HP 396 · Nest-Intervall 134 Ticks · Sicht 35.34 m · Convict-Kit aged-infantry
+5 Extrem          Gegner ≤  600 · Nest-HP 414 · Nest-Intervall 104 Ticks · Sicht 37.82 m · Convict-Kit worn-reserve
+6 Albtraum        Gegner ≤  800 · Nest-HP 432 · Nest-Intervall 79 Ticks · Sicht 40.30 m · Convict-Kit restricted-issue
+7 FREEFALL        Gegner ≤ 1000 · Nest-HP 450 · Nest-Intervall 54 Ticks · Sicht 42.78 m · Convict-Kit minimum-issue
+OK
+EXIT 0
+
+$ npm run balance:trace
+
+> project-freefall@0.1.0 balance:trace
+> node --conditions=development apps/server/test/support/balance-trace.ts
+
+{
+  "arena": "f52a57b052421856f0b7b5a5e783d5760bb6397e8c54799d1def266cbf03967f",
+  "mission.easy": "7fbcbd4b5861e63ce3c67c58f477181c7d5c0891428f30aac9d242495e627bde",
+  "mission.normal": "502d8ffee79a7ce0fd91bf17ddef04d112e11e98abbb400305847db20711641c",
+  "mission.challenging": "9c0d95c3e6dd126fc89e40aff3d87f545de8224dd48d390c261c6ebc15b06915",
+  "mission.hard": "22685f445eaebea61742f346604011d9591d8f648dcf565e5c8fbf8e5f3a3439",
+  "mission.extreme": "9ae835642775873295ba74018fdf73d0de1477651180b33a2b7818ad6385faaf",
+  "mission.nightmare": "dd1064f26073cc829ff4d10e07088bf7925f06489b9ec0839096f0f1e250b2a6",
+  "mission.freefall": "e75da3a96b25ad79e0894385a45c23cf3fb1aca0c51373190e26c62aea4660ae"
+}
+EXIT 0
+
+$ sha256sum -c docs/enemies/schabe/baseline.sha256
+apps/client/src/rendering/EnemyVisualLOD.ts: OK
+apps/client/src/rendering/AgentMeshes.ts: OK
+apps/server/src/ecs/HordeManager.ts: OK
+EXIT 0
+
+$ node --check scripts/playtest-combat-presentation.mjs
+EXIT 0
+
+$ ./node_modules/.bin/tsc --ignoreConfig --noEmit --target ES2023 --module NodeNext --customConditions development --types node --rewriteRelativeImportExtensions --resolveJsonModule --skipLibCheck --strict scripts/measure-mission-balance.ts
+EXIT 0
+
+$ git diff --check
+EXIT 0

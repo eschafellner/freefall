@@ -76,16 +76,15 @@ const LEGACY = {
  * (`npm run balance:trace`) and document it in docs/BALANCE_WORKFLOW.md.
  */
 const GOLDEN_TRACES = {
-  // 7.4C: committed enemy melee, current contact validation and attack-sector reservations.
-  arena: '2f4d1385be645eb19ec1f56770396c25de5542001d2e000c76ee4be65dfdacfb',
-  // 7.4D: shared spawn validation and authoritative encounter snapshots on Bodenbruch.
-  'mission.easy': '47467ab3721304ce495767ae991605e0dcf60cb60e23ae9a2891e47b0468e55b',
-  'mission.normal': '3449ca5ecb67d3003358fe75de37d426468a8fd171c40af6ff0bb7822223933e',
-  'mission.challenging': 'be2cb46957ed2bc56a12e30af9cf82423a730b89fca1d08c5e7b581a1d98944a',
-  'mission.hard': '68608ca13526ac6dba00bbabfc5d555ff5171d9fb64c9cac361dd6e67d3fa1f9',
-  'mission.extreme': 'e8d6d939a5339dc566d930b90dabc6c55aacbd6bc7b9497ca78ea41bf8839827',
-  'mission.nightmare': 'acba439a2dc0658252f56d6afeec40b53ca604a4ae4b5596d13a8841c7a91d30',
-  'mission.freefall': '409b981326b2a3a9d93b1ba47748ad30603cdbf22801ed2dc375ee3fc3b8a6cf',
+  // 7.9B: the longer Schabe windup changes contact, damage, and downstream simulation.
+  arena: 'f52a57b052421856f0b7b5a5e783d5760bb6397e8c54799d1def266cbf03967f',
+  'mission.easy': '7fbcbd4b5861e63ce3c67c58f477181c7d5c0891428f30aac9d242495e627bde',
+  'mission.normal': '502d8ffee79a7ce0fd91bf17ddef04d112e11e98abbb400305847db20711641c',
+  'mission.challenging': '9c0d95c3e6dd126fc89e40aff3d87f545de8224dd48d390c261c6ebc15b06915',
+  'mission.hard': '22685f445eaebea61742f346604011d9591d8f648dcf565e5c8fbf8e5f3a3439',
+  'mission.extreme': '9ae835642775873295ba74018fdf73d0de1477651180b33a2b7818ad6385faaf',
+  'mission.nightmare': 'dd1064f26073cc829ff4d10e07088bf7925f06489b9ec0839096f0f1e250b2a6',
+  'mission.freefall': 'e75da3a96b25ad79e0894385a45c23cf3fb1aca0c51373190e26c62aea4660ae',
 };
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -93,7 +92,7 @@ const GOLDEN_TRACES = {
 
 test('registry loads the published files, freezes them and exposes a stable version', () => {
   assert.equal(BALANCE.version.schemaVersion, 2);
-  assert.equal(BALANCE.version.release, '7.3');
+  assert.equal(BALANCE.version.release, '7.9B');
   assert.match(BALANCE.version.hash, /^[0-9a-f]{16}$/);
   deepFrozen(BALANCE.weapon('kestrel-ar-01'));
   deepFrozen(BALANCE.swarm);

@@ -6,7 +6,8 @@ import type { Room } from '@colyseus/sdk';
 import { ARENA_ROOM, BALANCE, BODENBRUCH, BODENBRUCH_ROOM, ENEMY_TYPES, HordeFrame, MAX_ENEMIES, PLAYER_MOTION, PROCEDURAL_CONTRACT_ID, SCHABE_TYPE, TEST_RIFLE, WIDE_POSITION_SCALE, decodeHorde, groundHeight, restoreWorld, missionGround, newPosture, openGround } from '@freefall/shared';
 import type { AtmosphereState, CombatEvent, MissionEvent, MissionPlan, MissionSnapshot, PlayersSnapshot, ServerMetrics, ShotEvent } from '@freefall/shared';
 import { startServer } from '../src/server.ts';
-import type { MissionInstance } from '../src/mission/MissionInstance.ts';
+import { MissionInstance } from '../src/mission/MissionInstance.ts';
+import { LocalMissionDebugRoom } from '../src/rooms/FreefallRoom.ts';
 import { seededRandom } from '../src/simulation/Battlefield.ts';
 
 function waitFor<T>(room: Room, type: string, matches: (data: T) => boolean, timeoutMs = 4500): Promise<T> {
@@ -468,12 +469,12 @@ test('four Colyseus peers share authoritative enemy timing at 140 ms simulated R
 });
 
 test('four clients receive one authoritative wave and reconnect twice at the 1,000-enemy cap', { timeout: 20_000 }, async () => {
-  const debug = process.env.FREEFALL_MISSION_DEBUG;
-  process.env.FREEFALL_MISSION_DEBUG = '1';
-  const starting = startServer(0, '127.0.0.1', false);
-  if (debug === undefined) delete process.env.FREEFALL_MISSION_DEBUG;
-  else process.env.FREEFALL_MISSION_DEBUG = debug;
-  const server = await starting;
+  const server = await startServer(0, '127.0.0.1', false);
+  const roomName = 'seeded-wave-test';
+  // Keep candidate visibility and wave placement repeatable while exercising the real room and transport.
+  server.define(roomName, class extends LocalMissionDebugRoom {
+    protected override createSimulation(): MissionInstance { return new MissionInstance(77, BODENBRUCH); }
+  });
   const rooms: Room[] = [];
   const address = server.transport.server?.address();
   assert.ok(address && typeof address === 'object');
@@ -490,7 +491,7 @@ test('four clients receive one authoritative wave and reconnect twice at the 1,0
 
   let stage = 'deployment';
   try {
-    const host = watch(await client.create(BODENBRUCH_ROOM));
+    const host = watch(await client.create(roomName));
     const startedWaves: number[] = [];
     host.onMessage<MissionEvent[]>('mission-events', (batch) => {
       for (const event of batch) if (event.type === 'HordeWaveStarted') startedWaves.push(event.waveId);

@@ -207,8 +207,9 @@ export class AudioEngine {
   }
 
   preload(ids: Iterable<string>): void {
-    if (!this.running) return;
-    for (const id of ids) void this.assets.load(this.context!, id);
+    const context = this.context;
+    if (!context || this.disposed || !this.settings.enabled) return;
+    for (const id of ids) void this.assets.load(context, id);
   }
 
   play(id: string, options: SampleOptions): SampleVoice | undefined {

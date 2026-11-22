@@ -524,7 +524,7 @@ export class ArenaView {
    * Telemetry overlay: orange ring at the last authoritative server position, cyan ring at the
    * simulated client prediction. The rendered operator is drawn between them. Without arguments hidden.
    */
-  debugPositions(server?: PlayerState, predicted?: OperatorPosition, tick = 0): void {
+  debugPositions(server?: PlayerState, predicted?: OperatorPosition, tick = 0, world?: WorldDefinition): void {
     if (!server && !predicted) {
       if (this.debugMarkers) {
         const { server, predicted, collider, zones } = this.debugMarkers;
@@ -574,7 +574,10 @@ export class ArenaView {
         zones.rotation.y = -posture.yaw;
         for (const [i, zone] of GROUND_HIT_ZONES.entries()) {
           const top = groundHitZoneTop(zone, supine);
-          zones.children[i].position.set(0, (top + zone.bottom) * shape.height / 2, zone.z * shape.halfLength * (supine ? -1 : 1));
+          const centerZ = zone.z * shape.halfLength * (supine ? -1 : 1);
+          const elevation = world?.terrain ? groundHeight(world, server.x - Math.sin(posture.yaw) * centerZ,
+            server.z + Math.cos(posture.yaw) * centerZ) - zones.position.y : 0;
+          zones.children[i].position.set(0, elevation + (top + zone.bottom) * shape.height / 2, centerZ);
           zones.children[i].scale.set(2 * zone.halfWidth * shape.radius, (top - zone.bottom) * shape.height,
             2 * zone.halfLength * shape.halfLength);
         }

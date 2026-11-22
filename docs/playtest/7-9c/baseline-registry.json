@@ -1,0 +1,939 @@
+{
+  "manifest": {
+    "schemaVersion": 2,
+    "release": "7.9B",
+    "description": "Schaben-Nahkampf mit längerem Windup und längeres Mindestfenster für die Ankunft gestaffelter Wellen im PEAK."
+  },
+  "weapons": {
+    "weapons": [
+      {
+        "id": "kestrel-ar-01",
+        "displayName": "Kestrel AR-01",
+        "category": "assault-rifle",
+        "slot": "primary",
+        "damage": 24,
+        "roundsPerSecond": 10,
+        "magazineSize": 45,
+        "reserveMagazines": 8,
+        "maxReserveMagazines": 8,
+        "reloadSeconds": 2.1,
+        "reloadTimeline": {
+          "removalAt": 0.2,
+          "insertionAt": 0.72
+        },
+        "effectiveRange": 72,
+        "recoil": {
+          "pitchPerShot": 0.3,
+          "yawPerShot": 0.2,
+          "verticalMultiplier": 1.2,
+          "horizontalMultiplier": 1.1,
+          "sustainedGrowthPerShot": 0.035,
+          "maxSustainedMultiplier": 1.6,
+          "maxClimbDegrees": 7,
+          "recoveryDelaySeconds": 0.1,
+          "recoveryPerSecond": 5,
+          "visualKick": 1,
+          "cameraKick": 0.5
+        },
+        "spread": {
+          "hipDegrees": 0.9,
+          "aimDegrees": 0.22,
+          "movingMultiplier": 1.6,
+          "bloomPerShot": 0.1,
+          "maxBloomDegrees": 1.8,
+          "bloomRecoveryPerSecond": 5
+        },
+        "movement": {
+          "walkSpeedMultiplier": 1,
+          "sprintSpeedMultiplier": 1
+        },
+        "assets": {
+          "visual": "weapon.kestrel-ar-01"
+        },
+        "sounds": {
+          "fire": "rifle"
+        },
+        "attachmentSlots": []
+      },
+      {
+        "id": "p-01",
+        "displayName": "P-01 Dienstpistole",
+        "category": "pistol",
+        "slot": "secondary",
+        "damage": 21.6,
+        "roundsPerSecond": 4,
+        "magazineSize": 12,
+        "reserveMagazines": 4,
+        "maxReserveMagazines": 4,
+        "reloadSeconds": 1.45,
+        "reloadTimeline": {
+          "removalAt": 0.18,
+          "insertionAt": 0.68
+        },
+        "effectiveRange": 44,
+        "recoil": {
+          "pitchPerShot": 0.85,
+          "yawPerShot": 0.25,
+          "verticalMultiplier": 1,
+          "horizontalMultiplier": 1,
+          "sustainedGrowthPerShot": 0,
+          "maxSustainedMultiplier": 1,
+          "maxClimbDegrees": 4,
+          "recoveryDelaySeconds": 0.06,
+          "recoveryPerSecond": 9,
+          "visualKick": 1.35,
+          "cameraKick": 0.75
+        },
+        "spread": {
+          "hipDegrees": 0.7,
+          "aimDegrees": 0.18,
+          "movingMultiplier": 1.4,
+          "bloomPerShot": 0.3,
+          "maxBloomDegrees": 1.5,
+          "bloomRecoveryPerSecond": 7
+        },
+        "movement": {
+          "walkSpeedMultiplier": 1,
+          "sprintSpeedMultiplier": 1
+        },
+        "assets": {
+          "visual": "weapon.p-01"
+        },
+        "sounds": {
+          "fire": "pistol"
+        },
+        "attachmentSlots": []
+      }
+    ]
+  },
+  "equipment": {
+    "grenades": [
+      {
+        "id": "equipment.frag_grenade",
+        "displayName": "Sprenggranate",
+        "capacity": 2,
+        "throwSeconds": 0.52,
+        "releaseSeconds": 0.22,
+        "fuseSeconds": 1.65,
+        "baseDamage": 165,
+        "blastRadius": 10.5,
+        "falloff": "linear",
+        "structureDamageMultipliers": {
+          "structure.swarm_nest": 2
+        },
+        "throw": {
+          "speed": 13,
+          "pitchOffset": 0.34,
+          "minPitch": -0.35,
+          "gravity": 13,
+          "releaseHeight": 1.35
+        }
+      }
+    ],
+    "medical": [
+      {
+        "id": "equipment.medical_stim",
+        "displayName": "Heilstim",
+        "maxCharges": 5,
+        "applicationSeconds": 1.2,
+        "healFractionOfMaxHealth": 0.4,
+        "cooldownSeconds": 0,
+        "interruptedBy": {
+          "fire": true,
+          "sprint": true,
+          "reload": true,
+          "weaponSwitch": true,
+          "melee": true
+        }
+      }
+    ],
+    "melee": [
+      {
+        "id": "melee.weapon_strike",
+        "displayName": "Kolbenstoß",
+        "damage": 50,
+        "range": 2,
+        "arcDegrees": 80,
+        "windupSeconds": 0.14,
+        "actionSeconds": 0.42,
+        "cooldownSeconds": 0.8,
+        "staggerSeconds": 0.4,
+        "staggerImmunitySeconds": 0.8,
+        "knockbackDistance": 1.1
+      }
+    ],
+    "loadouts": [
+      {
+        "id": "loadout.operator_standard",
+        "primaryWeaponId": "kestrel-ar-01",
+        "secondaryWeaponId": "p-01",
+        "grenadeId": "equipment.frag_grenade",
+        "medicalId": "equipment.medical_stim",
+        "meleeId": "melee.weapon_strike",
+        "weaponSwitchSeconds": 0.48
+      }
+    ],
+    "resupply": {
+      "onMissionStart": "full",
+      "onRespawn": "full",
+      "supplyCrates": "albatross",
+      "interactionSeconds": 1,
+      "interactionRange": 2.2,
+      "perUse": {
+        "primaryMagazines": 2,
+        "secondaryMagazines": 1,
+        "grenades": 1,
+        "stims": 2
+      },
+      "availableWhen": {
+        "vehicleDamaged": true,
+        "vehicleDisabled": true,
+        "vehicleDestroyed": false
+      }
+    }
+  },
+  "operators": {
+    "operator": {
+      "id": "operator.standard",
+      "loadoutId": "loadout.operator_standard",
+      "maxHealth": 100,
+      "walkSpeed": 5.8,
+      "sprintSpeed": 9.2,
+      "respawnSeconds": 3,
+      "respawnProtectionSeconds": 2,
+      "landingProtectionSeconds": 6
+    }
+  },
+  "enemies": {
+    "factions": [
+      {
+        "id": "swarm",
+        "displayName": "Der Schwarm"
+      }
+    ],
+    "archetypes": [
+      {
+        "id": "swarm.schabe",
+        "factionId": "swarm",
+        "displayName": "Schabe",
+        "protected": true,
+        "wireType": 0,
+        "visualAssetId": "enemy.swarm.schabe.procedural",
+        "gameplay": {
+          "health": 48,
+          "speed": 3.55,
+          "hitRadius": 0.68,
+          "hitHeight": 0.72,
+          "meleeRange": 1.45,
+          "meleeDamage": 8,
+          "meleeCooldown": 1.3
+        },
+        "resistances": {
+          "armor": 0,
+          "bulletMultiplier": 1,
+          "explosiveMultiplier": 1
+        },
+        "ai": {
+          "detectionRange": 31
+        }
+      }
+    ]
+  },
+  "structures": {
+    "nests": [
+      {
+        "id": "structure.swarm_nest",
+        "factionId": "swarm",
+        "spawnArchetypeId": "swarm.schabe",
+        "maxHealth": 360,
+        "spawnIntervalSeconds": 5.6,
+        "breachEmergeSeconds": 6.4,
+        "minSpawnIntervalTicks": 7,
+        "blockedSpawnRetryTicks": 9,
+        "reinforcementBoostRate": 1.85,
+        "hitRadius": 3.8,
+        "hitHeight": 1.55,
+        "exits": 3,
+        "exitRadius": 4.8,
+        "collapseTicks": 64,
+        "garrison": {
+          "routeRadius": 13,
+          "routePoints": 8,
+          "regroupDistance": 24,
+          "playerClearance": 7
+        }
+      }
+    ],
+    "vehicles": [
+      {
+        "id": "vehicle.albatross_02",
+        "displayName": "Albatross-02",
+        "hullHealth": 1700,
+        "thrusterHealth": 330,
+        "disabledThrusters": 2,
+        "supplyContainers": [
+          {
+            "id": "supply.port",
+            "side": "left",
+            "serial": "SUP-02-L",
+            "x": -3.32,
+            "z": 0,
+            "charges": 4,
+            "health": 420
+          },
+          {
+            "id": "supply.starboard",
+            "side": "right",
+            "serial": "SUP-02-R",
+            "x": 3.32,
+            "z": 0,
+            "charges": 4,
+            "health": 420
+          }
+        ]
+      }
+    ]
+  },
+  "swarm": {
+    "director": {
+      "enabled": true,
+      "sampleTicks": 15,
+      "timing": {
+        "calmTicks": 810,
+        "calmJitterTicks": 180,
+        "buildupTicks": 180,
+        "assaultMinTicks": 240,
+        "assaultMaxTicks": 600,
+        "peakMinTicks": 210,
+        "peakMaxTicks": 360,
+        "recoveryMinTicks": 480,
+        "recoveryMaxTicks": 900
+      },
+      "pressure": {
+        "smoothing": 0.25,
+        "startAtMost": 0.42,
+        "pauseAt": 0.68,
+        "weights": {
+          "population": 0.25,
+          "nearby": 0.4,
+          "attacks": 0.15,
+          "health": 0.25,
+          "damage": 0.35,
+          "casualties": 0.35
+        }
+      },
+      "wave": {
+        "minEnemies": 4,
+        "maxEnemies": 42,
+        "groupMin": 2,
+        "groupMax": 5,
+        "perAdditionalOperator": 0.24,
+        "budgetJitter": 0.2,
+        "groupIntervalTicks": 60,
+        "spawnIntervalTicks": 6,
+        "candidateRetries": 16
+      },
+      "spawn": {
+        "visibilityDot": 0.35,
+        "maxChecksPerTick": 32,
+        "dynamicChecksPerTick": 4,
+        "priorityHeadroom": 24,
+        "patrolSeedWindowTicks": 900
+      }
+    },
+    "meleeAttack": {
+      "windupTicks": 14,
+      "activeTicks": 3,
+      "recoveryTicks": 8,
+      "halfAngleDegrees": 60,
+      "decisionTicks": 2
+    },
+    "hordeAi": {
+      "targetTicks": 6,
+      "steeringTicks": 2,
+      "targeting": {
+        "commitmentTicks": 30,
+        "switchMeters": 2,
+        "switchRatio": 0.8
+      },
+      "separationRadius": 1.65,
+      "neighborsPerCell": 8,
+      "maxNeighbors": 8,
+      "separationStrength": 0.95,
+      "contactStrength": 1.35,
+      "contactDiameterFraction": 0.8,
+      "contactCandidatesPerCell": 32,
+      "forwardFloor": 0.22,
+      "steeringResponse": 14,
+      "turnRate": 10,
+      "attackRingFraction": 0.78,
+      "attackSpacing": 0.74,
+      "approachRange": 6,
+      "arrivalRadius": 0.22,
+      "goalRefreshDistance": 0.7,
+      "routeRefreshTicks": 12,
+      "routeRequestsPerTick": 144,
+      "fieldBuildsPerTick": 2,
+      "fieldCacheLimit": 32,
+      "gridCellSize": 5,
+      "cornerClearance": 0.12,
+      "anchorSearchCells": 2,
+      "waypointLookahead": 3,
+      "stuckTicks": 18,
+      "stuckProgressRatio": 0.15,
+      "recoveryRetries": 3,
+      "recoveryCooldownTicks": 45,
+      "recoveryContactScale": 0.58,
+      "unreachableRetryTicks": 12
+    },
+    "arena": {
+      "archetypeId": "swarm.schabe",
+      "outerRadiusInset": 5,
+      "ringWidth": 11,
+      "refillTicks": 9,
+      "maxSpawnsPerTick": 100
+    },
+    "patrols": {
+      "archetypeId": "swarm.schabe",
+      "perceptionPeriodTicks": 6,
+      "closeAwarenessRange": 9,
+      "fieldOfViewDot": 0.24,
+      "contactMemorySeconds": 6,
+      "alertDelayTicks": 10,
+      "suspiciousDelayTicks": 18,
+      "investigateSeconds": 17,
+      "searchSeconds": 3,
+      "lostContactSearchSeconds": 4,
+      "landingGraceSeconds": 6,
+      "routeSpeedScale": 0.71,
+      "suspiciousSpeedScale": 0.38,
+      "noiseRadius": {
+        "shot": 48,
+        "explosion": 82,
+        "landing": 100,
+        "beacon": 132
+      },
+      "noiseLifetimeTicks": {
+        "shot": 12,
+        "explosion": 12,
+        "landing": 120,
+        "beacon": 120
+      },
+      "maxRememberedNoises": 48,
+      "seedPlayerClearance": 14
+    },
+    "reinforcements": {
+      "callSeconds": 3,
+      "callCooldownSeconds": 35,
+      "globalCooldownSeconds": 4,
+      "regionCooldownSeconds": 32,
+      "nestBoostSeconds": 18,
+      "boostSearchRadius": 150,
+      "breachSearchRadius": 125,
+      "breachAttemptsPerRegion": 11,
+      "playerClearance": 27,
+      "nestSpacing": 18,
+      "deploymentClearance": 12,
+      "serviceApronClearance": 9,
+      "objectiveClearance": 12
+    },
+    "threat": {
+      "base": 3,
+      "perDifficultyLevel": 3,
+      "perActiveNest": 5,
+      "defending": 11,
+      "extracting": 13,
+      "nestPressureThreatDivisor": 200,
+      "extractionNestPressure": 0.4,
+      "alertHeat": {
+        "max": 42,
+        "perReinforcement": 12,
+        "decayPerTick": 0.008,
+        "touchdownBase": 4,
+        "touchdownPerLevel": 2,
+        "beaconBase": 8,
+        "beaconPerLevel": 3
+      }
+    },
+    "extraction": {
+      "initialPressureSeconds": 6,
+      "pressureIntervalSeconds": 15
+    },
+    "missionGeneration": {
+      "relayDefenseSeconds": 8,
+      "earlyPressureMultiplier": 0.65
+    }
+  },
+  "convicts": {
+    "squad": {
+      "size": 4,
+      "moveSpeed": 5.1,
+      "engageRange": 37,
+      "idleRescanTicks": 5,
+      "reloadWeaponId": "kestrel-ar-01"
+    },
+    "kits": [
+      {
+        "id": "security-surplus",
+        "weaponVariantId": "kestrel-service",
+        "maxHealth": 150,
+        "armor": 5,
+        "damage": 24,
+        "roundsPerSecond": 7,
+        "magazineSize": 28
+      },
+      {
+        "id": "field-standard",
+        "weaponVariantId": "kestrel-standard",
+        "maxHealth": 132,
+        "armor": 4,
+        "damage": 22,
+        "roundsPerSecond": 6.7,
+        "magazineSize": 26
+      },
+      {
+        "id": "light-webbing",
+        "weaponVariantId": "kestrel-reserve",
+        "maxHealth": 118,
+        "armor": 3,
+        "damage": 20,
+        "roundsPerSecond": 6.2,
+        "magazineSize": 24
+      },
+      {
+        "id": "aged-infantry",
+        "weaponVariantId": "kestrel-legacy",
+        "maxHealth": 106,
+        "armor": 2,
+        "damage": 18,
+        "roundsPerSecond": 5.8,
+        "magazineSize": 22
+      },
+      {
+        "id": "worn-reserve",
+        "weaponVariantId": "kestrel-worn",
+        "maxHealth": 96,
+        "armor": 1,
+        "damage": 16,
+        "roundsPerSecond": 5.4,
+        "magazineSize": 19
+      },
+      {
+        "id": "restricted-issue",
+        "weaponVariantId": "kestrel-restricted",
+        "maxHealth": 84,
+        "armor": 0,
+        "damage": 14,
+        "roundsPerSecond": 5,
+        "magazineSize": 16
+      },
+      {
+        "id": "minimum-issue",
+        "weaponVariantId": "kestrel-minimum",
+        "maxHealth": 72,
+        "armor": 0,
+        "damage": 12,
+        "roundsPerSecond": 4.5,
+        "magazineSize": 12
+      }
+    ]
+  },
+  "difficulty": {
+    "difficulties": [
+      {
+        "id": "easy",
+        "level": 1,
+        "displayName": "Leicht",
+        "maxActiveEnemies": 120,
+        "maxActiveNests": 2,
+        "patrolGroupCount": 5,
+        "patrolMinSize": 3,
+        "patrolMaxSize": 5,
+        "detectionRangeMultiplier": 0.82,
+        "reinforcementCooldownMultiplier": 1.55,
+        "nestSpawnIntervalMultiplier": 1.55,
+        "nestHealthMultiplier": 0.85,
+        "extractionThreatMultiplier": 0.5,
+        "maxConcurrentBreaches": 1,
+        "reinforcementBudget": 5,
+        "maxSpawnsPerTick": 8,
+        "enemyHealthMultiplier": 1,
+        "enemyDamageMultiplier": 1,
+        "convictKitId": "security-surplus"
+      },
+      {
+        "id": "normal",
+        "level": 2,
+        "displayName": "Normal",
+        "maxActiveEnemies": 200,
+        "maxActiveNests": 3,
+        "patrolGroupCount": 8,
+        "patrolMinSize": 4,
+        "patrolMaxSize": 7,
+        "detectionRangeMultiplier": 1,
+        "reinforcementCooldownMultiplier": 1.25,
+        "nestSpawnIntervalMultiplier": 1.2,
+        "nestHealthMultiplier": 1,
+        "extractionThreatMultiplier": 0.75,
+        "maxConcurrentBreaches": 1,
+        "reinforcementBudget": 8,
+        "maxSpawnsPerTick": 10,
+        "enemyHealthMultiplier": 1,
+        "enemyDamageMultiplier": 1,
+        "convictKitId": "field-standard"
+      },
+      {
+        "id": "challenging",
+        "level": 3,
+        "displayName": "Herausfordernd",
+        "maxActiveEnemies": 320,
+        "maxActiveNests": 4,
+        "patrolGroupCount": 12,
+        "patrolMinSize": 6,
+        "patrolMaxSize": 9,
+        "detectionRangeMultiplier": 1.07,
+        "reinforcementCooldownMultiplier": 1,
+        "nestSpawnIntervalMultiplier": 1,
+        "nestHealthMultiplier": 1,
+        "extractionThreatMultiplier": 1,
+        "maxConcurrentBreaches": 2,
+        "reinforcementBudget": 12,
+        "maxSpawnsPerTick": 12,
+        "enemyHealthMultiplier": 1,
+        "enemyDamageMultiplier": 1,
+        "convictKitId": "light-webbing"
+      },
+      {
+        "id": "hard",
+        "level": 4,
+        "displayName": "Schwer",
+        "maxActiveEnemies": 450,
+        "maxActiveNests": 5,
+        "patrolGroupCount": 15,
+        "patrolMinSize": 8,
+        "patrolMaxSize": 13,
+        "detectionRangeMultiplier": 1.14,
+        "reinforcementCooldownMultiplier": 0.83,
+        "nestSpawnIntervalMultiplier": 0.8,
+        "nestHealthMultiplier": 1.1,
+        "extractionThreatMultiplier": 1.25,
+        "maxConcurrentBreaches": 2,
+        "reinforcementBudget": 16,
+        "maxSpawnsPerTick": 14,
+        "enemyHealthMultiplier": 1,
+        "enemyDamageMultiplier": 1,
+        "convictKitId": "aged-infantry"
+      },
+      {
+        "id": "extreme",
+        "level": 5,
+        "displayName": "Extrem",
+        "maxActiveEnemies": 600,
+        "maxActiveNests": 6,
+        "patrolGroupCount": 20,
+        "patrolMinSize": 10,
+        "patrolMaxSize": 16,
+        "detectionRangeMultiplier": 1.22,
+        "reinforcementCooldownMultiplier": 0.68,
+        "nestSpawnIntervalMultiplier": 0.62,
+        "nestHealthMultiplier": 1.15,
+        "extractionThreatMultiplier": 1.5,
+        "maxConcurrentBreaches": 3,
+        "reinforcementBudget": 20,
+        "maxSpawnsPerTick": 16,
+        "enemyHealthMultiplier": 1,
+        "enemyDamageMultiplier": 1,
+        "convictKitId": "worn-reserve"
+      },
+      {
+        "id": "nightmare",
+        "level": 6,
+        "displayName": "Albtraum",
+        "maxActiveEnemies": 800,
+        "maxActiveNests": 8,
+        "patrolGroupCount": 24,
+        "patrolMinSize": 13,
+        "patrolMaxSize": 20,
+        "detectionRangeMultiplier": 1.3,
+        "reinforcementCooldownMultiplier": 0.55,
+        "nestSpawnIntervalMultiplier": 0.47,
+        "nestHealthMultiplier": 1.2,
+        "extractionThreatMultiplier": 1.8,
+        "maxConcurrentBreaches": 3,
+        "reinforcementBudget": 24,
+        "maxSpawnsPerTick": 18,
+        "enemyHealthMultiplier": 1,
+        "enemyDamageMultiplier": 1,
+        "convictKitId": "restricted-issue"
+      },
+      {
+        "id": "freefall",
+        "level": 7,
+        "displayName": "FREEFALL",
+        "maxActiveEnemies": 1000,
+        "maxActiveNests": 10,
+        "patrolGroupCount": 30,
+        "patrolMinSize": 16,
+        "patrolMaxSize": 24,
+        "detectionRangeMultiplier": 1.38,
+        "reinforcementCooldownMultiplier": 0.43,
+        "nestSpawnIntervalMultiplier": 0.32,
+        "nestHealthMultiplier": 1.25,
+        "extractionThreatMultiplier": 2.1,
+        "maxConcurrentBreaches": 4,
+        "reinforcementBudget": 32,
+        "maxSpawnsPerTick": 24,
+        "enemyHealthMultiplier": 1,
+        "enemyDamageMultiplier": 1,
+        "convictKitId": "minimum-issue"
+      }
+    ]
+  },
+  "combat": {
+    "damagePolicy": {
+      "operatorToOperator": 0.3,
+      "selfDamage": 0.3,
+      "operatorToConvict": 0.3,
+      "explosionsDamageOperators": true
+    },
+    "operatorHitbox": {
+      "radius": 0.42,
+      "height": 1.85
+    },
+    "audio": {
+      "maxVoices": 28,
+      "maxVoicesPerShooter": 4,
+      "audibleDistance": 150,
+      "distantBlendStart": 22,
+      "distantBlendEnd": 95,
+      "speedOfSound": 343,
+      "limiterThresholdDb": -6,
+      "weapons": {
+        "rifle": {
+          "gain": 1,
+          "transientHz": 2600,
+          "bodyHz": 105,
+          "bodyGain": 0.9,
+          "mechanicalGain": 0.35,
+          "tailGain": 0.55,
+          "variation": 0.07
+        },
+        "pistol": {
+          "gain": 0.85,
+          "transientHz": 3600,
+          "bodyHz": 150,
+          "bodyGain": 0.55,
+          "mechanicalGain": 0.5,
+          "tailGain": 0.4,
+          "variation": 0.06
+        }
+      },
+      "explosion": {
+        "gain": 1.5,
+        "bodyHz": 52,
+        "tailGain": 0.8
+      },
+      "environments": {
+        "carrier": {
+          "reverbSeconds": 0.9,
+          "reverbWet": 0.3,
+          "echoDelaySeconds": 0.045,
+          "echoFeedback": 0.32,
+          "metallic": 0.65
+        },
+        "open-field": {
+          "reverbSeconds": 2.4,
+          "reverbWet": 0.16,
+          "echoDelaySeconds": 0.42,
+          "echoFeedback": 0.22,
+          "metallic": 0
+        },
+        "outpost": {
+          "reverbSeconds": 1.3,
+          "reverbWet": 0.2,
+          "echoDelaySeconds": 0.18,
+          "echoFeedback": 0.25,
+          "metallic": 0.25
+        }
+      }
+    }
+  },
+  "movement": {
+    "crouchSpeedMultiplier": 0.55,
+    "proneSpeedMultiplier": 0.25,
+    "supineSpeedMultiplier": 0.2,
+    "crouchSeconds": 0.2,
+    "slide": {
+      "seconds": 0.6,
+      "distance": 4.5,
+      "decay": 0.8,
+      "cooldownSeconds": 1.2,
+      "minSpeed": 7
+    },
+    "diveDistance": 5,
+    "diveSeconds": 0.75,
+    "diveCooldownSeconds": 1.2,
+    "divePrepSeconds": 0.09,
+    "diveArcHeight": 0.62,
+    "noDirection": "forward",
+    "backwardDotThreshold": -0.000001,
+    "proneGetUpSeconds": 0.8,
+    "supineGetUpSeconds": 1,
+    "proneTurnRadiansPerSecond": 5,
+    "supineTurnRadiansPerSecond": 4,
+    "groundAcceleration": 8,
+    "getUpColliderExponent": 1,
+    "proneMinPitch": -0.48,
+    "supineMinPitch": -0.27,
+    "proneMaxPitch": 0.48,
+    "supineMaxPitch": 0.55,
+    "groundAimHalfArc": 1.0471975512,
+    "cameraDamping": 12,
+    "enemyAttackHalfHeight": 0.25,
+    "operatorMeleeHeight": 0.95,
+    "colliders": {
+      "STANDING": {
+        "radius": 0.42,
+        "halfLength": 0.42,
+        "height": 1.78,
+        "lookHeight": 1.34,
+        "muzzleHeight": 1.24
+      },
+      "CROUCHING": {
+        "radius": 0.42,
+        "halfLength": 0.42,
+        "height": 1.18,
+        "lookHeight": 0.92,
+        "muzzleHeight": 0.85
+      },
+      "SLIDING": {
+        "radius": 0.42,
+        "halfLength": 0.72,
+        "height": 0.9,
+        "lookHeight": 0.72,
+        "muzzleHeight": 0.68
+      },
+      "DIVING": {
+        "radius": 0.42,
+        "halfLength": 0.94,
+        "height": 0.72,
+        "lookHeight": 0.84,
+        "muzzleHeight": 0.62
+      },
+      "PRONE": {
+        "radius": 0.4,
+        "halfLength": 0.96,
+        "height": 0.49,
+        "lookHeight": 0.43,
+        "muzzleHeight": 0.36
+      },
+      "SUPINE": {
+        "radius": 0.43,
+        "halfLength": 0.98,
+        "height": 0.55,
+        "lookHeight": 0.48,
+        "muzzleHeight": 0.48
+      }
+    },
+    "actions": {
+      "STANDING": {
+        "sprint": true,
+        "aim": true,
+        "fire": true,
+        "reload": true,
+        "stim": true,
+        "switch": true,
+        "grenade": true,
+        "melee": true,
+        "resupply": true,
+        "dive": true,
+        "groundMove": false,
+        "standUp": false
+      },
+      "CROUCHING": {
+        "sprint": false,
+        "aim": true,
+        "fire": true,
+        "reload": true,
+        "stim": true,
+        "switch": true,
+        "grenade": true,
+        "melee": true,
+        "resupply": true,
+        "dive": true,
+        "groundMove": false,
+        "standUp": true
+      },
+      "SLIDING": {
+        "sprint": false,
+        "aim": true,
+        "fire": true,
+        "reload": true,
+        "stim": true,
+        "switch": true,
+        "grenade": true,
+        "melee": true,
+        "resupply": true,
+        "dive": false,
+        "groundMove": false,
+        "standUp": false
+      },
+      "DIVING": {
+        "sprint": false,
+        "aim": false,
+        "fire": false,
+        "reload": false,
+        "stim": false,
+        "switch": false,
+        "grenade": false,
+        "melee": false,
+        "resupply": false,
+        "dive": false,
+        "groundMove": false,
+        "standUp": false
+      },
+      "PRONE": {
+        "sprint": false,
+        "aim": true,
+        "fire": true,
+        "reload": true,
+        "stim": true,
+        "switch": true,
+        "grenade": false,
+        "melee": false,
+        "resupply": true,
+        "dive": false,
+        "groundMove": true,
+        "standUp": true
+      },
+      "SUPINE": {
+        "sprint": false,
+        "aim": true,
+        "fire": true,
+        "reload": true,
+        "stim": true,
+        "switch": true,
+        "grenade": false,
+        "melee": false,
+        "resupply": true,
+        "dive": false,
+        "groundMove": true,
+        "standUp": true
+      },
+      "GETTING_UP": {
+        "sprint": false,
+        "aim": false,
+        "fire": false,
+        "reload": false,
+        "stim": false,
+        "switch": false,
+        "grenade": false,
+        "melee": false,
+        "resupply": false,
+        "dive": false,
+        "groundMove": false,
+        "standUp": false
+      }
+    }
+  }
+}

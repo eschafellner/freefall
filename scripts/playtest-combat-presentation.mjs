@@ -1,7 +1,7 @@
 /** Reproducible browser and four-peer load probe. Local fixtures only. */
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { cpus, release, tmpdir, totalmem } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
@@ -26,12 +26,15 @@ const solo = process.env.FREEFALL_COMBAT_SOLO === '1';
 const delayMs = Number(process.env.FREEFALL_COMBAT_DELAY_MS ?? 0);
 const probeLoss = process.env.FREEFALL_COMBAT_DROP === '1';
 const tacticalStress = process.env.FREEFALL_TACTICAL_STRESS === '1';
+const movementProbe = process.env.FREEFALL_COMBAT_MOVEMENT === '1';
 const liveMax = process.env.FREEFALL_COMBAT_LIVE_MAX === '1';
 const steadyPopulation = process.env.FREEFALL_COMBAT_STEADY_POPULATION === '1';
+const missionFlow = process.env.FREEFALL_COMBAT_MISSION_FLOW === '1';
 const quality = process.env.FREEFALL_COMBAT_QUALITY ?? 'medium';
 const sampleMs = Number(process.env.FREEFALL_COMBAT_SAMPLE_MS ?? 4500);
 const matrix = (process.env.FREEFALL_COMBAT_LOAD ?? '0,100,250,500,750,1000').split(',').filter(Boolean).map(Number);
 assert.ok(!steadyPopulation || (liveMax && matrix.includes(1000)), 'population replenishment requires the live 1,000-enemy probe');
+assert.ok(!missionFlow || (steadyPopulation && !solo && sampleMs >= 20000), 'mission flow requires four peers at sustained load');
 const viewport = { width: Number(process.env.FREEFALL_BROWSER_WIDTH ?? 800), height: Number(process.env.FREEFALL_BROWSER_HEIGHT ?? 450) };
 const angle = process.env.FREEFALL_BROWSER_ANGLE ?? 'swiftshader';
 const worlds = [
@@ -46,7 +49,8 @@ const server = await startServer(0, '127.0.0.1', false);
 const url = 'http://127.0.0.1:' + server.transport.server.address().port;
 const sdk = new Client(url);
 const report = { angle, viewport, quality, sampleMs, baseline, solo, delayMs, probeLoss, tacticalStress, liveMax, steadyPopulation,
-  renderedClients: 1, worlds: {}, forest: [] };
+  movementProbe, missionFlow, renderedClients: 1, sourceRevision: process.env.FREEFALL_SOURCE_REVISION,
+  host: { cpu: cpus()[0]?.model, kernel: release(), ramBytes: totalmem(), node: process.version }, worlds: {}, forest: [] };
 const idle = { forward: 0, strafe: 0, aim: false, fire: false, sprint: false };
 let web, browser;
 const peers = [];
@@ -200,6 +204,31 @@ async function observe(page) {
   if (!await page.locator('.telemetry').count()) await page.keyboard.press('F2');
 }
 
+async function exerciseMissionFlow(mission, world, runner, checkpoints) {
+  const mark = (event) => checkpoints.push({ event, tick: mission.tick, enemies: mission.horde.count });
+  const { player, peer } = runner;
+  const crate = mission.snapshot().albatross?.supply?.find((entry) => entry.state === 'READY' && openGround(world, entry.x, entry.z, .45));
+  assert.ok(crate, 'reachable supply fixture');
+  place(player, world, { ...crate, yaw: 0, pitch: 0 });
+  player.equipment.magazines.primary--;
+  await until(() => player.activeInput, 'neutral input from the supply operator', 2000);
+  peer.send('mission-interact');
+  await until(() => mission.snapshot().albatross.supply.find(({ id }) => id === crate.id).charges === crate.charges - 1,
+    'resupply charge consumed', 5000);
+  mark('resupply-complete');
+
+  const relay = mission.plan.objectives[0].definition;
+  place(player, world, { x: relay.x, z: relay.z - 1, yaw: 0, pitch: 0 });
+  peer.send('mission-interact');
+  await until(() => mission.state === 'EXTRACTION_AVAILABLE', 'relay defended', 12000);
+  mark('relay-complete');
+
+  place(player, world, { ...mission.plan.extraction.balloon, yaw: 0, pitch: 0 });
+  peer.send('mission-action', 'balloon');
+  await until(() => mission.snapshot().extraction?.method === 'balloon', 'balloon extraction started', 5000);
+  mark('balloon-started');
+}
+
 async function measure(page, room, mission, target, sources, point, world, own, traffic) {
   const targeters = target > 100 ? sources : sources.slice(0, 1);
   for (const [i, source] of targeters.entries()) {
@@ -220,27 +249,64 @@ async function measure(page, room, mission, target, sources, point, world, own, 
   const cdp = await page.context().newCDPSession(page);
   const heapBefore = await cdp.send('Runtime.getHeapUsage');
   const withMissionCue = tacticalStress && target === 1000;
+  const movement = directed && movementProbe ? mission.enableMovementProfiling() : undefined;
+  const runner = directed && missionFlow ? targeters.at(-1) : undefined;
+  const checkpoints = [];
+  let flowError;
   let nestDestroyed = false;
   let localInputUpdate;
   let localInputError;
   const stepTimes = [];
   const population = new Map();
   const fixture = directed && steadyPopulation ? populationFixture(mission, world, target) : undefined;
+  const navigationTimes = [], aiTimes = [], spawnTimes = [], objectiveTimes = [];
+  const moved = new Set(), targeted = new Set();
+  const phaseTicks = new Map();
+  const attackStarts = mission.enemyCombat.totals.starts;
+  const operatorHits = mission.enemyCombat.totals.operatorHits;
+  const profile = mission.profileEnemyAI;
+  mission.profileEnemyAI = true;
+  const bytesBefore = traffic.hordeBytes;
+  const cpuBefore = process.cpuUsage();
+  const wallStart = performance.now();
   let ticksStartingAtTarget = 0;
   const step = mission.step;
   mission.step = function () {
     const start = performance.now();
     if (this.horde.count === target) ticksStartingAtTarget++;
     step.call(this);
+    const { targetMs, navigationMs, attackMs, encounterMs } = this.enemyAITime;
+    const simEnd = performance.now();
     fixture?.topUp();
-    stepTimes.push(performance.now() - start);
+    const end = performance.now();
+    stepTimes.push(simEnd - start);
+    aiTimes.push(targetMs + navigationMs + attackMs + encounterMs);
+    navigationTimes.push(navigationMs);
+    if (fixture) spawnTimes.push(end - simEnd);
+    objectiveTimes.push(this.objectiveUpdateMs);
+    const phase = this.director.pacing.snapshot()?.state;
+    if (phase) phaseTicks.set(phase, (phaseTicks.get(phase) ?? 0) + 1);
     const active = this.horde.count;
     population.set(active, (population.get(active) ?? 0) + 1);
+    if (this.tick % NET.tickHz !== 0) return;
+    for (let i = 0; i < active; i++) {
+      const slot = this.horde.active[i];
+      if (this.horde.target[slot] >= 0) targeted.add(this.horde.id[slot]);
+      if (Math.hypot(this.horde.vx[slot], this.horde.vz[slot]) > .1) moved.add(this.horde.id[slot]);
+    }
   };
+  const flow = runner && exerciseMissionFlow(mission, world, runner, checkpoints).catch((error) => { flowError = error.message; });
   let frames = 0;
   const pump = setInterval(() => {
     frames++;
-    if (directed && frames % 15 === 0 && !localInputUpdate) {
+    const phase = frames % 150;
+    if (movement && (phase === 35 || phase === 106) && !localInputUpdate && own.hp > 0) {
+      const input = phase === 106 ? page.keyboard.press('Space') : (async () => {
+        await page.keyboard.down('KeyS');
+        try { await page.keyboard.press('KeyX'); } finally { await page.keyboard.up('KeyS'); }
+      })();
+      localInputUpdate = input.catch((error) => { localInputError = error; }).finally(() => { localInputUpdate = undefined; });
+    } else if (directed && frames % 15 === 0 && !localInputUpdate) {
       localInputUpdate = aimBrowser(page, own, aimAtHorde(mission, own, world, point.yaw))
         .catch((error) => { localInputError = error; })
         .finally(() => { localInputUpdate = undefined; });
@@ -250,9 +316,15 @@ async function measure(page, room, mission, target, sources, point, world, own, 
       nestDestroyed = mission.debug(own.id, 'destroy-nest');
     }
     for (const [i, source] of targeters.entries()) {
+      if (source === runner && !flowError && checkpoints.at(-1)?.event !== 'balloon-started') {
+        send(source, {});
+        continue;
+      }
       const equipment = frames === 10 || frames === 85 ? 'grenade' : frames === 41 && i === 0 ? 'melee' : undefined;
       const aim = directed ? aimAtHorde(mission, source.player, world) : {};
-      send(source, { ...aim, fire: !equipment, equipment, reload: source.player.ammo === 0 });
+      const posture = movement && phase === 35 ? 'dive' : movement && phase === 106 ? 'stand' : undefined;
+      const forward = posture === 'dive' ? i % 2 ? -1 : 1 : 0;
+      send(source, { ...aim, fire: !equipment, equipment, reload: source.player.ammo === 0, posture, forward });
     }
   }, 1000 / NET.tickHz);
   const localFires = !targeters.length || target > 100;
@@ -291,16 +363,20 @@ async function measure(page, room, mission, target, sources, point, world, own, 
     }), sampleMs);
   } finally {
     mission.step = step;
+    mission.profileEnemyAI = profile;
     clearInterval(pump);
     await localInputUpdate;
     if (localFires) await page.mouse.up();
     if (directed) await page.mouse.up({ button: 'right' });
     for (const source of targeters) send(source, {});
   }
+  await flow;
+  const wallSeconds = (performance.now() - wallStart) / 1000;
   if (localInputError) throw localInputError;
+  if (movement) assert.ok(movement.dive.completed > 0, 'the browser load sample includes a completed authoritative dive');
   const events = traffic.events.slice(start);
   const blasts = events.filter((event) => event.type === 'blast');
-  assert.ok(blasts.length >= Math.max(1, targeters.length), 'the measured interval contains the confirmed blasts');
+  assert.ok(blasts.length >= Math.max(1, targeters.length - Number(!!runner)), 'the measured interval contains the confirmed blasts');
   if (withMissionCue) {
     assert.ok(nestDestroyed, 'the server confirmed a nest destruction during the 1,000-enemy interval');
     assert.ok(sample.notices.includes('Schwarmnest zerstört'), 'the mission cue reached the active combat HUD');
@@ -317,12 +393,21 @@ async function measure(page, room, mission, target, sources, point, world, own, 
     samples: sample.frames.length, frameMs: { ...timingStats(sample.frames), median: sample.frames.slice().sort((a, b) => a - b)[Math.floor(sample.frames.length / 2)] },
     fps: sample.frames.length * 1000 / sample.frames.reduce((a, b) => a + b, 0),
     peak: sample.peak, serverStepMs: timingStats(stepTimes), measuredServerTicks: stepTimes.length,
+    wallSeconds, serverAI: { totalMs: timingStats(aiTimes), navigationMs: timingStats(navigationTimes),
+      ...(fixture && { fixtureSpawnMs: timingStats(spawnTimes) }), objectiveMs: timingStats(objectiveTimes),
+      uniqueMovingSampled: moved.size, uniqueOperatorTargetsSampled: targeted.size, phaseTicks: Object.fromEntries(phaseTicks),
+      attackStarts: mission.enemyCombat.totals.starts - attackStarts, operatorHits: mission.enemyCombat.totals.operatorHits - operatorHits },
+    cpuMicros: process.cpuUsage(cpuBefore),
+    ...(sources.length ? { hordePayloadBytesPerSecond: (traffic.hordeBytes - bytesBefore) / wallSeconds } : {}),
+    ...(runner && { missionFlow: { checkpoints, error: flowError, endState: mission.state } }),
     serverTicks: mission.tick - startTicks, droppedSteps: room.loop.dropped - drops,
     shots: traffic.shots - shotStart, blasts: blasts.length, melee: events.filter((event) => event.type === 'melee').length,
     confirmedEnemyHits: Object.fromEntries(hits), renderedOperatorHits: hits.find(([id]) => id === own.id)?.[1] ?? 0,
     enemyHits: events.filter((event) => event.type === 'enemy-hit').length, memoryBefore, memoryAfter: process.memoryUsage(), heapBefore,
     heapAfter: await cdp.send('Runtime.getHeapUsage'), hud: await hud(page),
-    notices: sample.notices, damageDirections: sample.damageDirections, confirmedMarker: sample.confirmedMarker };
+    notices: sample.notices, damageDirections: sample.damageDirections, confirmedMarker: sample.confirmedMarker,
+    audio: JSON.parse(await page.locator('[data-audio]').getAttribute('data-audio')),
+    ...(movement && { movement }) };
   await cdp.detach();
   return result;
 }
@@ -355,7 +440,7 @@ try {
     const id = await page.locator('.room strong').innerText();
     const room = matchMaker.getLocalRoomById(id);
     const mission = room.arena, own = mission.players[0];
-    const traffic = { events: [], shots: 0, shotsByShooter: new Map(), confirmedHits: new Map() };
+    const traffic = { events: [], shots: 0, hordeBytes: 0, shotsByShooter: new Map(), confirmedHits: new Map() };
     let omitBlast = false;
     const broadcast = room.broadcast.bind(room);
     room.broadcast = (type, payload, options) => {
@@ -386,6 +471,7 @@ try {
       peer.onMessage('*', () => {});
       sources.push({ peer, player: mission.players.find((player) => player?.id === peer.sessionId), seq: 0, combat: [] });
       peer.onMessage('combat', (events) => sources[i].combat.push(...events));
+      if (i === 0) peer.onMessage('horde-wide', (payload) => { traffic.hordeBytes += payload.byteLength; });
     }
     await observe(page);
     Object.assign(own, CARRIER_CONSOLE);
@@ -403,7 +489,9 @@ try {
     for (const convict of mission.convicts.members) convict.fireAt = Infinity;
     const source = sources[0];
     const results = report.worlds[planet] = { weather, worldId: world.id, worldSeed: mission.plan.world.seed,
-      missionSeed: mission.plan.seed, planId: mission.plan.id, surfaces: [], errors };
+      missionSeed: mission.plan.seed, generatorVersion: mission.plan.generatorVersion,
+      templateId: mission.plan.templateId, balance: mission.plan.balance, difficulty: mission.difficulty.id,
+      planId: mission.plan.id, surfaces: [], errors };
     if (!baseline && !solo) for (const material of materials) {
       const point = range(world, material);
       place(source.player, world, point);
@@ -516,7 +604,9 @@ try {
         }
         const result = await measure(page, room, mission, target, sources, point, world, own, traffic);
         report.forest.push(result);
+        await writeFile(join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
         console.log('forest', target, result.fps.toFixed(1), 'FPS;', result.serverStepMs.p95?.toFixed(3), 'ms server p95;', result.blasts, 'blasts');
+        if (result.missionFlow) assert.equal(result.missionFlow.error, undefined);
       }
     }
     assert.deepEqual(errors, []);

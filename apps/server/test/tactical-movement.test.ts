@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   BALANCE, BALANCE_SOURCES, BODENBRUCH, MOVEMENT_INPUT, NET, PLAYER, advancePosture, createBalanceRegistry, divePeakStep,
-  fitsPosture, groundedBodyHit, isOperatorGrounded, newPosture, postureCollider, postureRayHit, resolveLoadout, slidePeakStep,
+  diveElevation, diveEnvelope, fitsPosture, generateWorld, groundHeight, groundedBodyHit, isOperatorGrounded, missionGround,
+  newPosture, postureCollider, postureRayHit, resolveLoadout, slidePeakStep,
   tacticalAimPitch, tacticalAimYaw,
 } from '@freefall/shared';
 import type { Obstacle, PlayerInput, PostureCommand, WorldDefinition } from '@freefall/shared';
@@ -33,6 +34,109 @@ function field(obstacles: Obstacle[] = [], registry = BALANCE) {
   const posture = () => p.posture.current;
   return { arena, p, world, step, advance, dive, posture };
 }
+
+test('diving preparation uses the standing friendly-fire profile until takeoff', () => {
+  const { arena, p, dive } = field();
+  const ally = arena.addPlayer('ally');
+  Object.assign(ally, { x: -.86, z: 5, activeInput: true });
+  ally.input = input(1, ally.life, { fire: true, pitch: Math.atan2(-.29, 5) });
+  dive(1);
+  ally.activeInput = true;
+  const shot = fireWeapon(arena.horde, ally, ray(), arena.tick, undefined, undefined, { players: arena.players });
+  assert.equal(shot?.ally, p.id);
+  assert.ok(p.hp < p.loadout.maxHealth);
+});
+
+test('friendly-fire hits the interpolated get-up volume from either ground posture', () => {
+  for (const posture of ['PRONE', 'SUPINE'] as const) {
+    const { arena, p, step, advance } = field();
+    p.posture.current = posture;
+    step({ posture: 'stand' });
+    advance(11);
+    assert.equal(p.posture.current, 'GETTING_UP');
+    const ally = arena.addPlayer('ally');
+    Object.assign(ally, { x: -.86, z: 5, activeInput: true });
+    ally.input = input(1, ally.life, { fire: true, pitch: Math.atan2(-1.3, 5) });
+    const shot = fireWeapon(arena.horde, ally, ray(), arena.tick, undefined, undefined, { players: arena.players });
+    assert.equal(shot?.ally, p.id, posture);
+    assert.equal(p.hp, p.loadout.maxHealth - Math.round(ally.loadout.weapons.primary.damage * ally.loadout.damagePolicy.operatorToOperator));
+  }
+});
+
+test('dive landing consumes one input without draining subsequent crawl input in its lock tick', () => {
+  const { arena, p, dive, advance } = field();
+  dive(1);
+  advance(ticks(movement.diveSeconds) - 1);
+  for (let seq = 2; seq <= 8; seq++) assert.ok(arena.receiveInput(p.id, input(seq, p.life, { strafe: 1 })));
+  advance(1);
+  assert.equal(p.posture.current, 'PRONE');
+  assert.equal(p.ack, 2);
+  assert.equal(p.x, 0);
+  advance(1);
+  assert.ok(p.ack > 2 && p.x > 0);
+});
+
+for (const [planet, seed, kind] of [['green-plains', 76, 'rock'], ['desert', 31, 'arch-pier'],
+  ['ice', 48, 'ice'], ['forest', 63, 'tree']] as const) {
+  test(`${planet} stops dives at generated ${kind} and resolves ground motion and rising on the heightfield`, () => {
+    const generated = generateWorld(planet, seed);
+    assert.ok(generated);
+    const world = missionGround(generated.world);
+    const wall = world.obstacles.find((o) => o.kind === kind);
+    assert.ok(wall);
+    const arena = new Battlefield(2, world);
+    const p = arena.addPlayer('p');
+    const yaw = Math.PI / 2, x = wall.x - wall.halfX - 3, z = wall.z;
+    Object.assign(p, { x, y: groundHeight(world, x, z), z, yaw, posture: newPosture(yaw), protectedUntil: 0 });
+    let seq = 0;
+    const turn = (overrides: Partial<PlayerInput> = {}) => {
+      assert.ok(arena.receiveInput(p.id, input(++seq, p.life, { yaw, ...overrides })));
+      arena.step();
+      assert.ok(Math.abs(p.y - groundHeight(world, p.x, p.z) -
+        (p.posture.dive ? diveElevation(p.posture.dive, arena.tick) : 0)) < 1e-9);
+      assert.ok(fitsPosture(p, postureCollider(p.posture, arena.tick), p.posture.yaw, world));
+    };
+    turn({ posture: 'dive', forward: 1 });
+    assert.equal(p.posture.current, 'DIVING');
+    while (p.posture.dive) turn();
+    assert.equal(p.posture.current, 'PRONE');
+    assert.ok(p.posture.landedDive?.impact);
+    assert.ok(p.x <= wall.x - wall.halfX - diveEnvelope('PRONE', movement).halfLength + 1e-6);
+    const landedX = p.x;
+    for (let i = 0; i < 8; i++) turn({ forward: -1 });
+    assert.ok(p.x < landedX);
+    assert.equal(p.posture.current, 'PRONE');
+    turn({ posture: 'stand' });
+    assert.equal(p.posture.current, 'GETTING_UP');
+    for (let i = 0; i < ticks(movement.proneGetUpSeconds); i++) turn();
+    assert.equal(p.posture.current, 'STANDING');
+  });
+}
+
+test('committed Schabe strikes use authoritative dive and rise volumes at the active tick', () => {
+  for (const phase of ['prep', 'flight', 'prone-rise', 'supine-rise'] as const) {
+    const { arena, p, step, advance } = field();
+    const stats = arena.enableMovementProfiling();
+    const rising = phase === 'prone-rise' || phase === 'supine-rise';
+    if (rising) p.posture.current = phase === 'prone-rise' ? 'PRONE' : 'SUPINE';
+    const z = phase === 'flight' ? -.65 : 0;
+    const enemy = arena.horde.spawn(.75, z, 0);
+    arena.horde.target[enemy] = p.slot;
+    arena.horde.yaw[enemy] = Math.atan2(-.75, z);
+    enemyCombatTick(arena, 0);
+    assert.equal(arena.enemyCombat.totals.starts, 1, phase);
+    const hitTick = arena.enemyCombat.timing.windupTicks;
+    const actionAt = phase === 'prep' ? hitTick - 2 : phase === 'flight' ? hitTick - 8 : 1;
+    advance(actionAt - 1);
+    step(rising ? { posture: 'stand' } : { posture: 'dive', forward: 1 });
+    advance(hitTick - actionAt);
+    const expected = rising ? 'GETTING_UP' : 'DIVING';
+    assert.equal(p.posture.current, expected, phase);
+    assert.equal(arena.combatEvents.filter((event) => event.type === 'enemy-hit').length, 1, phase);
+    assert.equal(stats.damage[expected], BALANCE.enemiesByWireType[0]!.gameplay.meleeDamage, phase);
+    assert.equal(p.hp, p.loadout.maxHealth - stats.damage[expected], phase);
+  }
+});
 
 test('crouch shortens the collider, scales walk speed, and ignores sprint', () => {
   const { p, step, posture } = field();

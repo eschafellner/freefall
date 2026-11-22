@@ -1,0 +1,2395 @@
+{
+  "revision": "ffc81913055f9673ffb55fa027b7488ef0ec9d71",
+  "simulationSeed": 51296,
+  "generatorVersion": 1,
+  "baseline": [
+    {
+      "test": "dev-ault nest-purge, seed 4, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 4,
+      "worldId": "world.bodenbruch",
+      "id": "generated.0d6c94f9a36121f0",
+      "objectives": [
+        {
+          "id": "west-crater-nest",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1325,
+      "routeMetres": 230.2,
+      "travelTicks": 753,
+      "enemiesAtResult": 42,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 15,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 15,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 360,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 1,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 30,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 1,
+        "refilled": {
+          "primaryMagazines": 1,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 84
+        }
+      ],
+      "supplyChargesAtResult": [
+        3,
+        4
+      ]
+    },
+    {
+      "test": "dev-ault relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 0,
+      "worldId": "world.bodenbruch",
+      "id": "generated.30715e42ad5ad86d",
+      "objectives": [
+        {
+          "id": "bravo",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 3565,
+      "routeMetres": 887.4,
+      "travelTicks": 2894,
+      "enemiesAtResult": 81,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "dev-ault relay-chain, seed 3, completes via balloon with 4 operators using gameplay inputs",
+      "seed": 3,
+      "worldId": "world.bodenbruch",
+      "id": "generated.6a6a98afe3645b2d",
+      "objectives": [
+        {
+          "id": "bravo",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "alpha",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "west-crater-nest",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": {
+        "x": 150,
+        "z": -153,
+        "radius": 5,
+        "id": "service-apron-pickup",
+        "tag": "balloon",
+        "label": "\u00d6stliches Vorfeld"
+      },
+      "durationTicks": 6598,
+      "routeMetres": 995.7,
+      "travelTicks": 3255,
+      "enemiesAtResult": 128,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 150,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 90,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 2160,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 2,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 21,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 7,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 21,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 7,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 39,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 39,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "green-plains relay-chain, seed 20, completes via balloon with 4 operators using gameplay inputs",
+      "seed": 20,
+      "worldSeed": 76,
+      "worldId": "world.generated.3782000242f3d521",
+      "id": "generated.c8b3c0051e9e81a8",
+      "objectives": [
+        {
+          "id": "relay-1",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "relay-2",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "start-nest-0",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": {
+        "x": -65,
+        "z": -155,
+        "radius": 6,
+        "id": "pickup-0",
+        "tag": "balloon",
+        "label": "Nordwest"
+      },
+      "durationTicks": 6107,
+      "routeMetres": 845.8,
+      "travelTicks": 2764,
+      "enemiesAtResult": 53,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 76,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 28,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 672,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 26,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 26,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 26,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 26,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "green-plains nest-purge, seed 4, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 4,
+      "worldSeed": 17,
+      "worldId": "world.generated.68c909076155c5e5",
+      "id": "generated.4c31017c2dc7647a",
+      "objectives": [
+        {
+          "id": "start-nest-0",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1734,
+      "routeMetres": 355.7,
+      "travelTicks": 1162,
+      "enemiesAtResult": 40,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 15,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 15,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 360,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 1,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 30,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 1,
+        "refilled": {
+          "primaryMagazines": 1,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        3,
+        4
+      ]
+    },
+    {
+      "test": "desert relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 31,
+      "worldId": "world.generated.728819ca01df0109",
+      "id": "generated.40c85ae5105394b6",
+      "objectives": [
+        {
+          "id": "relay-2",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 3211,
+      "routeMetres": 778.9,
+      "travelTicks": 2540,
+      "enemiesAtResult": 63,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "ice relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 48,
+      "worldId": "world.generated.b9ec957f0a62f9c4",
+      "id": "generated.610440357010979a",
+      "objectives": [
+        {
+          "id": "relay-0",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "start-nest-0",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1955,
+      "routeMetres": 393.7,
+      "travelTicks": 1284,
+      "enemiesAtResult": 44,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "forest relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 63,
+      "worldId": "world.generated.acdc7ec0c04dd3da",
+      "id": "generated.e8a31b805add44c0",
+      "objectives": [
+        {
+          "id": "relay-1",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 3679,
+      "routeMetres": 922.3,
+      "travelTicks": 3008,
+      "enemiesAtResult": 80,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "desert relay-defense, seed 0, completes via albatross with 4 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 31,
+      "worldId": "world.generated.728819ca01df0109",
+      "id": "generated.40c85ae5105394b6",
+      "objectives": [
+        {
+          "id": "relay-2",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 3216,
+      "routeMetres": 778.9,
+      "travelTicks": 2545,
+      "enemiesAtResult": 65,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "ice relay-defense, seed 0, completes via albatross with 4 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 48,
+      "worldId": "world.generated.b9ec957f0a62f9c4",
+      "id": "generated.610440357010979a",
+      "objectives": [
+        {
+          "id": "relay-0",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "start-nest-0",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1960,
+      "routeMetres": 393.7,
+      "travelTicks": 1289,
+      "enemiesAtResult": 44,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "forest relay-defense, seed 0, completes via albatross with 4 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 63,
+      "worldId": "world.generated.acdc7ec0c04dd3da",
+      "id": "generated.e8a31b805add44c0",
+      "objectives": [
+        {
+          "id": "relay-1",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 3685,
+      "routeMetres": 922.3,
+      "travelTicks": 3014,
+      "enemiesAtResult": 80,
+      "convictsSurvived": 4,
+      "balanceHash": "8cf1c12067347de6",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    }
+  ],
+  "final": [
+    {
+      "test": "dev-ault nest-purge, seed 4, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 4,
+      "worldId": "world.bodenbruch",
+      "id": "generated.9ab366633714f082",
+      "objectives": [
+        {
+          "id": "west-crater-nest",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1325,
+      "routeMetres": 230.2,
+      "travelTicks": 753,
+      "enemiesAtResult": 42,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 15,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 15,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 360,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 1,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 30,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 1,
+        "refilled": {
+          "primaryMagazines": 1,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 84
+        }
+      ],
+      "supplyChargesAtResult": [
+        3,
+        4
+      ]
+    },
+    {
+      "test": "dev-ault relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 0,
+      "worldId": "world.bodenbruch",
+      "id": "generated.03fb60ea128445e3",
+      "objectives": [
+        {
+          "id": "alpha",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "west-crater-nest",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1707,
+      "routeMetres": 317.7,
+      "travelTicks": 1036,
+      "enemiesAtResult": 56,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "dev-ault relay-chain, seed 3, completes via balloon with 4 operators using gameplay inputs",
+      "seed": 3,
+      "worldId": "world.bodenbruch",
+      "id": "generated.3144c34e527d7b57",
+      "objectives": [
+        {
+          "id": "bravo",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "alpha",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "west-crater-nest",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": {
+        "x": -145,
+        "z": 178,
+        "radius": 5,
+        "id": "south-flats-pickup",
+        "tag": "balloon",
+        "label": "S\u00fcdliche Ebene"
+      },
+      "durationTicks": 6184,
+      "routeMetres": 869.1,
+      "travelTicks": 2841,
+      "enemiesAtResult": 106,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "green-plains relay-chain, seed 20, completes via balloon with 4 operators using gameplay inputs",
+      "seed": 20,
+      "worldSeed": 76,
+      "worldId": "world.generated.3782000242f3d521",
+      "id": "generated.4e9c3f9786dcf5e4",
+      "objectives": [
+        {
+          "id": "relay-2",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "relay-0",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": {
+        "x": -65,
+        "z": -155,
+        "radius": 6,
+        "id": "pickup-0",
+        "tag": "balloon",
+        "label": "Nordwest"
+      },
+      "durationTicks": 5915,
+      "routeMetres": 787.8,
+      "travelTicks": 2572,
+      "enemiesAtResult": 63,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 54,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 12,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 288,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 30,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 30,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 30,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 36,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "green-plains nest-purge, seed 4, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 4,
+      "worldSeed": 17,
+      "worldId": "world.generated.68c909076155c5e5",
+      "id": "generated.d9464dd361d00014",
+      "objectives": [
+        {
+          "id": "start-nest-0",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1734,
+      "routeMetres": 355.7,
+      "travelTicks": 1162,
+      "enemiesAtResult": 40,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 15,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 15,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 360,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 1,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 30,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 1,
+        "refilled": {
+          "primaryMagazines": 1,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        3,
+        4
+      ]
+    },
+    {
+      "test": "desert relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 31,
+      "worldId": "world.generated.728819ca01df0109",
+      "id": "generated.7b4dff08b0f615b7",
+      "objectives": [
+        {
+          "id": "relay-1",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "start-nest-0",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 3655,
+      "routeMetres": 915.1,
+      "travelTicks": 2984,
+      "enemiesAtResult": 57,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "ice relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 48,
+      "worldId": "world.generated.b9ec957f0a62f9c4",
+      "id": "generated.03c906fd6766f2cb",
+      "objectives": [
+        {
+          "id": "relay-0",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1955,
+      "routeMetres": 393.7,
+      "travelTicks": 1284,
+      "enemiesAtResult": 44,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "forest relay-defense, seed 0, completes via albatross with 1 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 63,
+      "worldId": "world.generated.acdc7ec0c04dd3da",
+      "id": "generated.4486f562a4aea006",
+      "objectives": [
+        {
+          "id": "relay-0",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "start-nest-0",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1898,
+      "routeMetres": 376.3,
+      "travelTicks": 1227,
+      "enemiesAtResult": 48,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "desert relay-defense, seed 0, completes via albatross with 4 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 31,
+      "worldId": "world.generated.728819ca01df0109",
+      "id": "generated.7b4dff08b0f615b7",
+      "objectives": [
+        {
+          "id": "relay-1",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "start-nest-0",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 3660,
+      "routeMetres": 915.1,
+      "travelTicks": 2989,
+      "enemiesAtResult": 61,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "ice relay-defense, seed 0, completes via albatross with 4 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 48,
+      "worldId": "world.generated.b9ec957f0a62f9c4",
+      "id": "generated.03c906fd6766f2cb",
+      "objectives": [
+        {
+          "id": "relay-0",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1960,
+      "routeMetres": 393.7,
+      "travelTicks": 1289,
+      "enemiesAtResult": 44,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    },
+    {
+      "test": "forest relay-defense, seed 0, completes via albatross with 4 operators using gameplay inputs",
+      "seed": 0,
+      "worldSeed": 63,
+      "worldId": "world.generated.acdc7ec0c04dd3da",
+      "id": "generated.4486f562a4aea006",
+      "objectives": [
+        {
+          "id": "relay-0",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "start-nest-0",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ],
+      "pickup": "albatross",
+      "durationTicks": 1905,
+      "routeMetres": 376.3,
+      "travelTicks": 1234,
+      "enemiesAtResult": 48,
+      "convictsSurvived": 4,
+      "balanceHash": "390e375eec0bf943",
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "ammoAtResult": [
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        },
+        {
+          "ammo": 45,
+          "inactiveAmmo": 12,
+          "magazines": {
+            "primary": 8,
+            "secondary": 4
+          },
+          "grenades": 2,
+          "stims": 5,
+          "hp": 100
+        }
+      ],
+      "supplyChargesAtResult": [
+        4,
+        4
+      ]
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "buildVersion": "0.1.0",
+  "revision": "ffc81913055f9673ffb55fa027b7488ef0ec9d71",
+  "sourceBalance": {
+    "schemaVersion": 2,
+    "release": "7.9B",
+    "hash": "390e375eec0bf943"
+  },
+  "defaultDifficultyId": "normal",
+  "simulationSeed": 51296,
+  "tickHz": 30,
+  "host": {
+    "cpu": "AMD Ryzen 7 9700X 8-Core Processor",
+    "logicalCpus": 16,
+    "kernel": "7.3.3-300.fc45.x86_64",
+    "ramBytes": 66985082880,
+    "node": "v24.18.0"
+  },
+  "lifecycle": {
+    "cycles": 2,
+    "baselineMemory": {
+      "rss": 104374272,
+      "heapTotal": 20779008,
+      "heapUsed": 11220584,
+      "external": 10069147,
+      "arrayBuffers": 744406
+    },
+    "forcedGC": true,
+    "results": [
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1900,
+        "carrierTick": 2598,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 125702144,
+          "heapTotal": 37294080,
+          "heapUsed": 13871920,
+          "external": 11467985,
+          "arrayBuffers": 1129204
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 76,
+          "missionSeed": 4,
+          "templateId": "nest-purge",
+          "count": 4,
+          "method": "balloon",
+          "supply": true,
+          "difficultyId": "freefall"
+        },
+        "outcome": "team-lost",
+        "durationTicks": 3601,
+        "carrierTick": 6897,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 154169344,
+          "heapTotal": 57479168,
+          "heapUsed": 15023192,
+          "external": 12331421,
+          "arrayBuffers": 1743860
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 63,
+          "missionSeed": 0,
+          "templateId": "relay-defense",
+          "count": 4,
+          "method": "albatross"
+        },
+        "outcome": "extracted",
+        "durationTicks": 1900,
+        "carrierTick": 9495,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 150790144,
+          "heapTotal": 53022720,
+          "heapUsed": 15238328,
+          "external": 12139341,
+          "arrayBuffers": 937124
+        }
+      },
+      {
+        "scenario": {
+          "planetId": "forest",
+          "worldSeed": 76,
+          "missionSeed": 4,
+          "templateId": "nest-purge",
+          "count": 4,
+          "method": "balloon",
+          "supply": true,
+          "difficultyId": "freefall"
+        },
+        "outcome": "team-lost",
+        "durationTicks": 3426,
+        "carrierTick": 13619,
+        "enemyCount": 0,
+        "grenadesActive": false,
+        "memory": {
+          "rss": 152604672,
+          "heapTotal": 53809152,
+          "heapUsed": 15494736,
+          "external": 12408253,
+          "arrayBuffers": 2012772
+        }
+      }
+    ]
+  }
+}

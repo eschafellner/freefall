@@ -1,0 +1,2003 @@
+{
+  "registry": {
+    "schemaVersion": 2,
+    "release": "7.9B",
+    "hash": "390e375eec0bf943"
+  },
+  "simulationSeed": 421337,
+  "tickHz": 30,
+  "ticks": 210,
+  "node": "v24.18.0",
+  "kernel": "7.3.3-300.fc45.x86_64",
+  "cpu": "AMD Ryzen 7 9700X 8-Core Processor",
+  "workers": 16,
+  "samples": [
+    {
+      "world": {
+        "id": "world.generated.3782000242f3d521",
+        "planetId": "green-plains",
+        "biome": "temperate-grassland",
+        "seed": 76,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 1,
+      "sequence": "tactical",
+      "enemies": 0,
+      "minEnemies": 0,
+      "maxEnemies": 0,
+      "atTarget": 210,
+      "survivors": 1,
+      "health": [
+        100
+      ],
+      "enemy": {
+        "decisions": 0,
+        "validations": 0,
+        "starts": 0,
+        "hits": 0,
+        "operatorStarts": 0,
+        "operatorHits": 0,
+        "operatorDamage": 0,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 19,
+          "CROUCHING": 0,
+          "DIVING": 23,
+          "PRONE": 144,
+          "SUPINE": 0,
+          "GETTING_UP": 24,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:DIVING": 1,
+          "DIVING:PRONE": 1,
+          "PRONE:GETTING_UP": 1,
+          "GETTING_UP:STANDING": 1
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 1,
+          "accepted": 1,
+          "completed": 1,
+          "collisions": 0,
+          "metres": 5,
+          "ticks": 23,
+          "directions": {
+            "forward": 1,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 1,
+          "accepted": 1,
+          "completed": 1,
+          "interrupted": 0,
+          "ticks": 24
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 45,
+            "shots": 7,
+            "magazinesInserted": 1,
+            "stimsCompleted": 1
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 1.980710000000002,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.02322429523809568,
+        "p95": 0.05113999999998953,
+        "p99": 0.6208500000000043,
+        "max": 1.2429599999999965
+      },
+      "bytesHorde": 420,
+      "bytesPlayers": 83067,
+      "heapDeltaBytes": -2379864,
+      "rssBytes": 103653376
+    },
+    {
+      "world": {
+        "id": "world.generated.728819ca01df0109",
+        "planetId": "desert",
+        "biome": "arid-desert",
+        "seed": 31,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 2,
+      "sequence": "tactical",
+      "enemies": 0,
+      "minEnemies": 0,
+      "maxEnemies": 0,
+      "atTarget": 210,
+      "survivors": 2,
+      "health": [
+        100,
+        100
+      ],
+      "enemy": {
+        "decisions": 0,
+        "validations": 0,
+        "starts": 0,
+        "hits": 0,
+        "operatorStarts": 0,
+        "operatorHits": 0,
+        "operatorDamage": 0,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 32,
+          "CROUCHING": 0,
+          "DIVING": 46,
+          "PRONE": 144,
+          "SUPINE": 144,
+          "GETTING_UP": 54,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:DIVING": 2,
+          "DIVING:PRONE": 1,
+          "DIVING:SUPINE": 1,
+          "PRONE:GETTING_UP": 1,
+          "SUPINE:GETTING_UP": 1,
+          "GETTING_UP:STANDING": 2
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 2,
+          "accepted": 2,
+          "completed": 2,
+          "collisions": 0,
+          "metres": 10,
+          "ticks": 46,
+          "directions": {
+            "forward": 1,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 1,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 2,
+          "accepted": 2,
+          "completed": 2,
+          "interrupted": 0,
+          "ticks": 54
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 45,
+            "shots": 7,
+            "magazinesInserted": 1,
+            "stimsCompleted": 1
+          },
+          "SUPINE": {
+            "aimTicks": 45,
+            "shots": 7,
+            "magazinesInserted": 1,
+            "stimsCompleted": 1
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.7874919999999577,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.009821247619047398,
+        "p95": 0.02436000000000149,
+        "p99": 0.07205999999999335,
+        "max": 0.3100300000000118
+      },
+      "bytesHorde": 420,
+      "bytesPlayers": 160709,
+      "heapDeltaBytes": -519272,
+      "rssBytes": 103915520
+    },
+    {
+      "world": {
+        "id": "world.generated.b9ec957f0a62f9c4",
+        "planetId": "ice",
+        "biome": "glacial",
+        "seed": 48,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 3,
+      "sequence": "tactical",
+      "enemies": 0,
+      "minEnemies": 0,
+      "maxEnemies": 0,
+      "atTarget": 210,
+      "survivors": 3,
+      "health": [
+        100,
+        100,
+        100
+      ],
+      "enemy": {
+        "decisions": 0,
+        "validations": 0,
+        "starts": 0,
+        "hits": 0,
+        "operatorStarts": 0,
+        "operatorHits": 0,
+        "operatorDamage": 0,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 51,
+          "CROUCHING": 0,
+          "DIVING": 69,
+          "PRONE": 288,
+          "SUPINE": 144,
+          "GETTING_UP": 78,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:DIVING": 3,
+          "DIVING:PRONE": 2,
+          "DIVING:SUPINE": 1,
+          "PRONE:GETTING_UP": 2,
+          "SUPINE:GETTING_UP": 1,
+          "GETTING_UP:STANDING": 3
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 3,
+          "accepted": 3,
+          "completed": 3,
+          "collisions": 0,
+          "metres": 15,
+          "ticks": 69,
+          "directions": {
+            "forward": 2,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 1,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 3,
+          "accepted": 3,
+          "completed": 3,
+          "interrupted": 0,
+          "ticks": 78
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 90,
+            "shots": 14,
+            "magazinesInserted": 2,
+            "stimsCompleted": 2
+          },
+          "SUPINE": {
+            "aimTicks": 45,
+            "shots": 7,
+            "magazinesInserted": 1,
+            "stimsCompleted": 1
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.9413909999999817,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.011133819047619687,
+        "p95": 0.025459999999981164,
+        "p99": 0.17205999999998767,
+        "max": 0.22186000000002082
+      },
+      "bytesHorde": 420,
+      "bytesPlayers": 240410,
+      "heapDeltaBytes": -3888112,
+      "rssBytes": 108503040
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 4,
+      "sequence": "tactical",
+      "enemies": 0,
+      "minEnemies": 0,
+      "maxEnemies": 0,
+      "atTarget": 210,
+      "survivors": 4,
+      "health": [
+        100,
+        100,
+        100,
+        100
+      ],
+      "enemy": {
+        "decisions": 0,
+        "validations": 0,
+        "starts": 0,
+        "hits": 0,
+        "operatorStarts": 0,
+        "operatorHits": 0,
+        "operatorDamage": 0,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 64,
+          "CROUCHING": 0,
+          "DIVING": 92,
+          "PRONE": 288,
+          "SUPINE": 288,
+          "GETTING_UP": 108,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:DIVING": 4,
+          "DIVING:PRONE": 2,
+          "DIVING:SUPINE": 2,
+          "PRONE:GETTING_UP": 2,
+          "SUPINE:GETTING_UP": 2,
+          "GETTING_UP:STANDING": 4
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 4,
+          "accepted": 4,
+          "completed": 4,
+          "collisions": 0,
+          "metres": 20,
+          "ticks": 92,
+          "directions": {
+            "forward": 2,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 2,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 4,
+          "accepted": 4,
+          "completed": 4,
+          "interrupted": 0,
+          "ticks": 108
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 90,
+            "shots": 14,
+            "magazinesInserted": 2,
+            "stimsCompleted": 2
+          },
+          "SUPINE": {
+            "aimTicks": 90,
+            "shots": 14,
+            "magazinesInserted": 2,
+            "stimsCompleted": 2
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.8344100000000481,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.017280057142857463,
+        "p95": 0.019090000000005602,
+        "p99": 0.4060500000000218,
+        "max": 0.4996799999999837
+      },
+      "bytesHorde": 420,
+      "bytesPlayers": 318194,
+      "heapDeltaBytes": -2059264,
+      "rssBytes": 113315840
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 1,
+      "sequence": "upright",
+      "enemies": 1,
+      "minEnemies": 1,
+      "maxEnemies": 1,
+      "atTarget": 210,
+      "survivors": 1,
+      "health": [
+        92
+      ],
+      "enemy": {
+        "decisions": 20,
+        "validations": 10,
+        "starts": 5,
+        "hits": 5,
+        "operatorStarts": 5,
+        "operatorHits": 5,
+        "operatorDamage": 40,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 210,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 40,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {},
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "collisions": 0,
+          "metres": 0,
+          "ticks": 0,
+          "directions": {
+            "forward": 0,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.2083400000001916,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.036431252380952135,
+        "p95": 0.09017000000000053,
+        "p99": 0.3256709999999998,
+        "max": 4.515732000000014
+      },
+      "bytesHorde": 1520,
+      "bytesPlayers": 61796,
+      "heapDeltaBytes": -1094000,
+      "rssBytes": 114229248
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 1,
+      "sequence": "crouched",
+      "enemies": 1,
+      "minEnemies": 1,
+      "maxEnemies": 1,
+      "atTarget": 210,
+      "survivors": 1,
+      "health": [
+        92
+      ],
+      "enemy": {
+        "decisions": 19,
+        "validations": 12,
+        "starts": 5,
+        "hits": 5,
+        "operatorStarts": 5,
+        "operatorHits": 5,
+        "operatorDamage": 40,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 43,
+          "CROUCHING": 167,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 8,
+          "CROUCHING": 32,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:CROUCHING": 1,
+          "CROUCHING:STANDING": 1
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "collisions": 0,
+          "metres": 0,
+          "ticks": 0,
+          "directions": {
+            "forward": 0,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.16934000000009064,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.016905719047616955,
+        "p95": 0.0231899999999996,
+        "p99": 0.11669999999998026,
+        "max": 1.928321000000011
+      },
+      "bytesHorde": 1570,
+      "bytesPlayers": 74221,
+      "heapDeltaBytes": 337328,
+      "rssBytes": 114229248
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 1,
+      "sequence": "tactical",
+      "enemies": 1,
+      "minEnemies": 1,
+      "maxEnemies": 1,
+      "atTarget": 210,
+      "survivors": 1,
+      "health": [
+        92
+      ],
+      "enemy": {
+        "decisions": 30,
+        "validations": 13,
+        "starts": 5,
+        "hits": 4,
+        "operatorStarts": 5,
+        "operatorHits": 4,
+        "operatorDamage": 32,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 19,
+          "CROUCHING": 0,
+          "DIVING": 23,
+          "PRONE": 144,
+          "SUPINE": 0,
+          "GETTING_UP": 24,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 24,
+          "SUPINE": 0,
+          "GETTING_UP": 8,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:DIVING": 1,
+          "DIVING:PRONE": 1,
+          "PRONE:GETTING_UP": 1,
+          "GETTING_UP:STANDING": 1
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 1,
+          "accepted": 1,
+          "completed": 1,
+          "collisions": 0,
+          "metres": 5,
+          "ticks": 23,
+          "directions": {
+            "forward": 1,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 1,
+          "accepted": 1,
+          "completed": 1,
+          "interrupted": 0,
+          "ticks": 24
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 45,
+            "shots": 7,
+            "magazinesInserted": 1,
+            "stimsCompleted": 1
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.22615999999970882,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.015544861904762305,
+        "p95": 0.022770000000008395,
+        "p99": 0.0714800000000082,
+        "max": 1.9055910000000154
+      },
+      "bytesHorde": 1450,
+      "bytesPlayers": 83092,
+      "heapDeltaBytes": 1874520,
+      "rssBytes": 114229248
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 2,
+      "sequence": "upright",
+      "enemies": 8,
+      "minEnemies": 7,
+      "maxEnemies": 8,
+      "atTarget": 41,
+      "survivors": 2,
+      "health": [
+        12,
+        36
+      ],
+      "enemy": {
+        "decisions": 215,
+        "validations": 60,
+        "starts": 31,
+        "hits": 29,
+        "operatorStarts": 31,
+        "operatorHits": 29,
+        "operatorDamage": 232,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 420,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 232,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {},
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "collisions": 0,
+          "metres": 0,
+          "ticks": 0,
+          "directions": {
+            "forward": 0,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.19388000000009242,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.02356658095238001,
+        "p95": 0.04610999999999876,
+        "p99": 0.17606999999998152,
+        "max": 1.2748899999999992
+      },
+      "bytesHorde": 6832,
+      "bytesPlayers": 117563,
+      "heapDeltaBytes": -5593888,
+      "rssBytes": 114753536
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 2,
+      "sequence": "crouched",
+      "enemies": 8,
+      "minEnemies": 7,
+      "maxEnemies": 8,
+      "atTarget": 32,
+      "survivors": 1,
+      "health": [
+        28,
+        0
+      ],
+      "enemy": {
+        "decisions": 214,
+        "validations": 76,
+        "starts": 34,
+        "hits": 27,
+        "operatorStarts": 34,
+        "operatorHits": 27,
+        "operatorDamage": 212,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 48,
+          "CROUCHING": 309,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 40,
+          "CROUCHING": 172,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 1,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:CROUCHING": 2,
+          "CROUCHING:STANDING": 1
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "collisions": 0,
+          "metres": 0,
+          "ticks": 0,
+          "directions": {
+            "forward": 0,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.2214400000000296,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.0194103904761911,
+        "p95": 0.04149999999998499,
+        "p99": 0.17939000000001215,
+        "max": 1.055140999999992
+      },
+      "bytesHorde": 6870,
+      "bytesPlayers": 140134,
+      "heapDeltaBytes": 1019480,
+      "rssBytes": 118030336
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 2,
+      "sequence": "tactical",
+      "enemies": 8,
+      "minEnemies": 8,
+      "maxEnemies": 8,
+      "atTarget": 210,
+      "survivors": 2,
+      "health": [
+        12,
+        12
+      ],
+      "enemy": {
+        "decisions": 225,
+        "validations": 104,
+        "starts": 37,
+        "hits": 32,
+        "operatorStarts": 37,
+        "operatorHits": 32,
+        "operatorDamage": 256,
+        "interruptions": 0
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 32,
+          "CROUCHING": 0,
+          "DIVING": 46,
+          "PRONE": 144,
+          "SUPINE": 144,
+          "GETTING_UP": 54,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 8,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 96,
+          "SUPINE": 96,
+          "GETTING_UP": 56,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:DIVING": 2,
+          "DIVING:PRONE": 1,
+          "DIVING:SUPINE": 1,
+          "PRONE:GETTING_UP": 1,
+          "SUPINE:GETTING_UP": 1,
+          "GETTING_UP:STANDING": 2
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 2,
+          "accepted": 2,
+          "completed": 2,
+          "collisions": 0,
+          "metres": 10,
+          "ticks": 46,
+          "directions": {
+            "forward": 1,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 1,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 2,
+          "accepted": 2,
+          "completed": 2,
+          "interrupted": 0,
+          "ticks": 54
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 45,
+            "shots": 7,
+            "magazinesInserted": 1,
+            "stimsCompleted": 1
+          },
+          "SUPINE": {
+            "aimTicks": 45,
+            "shots": 7,
+            "magazinesInserted": 1,
+            "stimsCompleted": 1
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.45423099999999295,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.018390957142857392,
+        "p95": 0.026909999999986667,
+        "p99": 0.10913999999999646,
+        "max": 1.043750000000017
+      },
+      "bytesHorde": 7528,
+      "bytesPlayers": 160590,
+      "heapDeltaBytes": 1829664,
+      "rssBytes": 118292480
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 4,
+      "sequence": "upright",
+      "enemies": 36,
+      "minEnemies": 31,
+      "maxEnemies": 36,
+      "atTarget": 35,
+      "survivors": 0,
+      "health": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "enemy": {
+        "decisions": 2027,
+        "validations": 162,
+        "starts": 73,
+        "hits": 52,
+        "operatorStarts": 73,
+        "operatorHits": 52,
+        "operatorDamage": 400,
+        "interruptions": 14
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 462,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 400,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 4,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {},
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "collisions": 0,
+          "metres": 0,
+          "ticks": 0,
+          "directions": {
+            "forward": 0,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.3105410000000859,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.04422749999999937,
+        "p95": 0.0800299999999936,
+        "p99": 0.25108000000000175,
+        "max": 0.9802299999999775
+      },
+      "bytesHorde": 25116,
+      "bytesPlayers": 234003,
+      "heapDeltaBytes": -2939720,
+      "rssBytes": 118816768
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 4,
+      "sequence": "crouched",
+      "enemies": 36,
+      "minEnemies": 27,
+      "maxEnemies": 36,
+      "atTarget": 32,
+      "survivors": 0,
+      "health": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "enemy": {
+        "decisions": 1809,
+        "validations": 290,
+        "starts": 71,
+        "hits": 52,
+        "operatorStarts": 71,
+        "operatorHits": 52,
+        "operatorDamage": 400,
+        "interruptions": 10
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 20,
+          "CROUCHING": 398,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 0,
+          "CROUCHING": 400,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 4,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:CROUCHING": 4
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "collisions": 0,
+          "metres": 0,
+          "ticks": 0,
+          "directions": {
+            "forward": 0,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.17599999999987403,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.032088823809524214,
+        "p95": 0.05000000000001137,
+        "p99": 0.22929999999999495,
+        "max": 0.9785009999999943
+      },
+      "bytesHorde": 22730,
+      "bytesPlayers": 255342,
+      "heapDeltaBytes": 155952,
+      "rssBytes": 119341056
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 4,
+      "sequence": "tactical",
+      "enemies": 36,
+      "minEnemies": 32,
+      "maxEnemies": 36,
+      "atTarget": 32,
+      "survivors": 0,
+      "health": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "enemy": {
+        "decisions": 2057,
+        "validations": 370,
+        "starts": 76,
+        "hits": 52,
+        "operatorStarts": 76,
+        "operatorHits": 52,
+        "operatorDamage": 400,
+        "interruptions": 8
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 20,
+          "CROUCHING": 0,
+          "DIVING": 92,
+          "PRONE": 177,
+          "SUPINE": 178,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 200,
+          "SUPINE": 200,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 2,
+          "SUPINE": 2,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:DIVING": 4,
+          "DIVING:PRONE": 2,
+          "DIVING:SUPINE": 2
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 4,
+          "accepted": 4,
+          "completed": 4,
+          "collisions": 0,
+          "metres": 20,
+          "ticks": 92,
+          "directions": {
+            "forward": 2,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 2,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 90,
+            "shots": 14,
+            "magazinesInserted": 2,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 90,
+            "shots": 14,
+            "magazinesInserted": 2,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.305940000000021,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.029855590476189436,
+        "p95": 0.044340000000005375,
+        "p99": 0.2444799999999816,
+        "max": 0.9830910000000017
+      },
+      "bytesHorde": 25908,
+      "bytesPlayers": 284711,
+      "heapDeltaBytes": -383408,
+      "rssBytes": 119734272
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 4,
+      "sequence": "upright",
+      "enemies": 1000,
+      "minEnemies": 996,
+      "maxEnemies": 1000,
+      "atTarget": 32,
+      "survivors": 0,
+      "health": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "enemy": {
+        "decisions": 103276,
+        "validations": 158,
+        "starts": 76,
+        "hits": 52,
+        "operatorStarts": 76,
+        "operatorHits": 52,
+        "operatorDamage": 400,
+        "interruptions": 17
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 475,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 400,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 4,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {},
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "collisions": 0,
+          "metres": 0,
+          "ticks": 0,
+          "directions": {
+            "forward": 0,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.2815910000001054,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.45406277619047686,
+        "p95": 0.8989409999999793,
+        "p99": 1.1596509999999967,
+        "max": 4.11842200000001
+      },
+      "bytesHorde": 700484,
+      "bytesPlayers": 232270,
+      "heapDeltaBytes": 1868128,
+      "rssBytes": 122486784
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 4,
+      "sequence": "crouched",
+      "enemies": 1000,
+      "minEnemies": 993,
+      "maxEnemies": 1000,
+      "atTarget": 32,
+      "survivors": 0,
+      "health": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "enemy": {
+        "decisions": 103094,
+        "validations": 313,
+        "starts": 73,
+        "hits": 52,
+        "operatorStarts": 73,
+        "operatorHits": 52,
+        "operatorDamage": 400,
+        "interruptions": 14
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 20,
+          "CROUCHING": 413,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 0,
+          "CROUCHING": 400,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 4,
+          "DIVING": 0,
+          "PRONE": 0,
+          "SUPINE": 0,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:CROUCHING": 4
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "collisions": 0,
+          "metres": 0,
+          "ticks": 0,
+          "directions": {
+            "forward": 0,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 0,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 0,
+            "shots": 0,
+            "magazinesInserted": 0,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.21092000000038524,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.36731530476190555,
+        "p95": 0.643130000000042,
+        "p99": 0.8260399999999777,
+        "max": 3.0894409999999652
+      },
+      "bytesHorde": 698680,
+      "bytesPlayers": 258572,
+      "heapDeltaBytes": -1360600,
+      "rssBytes": 123142144
+    },
+    {
+      "world": {
+        "id": "world.generated.acdc7ec0c04dd3da",
+        "planetId": "forest",
+        "biome": "temperate-forest",
+        "seed": 63,
+        "formatVersion": 1,
+        "generatorVersion": 1,
+        "profileVersion": 1,
+        "assetVersion": 1
+      },
+      "operators": 4,
+      "sequence": "tactical",
+      "enemies": 1000,
+      "minEnemies": 997,
+      "maxEnemies": 1000,
+      "atTarget": 32,
+      "survivors": 0,
+      "health": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "enemy": {
+        "decisions": 103376,
+        "validations": 392,
+        "starts": 76,
+        "hits": 52,
+        "operatorStarts": 76,
+        "operatorHits": 52,
+        "operatorDamage": 400,
+        "interruptions": 13
+      },
+      "movement": {
+        "postureTicks": {
+          "STANDING": 20,
+          "CROUCHING": 0,
+          "DIVING": 92,
+          "PRONE": 157,
+          "SUPINE": 178,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "damage": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 200,
+          "SUPINE": 200,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "deaths": {
+          "STANDING": 0,
+          "CROUCHING": 0,
+          "DIVING": 0,
+          "PRONE": 2,
+          "SUPINE": 2,
+          "GETTING_UP": 0,
+          "SLIDING": 0
+        },
+        "transitions": {
+          "STANDING:DIVING": 4,
+          "DIVING:PRONE": 2,
+          "DIVING:SUPINE": 2
+        },
+        "rejected": {
+          "crouch": 0,
+          "dive": 0,
+          "stand": 0
+        },
+        "dive": {
+          "attempts": 4,
+          "accepted": 4,
+          "completed": 4,
+          "collisions": 0,
+          "metres": 20,
+          "ticks": 92,
+          "directions": {
+            "forward": 2,
+            "forward-right": 0,
+            "right": 0,
+            "back-right": 0,
+            "backward": 2,
+            "back-left": 0,
+            "left": 0,
+            "forward-left": 0
+          }
+        },
+        "getUp": {
+          "attempts": 0,
+          "accepted": 0,
+          "completed": 0,
+          "interrupted": 0,
+          "ticks": 0
+        },
+        "ground": {
+          "PRONE": {
+            "aimTicks": 90,
+            "shots": 14,
+            "magazinesInserted": 2,
+            "stimsCompleted": 0
+          },
+          "SUPINE": {
+            "aimTicks": 90,
+            "shots": 14,
+            "magazinesInserted": 2,
+            "stimsCompleted": 0
+          }
+        },
+        "droppedCommands": 0,
+        "movementMs": 0.30444000000005644,
+        "measuredTicks": 210
+      },
+      "tickMs": {
+        "mean": 0.34721091428571477,
+        "p95": 0.6322210000000155,
+        "p99": 0.8198100000000181,
+        "max": 1.7915810000000079
+      },
+      "bytesHorde": 701162,
+      "bytesPlayers": 281324,
+      "heapDeltaBytes": 482208,
+      "rssBytes": 124059648
+    }
+  ]
+}

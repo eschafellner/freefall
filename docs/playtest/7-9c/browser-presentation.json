@@ -1,0 +1,774 @@
+{
+  "albatross": {
+    "planetId": "green-plains",
+    "quality": "low",
+    "operators": 4,
+    "reducedMotion": "false",
+    "result": {
+      "id": "79f109c7-3c9b-4078-8d2e-8fb507124df8/result",
+      "missionInstanceId": "79f109c7-3c9b-4078-8d2e-8fb507124df8",
+      "missionId": "generated.eaa5468371f7d0d1",
+      "difficultyId": "normal",
+      "balanceHash": "390e375eec0bf943",
+      "primaryObjectivesCompleted": true,
+      "extractionAttempted": true,
+      "extractionMethod": "albatross",
+      "extractionSucceeded": true,
+      "extractedOperatorIds": [
+        "WJmmR6h0i",
+        "-43SwvIYm",
+        "W5KyE9kgy",
+        "jMS5Cv-5w"
+      ],
+      "convictsDeployed": 4,
+      "convictsSurvived": 4,
+      "albatrossSurvived": true,
+      "baseExperience": 400,
+      "extractionBonusExperience": 100,
+      "rewards": [
+        {
+          "operatorId": "WJmmR6h0i",
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "totalExperience": 500
+        },
+        {
+          "operatorId": "-43SwvIYm",
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "totalExperience": 500
+        },
+        {
+          "operatorId": "W5KyE9kgy",
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "totalExperience": 500
+        },
+        {
+          "operatorId": "jMS5Cv-5w",
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "totalExperience": 500
+        }
+      ],
+      "combat": {
+        "shots": {
+          "primary": 2,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 1,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 6,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 1,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 15
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 1,
+        "refilled": {
+          "primaryMagazines": 1,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "procedural": {
+        "planId": "generated.eaa5468371f7d0d1",
+        "planetId": "green-plains",
+        "seed": 0,
+        "templateId": "relay-defense",
+        "generatorVersion": 1,
+        "world": {
+          "id": "world.generated.3782000242f3d521",
+          "planetId": "green-plains",
+          "biome": "temperate-grassland",
+          "seed": 76,
+          "formatVersion": 1,
+          "generatorVersion": 1,
+          "profileVersion": 1,
+          "assetVersion": 1
+        }
+      },
+      "outcome": "extracted",
+      "durationTicks": 727,
+      "objectives": [
+        {
+          "id": "relay-2",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        }
+      ]
+    },
+    "sharedPhases": [
+      {
+        "type": "MissionStarted",
+        "tick": 19,
+        "missionId": "generated.eaa5468371f7d0d1",
+        "difficultyId": "normal",
+        "balanceHash": "390e375eec0bf943",
+        "instanceId": "79f109c7-3c9b-4078-8d2e-8fb507124df8",
+        "sequence": 1
+      },
+      {
+        "type": "AlbatrossTouchdown",
+        "tick": 221,
+        "entityId": "79f109c7-3c9b-4078-8d2e-8fb507124df8/albatross",
+        "position": {
+          "x": -153,
+          "z": 158
+        },
+        "instanceId": "79f109c7-3c9b-4078-8d2e-8fb507124df8",
+        "sequence": 3
+      },
+      {
+        "type": "ExtractionStarted",
+        "tick": 566,
+        "method": "albatross",
+        "arrivalAt": 686,
+        "instanceId": "79f109c7-3c9b-4078-8d2e-8fb507124df8",
+        "sequence": 8
+      },
+      {
+        "type": "MissionCompleted",
+        "tick": 746,
+        "result": {
+          "id": "79f109c7-3c9b-4078-8d2e-8fb507124df8/result",
+          "missionInstanceId": "79f109c7-3c9b-4078-8d2e-8fb507124df8",
+          "missionId": "generated.eaa5468371f7d0d1",
+          "difficultyId": "normal",
+          "balanceHash": "390e375eec0bf943",
+          "primaryObjectivesCompleted": true,
+          "extractionAttempted": true,
+          "extractionMethod": "albatross",
+          "extractionSucceeded": true,
+          "extractedOperatorIds": [
+            "WJmmR6h0i",
+            "-43SwvIYm",
+            "W5KyE9kgy",
+            "jMS5Cv-5w"
+          ],
+          "convictsDeployed": 4,
+          "convictsSurvived": 4,
+          "albatrossSurvived": true,
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "rewards": [
+            {
+              "operatorId": "WJmmR6h0i",
+              "baseExperience": 400,
+              "extractionBonusExperience": 100,
+              "totalExperience": 500
+            },
+            {
+              "operatorId": "-43SwvIYm",
+              "baseExperience": 400,
+              "extractionBonusExperience": 100,
+              "totalExperience": 500
+            },
+            {
+              "operatorId": "W5KyE9kgy",
+              "baseExperience": 400,
+              "extractionBonusExperience": 100,
+              "totalExperience": 500
+            },
+            {
+              "operatorId": "jMS5Cv-5w",
+              "baseExperience": 400,
+              "extractionBonusExperience": 100,
+              "totalExperience": 500
+            }
+          ],
+          "combat": {
+            "shots": {
+              "primary": 2,
+              "secondary": 0
+            },
+            "hits": {
+              "primary": 0,
+              "secondary": 0
+            },
+            "damage": {
+              "primary": 0,
+              "secondary": 0
+            },
+            "magazinesUsed": {
+              "primary": 1,
+              "secondary": 0
+            },
+            "roundsDiscarded": {
+              "primary": 6,
+              "secondary": 0
+            },
+            "reloadsInterrupted": 0,
+            "grenadesThrown": 0,
+            "grenadeDamageEnemies": 0,
+            "grenadeDamageNests": 0,
+            "grenadeKills": 0,
+            "meleeAttacks": 1,
+            "meleeHits": 0,
+            "meleeKills": 0,
+            "staggers": 0,
+            "friendlyFireDamage": {
+              "bullet": 0,
+              "explosion": 0,
+              "melee": 15
+            },
+            "selfDamage": 0,
+            "convictFriendlyDamage": 0,
+            "resupplyUses": 1,
+            "refilled": {
+              "primaryMagazines": 1,
+              "secondaryMagazines": 0,
+              "grenades": 0,
+              "stims": 0
+            },
+            "blasts": 0,
+            "blastQueryMsTotal": 0,
+            "blastQueryMsMax": 0
+          },
+          "procedural": {
+            "planId": "generated.eaa5468371f7d0d1",
+            "planetId": "green-plains",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "generatorVersion": 1,
+            "world": {
+              "id": "world.generated.3782000242f3d521",
+              "planetId": "green-plains",
+              "biome": "temperate-grassland",
+              "seed": 76,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "outcome": "extracted",
+          "durationTicks": 727,
+          "objectives": [
+            {
+              "id": "relay-2",
+              "state": "complete",
+              "progress": 1,
+              "completeAt": 0,
+              "optional": false
+            }
+          ]
+        },
+        "instanceId": "79f109c7-3c9b-4078-8d2e-8fb507124df8",
+        "sequence": 9
+      }
+    ],
+    "resupply": [
+      {
+        "type": "resupply",
+        "tick": 513,
+        "operator": "WJmmR6h0i",
+        "container": "supply.port",
+        "charges": 3,
+        "granted": {
+          "primaryMagazines": 1,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        }
+      }
+    ],
+    "damage": [
+      {
+        "type": "friendly-fire",
+        "tick": 524,
+        "attacker": "-43SwvIYm",
+        "target": "WJmmR6h0i",
+        "amount": 15,
+        "source": "melee",
+        "self": false,
+        "life": 9,
+        "direction": {
+          "x": 1.0499999999999972,
+          "z": 0
+        }
+      }
+    ],
+    "movement": [
+      {
+        "posture": "PRONE",
+        "serverObservedMs": 81.60727399999996,
+        "hudObservedMs": 966.6980380000005,
+        "ticksToLand": 23,
+        "stoodAt": 339,
+        "serverShot": true
+      },
+      {
+        "posture": "SUPINE",
+        "serverObservedMs": 85.25134900000012,
+        "hudObservedMs": 890.2642400000004,
+        "ticksToLand": 23,
+        "stoodAt": 407,
+        "serverShot": true
+      }
+    ],
+    "errors": []
+  },
+  "balloon": {
+    "planetId": "desert",
+    "quality": "medium",
+    "operators": 4,
+    "reducedMotion": "true",
+    "result": {
+      "id": "34b18890-8055-407d-b614-4a46f7b97411/result",
+      "missionInstanceId": "34b18890-8055-407d-b614-4a46f7b97411",
+      "missionId": "generated.f02666cd81c8c9b5",
+      "difficultyId": "normal",
+      "balanceHash": "390e375eec0bf943",
+      "primaryObjectivesCompleted": true,
+      "extractionAttempted": true,
+      "extractionMethod": "balloon",
+      "extractionSucceeded": true,
+      "extractedOperatorIds": [
+        "jKYWR3-Jn",
+        "GiNFHLtCi",
+        "iTDpMCdLf",
+        "kK0Umx_Jr"
+      ],
+      "convictsDeployed": 4,
+      "convictsSurvived": 4,
+      "albatrossSurvived": true,
+      "baseExperience": 400,
+      "extractionBonusExperience": 100,
+      "rewards": [
+        {
+          "operatorId": "jKYWR3-Jn",
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "totalExperience": 500
+        },
+        {
+          "operatorId": "GiNFHLtCi",
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "totalExperience": 500
+        },
+        {
+          "operatorId": "iTDpMCdLf",
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "totalExperience": 500
+        },
+        {
+          "operatorId": "kK0Umx_Jr",
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "totalExperience": 500
+        }
+      ],
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "procedural": {
+        "planId": "generated.f02666cd81c8c9b5",
+        "planetId": "desert",
+        "seed": 0,
+        "templateId": "relay-defense",
+        "generatorVersion": 1,
+        "world": {
+          "id": "world.generated.ff1cdb79e1bb09ab",
+          "planetId": "desert",
+          "biome": "arid-desert",
+          "seed": 76,
+          "formatVersion": 1,
+          "generatorVersion": 1,
+          "profileVersion": 1,
+          "assetVersion": 1
+        }
+      },
+      "outcome": "extracted",
+      "durationTicks": 413,
+      "objectives": [
+        {
+          "id": "relay-1",
+          "state": "complete",
+          "progress": 1,
+          "completeAt": 0,
+          "optional": false
+        },
+        {
+          "id": "start-nest-0",
+          "state": "cancelled",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": true
+        }
+      ]
+    },
+    "sharedPhases": [
+      {
+        "type": "MissionStarted",
+        "tick": 20,
+        "missionId": "generated.f02666cd81c8c9b5",
+        "difficultyId": "normal",
+        "balanceHash": "390e375eec0bf943",
+        "instanceId": "34b18890-8055-407d-b614-4a46f7b97411",
+        "sequence": 1
+      },
+      {
+        "type": "AlbatrossTouchdown",
+        "tick": 222,
+        "entityId": "34b18890-8055-407d-b614-4a46f7b97411/albatross",
+        "position": {
+          "x": -153,
+          "z": 158
+        },
+        "instanceId": "34b18890-8055-407d-b614-4a46f7b97411",
+        "sequence": 3
+      },
+      {
+        "type": "ExtractionStarted",
+        "tick": 282,
+        "method": "balloon",
+        "arrivalAt": 2982,
+        "instanceId": "34b18890-8055-407d-b614-4a46f7b97411",
+        "sequence": 9
+      },
+      {
+        "type": "MissionCompleted",
+        "tick": 433,
+        "result": {
+          "id": "34b18890-8055-407d-b614-4a46f7b97411/result",
+          "missionInstanceId": "34b18890-8055-407d-b614-4a46f7b97411",
+          "missionId": "generated.f02666cd81c8c9b5",
+          "difficultyId": "normal",
+          "balanceHash": "390e375eec0bf943",
+          "primaryObjectivesCompleted": true,
+          "extractionAttempted": true,
+          "extractionMethod": "balloon",
+          "extractionSucceeded": true,
+          "extractedOperatorIds": [
+            "jKYWR3-Jn",
+            "GiNFHLtCi",
+            "iTDpMCdLf",
+            "kK0Umx_Jr"
+          ],
+          "convictsDeployed": 4,
+          "convictsSurvived": 4,
+          "albatrossSurvived": true,
+          "baseExperience": 400,
+          "extractionBonusExperience": 100,
+          "rewards": [
+            {
+              "operatorId": "jKYWR3-Jn",
+              "baseExperience": 400,
+              "extractionBonusExperience": 100,
+              "totalExperience": 500
+            },
+            {
+              "operatorId": "GiNFHLtCi",
+              "baseExperience": 400,
+              "extractionBonusExperience": 100,
+              "totalExperience": 500
+            },
+            {
+              "operatorId": "iTDpMCdLf",
+              "baseExperience": 400,
+              "extractionBonusExperience": 100,
+              "totalExperience": 500
+            },
+            {
+              "operatorId": "kK0Umx_Jr",
+              "baseExperience": 400,
+              "extractionBonusExperience": 100,
+              "totalExperience": 500
+            }
+          ],
+          "combat": {
+            "shots": {
+              "primary": 0,
+              "secondary": 0
+            },
+            "hits": {
+              "primary": 0,
+              "secondary": 0
+            },
+            "damage": {
+              "primary": 0,
+              "secondary": 0
+            },
+            "magazinesUsed": {
+              "primary": 0,
+              "secondary": 0
+            },
+            "roundsDiscarded": {
+              "primary": 0,
+              "secondary": 0
+            },
+            "reloadsInterrupted": 0,
+            "grenadesThrown": 0,
+            "grenadeDamageEnemies": 0,
+            "grenadeDamageNests": 0,
+            "grenadeKills": 0,
+            "meleeAttacks": 0,
+            "meleeHits": 0,
+            "meleeKills": 0,
+            "staggers": 0,
+            "friendlyFireDamage": {
+              "bullet": 0,
+              "explosion": 0,
+              "melee": 0
+            },
+            "selfDamage": 0,
+            "convictFriendlyDamage": 0,
+            "resupplyUses": 0,
+            "refilled": {
+              "primaryMagazines": 0,
+              "secondaryMagazines": 0,
+              "grenades": 0,
+              "stims": 0
+            },
+            "blasts": 0,
+            "blastQueryMsTotal": 0,
+            "blastQueryMsMax": 0
+          },
+          "procedural": {
+            "planId": "generated.f02666cd81c8c9b5",
+            "planetId": "desert",
+            "seed": 0,
+            "templateId": "relay-defense",
+            "generatorVersion": 1,
+            "world": {
+              "id": "world.generated.ff1cdb79e1bb09ab",
+              "planetId": "desert",
+              "biome": "arid-desert",
+              "seed": 76,
+              "formatVersion": 1,
+              "generatorVersion": 1,
+              "profileVersion": 1,
+              "assetVersion": 1
+            }
+          },
+          "outcome": "extracted",
+          "durationTicks": 413,
+          "objectives": [
+            {
+              "id": "relay-1",
+              "state": "complete",
+              "progress": 1,
+              "completeAt": 0,
+              "optional": false
+            },
+            {
+              "id": "start-nest-0",
+              "state": "cancelled",
+              "progress": 0,
+              "completeAt": 0,
+              "optional": true
+            }
+          ]
+        },
+        "instanceId": "34b18890-8055-407d-b614-4a46f7b97411",
+        "sequence": 11
+      }
+    ],
+    "resupply": [],
+    "damage": [],
+    "errors": []
+  },
+  "failure": {
+    "planetId": "ice",
+    "quality": "high",
+    "operators": 4,
+    "result": {
+      "id": "0e846334-627c-4e7e-9387-2053c5b5f39d/result",
+      "missionInstanceId": "0e846334-627c-4e7e-9387-2053c5b5f39d",
+      "missionId": "generated.f3a50724235d3566",
+      "difficultyId": "normal",
+      "balanceHash": "390e375eec0bf943",
+      "primaryObjectivesCompleted": false,
+      "extractionAttempted": false,
+      "extractionMethod": "none",
+      "extractionSucceeded": false,
+      "extractedOperatorIds": [],
+      "convictsDeployed": 4,
+      "convictsSurvived": 4,
+      "albatrossSurvived": true,
+      "baseExperience": 0,
+      "extractionBonusExperience": 0,
+      "rewards": [
+        {
+          "operatorId": "UfT4rXIgc",
+          "baseExperience": 0,
+          "extractionBonusExperience": 0,
+          "totalExperience": 0
+        },
+        {
+          "operatorId": "YXTJ2YxtJ",
+          "baseExperience": 0,
+          "extractionBonusExperience": 0,
+          "totalExperience": 0
+        },
+        {
+          "operatorId": "L2WDNi4au",
+          "baseExperience": 0,
+          "extractionBonusExperience": 0,
+          "totalExperience": 0
+        },
+        {
+          "operatorId": "kHXc1Q8n1",
+          "baseExperience": 0,
+          "extractionBonusExperience": 0,
+          "totalExperience": 0
+        }
+      ],
+      "combat": {
+        "shots": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "hits": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "damage": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "magazinesUsed": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "roundsDiscarded": {
+          "primary": 0,
+          "secondary": 0
+        },
+        "reloadsInterrupted": 0,
+        "grenadesThrown": 0,
+        "grenadeDamageEnemies": 0,
+        "grenadeDamageNests": 0,
+        "grenadeKills": 0,
+        "meleeAttacks": 0,
+        "meleeHits": 0,
+        "meleeKills": 0,
+        "staggers": 0,
+        "friendlyFireDamage": {
+          "bullet": 0,
+          "explosion": 0,
+          "melee": 0
+        },
+        "selfDamage": 0,
+        "convictFriendlyDamage": 0,
+        "resupplyUses": 0,
+        "refilled": {
+          "primaryMagazines": 0,
+          "secondaryMagazines": 0,
+          "grenades": 0,
+          "stims": 0
+        },
+        "blasts": 0,
+        "blastQueryMsTotal": 0,
+        "blastQueryMsMax": 0
+      },
+      "procedural": {
+        "planId": "generated.f3a50724235d3566",
+        "planetId": "ice",
+        "seed": 0,
+        "templateId": "relay-defense",
+        "generatorVersion": 1,
+        "world": {
+          "id": "world.generated.7167f171073377ae",
+          "planetId": "ice",
+          "biome": "glacial",
+          "seed": 76,
+          "formatVersion": 1,
+          "generatorVersion": 1,
+          "profileVersion": 1,
+          "assetVersion": 1
+        }
+      },
+      "outcome": "team-lost",
+      "durationTicks": 261,
+      "objectives": [
+        {
+          "id": "relay-0",
+          "state": "failed",
+          "progress": 0,
+          "completeAt": 0,
+          "optional": false
+        }
+      ]
+    },
+    "errors": []
+  }
+}

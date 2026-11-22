@@ -134,6 +134,23 @@ test('the server controls the fire rate regardless of how often the client sends
   assert.deepEqual(Object.keys(parsed).sort(), ['fire', 'forward', 'pitch', 'seq', 'sprint', 'strafe', 'yaw']);
 });
 
+test('Kestrel starts recovering on its next regular firing tick and still climbs under held fire', () => {
+  const field = new Range(open);
+  const operator = field.addPlayer('a');
+  const drive = driver(field);
+  const { handling, fireIntervalTicks } = operator.loadout.weapons.primary;
+  assert.equal(handling.recoil.recoveryDelayTicks, fireIntervalTicks);
+  drive(operator, { fire: true });
+  const peak = operator.recoil.pitch;
+  assert.ok(peak > 0);
+  drive(operator, {}, fireIntervalTicks - 1);
+  assert.equal(operator.recoil.pitch, peak);
+  drive(operator);
+  assert.ok(operator.recoil.pitch > 0 && operator.recoil.pitch < peak);
+  drive(operator, { fire: true }, fireIntervalTicks * 8);
+  assert.ok(operator.recoil.pitch > peak);
+});
+
 test('flat-world standing shots replicate the validated shoulder ray and the original muzzle separately', () => {
   const field = new Range(wall);
   const p = field.addPlayer('a');

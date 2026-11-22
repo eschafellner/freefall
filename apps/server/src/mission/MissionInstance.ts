@@ -20,6 +20,7 @@ import { Convicts } from './Convicts.ts';
 import { EncounterDirector } from './EncounterDirector.ts';
 import { ExtractionSystem } from './ExtractionSystem.ts';
 import { MissionAtmosphere } from './MissionAtmosphere.ts';
+import { MissionTelemetry } from './MissionTelemetry.ts';
 import { ObjectiveManager } from './ObjectiveManager.ts';
 import { isMissionSeed, missionGenerator } from './MissionGenerator.ts';
 import type { GenerationResult } from './MissionGenerator.ts';
@@ -47,6 +48,8 @@ export class MissionInstance extends Battlefield {
   private generated?: Extract<GenerationResult, { status: 'generated' }>;
   private fallback?: MissionFallback;
   private startedAt = 0;
+  captureMissionTelemetry = false;
+  private telemetry?: MissionTelemetry;
   objectiveUpdateMs = 0;
   atmosphereUpdateMs = 0;
   private weather?: MissionAtmosphere;
@@ -120,6 +123,7 @@ export class MissionInstance extends Battlefield {
   }
 
   private readonly emit = (event: MissionEvent): void => {
+    this.telemetry?.event(event);
     this.pendingEvents.push({ ...event, instanceId: this.instanceId, sequence: ++this.presentationSequence });
     if (event.type !== 'SwarmNestDestroyed' || !this.simulatesCombat) return;
     const initial = this.director.initialNests.get(event.nestId);
@@ -183,6 +187,7 @@ export class MissionInstance extends Battlefield {
     const player = this.player(id);
     if (!player) return;
     this.disconnected.add(id);
+    if (this.telemetry && (this.state === 'DEPLOYMENT' || this.simulatesCombat)) this.telemetry.party.disconnects++;
     this.enemyCombat.interruptOperator(player, this.tick);
     cancelEquipment(player, this.tick);
     player.reloadRequested = false;
@@ -192,7 +197,11 @@ export class MissionInstance extends Battlefield {
     if (this.extraction.current?.phase !== 'LIFT') this.extraction.release(id);
   }
 
-  reconnect(id: string): void { this.disconnected.delete(id); }
+  reconnect(id: string): void {
+    if (this.disconnected.delete(id) && this.telemetry && (this.state === 'DEPLOYMENT' || this.simulatesCombat)) {
+      this.telemetry.party.reconnects++;
+    }
+  }
 
   override removePlayer(id: string): void {
     this.disconnect(id);
@@ -224,8 +233,13 @@ export class MissionInstance extends Battlefield {
       if ((seed !== undefined && (!allowSeed || !isMissionSeed(seed))) ||
           (templateId !== undefined && (typeof templateId !== 'string' || templateId.length > 64))) return false;
       const missionSeed = seed ?? randomInt(0x100000000);
+      const selectedWorldSeed = generatedWorld ? worldSeed ?? randomInt(0x100000000) : undefined;
       const result = missionGenerator.generate({ planetId, difficultyId, seed: missionSeed, templateId, timeOfDay,
-        ...(generatedWorld && { worldSeed: worldSeed ?? randomInt(0x100000000) }) }, this.registry);
+        ...(selectedWorldSeed !== undefined && { worldSeed: selectedWorldSeed }) }, this.registry);
+      if (result.status === 'failed' && !process.env.NODE_TEST_CONTEXT) {
+        console.warn('[mission-generation] %s', JSON.stringify({ planetId, missionSeed, worldSeed: selectedWorldSeed,
+          templateId, difficultyId, balanceHash: this.registry.version.hash, reason: result.reason, ...result.diagnostics }));
+      }
       if (result.status === 'generated') {
         if (!generatedWorld && result.definition.world.id !== this.baseDefinition.world.id) return false;
         generated = result;
@@ -234,9 +248,6 @@ export class MissionInstance extends Battlefield {
       } else {
         this.feedback.push({ id, code: 'generation-failed' });
         return false;
-      }
-      if (result.status === 'failed' && result.diagnostics.rejected.length && !process.env.NODE_TEST_CONTEXT) {
-        console.warn('[mission-generation] %s', JSON.stringify({ planetId, missionSeed, reason: result.reason, ...result.diagnostics }));
       }
     }
     this.generated = generated;
@@ -306,6 +317,7 @@ export class MissionInstance extends Battlefield {
     }
     this.boardingUntil = 0;
     for (const player of this.connected) this.roster.add(player.id);
+    if (this.captureMissionTelemetry) this.telemetry = new MissionTelemetry(this, this.roster);
     this.emit({ type: 'MissionStarted', tick: this.tick, missionId: this.definition.id, difficultyId: this.difficulty.id, balanceHash: this.balance.configHash });
     this.nextDeploymentPhase();
   }
@@ -391,13 +403,19 @@ export class MissionInstance extends Battlefield {
           reloading(player) || player.reloadRequested ? 'resupply-reloading' :
             !allowsPostureAction(player.posture, 'resupply', this.movementBalance) ? 'resupply-posture' : undefined);
       if (blocked) {
+        if (this.telemetry) this.telemetry.interactions.resupplyRejected++;
         this.feedback.push({ id, code: blocked });
         return false;
       }
+      if (this.telemetry) this.telemetry.interactions.resupplyAccepted++;
       player.pendingResupply = container.id;
       return true;
     }
-    if (this.state === 'ACTIVE_MISSION') return (!this.plan || isOperatorGrounded(player, this.surface)) && this.objectives.interact(player, this.tick);
+    if (this.state === 'ACTIVE_MISSION') {
+      const accepted = (!this.plan || isOperatorGrounded(player, this.surface)) && this.objectives.interact(player, this.tick);
+      if (this.telemetry) this.telemetry.interactions[accepted ? 'objectivesAccepted' : 'objectivesRejected']++;
+      return accepted;
+    }
     if (this.state === 'EXTRACTION_AVAILABLE') return this.action(id, 'albatross');
     return this.action(id, 'secure');
   }
@@ -526,6 +544,7 @@ export class MissionInstance extends Battlefield {
   }
 
   private reset(): void {
+    this.telemetry = undefined;
     this.weather = undefined;
     this.grenades.clear();
     while (this.horde.count) this.horde.despawn(this.horde.active[this.horde.count - 1]);
@@ -549,6 +568,20 @@ export class MissionInstance extends Battlefield {
     this.stateValue = 'CARRIER_HUB';
     this.flowRevision++;
   }
+
+  override step(): void {
+    const { telemetry, state } = this;
+    if (!telemetry || (state !== 'DEPLOYMENT' && !this.simulatesCombat)) {
+      super.step();
+      return;
+    }
+    const extraction = this.extraction.current;
+    const extractionPhase = extraction?.phase;
+    super.step();
+    telemetry.step(this, state, extraction?.method, extractionPhase === 'LIFT');
+  }
+
+  missionTelemetry() { return this.telemetry?.snapshot(); }
 
   protected finishTick(): void {
     const connected = this.connected;
@@ -600,14 +633,18 @@ export class MissionInstance extends Battlefield {
     }
     if (this.state === 'EXTRACTION_IN_PROGRESS') {
       const extraction = this.extraction.current!;
-      const wasLift = extraction.phase === 'LIFT';
+      const previousPhase = extraction.phase;
       const result = this.extraction.update(living, this.tick, this.albatross!.airworthy, this.surface);
-      if (result === 'cancel') this.transition('EXTRACTION_AVAILABLE');
-      else if (result === 'complete') {
+      if (result === 'cancel') {
+        if (this.telemetry) this.telemetry.extraction[extraction.method].cancellations++;
+        this.transition('EXTRACTION_AVAILABLE');
+      } else if (result === 'complete') {
         // Captured operators retain their result if they drop during the outbound cinematic.
         this.finish(extraction.securedIds);
         return;
-      } else if (!wasLift && extraction.phase === 'LIFT') {
+      } else if (previousPhase === 'APPROACH' && extraction.phase === 'COUNTDOWN' && this.telemetry) {
+        this.telemetry.extraction.balloon.missedPickups++;
+      } else if (previousPhase !== 'LIFT' && extraction.phase === 'LIFT') {
         for (const player of living) if (extraction.securedIds.includes(player.id)) {
           cancelEquipment(player, this.tick);
           player.protectedUntil = extraction.endsAt + 1;

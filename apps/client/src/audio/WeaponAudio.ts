@@ -1,21 +1,8 @@
-/**
- * Layered, procedural weapon audio. No audio data crosses the network: every client synthesizes the sounds from
- * synchronized gameplay events (shots, reload phases, blasts, melee, resupply) and its own listener position.
- *
- * Shot layers (parameters in `combat.json › audio.weapons`):
- *   transient  band-passed noise crack, a few milliseconds, the "dry" impulse
- *   body       pitch-dropping sine through soft saturation, the low-frequency pressure
- *   mechanical short resonant click of bolt or slide, only audible up close
- *   tail       low-passed noise into the environment reverb/echo send
- * Distance: delay by the speed of sound, level falloff, a low-pass that closes with distance and a cross-fade from
- * the close variant (crack + mechanics) to the distant variant (dull boom + more tail).
- *
- * Procedural weapons share the mixer and voice budget with recorded gameplay audio.
- */
-import { COMBAT, WEAPONS } from '@freefall/shared';
-import type { AudioEnvironmentId, WeaponSlot } from '@freefall/shared';
+import { COMBAT, allowsPostureAction } from '@freefall/shared';
+import type { AudioEnvironmentId, PlayerState, PlayersSnapshot, WeaponSlot } from '@freefall/shared';
 import type { AudioEngine } from './AudioEngine.ts';
 import { PRIORITY } from './VoiceBudget.ts';
+import { PLANET_WEAPON_MIX, WEAPON_ASSET_IDS, WEAPON_RECORDINGS, WEAPON_SWITCH_ASSET } from './WeaponAudioCatalog.ts';
 
 export interface Listener { x: number; y?: number; z: number; yaw: number }
 export interface SoundSource { x: number; z: number; y?: number }
@@ -33,18 +20,56 @@ interface Voice {
   sources: Set<AudioScheduledSourceNode>;
 }
 
+type HandlingCue = 'remove' | 'insert' | 'finish' | 'switch';
+const HANDLING_LATE_TICKS = 3;
+const RECORDED_MAX_TRAVEL_SECONDS = .115;
+
+/** Admit only newly observed authoritative transitions. A baseline, a life change or a stale phase is silent. */
+export function weaponHandlingCue(player: PlayerState, previous: PlayerState | undefined, from: number, tick: number):
+  { action: HandlingCue; slot: WeaponSlot } | undefined {
+  if (!previous?.hp || !player.hp || previous.life !== player.life || tick <= from) return;
+  const crossed = (at: number) => from < at && at <= tick && tick - at <= HANDLING_LATE_TICKS;
+  const gear = player.equipment;
+  const action = gear?.action;
+  if (gear && (action === 'primary' || action === 'secondary') && crossed(gear.started)) return { action: 'switch', slot: action };
+  const reload = player.reload;
+  if (action || (player.posture && !allowsPostureAction(player.posture, 'reload'))) return;
+  if (reload) {
+    const { phase, slot, removalAt, insertAt } = reload;
+    if ((phase === 'MAGAZINE_INSERTION' || phase === 'RELOAD_COMPLETE') && crossed(insertAt)) return { action: 'insert', slot };
+    if (phase === 'MAGAZINE_REMOVAL' && crossed(removalAt)) return { action: 'remove', slot };
+  }
+  const before = previous.reload;
+  // On the normal wire path READY is encoded as reloadUntil=0 with no reload object.
+  if (before?.phase === 'RELOAD_COMPLETE' && gear?.slot === before.slot && player.reloadUntil === 0 &&
+      (!reload || (reload.phase === 'READY' && reload.at === before.until)) && crossed(before.until)) {
+    return { action: 'finish', slot: before.slot };
+  }
+}
+
 export class WeaponAudio {
   private readonly engine: AudioEngine;
   private curve?: Float32Array<ArrayBuffer>;
-  private readonly pending = new Map<string, AudioScheduledSourceNode[]>();
   private readonly transient = new Set<() => void>();
+  private ownHandling?: PlayersSnapshot;
+  private remoteHandling?: PlayersSnapshot;
+  private planetMix?: { reflections: number; distantCutoff: number };
   private random = 0x51ed;
+  private readonly counts = { own: 0, remote: 0, remove: 0, insert: 0, finish: 0, switch: 0, casing: 0, unavailable: 0 };
 
-  constructor(engine: AudioEngine) { this.engine = engine; }
-
-  setEnvironment(id: AudioEnvironmentId): void {
-    if (this.engine.environment !== id) this.engine.setEnvironment(id);
+  constructor(engine: AudioEngine) {
+    this.engine = engine;
+    engine.assets.retain(WEAPON_ASSET_IDS);
   }
+
+  setEnvironment(id: AudioEnvironmentId, planet?: string): void {
+    if (this.engine.environment !== id) this.engine.setEnvironment(id);
+    this.planetMix = id === 'open-field' && planet ? PLANET_WEAPON_MIX[planet] : undefined;
+  }
+
+  warm(): void { this.engine.preload(WEAPON_ASSET_IDS); }
+
+  metrics() { return { ...this.counts }; }
 
   private rand(): number {
     this.random = (Math.imul(this.random, 1664525) + 1013904223) >>> 0;
@@ -53,30 +78,31 @@ export class WeaponAudio {
 
   /**
    * Creates the spatial output chain of one sound event, or undefined if it is inaudible or over budget.
-   * `seconds` is the audible length; it may depend on the distance blend (distant tails ring longer).
+   * The reservation covers all layers and their travel delay.
    */
-  private voice(owner: string, source: SoundSource, listener: Listener, own: boolean, length: number | ((blend: number) => number),
-    gain = 1, priority?: number): Voice | undefined {
+  private voice(owner: string, source: SoundSource, listener: Listener, own: boolean, seconds: number,
+    gain = 1, priority?: number, recorded = false): Voice | undefined {
     const context = this.engine.context;
     const bus = this.engine.bus('weapons');
     if (!context || !bus || context.state !== 'running') return;
     const { audibleDistance, distantBlendStart, distantBlendEnd, speedOfSound } = COMBAT.audio;
     const dx = source.x - listener.x, dz = source.z - listener.z;
     const horizontal = Math.hypot(dx, dz);
-    const distance = own ? 0 : priority === undefined ? horizontal : Math.hypot(horizontal, (source.y ?? listener.y ?? 0) - (listener.y ?? 0));
+    const distance = own ? 0 : priority === undefined && !recorded ? horizontal :
+      Math.hypot(horizontal, (source.y ?? listener.y ?? 0) - (listener.y ?? 0));
     if (distance > audibleDistance) return;
     const blend = smooth(distantBlendStart, distantBlendEnd, distance);
-    const seconds = typeof length === 'function' ? length(blend) : length;
     const sources = new Set<AudioScheduledSourceNode>();
-    const release = this.engine.reserve(owner, seconds + distance / speedOfSound + .10,
+    const travel = recorded ? Math.min(RECORDED_MAX_TRAVEL_SECONDS, distance / speedOfSound) : distance / speedOfSound;
+    const release = this.engine.reserve(owner, seconds + travel + (recorded ? .025 : .10),
       priority ?? (own ? PRIORITY.threat : PRIORITY.combat - Math.min(14, distance / 6)), () => {
         if (release) this.transient.delete(release);
         for (const source of sources) source.stop();
         out.disconnect(); wet?.disconnect(); dry.disconnect(); filter.disconnect(); pan.disconnect();
       });
     if (!release) return;
-    if (priority !== undefined) this.transient.add(release);
-    const at = context.currentTime + .005 + distance / speedOfSound;
+    if (recorded || priority !== undefined) this.transient.add(release);
+    const at = context.currentTime + .005 + travel;
     const pan = context.createStereoPanner();
     const filter = context.createBiquadFilter();
     filter.type = 'lowpass';
@@ -84,7 +110,8 @@ export class WeaponAudio {
     const front = distance > .5 ? (dx * Math.sin(listener.yaw) - dz * Math.cos(listener.yaw)) / distance : 1;
     pan.pan.value = Math.max(-.85, Math.min(.85, right * .85));
     // Sources behind the listener lose some brilliance.
-    filter.frequency.value = (17_000 - 15_400 * blend) * (front < 0 ? .7 : 1);
+    const distantCutoff = recorded ? this.planetMix?.distantCutoff ?? 1900 : 1600;
+    filter.frequency.value = (17_000 - (17_000 - distantCutoff) * blend) * (front < 0 ? .7 : 1);
     filter.Q.value = .4;
     const dry = context.createGain();
     dry.gain.value = gain / (1 + distance / 14);
@@ -95,7 +122,8 @@ export class WeaponAudio {
     const wet = send ? context.createGain() : undefined;
     if (send && wet) {
       // Distant sources are dominated by reflections.
-      wet.gain.value = gain * (.35 + blend * .9) / (1 + distance / 40);
+      const reflections = recorded ? this.planetMix?.reflections ?? .78 : 1;
+      wet.gain.value = reflections * gain * (.35 + blend * .9) / (1 + distance / 40);
       out.connect(wet).connect(send);
     }
     return { at, blend, out, sources };
@@ -162,30 +190,54 @@ export class WeaponAudio {
     return shaper;
   }
 
-  shot(slot: WeaponSlot, shooter: string, source: SoundSource, listener: Listener, own: boolean): void {
-    const kind = WEAPONS[slot].sounds.fire;
-    const profile = COMBAT.audio.weapons[kind];
-    const rifle = kind === 'rifle';
-    const tail = rifle ? .42 : .3;
-    // The tail layer starts 10 ms late and lasts tail × (1 + blend).
-    const voice = this.voice(shooter, source, listener, own, (blend) => tail * (1 + blend) + .1, profile.gain);
-    if (!voice) return;
-    const { at, blend } = voice;
-    const close = 1 - blend;
-    const vary = 1 + (this.rand() * 2 - 1) * profile.variation;
-    // Close: sharp crack. Distant: the crack is gone, a dull boom and the reflections remain.
-    this.noise(voice, at, rifle ? .045 : .03, 'bandpass', profile.transientHz * vary, .8, .9 * close + .05);
-    this.noise(voice, at, rifle ? .02 : .014, 'highpass', 5200 * vary, .5, .35 * close);
-    this.tone(voice, at, rifle ? .16 : .1, profile.bodyHz * 1.9 * vary, profile.bodyHz * .55, profile.bodyGain * (.7 + blend * .5), 'sine', true);
-    if (close > .35) {
-      this.noise(voice, at + (rifle ? .011 : .008), .018, 'bandpass', (rifle ? 2300 : 3300) * vary, 6, profile.mechanicalGain * close);
-      if (!rifle) this.noise(voice, at + .045, .02, 'bandpass', 2700 * vary, 8, profile.mechanicalGain * .6 * close);
+  private recording(id: string): AudioBuffer | undefined {
+    const buffer = this.engine.assets.get(id);
+    if (!buffer) this.engine.preload([id]);
+    return buffer;
+  }
+
+  private sample(voice: Voice, buffer: AudioBuffer, pitch: number, level = 1, offset = 0): void {
+    const context = this.engine.context!;
+    const node = context.createBufferSource();
+    node.buffer = buffer;
+    node.playbackRate.value = pitch;
+    const gain = level === 1 ? undefined : context.createGain();
+    if (gain) {
+      gain.gain.value = level;
+      node.connect(gain).connect(voice.out);
+    } else node.connect(voice.out);
+    voice.sources.add(node);
+    node.onended = () => { voice.sources.delete(node); node.disconnect(); gain?.disconnect(); };
+    node.start(voice.at + offset);
+  }
+
+  shot(slot: WeaponSlot, shooter: string, source: SoundSource, listener: Listener, own: boolean, hardFloor = false): boolean {
+    if (!this.engine.running) return false;
+    const { audibleDistance, distantBlendStart, distantBlendEnd } = COMBAT.audio;
+    const distance = own ? 0 : Math.hypot(source.x - listener.x, source.z - listener.z, (source.y ?? listener.y ?? 0) - (listener.y ?? 0));
+    if (distance > audibleDistance) return false;
+    const mix = smooth(distantBlendStart, distantBlendEnd, distance);
+    const profile = WEAPON_RECORDINGS[slot];
+    const variation = this.rand() < .5 ? 0 : 1;
+    const near = mix < 1 ? this.recording(profile.near[variation]) ?? this.recording(profile.near[1 - variation]) : undefined;
+    const distant = mix > 0 ? this.recording(profile.distant) : undefined;
+    if (!near && !distant) { this.counts.unavailable++; return false; }
+    const pitch = .98 + this.rand() * .04;
+    const casing = hardFloor && own && profile.casing && this.rand() < .28 ? this.recording(profile.casing) : undefined;
+    const casingOffset = .15;
+    const length = Math.max((near?.duration ?? 0) / pitch, (distant?.duration ?? 0) / pitch,
+      casing ? casingOffset + casing.duration : 0);
+    const priority = own ? PRIORITY.threat - 1 : PRIORITY.combat - Math.min(14, distance / 6);
+    const voice = this.voice(shooter, source, listener, own, length, profile.level * (.96 + this.rand() * .08), priority, true);
+    if (!voice) return false;
+    if (near) this.sample(voice, near, pitch, distant ? 1 - mix : 1);
+    if (distant) this.sample(voice, distant, pitch, near ? mix : 1);
+    if (casing) {
+      this.sample(voice, casing, 1, .24, casingOffset);
+      this.counts.casing++;
     }
-    this.noise(voice, at + .01, tail * (1 + blend), 'lowpass', 1500 - 800 * blend, .5, profile.tailGain * (.35 + blend * .45), .012);
-    // Casing on the ground, own rifle only (keeps the voice count low).
-    if (own && rifle && this.rand() < .7) {
-      this.noise(voice, at + .32 + this.rand() * .12, .05, 'bandpass', 5200 + this.rand() * 1800, 12, .05);
-    }
+    this.counts[own ? 'own' : 'remote']++;
+    return true;
   }
 
   explosion(source: SoundSource, listener: Listener, distance: number): void {
@@ -199,55 +251,42 @@ export class WeaponAudio {
     this.noise(voice, at + .035, .85 + .34 * blend, 'lowpass', 890 - blend * 380, .5, profile.tailGain * .52, .034);
   }
 
-  private mechanics(owner: string, source: SoundSource, listener: Listener, own: boolean, steps: [number, number, number, number][]): AudioScheduledSourceNode[] {
+  private mechanics(owner: string, source: SoundSource, listener: Listener, own: boolean, steps: [number, number, number, number][]): void {
     const voice = this.voice(owner, source, listener, own, Math.max(...steps.map(([delay]) => delay)) + .2, own ? .55 : .4);
-    if (!voice || (!own && voice.blend > .4)) return [];
-    const nodes: AudioScheduledSourceNode[] = [];
+    if (!voice || (!own && voice.blend > .4)) return;
     for (const [delay, frequency, q, level] of steps) {
-      const node = this.noise(voice, voice.at + delay, .035, 'bandpass', frequency, q, level);
-      if (node) nodes.push(node);
-    }
-    return nodes;
-  }
-
-  /** Reload phases from the server: start (release + drop), insertion (seat), interruption (cancels pending cues). */
-  reload(operator: string, slot: WeaponSlot, phase: 'RELOAD_START' | 'MAGAZINE_INSERTION' | 'RELOAD_INTERRUPTED',
-    source: SoundSource, listener: Listener, own: boolean, removalSeconds: number, chamberSeconds: number): void {
-    const key = operator;
-    if (phase === 'RELOAD_INTERRUPTED') {
-      for (const node of this.pending.get(key) ?? []) { try { node.stop(); } catch { /* already ended */ } }
-      this.pending.delete(key);
-      return;
-    }
-    const rifle = slot === 'primary';
-    if (phase === 'RELOAD_START') {
-      const nodes = this.mechanics(`${operator}-reload`, source, listener, own, [
-        [0, 900, 2, .18], [removalSeconds, rifle ? 1900 : 2600, 7, .4], [removalSeconds + .2, 700, 3, .22],
-      ]);
-      if (!nodes.length) return;
-      const pending = new Set(nodes);
-      this.pending.set(key, nodes);
-      for (const node of nodes) node.addEventListener('ended', () => {
-        pending.delete(node);
-        if (!pending.size && this.pending.get(key) === nodes) this.pending.delete(key);
-      }, { once: true });
-    } else {
-      this.pending.delete(key);
-      this.mechanics(`${operator}-reload`, source, listener, own, [
-        [0, rifle ? 1500 : 2100, 6, .55], [chamberSeconds, rifle ? 2600 : 3400, 9, .5], [chamberSeconds + .06, 1700, 6, .35],
-      ]);
+      this.noise(voice, voice.at + delay, .035, 'bandpass', frequency, q, level);
     }
   }
 
-  reset(): void {
-    this.pending.clear();
-    this.clearTransient();
+  /** Local snapshots are immediate. Remote snapshots follow the existing pose playback clock. */
+  handling(packet: PlayersSnapshot, listener: Listener, ownId: string, own: boolean, ready: boolean): void {
+    const previous = own ? this.ownHandling : this.remoteHandling;
+    if (previous && packet.tick <= previous.tick) return;
+    if (own) this.ownHandling = packet;
+    else this.remoteHandling = packet;
+    if (!previous || !ready || !this.engine.running) return;
+    for (const player of packet.players) {
+      if ((player.id === ownId) !== own) continue;
+      if (!own && Math.hypot(player.x - listener.x, player.z - listener.z) > 32) continue;
+      const before = previous.players.find(({ id }) => id === player.id);
+      const cue = weaponHandlingCue(player, before, previous.tick, packet.tick);
+      if (!cue) continue;
+      const id = cue.action === 'switch' ? WEAPON_SWITCH_ASSET : WEAPON_RECORDINGS[cue.slot][cue.action];
+      if (!id) continue;
+      const buffer = this.recording(id);
+      if (!buffer) { this.counts.unavailable++; continue; }
+      const voice = this.voice(`${player.id}-handling`, player, listener, own, buffer.duration, own ? .70 : .56,
+        own ? PRIORITY.combat : PRIORITY.world, true);
+      if (!voice) continue;
+      this.sample(voice, buffer, 1);
+      this.counts[cue.action]++;
+    }
   }
 
-  clearTransient(): void { for (const release of this.transient) release(); }
-
-  switchWeapon(operator: string, source: SoundSource, listener: Listener, own: boolean): void {
-    this.mechanics(`${operator}-switch`, source, listener, own, [[0, 600, 1.5, .16], [.24, 2800, 8, .3]]);
+  clearTransient(): void {
+    for (const release of this.transient) release();
+    this.ownHandling = this.remoteHandling = undefined;
   }
 
   grenadeRelease(operator: string, source: SoundSource, listener: Listener, own: boolean): void {

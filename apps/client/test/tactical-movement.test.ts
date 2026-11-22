@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BALANCE, BODENBRUCH, NET, PLAYER, advancePosture, applyPostureInput, copyPosture, newPosture, slidePeakStep, wrapAngle } from '@freefall/shared';
+import { Quaternion, Vector3 } from 'three';
+import { BALANCE, BODENBRUCH, NET, PLAYER, advancePosture, applyPostureInput, copyPosture, groundHeight, newPosture, slidePeakStep, wrapAngle } from '@freefall/shared';
 import type { OperatorPosition, PlayerInput, PlayerState, PlayersSnapshot, PostureState } from '@freefall/shared';
 import { playerSnapshot } from '../../server/src/networking/snapshots.ts';
 import { Battlefield } from '../../server/src/simulation/Battlefield.ts';
@@ -12,10 +13,51 @@ import { DesktopInput, analogMovement } from '../src/input/DesktopInput.ts';
 import { cameraPreferences, normalizeCameraPreferences } from '../src/rendering/CameraPreferences.ts';
 import { LANDING_TICKS, TacticalAnimation } from '../src/rendering/characters/TacticalAnimation.ts';
 import { ThirdPersonCamera, cameraAnchorWeight } from '../src/rendering/ThirdPersonCamera.ts';
+import { PlayerVisualController } from '../src/rendering/characters/PlayerVisualController.ts';
+import { createSoldierParts } from '../src/rendering/characters/SoldierRig.ts';
+import { createKestrel } from '../src/rendering/weapons/Kestrel.ts';
 
 const idle = (seq: number): PlayerInput => ({ seq, life: 1, forward: 0, strafe: 0, yaw: 0, pitch: 0, fire: false, sprint: false });
 const movement = BALANCE.movement;
 const player: PlayerState = { id: 'p', slot: 0, x: 0, z: 0, hp: 100, yaw: 0, life: 1, ack: 0, respawnTick: 0, kills: 0 };
+
+test('ground combat weapon pose follows aim above and below the global zero plane', () => {
+  const model = new PlayerVisualController(createSoldierParts(), createKestrel(), 0xffffff);
+  try {
+    for (const current of ['PRONE', 'SUPINE'] as const) {
+      const directions = [];
+      for (const y of [-8, 8]) {
+        const world = { ...BODENBRUCH.world, obstacles: [], terrain: { half: 30, cells: 1, step: 60,
+          minHeight: y, maxHeight: y, maxGrade: 0, allowedGrade: .25, heightsCm: Array(4).fill(y * 100) } };
+        model.draw('p', directions.length + 1, 100, 0, 0, .1, -.32, true, false, 0, 40, 0, 1 / 60,
+          true, undefined, { ...newPosture(), current }, y, undefined, undefined, 40, world);
+        const direction = new Vector3(0, 0, -1).applyQuaternion(model.weapon.root.getWorldQuaternion(new Quaternion()));
+        assert.ok(direction.z < -.9 && direction.y < 0, `${current} points forward and down at elevation ${y}`);
+        directions.push(direction);
+      }
+      assert.ok(directions[0].distanceTo(directions[1]) < 1e-9, 'changing world elevation preserves aim');
+    }
+  } finally { model.dispose(); }
+});
+
+test('remote ground combat follows triangle height and stops extrapolation at solid cover', () => {
+  const world = { ...BODENBRUCH.world, half: 10,
+    obstacles: [{ x: 1.01, z: 0, halfX: .02, halfZ: 2, height: 3, bottom: -2, kind: 'barrier' as const }],
+    terrain: { half: 10, cells: 1, step: 20, minHeight: -1, maxHeight: 1, maxGrade: .15,
+      allowedGrade: .25, heightsCm: [0, 0, 0, 100] } };
+  const posture = { ...newPosture(), current: 'PRONE' as const };
+  const from = { ...player, x: .2, y: groundHeight(world, .2, 0), posture };
+  const next = { ...from, x: .58, y: groundHeight(world, .58, 0) };
+  const a = { tick: 10, host: 'p', players: [from] };
+  const b = { tick: 18, host: 'p', players: [next] };
+  const pose = remotePose(from, a, b, 1.25, next, { x: 0, z: 0, tick: 0, yaw: 0, pitch: 0 }, world);
+  assert.ok(pose.x >= next.x && pose.x <= .590001, `extrapolated body stopped beside the wall at ${pose.x}`);
+  assert.equal(pose.y, groundHeight(world, pose.x, pose.z));
+
+  const acrossEdge = { ...from, x: -.2, y: groundHeight(world, -.2, 0) };
+  remotePose(acrossEdge, a, b, .25, next, pose, world);
+  assert.equal(pose.y, groundHeight(world, pose.x, pose.z), 'ground pose stays on the triangle beneath it');
+});
 
 test('pending crawl, turn and get-up replay against authoritative snapshots in either ground posture', () => {
   for (const stance of ['PRONE', 'SUPINE'] as const) {

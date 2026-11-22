@@ -1,0 +1,3 @@
+Both runs used the same commands, registry snapshot and seed schedule.
+77/77 outcomes, objectives, gameplay counters, inventory, extraction outcomes and mission ticks matched.
+Excluded generated instance UUIDs, machine timings and serialization measurements.

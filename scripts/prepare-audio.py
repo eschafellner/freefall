@@ -55,6 +55,23 @@ ONE_SHOTS = [
 ]
 LEAVES = [(f"forest-floor-{n}", f"leaves-0{n}", (0, 2), .51, 110, 6650, -23, 1) for n in range(1, 5)]
 
+# id, target RMS, layers (source ID, start, length, trim filters, placement in finished sample)
+WEAPON_CUTS = [
+    ("kestrel-shot-1", -19, [("weapon-d31", .495, .226, 52, 13000, 0)]),
+    ("kestrel-shot-2", -19, [("weapon-d30", .495, .226, 52, 13000, 0)]),
+    ("kestrel-shot-distant", -23, [("weapon-d23", .521, .24, 64, 5400, 0)]),
+    ("p01-shot-1", -21, [("weapon-x39", 1.402, .184, 76, 13500, 0)]),
+    ("p01-shot-2", -21, [("weapon-x39-alt", 6.441, .184, 76, 13500, 0)]),
+    ("p01-shot-distant", -24, [("weapon-x31", 5.238, .236, 88, 5500, 0)]),
+    ("kestrel-mag-out", -25, [("weapon-d5", 1.218, .239, 135, 10700, 0)]),
+    ("kestrel-mag-in", -24, [("weapon-d4", 1.254, .15, 118, 10500, 0)]),
+    ("kestrel-reload-finish", -27, [("weapon-d13", .35, .15, 130, 10100, 0)]),
+    ("p01-mag-out", -26, [("weapon-x5", 1.35, .16, 155, 10500, 0)]),
+    ("p01-mag-in-slide", -25, [("weapon-x4", .874, .132, 140, 11200, 0), ("weapon-x17", 1.145, .125, 140, 11200, .076)]),
+    ("weapon-switch-foley", -29, [("weapon-switch-source", 2.375, .144, 115, 8500, 0)]),
+    ("weapon-casing-hard", -31, [("weapon-casing-source", .11, .142, 420, 10800, 0)]),
+]
+
 
 def ffmpeg(args, data=None):
     return subprocess.run(["ffmpeg", "-hide_banner", "-nostdin", "-y", *map(str, args)], input=data,
@@ -149,20 +166,73 @@ def prepare(inputs, catalog, job):
     ]
 
 
+def prepare_weapon(inputs, catalog, job):
+    name, target, layers = job
+    sample_count = round(max(length + offset for _, _, length, _, _, offset in layers) * RATE)
+    samples = array("f", [0.0]) * sample_count
+    for source, start, length, low, high, offset in layers:
+        entry = catalog[source]
+        path = inputs / entry["file"]
+        # A symmetric downmix leaves room for the two microphone perspectives to sum at the transient.
+        args = ["-v", "error", "-ss", start, "-i", path, "-t", length]
+        channel = entry.get("selectedChannel")
+        if channel is not None:
+            mono = f"pan=mono|c0=c{channel},"
+        else:
+            mono = "pan=mono|c0=0.5*c0+0.5*c1," if entry["channels"] == 2 else ""
+        # PPQ take two has three isolated full-scale samples on its cleanest microphone.
+        # Repair them before resampling, where they would spread to neighbouring samples.
+        repair = "adeclip=w=10:o=75:a=8:t=2," if entry.get("repairIsolatedPeaks") else ""
+        result = ffmpeg([*args, "-af", f"{mono}{repair}highpass=f={low},lowpass=f={high}",
+                         "-ar", RATE, "-ac", "1", "-f", "f32le", "pipe:1"])
+        clip = array("f", result.stdout)
+        edge_in, edge_out = round(.002 * RATE), round(.033 * RATE)
+        shift = round(offset * RATE)
+        for i, value in enumerate(clip):
+            samples[shift + i] += value * min(1, i / edge_in, (len(clip) - 1 - i) / edge_out)
+
+    peak = 20 * math.log10(max(abs(value) for value in samples))
+    rms = 10 * math.log10(sum(value * value for value in samples) / len(samples))
+    gain = min(target - rms, -6 - peak, 14)
+    formats = {}
+    for extension, codec in [("ogg", ["-c:a", "libvorbis", "-q:a", "4"]),
+                             ("mp3", ["-c:a", "libmp3lame", "-q:a", "3"])]:
+        file = OUT / f"{name}.{extension}"
+        ffmpeg(["-v", "error", "-f", "f32le", "-ar", RATE, "-ac", 1, "-i", "pipe:0", "-af",
+                f"volume={gain:.5f}dB", *codec, "-map_metadata", "-1", file], samples.tobytes())
+        formats[extension] = hashlib.sha256(file.read_bytes()).hexdigest()
+    return {"id": name, "source": layers[0][0], "category": "weapon",
+            "layers": [{"source": source, "start": start, "seconds": length, "hpfHz": low, "lpfHz": high, "offset": offset}
+                       for source, start, length, low, high, offset in layers],
+            "seconds": round(sample_count / RATE, 4), "channels": 1, "crossfade": 0,
+            "gainDb": round(gain, 2), "rmsDbfs": round(rms + gain, 2), "peakDbfs": round(peak + gain, 2), "sha256": formats}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("inputs", type=Path, help="Directory with the documented source files and archive members")
+    parser.add_argument("--weapons", action="store_true", help="Prepare only the 7.9A.1 one-shots")
     args = parser.parse_args()
     source_catalog = json.loads(SOURCES.read_text())
+    source_catalog = {key: entry for key, entry in source_catalog.items() if (entry["category"] == "weapon") == args.weapons}
     for source, entry in source_catalog.items():
         path = args.inputs / entry["file"]
         if hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
             raise ValueError(f"Source hash differs: {path}")
     OUT.mkdir(parents=True, exist_ok=True)
+    manifest = ROOT / "docs/audio-masters.json"
+    cached = json.loads(manifest.read_text()) if manifest.exists() else []
+    if args.weapons:
+        catalog = [asset for asset in cached if asset.get("category") != "weapon"]
+        catalog.extend(prepare_weapon(args.inputs, source_catalog, job) for job in WEAPON_CUTS)
+        manifest.write_text(json.dumps(catalog, indent=2, ensure_ascii=False) + "\n")
+        print(f"Prepared {len(WEAPON_CUTS)} weapon masters in two runtime formats.")
+        return
     with ThreadPoolExecutor(max_workers=4) as workers:
         results = list(workers.map(lambda job: prepare(args.inputs, source_catalog, job), [*LOOPS, *CUTS, *ONE_SHOTS, *LEAVES]))
     catalog = [asset for group in results for asset in group]
-    (ROOT / "docs/audio-masters.json").write_text(json.dumps(catalog, indent=2, ensure_ascii=False) + "\n")
+    catalog.extend(asset for asset in cached if asset.get("category") == "weapon")
+    manifest.write_text(json.dumps(catalog, indent=2, ensure_ascii=False) + "\n")
     print(f"Prepared {len(catalog)} audio masters in two runtime formats.")
 
 

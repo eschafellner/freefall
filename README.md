@@ -85,6 +85,18 @@ Der Prototyp ist für lokale Tests ausgelegt. Fortschritt, Inventar, Accounts, S
 
 [Skyfall Carrier](docs/SKYFALL_CARRIER.md) · [Game Flow](docs/GAME_FLOW.md) · [Extraktion](docs/EXTRACTION_SYSTEM.md) · [Missionsbelohnungen](docs/MISSION_REWARDS.md)
 
+## Integration und Release-Abnahme · 7.9E
+
+Der Waldlasttest erreichte 1.000 serverseitig simulierte Schaben. Die Release-Freigabe bleibt wegen der Missionsdauer und ausstehender Spiel-, Hör- und Zielgeräteprüfungen offen. [Abnahmebericht](docs/MILESTONE_7_9E_FINAL_ACCEPTANCE.md) · [Messdaten und Reproduktion](docs/playtest/7-9e/README.md)
+
+## Waffenaufnahmen · 7.9A.1
+
+Kestrel und P-01 verwenden lizenzgeprüfte Aufnahmen für Schüsse und Handhabung. Die Integration folgt bestätigten Zuständen und der lokalen Schussvorhersage. [Abdeckung und Prüfergebnisse](docs/WEAPON_AUDIO_7_9A.md)
+
+## Kampf- und Ressourcenbalance · 7.9A.2
+
+Die Kestrel beginnt die Rückstoßerholung ab ihrem nächsten regulären Schusstakt. [Vorher-Nachher-Messungen und Regression](docs/COMBAT_BALANCE_7_9A_2.md)
+
 ## Combat Presentation und Multiplayer-Abnahme · 7.8E
 
 Waffen-, Treffer-, Explosions-, Nahkampf- und Missionsereignisse verwenden gemeinsame Regeln für Deduplizierung und Wiederverbindung. **F2** zeigt Ereignisalter und Posenwartezeit. Die finale Freigabe steht aus. [Abnahmebericht](docs/MILESTONE_7_8_FINAL_ACCEPTANCE.md) · [Testmatrix](docs/MILESTONE_7_8E_TEST_MATRIX.md) · [Performance](docs/MILESTONE_7_8E_PERFORMANCE_REPORT.md)

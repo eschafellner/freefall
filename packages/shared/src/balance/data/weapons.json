@@ -21,7 +21,7 @@
         "sustainedGrowthPerShot": 0.035,
         "maxSustainedMultiplier": 1.6,
         "maxClimbDegrees": 7,
-        "recoveryDelaySeconds": 0.12,
+        "recoveryDelaySeconds": 0.10,
         "recoveryPerSecond": 5,
         "visualKick": 1,
         "cameraKick": 0.5

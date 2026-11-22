@@ -1,0 +1,4277 @@
+{
+  "revision": "ffc81913055f9673ffb55fa027b7488ef0ec9d71",
+  "workspace": "7.9E",
+  "balanceHash": "390e375eec0bf943",
+  "balanceRelease": "7.9B",
+  "hardware": {
+    "cpu": "AMD Ryzen 7 9700X 8-Core Processor",
+    "threads": 16,
+    "ram": 66985082880,
+    "kernel": "7.3.3-300.fc45.x86_64",
+    "node": "v24.18.0"
+  },
+  "matrix": "director",
+  "scenarios": [
+    {
+      "scenario": {
+        "kind": "director",
+        "operators": 1,
+        "seconds": 1500
+      },
+      "config": {
+        "difficultyId": "normal",
+        "simulationSeed": 421337,
+        "missionSeed": null,
+        "worldSeed": null,
+        "generatorVersion": null,
+        "world": "world.bodenbruch",
+        "obstacles": 3,
+        "tickHz": 30,
+        "hordeHz": 10,
+        "activeCap": 200
+      },
+      "durationTicks": 6125,
+      "state": "MISSION_RESULTS",
+      "finalHp": [
+        0
+      ],
+      "active": {
+        "min": 0,
+        "max": 2,
+        "final": 1,
+        "mean": 1.0901224489795918,
+        "movedIds": 2,
+        "enemyDeaths": 1
+      },
+      "combat": {
+        "decisions": 2646,
+        "validations": 76,
+        "starts": 38,
+        "hits": 38,
+        "operatorStarts": 38,
+        "operatorHits": 38,
+        "operatorDamage": 300,
+        "interruptions": 0,
+        "firstWindup": 4668,
+        "firstDamageFromStart": 14,
+        "hitSizes": {
+          "4": 1,
+          "8": 37
+        },
+        "hpTimeline": [
+          {
+            "firstHit": 4682,
+            "death": 6125,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          }
+        ],
+        "pendingOperatorAttacks": 0,
+        "unsuccessfulOperatorStarts": 0,
+        "maxWindup": 1,
+        "maxActive": 1,
+        "maxRecovery": 1,
+        "rangeMean": 0.23820408163265305,
+        "resources": {
+          "shots": {
+            "primary": 405,
+            "secondary": 0
+          },
+          "hits": {
+            "primary": 2,
+            "secondary": 0
+          },
+          "damage": {
+            "primary": 48,
+            "secondary": 0
+          },
+          "magazinesUsed": {
+            "primary": 8,
+            "secondary": 0
+          },
+          "roundsDiscarded": {
+            "primary": 0,
+            "secondary": 0
+          },
+          "reloadsInterrupted": 0,
+          "grenadesThrown": 0,
+          "grenadeDamageEnemies": 0,
+          "grenadeDamageNests": 0,
+          "grenadeKills": 0,
+          "meleeAttacks": 0,
+          "meleeHits": 0,
+          "meleeKills": 0,
+          "staggers": 0,
+          "friendlyFireDamage": {
+            "bullet": 0,
+            "explosion": 0,
+            "melee": 0
+          },
+          "selfDamage": 0,
+          "convictFriendlyDamage": 0,
+          "resupplyUses": 0,
+          "refilled": {
+            "primaryMagazines": 0,
+            "secondaryMagazines": 0,
+            "grenades": 0,
+            "stims": 0
+          },
+          "blasts": 0,
+          "blastQueryMsTotal": 0,
+          "blastQueryMsMax": 0
+        }
+      },
+      "targeting": {
+        "targetTicks": [
+          6381
+        ],
+        "switches": 0,
+        "acquisitions": 2,
+        "losses": 0
+      },
+      "navigation": {
+        "requests": 735,
+        "builds": 0,
+        "hits": 0,
+        "deferred": 0,
+        "stuckPeak": 0,
+        "stuckEpisodes": 0,
+        "recoveryAttempts": 0,
+        "recoveries": 0,
+        "fallbacks": 0,
+        "unreachable": 0,
+        "overlapProbes": 0
+      },
+      "spawn": {
+        "checked": 450,
+        "waveChecked": 450,
+        "spawned": 2,
+        "waveSpawned": 2,
+        "capacityDeferrals": 0,
+        "budgetDeferrals": 0,
+        "rejected": {
+          "ground": 0,
+          "protected-area": 0,
+          "operator-distance": 288,
+          "structure": 0,
+          "occupied": 0,
+          "visible": 160,
+          "route": 0
+        },
+        "peakChecks": 4,
+        "peakWaveChecks": 4,
+        "peakSpawned": 1
+      },
+      "waves": [
+        {
+          "tick": 982,
+          "budget": 5
+        },
+        {
+          "tick": 1972,
+          "spawned": 2,
+          "reason": "partial"
+        },
+        {
+          "tick": 3399,
+          "budget": 4
+        },
+        {
+          "tick": 4179,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 5577,
+          "budget": 5
+        },
+        {
+          "tick": 6125,
+          "spawned": 0,
+          "reason": "mission-ended"
+        }
+      ],
+      "holds": {},
+      "phases": [
+        {
+          "state": "CALM",
+          "start": 1,
+          "ticks": 981,
+          "pressureMax": 0,
+          "maxPopulation": 0,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 982,
+          "ticks": 180,
+          "pressureMax": 0.032534445483576174,
+          "maxPopulation": 2,
+          "spawnChecks": 2,
+          "spawns": 2,
+          "damage": 0,
+          "pressureMean": 0.004860878476139269,
+          "nearbyMean": 0.23333333333333334,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 1162,
+          "ticks": 600,
+          "pressureMax": 0.07522684338321978,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.07138495691630457,
+          "nearbyMean": 2,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 1762,
+          "ticks": 210,
+          "pressureMax": 0.07522726507724273,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.07522716429166675,
+          "nearbyMean": 2,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 1972,
+          "ticks": 480,
+          "pressureMax": 0.07522727272650429,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.07522727186673082,
+          "nearbyMean": 2,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 2452,
+          "ticks": 947,
+          "pressureMax": 0.07522727272709039,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.04273735228758045,
+          "nearbyMean": 1.08870116156283,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 3399,
+          "ticks": 180,
+          "pressureMax": 0.03761363849618331,
+          "maxPopulation": 1,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03761363696019067,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 3579,
+          "ticks": 600,
+          "pressureMax": 0.037613636431187675,
+          "maxPopulation": 1,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03761363636949072,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 4179,
+          "ticks": 480,
+          "pressureMax": 0.03761363636363705,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03761363636363646,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 4659,
+          "ticks": 918,
+          "pressureMax": 0.21061857561788838,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 184,
+          "pressureMean": 0.1670822781699716,
+          "nearbyMean": 1,
+          "rangeMean": 0.9912854030501089,
+          "attackMean": 0.43899782135076254
+        },
+        {
+          "state": "BUILDUP",
+          "start": 5577,
+          "ticks": 180,
+          "pressureMax": 0.21061864013529677,
+          "maxPopulation": 1,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 40,
+          "pressureMean": 0.1886510085383832,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.40555555555555556
+        },
+        {
+          "state": "ASSAULT",
+          "start": 5757,
+          "ticks": 368,
+          "pressureMax": 0.3082429154774993,
+          "maxPopulation": 1,
+          "spawnChecks": 96,
+          "spawns": 0,
+          "damage": 72,
+          "pressureMean": 0.2257933818108233,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.453804347826087
+        }
+      ],
+      "ms": {
+        "tick": {
+          "mean": 0.007290090122449129,
+          "p95": 0.014859999999998763,
+          "p99": 0.04206999999999539,
+          "max": 2.0134000000000185
+        },
+        "ai": {
+          "mean": 0.004566701714286071,
+          "p95": 0.009590000000031296,
+          "p99": 0.02858999999997991,
+          "max": 0.8425599999999918
+        },
+        "target": {
+          "mean": 0.00016098612244902643,
+          "p95": 0.0003899999999816828,
+          "p99": 0.0007699999999886131,
+          "max": 0.03945999999999117
+        },
+        "navigation": {
+          "mean": 0.0023127288163266257,
+          "p95": 0.005009999999998627,
+          "p99": 0.013499999999993406,
+          "max": 0.6877800000000036
+        },
+        "attack": {
+          "mean": 0.0004830138775511136,
+          "p95": 0.0006899999999916417,
+          "p99": 0.0025100000000009004,
+          "max": 0.24703999999999837
+        },
+        "director": {
+          "mean": 0.0006750435918366626,
+          "p95": 0.0008200000000044838,
+          "p99": 0.008759999999995216,
+          "max": 0.7644200000000012
+        },
+        "spawn": {
+          "mean": 0.0002116066938775076,
+          "p95": 0,
+          "p99": 0.0027100000000075397,
+          "max": 0.42461000000000126
+        },
+        "encode": {
+          "mean": 0.0006790303772658322,
+          "p95": 0.0014400000000023283,
+          "p99": 0.00413000000000352,
+          "max": 0.0630700000000104
+        }
+      },
+      "runtime": {
+        "elapsedMs": 60.617185999999975,
+        "cpuMs": 164.58,
+        "initialMemory": {
+          "rss": 109277184,
+          "heapTotal": 21827584,
+          "heapUsed": 12052224,
+          "external": 10283771,
+          "arrayBuffers": 822595
+        },
+        "memory": {
+          "rss": 128937984,
+          "heapTotal": 34148352,
+          "heapUsed": 17248072,
+          "external": 10284809,
+          "arrayBuffers": 823593
+        },
+        "hordePayloadBytesPerSecond": 185.51510204081632
+      }
+    },
+    {
+      "scenario": {
+        "kind": "director",
+        "operators": 2,
+        "seconds": 1500
+      },
+      "config": {
+        "difficultyId": "normal",
+        "simulationSeed": 421337,
+        "missionSeed": null,
+        "worldSeed": null,
+        "generatorVersion": null,
+        "world": "world.bodenbruch",
+        "obstacles": 3,
+        "tickHz": 30,
+        "hordeHz": 10,
+        "activeCap": 200
+      },
+      "durationTicks": 7816,
+      "state": "MISSION_RESULTS",
+      "finalHp": [
+        0,
+        0
+      ],
+      "active": {
+        "min": 0,
+        "max": 7,
+        "final": 2,
+        "mean": 1.9660951893551688,
+        "movedIds": 8,
+        "enemyDeaths": 6
+      },
+      "combat": {
+        "decisions": 6268,
+        "validations": 153,
+        "starts": 77,
+        "hits": 76,
+        "operatorStarts": 77,
+        "operatorHits": 76,
+        "operatorDamage": 600,
+        "interruptions": 0,
+        "firstWindup": 3152,
+        "firstDamageFromStart": 14,
+        "hitSizes": {
+          "4": 2,
+          "8": 74
+        },
+        "hpTimeline": [
+          {
+            "firstHit": 4748,
+            "death": 6191,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          },
+          {
+            "firstHit": 6373,
+            "death": 7816,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          }
+        ],
+        "pendingOperatorAttacks": 0,
+        "unsuccessfulOperatorStarts": 1,
+        "maxWindup": 1,
+        "maxActive": 1,
+        "maxRecovery": 1,
+        "rangeMean": 0.37384851586489254,
+        "resources": {
+          "shots": {
+            "primary": 810,
+            "secondary": 0
+          },
+          "hits": {
+            "primary": 12,
+            "secondary": 0
+          },
+          "damage": {
+            "primary": 288,
+            "secondary": 0
+          },
+          "magazinesUsed": {
+            "primary": 16,
+            "secondary": 0
+          },
+          "roundsDiscarded": {
+            "primary": 0,
+            "secondary": 0
+          },
+          "reloadsInterrupted": 0,
+          "grenadesThrown": 0,
+          "grenadeDamageEnemies": 0,
+          "grenadeDamageNests": 0,
+          "grenadeKills": 0,
+          "meleeAttacks": 0,
+          "meleeHits": 0,
+          "meleeKills": 0,
+          "staggers": 0,
+          "friendlyFireDamage": {
+            "bullet": 0,
+            "explosion": 0,
+            "melee": 0
+          },
+          "selfDamage": 0,
+          "convictFriendlyDamage": 0,
+          "resupplyUses": 0,
+          "refilled": {
+            "primaryMagazines": 0,
+            "secondaryMagazines": 0,
+            "grenades": 0,
+            "stims": 0
+          },
+          "blasts": 0,
+          "blastQueryMsTotal": 0,
+          "blastQueryMsMax": 0
+        }
+      },
+      "targeting": {
+        "targetTicks": [
+          6639,
+          5837
+        ],
+        "switches": 0,
+        "acquisitions": 8,
+        "losses": 1
+      },
+      "navigation": {
+        "requests": 1543,
+        "builds": 0,
+        "hits": 0,
+        "deferred": 0,
+        "stuckPeak": 0,
+        "stuckEpisodes": 0,
+        "recoveryAttempts": 0,
+        "recoveries": 0,
+        "fallbacks": 0,
+        "unreachable": 0,
+        "overlapProbes": 0
+      },
+      "spawn": {
+        "checked": 393,
+        "waveChecked": 393,
+        "spawned": 8,
+        "waveSpawned": 8,
+        "capacityDeferrals": 0,
+        "budgetDeferrals": 0,
+        "rejected": {
+          "ground": 0,
+          "protected-area": 0,
+          "operator-distance": 224,
+          "structure": 0,
+          "occupied": 0,
+          "visible": 161,
+          "route": 0
+        },
+        "peakChecks": 4,
+        "peakWaveChecks": 4,
+        "peakSpawned": 1
+      },
+      "waves": [
+        {
+          "tick": 982,
+          "budget": 6
+        },
+        {
+          "tick": 1972,
+          "spawned": 2,
+          "reason": "partial"
+        },
+        {
+          "tick": 3399,
+          "budget": 6
+        },
+        {
+          "tick": 4029,
+          "spawned": 6,
+          "reason": "completed"
+        },
+        {
+          "tick": 5415,
+          "budget": 7
+        },
+        {
+          "tick": 6195,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 7528,
+          "budget": 4
+        },
+        {
+          "tick": 7816,
+          "spawned": 0,
+          "reason": "mission-ended"
+        }
+      ],
+      "holds": {},
+      "phases": [
+        {
+          "state": "CALM",
+          "start": 1,
+          "ticks": 981,
+          "pressureMax": 0,
+          "maxPopulation": 0,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 982,
+          "ticks": 180,
+          "pressureMax": 0.032534445483576174,
+          "maxPopulation": 2,
+          "spawnChecks": 2,
+          "spawns": 2,
+          "damage": 0,
+          "pressureMean": 0.004860878476139269,
+          "nearbyMean": 0.23333333333333334,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 1162,
+          "ticks": 600,
+          "pressureMax": 0.07522684338321978,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.07138495691630457,
+          "nearbyMean": 2,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 1762,
+          "ticks": 210,
+          "pressureMax": 0.07522726507724273,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.07522716429166675,
+          "nearbyMean": 2,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 1972,
+          "ticks": 480,
+          "pressureMax": 0.07522727272650429,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.07522727186673082,
+          "nearbyMean": 2,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 2452,
+          "ticks": 947,
+          "pressureMax": 0.07522727272726698,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.0500588905154735,
+          "nearbyMean": 1.2787750791974657,
+          "rangeMean": 0.004223864836325237,
+          "attackMean": 0.01795142555438226
+        },
+        {
+          "state": "BUILDUP",
+          "start": 3399,
+          "ticks": 180,
+          "pressureMax": 0.051507734167262335,
+          "maxPopulation": 5,
+          "spawnChecks": 5,
+          "spawns": 4,
+          "damage": 0,
+          "pressureMean": 0.04132822206324081,
+          "nearbyMean": 1.0444444444444445,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 3579,
+          "ticks": 240,
+          "pressureMax": 0.16567375545850696,
+          "maxPopulation": 7,
+          "spawnChecks": 2,
+          "spawns": 2,
+          "damage": 0,
+          "pressureMean": 0.11347739796397699,
+          "nearbyMean": 3.504166666666667,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 3819,
+          "ticks": 210,
+          "pressureMax": 0.1595622260817738,
+          "maxPopulation": 4,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.1251498509684707,
+          "nearbyMean": 3.033333333333333,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 4029,
+          "ticks": 480,
+          "pressureMax": 0.11490111465315969,
+          "maxPopulation": 4,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.08782330306675454,
+          "nearbyMean": 2.122916666666667,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 4509,
+          "ticks": 906,
+          "pressureMax": 0.2081596458325098,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 144,
+          "pressureMean": 0.12986858838605292,
+          "nearbyMean": 1,
+          "rangeMean": 0.7527593818984547,
+          "attackMean": 0.33774834437086093
+        },
+        {
+          "state": "BUILDUP",
+          "start": 5415,
+          "ticks": 180,
+          "pressureMax": 0.2081596458325098,
+          "maxPopulation": 2,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 32,
+          "pressureMean": 0.18362213353048043,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.39444444444444443
+        },
+        {
+          "state": "ASSAULT",
+          "start": 5595,
+          "ticks": 600,
+          "pressureMax": 0.305786507737674,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 124,
+          "pressureMean": 0.21104959394309686,
+          "nearbyMean": 1,
+          "rangeMean": 0.995,
+          "attackMean": 0.4483333333333333
+        },
+        {
+          "state": "RECOVERY",
+          "start": 6195,
+          "ticks": 480,
+          "pressureMax": 0.3370826474737606,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 64,
+          "pressureMean": 0.17466282481000342,
+          "nearbyMean": 1,
+          "rangeMean": 0.6604166666666667,
+          "attackMean": 0.2916666666666667
+        },
+        {
+          "state": "CALM",
+          "start": 6675,
+          "ticks": 853,
+          "pressureMax": 0.20653703383612942,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 176,
+          "pressureMean": 0.1829236198904084,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.43376318874560377
+        },
+        {
+          "state": "BUILDUP",
+          "start": 7528,
+          "ticks": 180,
+          "pressureMax": 0.24957316090346873,
+          "maxPopulation": 2,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 40,
+          "pressureMean": 0.21322491042070382,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.4722222222222222
+        },
+        {
+          "state": "ASSAULT",
+          "start": 7708,
+          "ticks": 108,
+          "pressureMax": 0.3041613088056122,
+          "maxPopulation": 2,
+          "spawnChecks": 32,
+          "spawns": 0,
+          "damage": 16,
+          "pressureMean": 0.282372945202985,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.4444444444444444
+        }
+      ],
+      "ms": {
+        "tick": {
+          "mean": 0.006381890481064442,
+          "p95": 0.013589999999993552,
+          "p99": 0.028480000000001837,
+          "max": 0.5287899999999865
+        },
+        "ai": {
+          "mean": 0.0040804044268167704,
+          "p95": 0.008079999999978327,
+          "p99": 0.018510000000020455,
+          "max": 0.52573000000001
+        },
+        "target": {
+          "mean": 0.00016055143295787985,
+          "p95": 0.00027000000000043656,
+          "p99": 0.00038000000000693035,
+          "max": 0.01548000000002503
+        },
+        "navigation": {
+          "mean": 0.0024252836489256236,
+          "p95": 0.0055499999999995,
+          "p99": 0.008759999999995216,
+          "max": 0.523619999999994
+        },
+        "attack": {
+          "mean": 0.0003721278147389482,
+          "p95": 0.0008699999999919328,
+          "p99": 0.0014799999999866031,
+          "max": 0.09946999999999662
+        },
+        "director": {
+          "mean": 0.0004245600051176613,
+          "p95": 0.0006599999999821193,
+          "p99": 0.005310000000008586,
+          "max": 0.10997000000000412
+        },
+        "spawn": {
+          "mean": 0.00010324731320375117,
+          "p95": 0,
+          "p99": 0.002289999999959491,
+          "max": 0.05655000000001564
+        },
+        "encode": {
+          "mean": 0.0005812859884836323,
+          "p95": 0.001069999999998572,
+          "p99": 0.00190000000000623,
+          "max": 0.030580000000014707
+        }
+      },
+      "runtime": {
+        "elapsedMs": 69.539039,
+        "cpuMs": 207.987,
+        "initialMemory": {
+          "rss": 128937984,
+          "heapTotal": 34148352,
+          "heapUsed": 23750624,
+          "external": 10962771,
+          "arrayBuffers": 1501555
+        },
+        "memory": {
+          "rss": 130707456,
+          "heapTotal": 36769792,
+          "heapUsed": 21119176,
+          "external": 10771917,
+          "arrayBuffers": 1310701
+        },
+        "hordePayloadBytesPerSecond": 281.4611054247697
+      }
+    },
+    {
+      "scenario": {
+        "kind": "director",
+        "operators": 3,
+        "seconds": 1500
+      },
+      "config": {
+        "difficultyId": "normal",
+        "simulationSeed": 421337,
+        "missionSeed": null,
+        "worldSeed": null,
+        "generatorVersion": null,
+        "world": "world.bodenbruch",
+        "obstacles": 3,
+        "tickHz": 30,
+        "hordeHz": 10,
+        "activeCap": 200
+      },
+      "durationTicks": 8323,
+      "state": "MISSION_RESULTS",
+      "finalHp": [
+        0,
+        0,
+        0
+      ],
+      "active": {
+        "min": 0,
+        "max": 8,
+        "final": 3,
+        "mean": 2.444671392526733,
+        "movedIds": 9,
+        "enemyDeaths": 6
+      },
+      "combat": {
+        "decisions": 8082,
+        "validations": 228,
+        "starts": 114,
+        "hits": 114,
+        "operatorStarts": 114,
+        "operatorHits": 114,
+        "operatorDamage": 900,
+        "interruptions": 0,
+        "firstWindup": 4748,
+        "firstDamageFromStart": 14,
+        "hitSizes": {
+          "4": 3,
+          "8": 111
+        },
+        "hpTimeline": [
+          {
+            "firstHit": 6760,
+            "death": 8323,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          },
+          {
+            "firstHit": 6723,
+            "death": 8166,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          },
+          {
+            "firstHit": 4762,
+            "death": 6205,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          }
+        ],
+        "pendingOperatorAttacks": 0,
+        "unsuccessfulOperatorStarts": 0,
+        "maxWindup": 2,
+        "maxActive": 2,
+        "maxRecovery": 2,
+        "rangeMean": 0.5255316592574792,
+        "resources": {
+          "shots": {
+            "primary": 1215,
+            "secondary": 0
+          },
+          "hits": {
+            "primary": 12,
+            "secondary": 0
+          },
+          "damage": {
+            "primary": 288,
+            "secondary": 0
+          },
+          "magazinesUsed": {
+            "primary": 24,
+            "secondary": 0
+          },
+          "roundsDiscarded": {
+            "primary": 0,
+            "secondary": 0
+          },
+          "reloadsInterrupted": 0,
+          "grenadesThrown": 0,
+          "grenadeDamageEnemies": 0,
+          "grenadeDamageNests": 0,
+          "grenadeKills": 0,
+          "meleeAttacks": 0,
+          "meleeHits": 0,
+          "meleeKills": 0,
+          "staggers": 0,
+          "friendlyFireDamage": {
+            "bullet": 0,
+            "explosion": 0,
+            "melee": 0
+          },
+          "selfDamage": 0,
+          "convictFriendlyDamage": 0,
+          "resupplyUses": 0,
+          "refilled": {
+            "primaryMagazines": 0,
+            "secondaryMagazines": 0,
+            "grenades": 0,
+            "stims": 0
+          },
+          "blasts": 0,
+          "blastQueryMsTotal": 0,
+          "blastQueryMsMax": 0
+        }
+      },
+      "targeting": {
+        "targetTicks": [
+          6284,
+          5047,
+          4891
+        ],
+        "switches": 2,
+        "acquisitions": 10,
+        "losses": 2
+      },
+      "navigation": {
+        "requests": 1948,
+        "builds": 0,
+        "hits": 0,
+        "deferred": 0,
+        "stuckPeak": 2,
+        "stuckEpisodes": 2,
+        "recoveryAttempts": 6,
+        "recoveries": 0,
+        "fallbacks": 2,
+        "unreachable": 0,
+        "overlapProbes": 0
+      },
+      "spawn": {
+        "checked": 521,
+        "waveChecked": 521,
+        "spawned": 9,
+        "waveSpawned": 9,
+        "capacityDeferrals": 0,
+        "budgetDeferrals": 0,
+        "rejected": {
+          "ground": 0,
+          "protected-area": 0,
+          "operator-distance": 352,
+          "structure": 0,
+          "occupied": 0,
+          "visible": 160,
+          "route": 0
+        },
+        "peakChecks": 4,
+        "peakWaveChecks": 4,
+        "peakSpawned": 1
+      },
+      "waves": [
+        {
+          "tick": 982,
+          "budget": 8
+        },
+        {
+          "tick": 1972,
+          "spawned": 2,
+          "reason": "partial"
+        },
+        {
+          "tick": 3399,
+          "budget": 7
+        },
+        {
+          "tick": 4029,
+          "spawned": 7,
+          "reason": "completed"
+        },
+        {
+          "tick": 5480,
+          "budget": 9
+        },
+        {
+          "tick": 6260,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 7556,
+          "budget": 7
+        },
+        {
+          "tick": 8323,
+          "spawned": 0,
+          "reason": "mission-ended"
+        }
+      ],
+      "holds": {},
+      "phases": [
+        {
+          "state": "CALM",
+          "start": 1,
+          "ticks": 981,
+          "pressureMax": 0,
+          "maxPopulation": 0,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 982,
+          "ticks": 180,
+          "pressureMax": 0.03636967275630344,
+          "maxPopulation": 2,
+          "spawnChecks": 2,
+          "spawns": 2,
+          "damage": 0,
+          "pressureMean": 0.006740613324624117,
+          "nearbyMean": 0.31666666666666665,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 1162,
+          "ticks": 600,
+          "pressureMax": 0.0751980306946146,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.06096499918330823,
+          "nearbyMean": 1.64,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 1762,
+          "ticks": 210,
+          "pressureMax": 0.038115893951868804,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03774048709214277,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 1972,
+          "ticks": 480,
+          "pressureMax": 0.037622585563232905,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.037614643047457166,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 2452,
+          "ticks": 947,
+          "pressureMax": 0.03761363726260518,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03761363641489778,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 3399,
+          "ticks": 180,
+          "pressureMax": 0.04241565916348588,
+          "maxPopulation": 5,
+          "spawnChecks": 4,
+          "spawns": 4,
+          "damage": 0,
+          "pressureMean": 0.04091388533256865,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 3579,
+          "ticks": 240,
+          "pressureMax": 0.1376408439496608,
+          "maxPopulation": 8,
+          "spawnChecks": 3,
+          "spawns": 3,
+          "damage": 0,
+          "pressureMean": 0.06578122890238933,
+          "nearbyMean": 2.0083333333333333,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 3819,
+          "ticks": 210,
+          "pressureMax": 0.18839739769856217,
+          "maxPopulation": 6,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.17674989231845362,
+          "nearbyMean": 5,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 4029,
+          "ticks": 480,
+          "pressureMax": 0.18839739769856217,
+          "maxPopulation": 5,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.13761090931325898,
+          "nearbyMean": 3.35625,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 4509,
+          "ticks": 971,
+          "pressureMax": 0.24830408736279075,
+          "maxPopulation": 3,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 152,
+          "pressureMean": 0.16909230395474764,
+          "nearbyMean": 2,
+          "rangeMean": 0.7538619979402678,
+          "attackMean": 0.33264675592173015
+        },
+        {
+          "state": "BUILDUP",
+          "start": 5480,
+          "ticks": 180,
+          "pressureMax": 0.2483065797974904,
+          "maxPopulation": 3,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 40,
+          "pressureMean": 0.2243701237229495,
+          "nearbyMean": 2,
+          "rangeMean": 1,
+          "attackMean": 0.46111111111111114
+        },
+        {
+          "state": "ASSAULT",
+          "start": 5660,
+          "ticks": 600,
+          "pressureMax": 0.37558603708901206,
+          "maxPopulation": 3,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 108,
+          "pressureMean": 0.25975102103245373,
+          "nearbyMean": 2,
+          "rangeMean": 0.91,
+          "attackMean": 0.4
+        },
+        {
+          "state": "RECOVERY",
+          "start": 6260,
+          "ticks": 480,
+          "pressureMax": 0.32545285645025157,
+          "maxPopulation": 3,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 8,
+          "pressureMean": 0.12105634667371597,
+          "nearbyMean": 2,
+          "rangeMean": 0.06666666666666667,
+          "attackMean": 0.035416666666666666
+        },
+        {
+          "state": "CALM",
+          "start": 6740,
+          "ticks": 816,
+          "pressureMax": 0.3044870334263243,
+          "maxPopulation": 3,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 280,
+          "pressureMean": 0.24503170656025514,
+          "nearbyMean": 2,
+          "rangeMean": 1.6556372549019607,
+          "attackMean": 0.7291666666666666
+        },
+        {
+          "state": "BUILDUP",
+          "start": 7556,
+          "ticks": 180,
+          "pressureMax": 0.3044870334263243,
+          "maxPopulation": 3,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 64,
+          "pressureMean": 0.2977547506894182,
+          "nearbyMean": 2,
+          "rangeMean": 2,
+          "attackMean": 0.8944444444444445
+        },
+        {
+          "state": "ASSAULT",
+          "start": 7736,
+          "ticks": 587,
+          "pressureMax": 0.48619150553619495,
+          "maxPopulation": 3,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 244,
+          "pressureMean": 0.3552073727150504,
+          "nearbyMean": 2,
+          "rangeMean": 1.9948892674616696,
+          "attackMean": 0.8756388415672913
+        }
+      ],
+      "ms": {
+        "tick": {
+          "mean": 0.005221919500179999,
+          "p95": 0.009230000000002292,
+          "p99": 0.01829000000003589,
+          "max": 0.5190110000000345
+        },
+        "ai": {
+          "mean": 0.0034103675357440807,
+          "p95": 0.006880000000023756,
+          "p99": 0.013129999999932807,
+          "max": 0.5143410000000586
+        },
+        "target": {
+          "mean": 0.0001224101886339818,
+          "p95": 0.00018000000000029104,
+          "p99": 0.0002499999999940883,
+          "max": 0.001059999999995398
+        },
+        "navigation": {
+          "mean": 0.002180130722095177,
+          "p95": 0.004199999999968895,
+          "p99": 0.0072499999999990905,
+          "max": 0.5105210000000397
+        },
+        "attack": {
+          "mean": 0.00023809083263228616,
+          "p95": 0.00044000000002597517,
+          "p99": 0.0016299999999773718,
+          "max": 0.020570000000020627
+        },
+        "director": {
+          "mean": 0.0003238016340262255,
+          "p95": 0.0007600000000138607,
+          "p99": 0.005820000000028358,
+          "max": 0.09638000000001057
+        },
+        "spawn": {
+          "mean": 0.00007860759341582736,
+          "p95": 0,
+          "p99": 0.002540000000010423,
+          "max": 0.03564000000000078
+        },
+        "encode": {
+          "mean": 0.0005026712328769969,
+          "p95": 0.0008399999999824104,
+          "p99": 0.0016000000000531145,
+          "max": 0.05297000000001617
+        }
+      },
+      "runtime": {
+        "elapsedMs": 66.27736799999997,
+        "cpuMs": 183.1,
+        "initialMemory": {
+          "rss": 132411392,
+          "heapTotal": 36769792,
+          "heapUsed": 24375072,
+          "external": 11448679,
+          "arrayBuffers": 1987463
+        },
+        "memory": {
+          "rss": 153251840,
+          "heapTotal": 56692736,
+          "heapUsed": 24217704,
+          "external": 11258305,
+          "arrayBuffers": 1797089
+        },
+        "hordePayloadBytesPerSecond": 331.2219151748168
+      }
+    },
+    {
+      "scenario": {
+        "kind": "director",
+        "operators": 4,
+        "seconds": 1500
+      },
+      "config": {
+        "difficultyId": "normal",
+        "simulationSeed": 421337,
+        "missionSeed": null,
+        "worldSeed": null,
+        "generatorVersion": null,
+        "world": "world.bodenbruch",
+        "obstacles": 3,
+        "tickHz": 30,
+        "hordeHz": 10,
+        "activeCap": 200
+      },
+      "durationTicks": 15974,
+      "state": "MISSION_RESULTS",
+      "finalHp": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "active": {
+        "min": 0,
+        "max": 14,
+        "final": 14,
+        "mean": 5.531801677726305,
+        "movedIds": 25,
+        "enemyDeaths": 11
+      },
+      "combat": {
+        "decisions": 41371,
+        "validations": 404,
+        "starts": 155,
+        "hits": 152,
+        "operatorStarts": 155,
+        "operatorHits": 152,
+        "operatorDamage": 1200,
+        "interruptions": 2,
+        "firstWindup": 4746,
+        "firstDamageFromStart": 14,
+        "hitSizes": {
+          "4": 4,
+          "8": 148
+        },
+        "hpTimeline": [
+          {
+            "firstHit": 15623,
+            "death": 15974,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 2
+          },
+          {
+            "firstHit": 13437,
+            "death": 13981,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          },
+          {
+            "firstHit": 7037,
+            "death": 8480,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          },
+          {
+            "firstHit": 4760,
+            "death": 6203,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          }
+        ],
+        "pendingOperatorAttacks": 0,
+        "unsuccessfulOperatorStarts": 3,
+        "maxWindup": 3,
+        "maxActive": 2,
+        "maxRecovery": 3,
+        "rangeMean": 0.3740453236509328,
+        "resources": {
+          "shots": {
+            "primary": 1620,
+            "secondary": 0
+          },
+          "hits": {
+            "primary": 23,
+            "secondary": 0
+          },
+          "damage": {
+            "primary": 552,
+            "secondary": 0
+          },
+          "magazinesUsed": {
+            "primary": 32,
+            "secondary": 0
+          },
+          "roundsDiscarded": {
+            "primary": 0,
+            "secondary": 0
+          },
+          "reloadsInterrupted": 0,
+          "grenadesThrown": 0,
+          "grenadeDamageEnemies": 0,
+          "grenadeDamageNests": 0,
+          "grenadeKills": 0,
+          "meleeAttacks": 0,
+          "meleeHits": 0,
+          "meleeKills": 0,
+          "staggers": 0,
+          "friendlyFireDamage": {
+            "bullet": 0,
+            "explosion": 0,
+            "melee": 0
+          },
+          "selfDamage": 0,
+          "convictFriendlyDamage": 0,
+          "resupplyUses": 0,
+          "refilled": {
+            "primaryMagazines": 0,
+            "secondaryMagazines": 0,
+            "grenades": 0,
+            "stims": 0
+          },
+          "blasts": 0,
+          "blastQueryMsTotal": 0,
+          "blastQueryMsMax": 0
+        }
+      },
+      "targeting": {
+        "targetTicks": [
+          26611,
+          12423,
+          4953,
+          4935
+        ],
+        "switches": 2,
+        "acquisitions": 22,
+        "losses": 5
+      },
+      "navigation": {
+        "requests": 8185,
+        "builds": 0,
+        "hits": 0,
+        "deferred": 0,
+        "stuckPeak": 8,
+        "stuckEpisodes": 9,
+        "recoveryAttempts": 26,
+        "recoveries": 0,
+        "fallbacks": 6,
+        "unreachable": 0,
+        "overlapProbes": 0
+      },
+      "spawn": {
+        "checked": 801,
+        "waveChecked": 801,
+        "spawned": 25,
+        "waveSpawned": 25,
+        "capacityDeferrals": 0,
+        "budgetDeferrals": 0,
+        "rejected": {
+          "ground": 0,
+          "protected-area": 0,
+          "operator-distance": 241,
+          "structure": 0,
+          "occupied": 0,
+          "visible": 535,
+          "route": 0
+        },
+        "peakChecks": 4,
+        "peakWaveChecks": 4,
+        "peakSpawned": 1
+      },
+      "waves": [
+        {
+          "tick": 982,
+          "budget": 9
+        },
+        {
+          "tick": 1972,
+          "spawned": 2,
+          "reason": "partial"
+        },
+        {
+          "tick": 3399,
+          "budget": 8
+        },
+        {
+          "tick": 4029,
+          "spawned": 8,
+          "reason": "completed"
+        },
+        {
+          "tick": 5329,
+          "budget": 9
+        },
+        {
+          "tick": 6109,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 7535,
+          "budget": 7
+        },
+        {
+          "tick": 8315,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 9680,
+          "budget": 7
+        },
+        {
+          "tick": 10310,
+          "spawned": 7,
+          "reason": "completed"
+        },
+        {
+          "tick": 11665,
+          "budget": 8
+        },
+        {
+          "tick": 12406,
+          "spawned": 8,
+          "reason": "completed"
+        },
+        {
+          "tick": 14116,
+          "budget": 5
+        },
+        {
+          "tick": 14896,
+          "spawned": 0,
+          "reason": "blocked"
+        }
+      ],
+      "holds": {
+        "pressure": 103
+      },
+      "phases": [
+        {
+          "state": "CALM",
+          "start": 1,
+          "ticks": 981,
+          "pressureMax": 0,
+          "maxPopulation": 0,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 982,
+          "ticks": 180,
+          "pressureMax": 0.03636967275630344,
+          "maxPopulation": 2,
+          "spawnChecks": 2,
+          "spawns": 2,
+          "damage": 0,
+          "pressureMean": 0.006740613324624117,
+          "nearbyMean": 0.31666666666666665,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 1162,
+          "ticks": 600,
+          "pressureMax": 0.0751980306946146,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.06096499918330823,
+          "nearbyMean": 1.64,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 1762,
+          "ticks": 210,
+          "pressureMax": 0.038115893951868804,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03774048709214277,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 1972,
+          "ticks": 480,
+          "pressureMax": 0.037622585563232905,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.037614643047457166,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 2452,
+          "ticks": 947,
+          "pressureMax": 0.03761363726260518,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03761363641489778,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 3399,
+          "ticks": 180,
+          "pressureMax": 0.04241565916348588,
+          "maxPopulation": 5,
+          "spawnChecks": 4,
+          "spawns": 4,
+          "damage": 0,
+          "pressureMean": 0.04091388533256865,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 3579,
+          "ticks": 240,
+          "pressureMax": 0.13710262022254138,
+          "maxPopulation": 9,
+          "spawnChecks": 4,
+          "spawns": 4,
+          "damage": 0,
+          "pressureMean": 0.07710523040690168,
+          "nearbyMean": 2.35,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 3819,
+          "ticks": 210,
+          "pressureMax": 0.13710262022254138,
+          "maxPopulation": 5,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.11968751795884844,
+          "nearbyMean": 3.033333333333333,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 4029,
+          "ticks": 480,
+          "pressureMax": 0.1145009305635552,
+          "maxPopulation": 4,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.08529872441987277,
+          "nearbyMean": 2.060416666666667,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 4509,
+          "ticks": 820,
+          "pressureMax": 0.21081144108214986,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 120,
+          "pressureMean": 0.1210156927422308,
+          "nearbyMean": 1,
+          "rangeMean": 0.7109756097560975,
+          "attackMean": 0.31097560975609756
+        },
+        {
+          "state": "BUILDUP",
+          "start": 5329,
+          "ticks": 180,
+          "pressureMax": 0.2109029152944371,
+          "maxPopulation": 2,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 40,
+          "pressureMean": 0.18645091078271803,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.4722222222222222
+        },
+        {
+          "state": "ASSAULT",
+          "start": 5509,
+          "ticks": 600,
+          "pressureMax": 0.26316654836644515,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 120,
+          "pressureMean": 0.1946110934234026,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.425
+        },
+        {
+          "state": "RECOVERY",
+          "start": 6109,
+          "ticks": 480,
+          "pressureMax": 0.3381317484606748,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 20,
+          "pressureMean": 0.1651648023133875,
+          "nearbyMean": 1,
+          "rangeMean": 0.19791666666666666,
+          "attackMean": 0.10625
+        },
+        {
+          "state": "CALM",
+          "start": 6589,
+          "ticks": 946,
+          "pressureMax": 0.2096727809934707,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 104,
+          "pressureMean": 0.10035734850980768,
+          "nearbyMean": 1,
+          "rangeMean": 0.5422832980972516,
+          "attackMean": 0.23890063424947147
+        },
+        {
+          "state": "BUILDUP",
+          "start": 7535,
+          "ticks": 180,
+          "pressureMax": 0.2097620470815899,
+          "maxPopulation": 2,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 40,
+          "pressureMean": 0.18738043377233551,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.4444444444444444
+        },
+        {
+          "state": "ASSAULT",
+          "start": 7715,
+          "ticks": 600,
+          "pressureMax": 0.22667519945267983,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 120,
+          "pressureMean": 0.1887484340361034,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.43333333333333335
+        },
+        {
+          "state": "RECOVERY",
+          "start": 8315,
+          "ticks": 480,
+          "pressureMax": 0.3280841830111358,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 36,
+          "pressureMean": 0.17664863882766146,
+          "nearbyMean": 0.36666666666666664,
+          "rangeMean": 0.3458333333333333,
+          "attackMean": 0.16666666666666666
+        },
+        {
+          "state": "CALM",
+          "start": 8795,
+          "ticks": 885,
+          "pressureMax": 0.009679420218401978,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.003016802015291724,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 9680,
+          "ticks": 180,
+          "pressureMax": 0.01640613040983137,
+          "maxPopulation": 6,
+          "spawnChecks": 4,
+          "spawns": 4,
+          "damage": 0,
+          "pressureMean": 0.005995618361432043,
+          "nearbyMean": 0.022222222222222223,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 9860,
+          "ticks": 240,
+          "pressureMax": 0.14938886750227479,
+          "maxPopulation": 9,
+          "spawnChecks": 3,
+          "spawns": 3,
+          "damage": 0,
+          "pressureMean": 0.10739002457448585,
+          "nearbyMean": 3.283333333333333,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 10100,
+          "ticks": 210,
+          "pressureMax": 0.12867737249452185,
+          "maxPopulation": 8,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.12160174970345979,
+          "nearbyMean": 3,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 10310,
+          "ticks": 480,
+          "pressureMax": 0.11926172019746943,
+          "maxPopulation": 8,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.11776118301558423,
+          "nearbyMean": 3,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 10790,
+          "ticks": 875,
+          "pressureMax": 0.11659687227168458,
+          "maxPopulation": 6,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.11659129073445927,
+          "nearbyMean": 3,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 11665,
+          "ticks": 180,
+          "pressureMax": 0.1193401759530982,
+          "maxPopulation": 6,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.11706916697223352,
+          "nearbyMean": 3,
+          "rangeMean": 0.022222222222222223,
+          "attackMean": 0.09444444444444444
+        },
+        {
+          "state": "ASSAULT",
+          "start": 11845,
+          "ticks": 351,
+          "pressureMax": 0.12327511886087994,
+          "maxPopulation": 14,
+          "spawnChecks": 80,
+          "spawns": 8,
+          "damage": 0,
+          "pressureMean": 0.11868301779022641,
+          "nearbyMean": 3,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 12196,
+          "ticks": 210,
+          "pressureMax": 0.1265318285129666,
+          "maxPopulation": 14,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.12589304273689036,
+          "nearbyMean": 3,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 12406,
+          "ticks": 480,
+          "pressureMax": 0.16863635770157628,
+          "maxPopulation": 14,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.12946179129765908,
+          "nearbyMean": 3.1875,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 12886,
+          "ticks": 1230,
+          "pressureMax": 0.6588334395436832,
+          "maxPopulation": 14,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 300,
+          "pressureMean": 0.4186566517881565,
+          "nearbyMean": 7.829268292682927,
+          "rangeMean": 1.2447154471544715,
+          "attackMean": 0.5252032520325203
+        },
+        {
+          "state": "BUILDUP",
+          "start": 14116,
+          "ticks": 180,
+          "pressureMax": 0.41503379961848186,
+          "maxPopulation": 14,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.35035128896215845,
+          "nearbyMean": 8,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 14296,
+          "ticks": 600,
+          "pressureMax": 0.31518589061082486,
+          "maxPopulation": 14,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.3091717347616586,
+          "nearbyMean": 8,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 14896,
+          "ticks": 480,
+          "pressureMax": 0.3084092730123206,
+          "maxPopulation": 14,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.308409114736754,
+          "nearbyMean": 8,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 15376,
+          "ticks": 598,
+          "pressureMax": 0.7205969419108735,
+          "maxPopulation": 14,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 296,
+          "pressureMean": 0.4615691564108093,
+          "nearbyMean": 8,
+          "rangeMean": 2.5384615384615383,
+          "attackMean": 1.0869565217391304
+        }
+      ],
+      "ms": {
+        "tick": {
+          "mean": 0.005737604607486778,
+          "p95": 0.011069999999961055,
+          "p99": 0.01647000000002663,
+          "max": 0.24923100000000886
+        },
+        "ai": {
+          "mean": 0.0043284099787152235,
+          "p95": 0.009590000000059717,
+          "p99": 0.014500000000055024,
+          "max": 0.24723099999994247
+        },
+        "target": {
+          "mean": 0.0001380549643169434,
+          "p95": 0.00022999999998774,
+          "p99": 0.0002499999999940883,
+          "max": 0.0090200000000209
+        },
+        "navigation": {
+          "mean": 0.003167426129961238,
+          "p95": 0.007090000000005148,
+          "p99": 0.011810000000025411,
+          "max": 0.19098100000002205
+        },
+        "attack": {
+          "mean": 0.0003112301865531019,
+          "p95": 0.0005800000000135697,
+          "p99": 0.0013599999999769352,
+          "max": 0.08845999999999776
+        },
+        "director": {
+          "mean": 0.0002201459872291449,
+          "p95": 0.0002800000000320324,
+          "p99": 0.006450000000029377,
+          "max": 0.09309999999999263
+        },
+        "spawn": {
+          "mean": 0.00008886002253663165,
+          "p95": 0,
+          "p99": 0.0033200000000306318,
+          "max": 0.05294999999995298
+        },
+        "encode": {
+          "mean": 0.0004604489105941183,
+          "p95": 0.0008100000000013097,
+          "p99": 0.001320000000021082,
+          "max": 0.015150000000005548
+        }
+      },
+      "runtime": {
+        "elapsedMs": 124.092984,
+        "cpuMs": 237.535,
+        "initialMemory": {
+          "rss": 158494720,
+          "heapTotal": 56692736,
+          "heapUsed": 36075640,
+          "external": 11937265,
+          "arrayBuffers": 2476049
+        },
+        "memory": {
+          "rss": 168325120,
+          "heapTotal": 61128704,
+          "heapUsed": 41249592,
+          "external": 11777663,
+          "arrayBuffers": 2316447
+        },
+        "hordePayloadBytesPerSecond": 634.4397145361212
+      }
+    },
+    {
+      "scenario": {
+        "kind": "director-contact",
+        "operators": 1,
+        "seconds": 1500
+      },
+      "config": {
+        "difficultyId": "normal",
+        "simulationSeed": 421337,
+        "missionSeed": null,
+        "worldSeed": null,
+        "generatorVersion": null,
+        "world": "world.bodenbruch",
+        "obstacles": 3,
+        "tickHz": 30,
+        "hordeHz": 10,
+        "activeCap": 200
+      },
+      "durationTicks": 6101,
+      "state": "MISSION_RESULTS",
+      "finalHp": [
+        0
+      ],
+      "active": {
+        "min": 0,
+        "max": 5,
+        "final": 1,
+        "mean": 1.2789706605474513,
+        "movedIds": 5,
+        "enemyDeaths": 4
+      },
+      "combat": {
+        "decisions": 3190,
+        "validations": 77,
+        "starts": 39,
+        "hits": 38,
+        "operatorStarts": 39,
+        "operatorHits": 38,
+        "operatorDamage": 300,
+        "interruptions": 0,
+        "firstWindup": 3162,
+        "firstDamageFromStart": 14,
+        "hitSizes": {
+          "4": 1,
+          "8": 37
+        },
+        "hpTimeline": [
+          {
+            "firstHit": 4658,
+            "death": 6101,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          }
+        ],
+        "pendingOperatorAttacks": 0,
+        "unsuccessfulOperatorStarts": 1,
+        "maxWindup": 1,
+        "maxActive": 1,
+        "maxRecovery": 1,
+        "rangeMean": 0.23930503196197345,
+        "resources": {
+          "shots": {
+            "primary": 405,
+            "secondary": 0
+          },
+          "hits": {
+            "primary": 8,
+            "secondary": 0
+          },
+          "damage": {
+            "primary": 192,
+            "secondary": 0
+          },
+          "magazinesUsed": {
+            "primary": 8,
+            "secondary": 0
+          },
+          "roundsDiscarded": {
+            "primary": 0,
+            "secondary": 0
+          },
+          "reloadsInterrupted": 0,
+          "grenadesThrown": 0,
+          "grenadeDamageEnemies": 0,
+          "grenadeDamageNests": 0,
+          "grenadeKills": 0,
+          "meleeAttacks": 0,
+          "meleeHits": 0,
+          "meleeKills": 0,
+          "staggers": 0,
+          "friendlyFireDamage": {
+            "bullet": 0,
+            "explosion": 0,
+            "melee": 0
+          },
+          "selfDamage": 0,
+          "convictFriendlyDamage": 0,
+          "resupplyUses": 0,
+          "refilled": {
+            "primaryMagazines": 0,
+            "secondaryMagazines": 0,
+            "grenades": 0,
+            "stims": 0
+          },
+          "blasts": 0,
+          "blastQueryMsTotal": 0,
+          "blastQueryMsMax": 0
+        }
+      },
+      "targeting": {
+        "targetTicks": [
+          6841
+        ],
+        "switches": 0,
+        "acquisitions": 5,
+        "losses": 0
+      },
+      "navigation": {
+        "requests": 848,
+        "builds": 0,
+        "hits": 0,
+        "deferred": 0,
+        "stuckPeak": 0,
+        "stuckEpisodes": 0,
+        "recoveryAttempts": 0,
+        "recoveries": 0,
+        "fallbacks": 0,
+        "unreachable": 0,
+        "overlapProbes": 0
+      },
+      "spawn": {
+        "checked": 357,
+        "waveChecked": 357,
+        "spawned": 5,
+        "waveSpawned": 5,
+        "capacityDeferrals": 0,
+        "budgetDeferrals": 0,
+        "rejected": {
+          "ground": 0,
+          "protected-area": 0,
+          "operator-distance": 352,
+          "structure": 0,
+          "occupied": 0,
+          "visible": 0,
+          "route": 0
+        },
+        "peakChecks": 4,
+        "peakWaveChecks": 4,
+        "peakSpawned": 1
+      },
+      "waves": [
+        {
+          "tick": 982,
+          "budget": 5
+        },
+        {
+          "tick": 1612,
+          "spawned": 5,
+          "reason": "completed"
+        },
+        {
+          "tick": 2959,
+          "budget": 5
+        },
+        {
+          "tick": 3739,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 5143,
+          "budget": 5
+        },
+        {
+          "tick": 5923,
+          "spawned": 0,
+          "reason": "blocked"
+        }
+      ],
+      "holds": {},
+      "phases": [
+        {
+          "state": "CALM",
+          "start": 1,
+          "ticks": 981,
+          "pressureMax": 0,
+          "maxPopulation": 0,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 982,
+          "ticks": 180,
+          "pressureMax": 0.032534445483576174,
+          "maxPopulation": 2,
+          "spawnChecks": 2,
+          "spawns": 2,
+          "damage": 0,
+          "pressureMean": 0.004860878476139269,
+          "nearbyMean": 0.23333333333333334,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 1162,
+          "ticks": 240,
+          "pressureMax": 0.08695492844960072,
+          "maxPopulation": 5,
+          "spawnChecks": 3,
+          "spawns": 3,
+          "damage": 0,
+          "pressureMean": 0.0698932074871504,
+          "nearbyMean": 2.0625,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 1402,
+          "ticks": 210,
+          "pressureMax": 0.1485081413957893,
+          "maxPopulation": 4,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.125462578728168,
+          "nearbyMean": 3.7,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 1612,
+          "ticks": 480,
+          "pressureMax": 0.15043503743348358,
+          "maxPopulation": 4,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.12546110525371015,
+          "nearbyMean": 3.0875,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 2092,
+          "ticks": 867,
+          "pressureMax": 0.046776852271900836,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03818435565940763,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 2959,
+          "ticks": 180,
+          "pressureMax": 0.03761363688315508,
+          "maxPopulation": 1,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03761363652293949,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 3139,
+          "ticks": 600,
+          "pressureMax": 0.041022727281984035,
+          "maxPopulation": 1,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.037954539665953926,
+          "nearbyMean": 1,
+          "rangeMean": 0.0033333333333333335,
+          "attackMean": 0.028333333333333332
+        },
+        {
+          "state": "RECOVERY",
+          "start": 3739,
+          "ticks": 480,
+          "pressureMax": 0.037613697312637515,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03761364360060312,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 4219,
+          "ticks": 924,
+          "pressureMax": 0.20822952534628308,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 104,
+          "pressureMean": 0.09848817108010025,
+          "nearbyMean": 1,
+          "rangeMean": 0.54004329004329,
+          "attackMean": 0.23917748917748918
+        },
+        {
+          "state": "BUILDUP",
+          "start": 5143,
+          "ticks": 180,
+          "pressureMax": 0.20832204164014734,
+          "maxPopulation": 1,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 40,
+          "pressureMean": 0.184429968539162,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.4666666666666667
+        },
+        {
+          "state": "ASSAULT",
+          "start": 5323,
+          "ticks": 600,
+          "pressureMax": 0.21967374144883062,
+          "maxPopulation": 1,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 120,
+          "pressureMean": 0.18624454211304203,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.4266666666666667
+        },
+        {
+          "state": "RECOVERY",
+          "start": 5923,
+          "ticks": 178,
+          "pressureMax": 0.3059489066831484,
+          "maxPopulation": 1,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 32,
+          "pressureMean": 0.2646236520971506,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.4606741573033708
+        }
+      ],
+      "ms": {
+        "tick": {
+          "mean": 0.0025885159809866092,
+          "p95": 0.0045900000000074215,
+          "p99": 0.006100000000003547,
+          "max": 0.19360000000000355
+        },
+        "ai": {
+          "mean": 0.001750692181609301,
+          "p95": 0.003750000000025011,
+          "p99": 0.004650000000026466,
+          "max": 0.18012000000010175
+        },
+        "target": {
+          "mean": 0.00007173414194383496,
+          "p95": 0.00009999999997489795,
+          "p99": 0.00011000000000649379,
+          "max": 0.003709999999955471
+        },
+        "navigation": {
+          "mean": 0.0011358290444192902,
+          "p95": 0.0028100000000108594,
+          "p99": 0.00334000000003698,
+          "max": 0.17830000000003565
+        },
+        "attack": {
+          "mean": 0.00017684641862027853,
+          "p95": 0.0004299999999943793,
+          "p99": 0.0007799999999633656,
+          "max": 0.008240000000000691
+        },
+        "director": {
+          "mean": 0.00012328798557660254,
+          "p95": 0.00018000000000029104,
+          "p99": 0.0020400000000222462,
+          "max": 0.0422800000000052
+        },
+        "spawn": {
+          "mean": 0.000024681199803225576,
+          "p95": 0,
+          "p99": 0.0011600000000271393,
+          "max": 0.018979999999942265
+        },
+        "encode": {
+          "mean": 0.0003473044761436076,
+          "p95": 0.00045999999997548,
+          "p99": 0.0007100000000264117,
+          "max": 0.06475999999997839
+        }
+      },
+      "runtime": {
+        "elapsedMs": 22.842486000000008,
+        "cpuMs": 32.101,
+        "initialMemory": {
+          "rss": 168456192,
+          "heapTotal": 61128704,
+          "heapUsed": 29341232,
+          "external": 12420559,
+          "arrayBuffers": 2959343
+        },
+        "memory": {
+          "rss": 168980480,
+          "heapTotal": 61128704,
+          "heapUsed": 31272456,
+          "external": 12233891,
+          "arrayBuffers": 2772675
+        },
+        "hordePayloadBytesPerSecond": 204.9401737420095
+      }
+    },
+    {
+      "scenario": {
+        "kind": "director-contact",
+        "operators": 2,
+        "seconds": 1500
+      },
+      "config": {
+        "difficultyId": "normal",
+        "simulationSeed": 421337,
+        "missionSeed": null,
+        "worldSeed": null,
+        "generatorVersion": null,
+        "world": "world.bodenbruch",
+        "obstacles": 3,
+        "tickHz": 30,
+        "hordeHz": 10,
+        "activeCap": 200
+      },
+      "durationTicks": 6093,
+      "state": "MISSION_RESULTS",
+      "finalHp": [
+        0,
+        0
+      ],
+      "active": {
+        "min": 0,
+        "max": 6,
+        "final": 3,
+        "mean": 2.6417200065649107,
+        "movedIds": 6,
+        "enemyDeaths": 3
+      },
+      "combat": {
+        "decisions": 6634,
+        "validations": 153,
+        "starts": 77,
+        "hits": 76,
+        "operatorStarts": 77,
+        "operatorHits": 76,
+        "operatorDamage": 600,
+        "interruptions": 0,
+        "firstWindup": 3162,
+        "firstDamageFromStart": 14,
+        "hitSizes": {
+          "4": 2,
+          "8": 74
+        },
+        "hpTimeline": [
+          {
+            "firstHit": 4650,
+            "death": 6093,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          },
+          {
+            "firstHit": 3472,
+            "death": 4175,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          }
+        ],
+        "pendingOperatorAttacks": 0,
+        "unsuccessfulOperatorStarts": 1,
+        "maxWindup": 2,
+        "maxActive": 2,
+        "maxRecovery": 2,
+        "rangeMean": 0.4749712785163302,
+        "resources": {
+          "shots": {
+            "primary": 810,
+            "secondary": 0
+          },
+          "hits": {
+            "primary": 7,
+            "secondary": 0
+          },
+          "damage": {
+            "primary": 168,
+            "secondary": 0
+          },
+          "magazinesUsed": {
+            "primary": 16,
+            "secondary": 0
+          },
+          "roundsDiscarded": {
+            "primary": 0,
+            "secondary": 0
+          },
+          "reloadsInterrupted": 0,
+          "grenadesThrown": 0,
+          "grenadeDamageEnemies": 0,
+          "grenadeDamageNests": 0,
+          "grenadeKills": 0,
+          "meleeAttacks": 0,
+          "meleeHits": 0,
+          "meleeKills": 0,
+          "staggers": 0,
+          "friendlyFireDamage": {
+            "bullet": 0,
+            "explosion": 0,
+            "melee": 0
+          },
+          "selfDamage": 0,
+          "convictFriendlyDamage": 0,
+          "resupplyUses": 0,
+          "refilled": {
+            "primaryMagazines": 0,
+            "secondaryMagazines": 0,
+            "grenades": 0,
+            "stims": 0
+          },
+          "blasts": 0,
+          "blastQueryMsTotal": 0,
+          "blastQueryMsMax": 0
+        }
+      },
+      "targeting": {
+        "targetTicks": [
+          5438,
+          5735
+        ],
+        "switches": 3,
+        "acquisitions": 6,
+        "losses": 2
+      },
+      "navigation": {
+        "requests": 1498,
+        "builds": 0,
+        "hits": 0,
+        "deferred": 0,
+        "stuckPeak": 2,
+        "stuckEpisodes": 2,
+        "recoveryAttempts": 6,
+        "recoveries": 0,
+        "fallbacks": 2,
+        "unreachable": 0,
+        "overlapProbes": 0
+      },
+      "spawn": {
+        "checked": 358,
+        "waveChecked": 358,
+        "spawned": 6,
+        "waveSpawned": 6,
+        "capacityDeferrals": 0,
+        "budgetDeferrals": 0,
+        "rejected": {
+          "ground": 0,
+          "protected-area": 0,
+          "operator-distance": 352,
+          "structure": 0,
+          "occupied": 0,
+          "visible": 0,
+          "route": 0
+        },
+        "peakChecks": 4,
+        "peakWaveChecks": 4,
+        "peakSpawned": 1
+      },
+      "waves": [
+        {
+          "tick": 982,
+          "budget": 6
+        },
+        {
+          "tick": 1612,
+          "spawned": 6,
+          "reason": "completed"
+        },
+        {
+          "tick": 3063,
+          "budget": 7
+        },
+        {
+          "tick": 3843,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 5196,
+          "budget": 6
+        },
+        {
+          "tick": 5976,
+          "spawned": 0,
+          "reason": "blocked"
+        }
+      ],
+      "holds": {},
+      "phases": [
+        {
+          "state": "CALM",
+          "start": 1,
+          "ticks": 981,
+          "pressureMax": 0,
+          "maxPopulation": 0,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 982,
+          "ticks": 180,
+          "pressureMax": 0.032534445483576174,
+          "maxPopulation": 2,
+          "spawnChecks": 2,
+          "spawns": 2,
+          "damage": 0,
+          "pressureMean": 0.004860878476139269,
+          "nearbyMean": 0.23333333333333334,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 1162,
+          "ticks": 240,
+          "pressureMax": 0.10387563470145335,
+          "maxPopulation": 6,
+          "spawnChecks": 4,
+          "spawns": 4,
+          "damage": 0,
+          "pressureMean": 0.07256328924415954,
+          "nearbyMean": 2.175,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 1402,
+          "ticks": 210,
+          "pressureMax": 0.18501731327579848,
+          "maxPopulation": 5,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.16197886838285172,
+          "nearbyMean": 4.685714285714286,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 1612,
+          "ticks": 480,
+          "pressureMax": 0.1534401364449094,
+          "maxPopulation": 3,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.08740713279741505,
+          "nearbyMean": 2.08125,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 2092,
+          "ticks": 971,
+          "pressureMax": 0.07648784491233084,
+          "maxPopulation": 3,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.07647786067576773,
+          "nearbyMean": 2,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 3063,
+          "ticks": 180,
+          "pressureMax": 0.07922653958945351,
+          "maxPopulation": 3,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.07718347275364491,
+          "nearbyMean": 2,
+          "rangeMean": 0.016666666666666666,
+          "attackMean": 0.09444444444444444
+        },
+        {
+          "state": "ASSAULT",
+          "start": 3243,
+          "ticks": 600,
+          "pressureMax": 0.30224966476171455,
+          "maxPopulation": 3,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 160,
+          "pressureMean": 0.1779213638660773,
+          "nearbyMean": 2,
+          "rangeMean": 1.2766666666666666,
+          "attackMean": 0.5666666666666667
+        },
+        {
+          "state": "RECOVERY",
+          "start": 3843,
+          "ticks": 480,
+          "pressureMax": 0.38914557303051395,
+          "maxPopulation": 3,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 140,
+          "pressureMean": 0.29481518091936415,
+          "nearbyMean": 1.7145833333333333,
+          "rangeMean": 1.3875,
+          "attackMean": 0.6375
+        },
+        {
+          "state": "CALM",
+          "start": 4323,
+          "ticks": 873,
+          "pressureMax": 0.20933378587135731,
+          "maxPopulation": 3,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 112,
+          "pressureMean": 0.12176942683835365,
+          "nearbyMean": 1,
+          "rangeMean": 0.6426116838487973,
+          "attackMean": 0.28865979381443296
+        },
+        {
+          "state": "BUILDUP",
+          "start": 5196,
+          "ticks": 180,
+          "pressureMax": 0.20943224378560385,
+          "maxPopulation": 3,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 40,
+          "pressureMean": 0.18612557277090738,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.39444444444444443
+        },
+        {
+          "state": "ASSAULT",
+          "start": 5376,
+          "ticks": 600,
+          "pressureMax": 0.25111821915664173,
+          "maxPopulation": 3,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 120,
+          "pressureMean": 0.191954828691336,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.4483333333333333
+        },
+        {
+          "state": "RECOVERY",
+          "start": 5976,
+          "ticks": 117,
+          "pressureMax": 0.3110549139784521,
+          "maxPopulation": 3,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 24,
+          "pressureMean": 0.28413870644423844,
+          "nearbyMean": 1,
+          "rangeMean": 1,
+          "attackMean": 0.4358974358974359
+        }
+      ],
+      "ms": {
+        "tick": {
+          "mean": 0.004127186115214416,
+          "p95": 0.006979999999998654,
+          "p99": 0.010529999999903339,
+          "max": 0.33395999999993364
+        },
+        "ai": {
+          "mean": 0.0028784575742661716,
+          "p95": 0.004689999999868633,
+          "p99": 0.00772000000006301,
+          "max": 0.32791999999994914
+        },
+        "target": {
+          "mean": 0.00010900049236877248,
+          "p95": 0.0001700000000255386,
+          "p99": 0.00020000000006348273,
+          "max": 0.0012900000000399814
+        },
+        "navigation": {
+          "mean": 0.0019257296898077165,
+          "p95": 0.0032300000000304863,
+          "p99": 0.004189999999994143,
+          "max": 0.32458999999994376
+        },
+        "attack": {
+          "mean": 0.0002555425898570206,
+          "p95": 0.00037999999995008693,
+          "p99": 0.0011299999999891952,
+          "max": 0.019229999999993197
+        },
+        "director": {
+          "mean": 0.00015414409978714878,
+          "p95": 0.00023999999996249244,
+          "p99": 0.0023200000000542786,
+          "max": 0.04679999999996198
+        },
+        "spawn": {
+          "mean": 0.000036712621040431826,
+          "p95": 0,
+          "p99": 0.0013199999999642387,
+          "max": 0.02257000000008702
+        },
+        "encode": {
+          "mean": 0.00044796208764132735,
+          "p95": 0.0008100000000013097,
+          "p99": 0.0012699999999767897,
+          "max": 0.0036000000000058208
+        }
+      },
+      "runtime": {
+        "elapsedMs": 35.79951900000003,
+        "cpuMs": 76.212,
+        "initialMemory": {
+          "rss": 169111552,
+          "heapTotal": 61128704,
+          "heapUsed": 39711104,
+          "external": 12912851,
+          "arrayBuffers": 3451635
+        },
+        "memory": {
+          "rss": 169635840,
+          "heapTotal": 61915136,
+          "heapUsed": 41386736,
+          "external": 12738303,
+          "arrayBuffers": 3277087
+        },
+        "hordePayloadBytesPerSecond": 350.8813392417528
+      }
+    },
+    {
+      "scenario": {
+        "kind": "director-contact",
+        "operators": 3,
+        "seconds": 1500
+      },
+      "config": {
+        "difficultyId": "normal",
+        "simulationSeed": 421337,
+        "missionSeed": null,
+        "worldSeed": null,
+        "generatorVersion": null,
+        "world": "world.bodenbruch",
+        "obstacles": 3,
+        "tickHz": 30,
+        "hordeHz": 10,
+        "activeCap": 200
+      },
+      "durationTicks": 9415,
+      "state": "MISSION_RESULTS",
+      "finalHp": [
+        0,
+        0,
+        0
+      ],
+      "active": {
+        "min": 0,
+        "max": 8,
+        "final": 8,
+        "mean": 4.359745087626129,
+        "movedIds": 14,
+        "enemyDeaths": 6
+      },
+      "combat": {
+        "decisions": 18392,
+        "validations": 368,
+        "starts": 117,
+        "hits": 114,
+        "operatorStarts": 117,
+        "operatorHits": 114,
+        "operatorDamage": 900,
+        "interruptions": 2,
+        "firstWindup": 3160,
+        "firstDamageFromStart": 14,
+        "hitSizes": {
+          "4": 3,
+          "8": 111
+        },
+        "hpTimeline": [
+          {
+            "firstHit": 4622,
+            "death": 5909,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 2
+          },
+          {
+            "firstHit": 8993,
+            "death": 9415,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 2
+          },
+          {
+            "firstHit": 4271,
+            "death": 5714,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          }
+        ],
+        "pendingOperatorAttacks": 0,
+        "unsuccessfulOperatorStarts": 3,
+        "maxWindup": 2,
+        "maxActive": 2,
+        "maxRecovery": 2,
+        "rangeMean": 0.4961232076473712,
+        "resources": {
+          "shots": {
+            "primary": 1215,
+            "secondary": 0
+          },
+          "hits": {
+            "primary": 12,
+            "secondary": 0
+          },
+          "damage": {
+            "primary": 288,
+            "secondary": 0
+          },
+          "magazinesUsed": {
+            "primary": 24,
+            "secondary": 0
+          },
+          "roundsDiscarded": {
+            "primary": 0,
+            "secondary": 0
+          },
+          "reloadsInterrupted": 0,
+          "grenadesThrown": 0,
+          "grenadeDamageEnemies": 0,
+          "grenadeDamageNests": 0,
+          "grenadeKills": 0,
+          "meleeAttacks": 0,
+          "meleeHits": 0,
+          "meleeKills": 0,
+          "staggers": 0,
+          "friendlyFireDamage": {
+            "bullet": 0,
+            "explosion": 0,
+            "melee": 0
+          },
+          "selfDamage": 0,
+          "convictFriendlyDamage": 0,
+          "resupplyUses": 0,
+          "refilled": {
+            "primaryMagazines": 0,
+            "secondaryMagazines": 0,
+            "grenades": 0,
+            "stims": 0
+          },
+          "blasts": 0,
+          "blastQueryMsTotal": 0,
+          "blastQueryMsMax": 0
+        }
+      },
+      "targeting": {
+        "targetTicks": [
+          5484,
+          20676,
+          5054
+        ],
+        "switches": 3,
+        "acquisitions": 15,
+        "losses": 3
+      },
+      "navigation": {
+        "requests": 4253,
+        "builds": 0,
+        "hits": 0,
+        "deferred": 0,
+        "stuckPeak": 6,
+        "stuckEpisodes": 8,
+        "recoveryAttempts": 24,
+        "recoveries": 0,
+        "fallbacks": 6,
+        "unreachable": 0,
+        "overlapProbes": 0
+      },
+      "spawn": {
+        "checked": 530,
+        "waveChecked": 530,
+        "spawned": 14,
+        "waveSpawned": 14,
+        "capacityDeferrals": 0,
+        "budgetDeferrals": 0,
+        "rejected": {
+          "ground": 0,
+          "protected-area": 0,
+          "operator-distance": 176,
+          "structure": 0,
+          "occupied": 2,
+          "visible": 338,
+          "route": 0
+        },
+        "peakChecks": 4,
+        "peakWaveChecks": 4,
+        "peakSpawned": 1
+      },
+      "waves": [
+        {
+          "tick": 982,
+          "budget": 8
+        },
+        {
+          "tick": 1612,
+          "spawned": 8,
+          "reason": "completed"
+        },
+        {
+          "tick": 2944,
+          "budget": 8
+        },
+        {
+          "tick": 3724,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 5058,
+          "budget": 9
+        },
+        {
+          "tick": 6048,
+          "spawned": 6,
+          "reason": "partial"
+        },
+        {
+          "tick": 7489,
+          "budget": 6
+        },
+        {
+          "tick": 8269,
+          "spawned": 0,
+          "reason": "blocked"
+        }
+      ],
+      "holds": {},
+      "phases": [
+        {
+          "state": "CALM",
+          "start": 1,
+          "ticks": 981,
+          "pressureMax": 0,
+          "maxPopulation": 0,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 982,
+          "ticks": 180,
+          "pressureMax": 0.03636967275630344,
+          "maxPopulation": 2,
+          "spawnChecks": 2,
+          "spawns": 2,
+          "damage": 0,
+          "pressureMean": 0.006740613324624117,
+          "nearbyMean": 0.31666666666666665,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 1162,
+          "ticks": 240,
+          "pressureMax": 0.12219997872971043,
+          "maxPopulation": 8,
+          "spawnChecks": 8,
+          "spawns": 6,
+          "damage": 0,
+          "pressureMean": 0.07548931751961968,
+          "nearbyMean": 2.2625,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 1402,
+          "ticks": 210,
+          "pressureMax": 0.25614173883096414,
+          "maxPopulation": 7,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.21898476856072535,
+          "nearbyMean": 6.5,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 1612,
+          "ticks": 480,
+          "pressureMax": 0.22207613129658574,
+          "maxPopulation": 4,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.08870384201443007,
+          "nearbyMean": 1.85625,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 2092,
+          "ticks": 852,
+          "pressureMax": 0.039563444703674365,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03890799040981795,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 2944,
+          "ticks": 180,
+          "pressureMax": 0.038863636416538255,
+          "maxPopulation": 2,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.0388636363798579,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 3124,
+          "ticks": 600,
+          "pressureMax": 0.041167076167783125,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.03909397512778352,
+          "nearbyMean": 1,
+          "rangeMean": 0.0016666666666666668,
+          "attackMean": 0.028333333333333332
+        },
+        {
+          "state": "RECOVERY",
+          "start": 3724,
+          "ticks": 480,
+          "pressureMax": 0.03886369127264628,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.038863642883426225,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 4204,
+          "ticks": 854,
+          "pressureMax": 0.30148042752915843,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 264,
+          "pressureMean": 0.20671650415196086,
+          "nearbyMean": 1.8278688524590163,
+          "rangeMean": 1.4672131147540983,
+          "attackMean": 0.6569086651053864
+        },
+        {
+          "state": "BUILDUP",
+          "start": 5058,
+          "ticks": 180,
+          "pressureMax": 0.3023159792527211,
+          "maxPopulation": 2,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 64,
+          "pressureMean": 0.28416822444342515,
+          "nearbyMean": 2,
+          "rangeMean": 2,
+          "attackMean": 0.8222222222222222
+        },
+        {
+          "state": "ASSAULT",
+          "start": 5238,
+          "ticks": 600,
+          "pressureMax": 0.45975536075028,
+          "maxPopulation": 8,
+          "spawnChecks": 152,
+          "spawns": 6,
+          "damage": 252,
+          "pressureMean": 0.335988697146708,
+          "nearbyMean": 2,
+          "rangeMean": 1.9983333333333333,
+          "attackMean": 0.8866666666666667
+        },
+        {
+          "state": "PEAK",
+          "start": 5838,
+          "ticks": 210,
+          "pressureMax": 0.4234305151998817,
+          "maxPopulation": 8,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 20,
+          "pressureMean": 0.3477717824543978,
+          "nearbyMean": 1.7857142857142858,
+          "rangeMean": 0.6857142857142857,
+          "attackMean": 0.30952380952380953
+        },
+        {
+          "state": "RECOVERY",
+          "start": 6048,
+          "ticks": 480,
+          "pressureMax": 0.22818545086537811,
+          "maxPopulation": 8,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.21380234913389476,
+          "nearbyMean": 5.579166666666667,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 6528,
+          "ticks": 961,
+          "pressureMax": 0.22818533803808771,
+          "maxPopulation": 8,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.22818217959022505,
+          "nearbyMean": 6,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 7489,
+          "ticks": 180,
+          "pressureMax": 0.22818181818236732,
+          "maxPopulation": 8,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.22818181818199335,
+          "nearbyMean": 6,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 7669,
+          "ticks": 600,
+          "pressureMax": 0.22818181818183864,
+          "maxPopulation": 8,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.22818181818182182,
+          "nearbyMean": 6,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 8269,
+          "ticks": 480,
+          "pressureMax": 0.2281818181818182,
+          "maxPopulation": 8,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.2281818181818199,
+          "nearbyMean": 6,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 8749,
+          "ticks": 666,
+          "pressureMax": 0.6067212070770186,
+          "maxPopulation": 8,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 296,
+          "pressureMean": 0.37675054793587487,
+          "nearbyMean": 6,
+          "rangeMean": 2.566066066066066,
+          "attackMean": 0.9774774774774775
+        }
+      ],
+      "ms": {
+        "tick": {
+          "mean": 0.0052193991502927466,
+          "p95": 0.009930000000053951,
+          "p99": 0.014379999999960091,
+          "max": 0.3184600000000728
+        },
+        "ai": {
+          "mean": 0.003825233032393912,
+          "p95": 0.008049999999798274,
+          "p99": 0.01148000000000593,
+          "max": 0.315050000000042
+        },
+        "target": {
+          "mean": 0.00013636654275094566,
+          "p95": 0.0002500000000509317,
+          "p99": 0.0002800000000888758,
+          "max": 0.0014800000000150249
+        },
+        "navigation": {
+          "mean": 0.0026718796601167645,
+          "p95": 0.006060000000047694,
+          "p99": 0.0071199999999862484,
+          "max": 0.31232999999997446
+        },
+        "attack": {
+          "mean": 0.0003686639405198384,
+          "p95": 0.0006500000000642103,
+          "p99": 0.0030600000000049477,
+          "max": 0.2015400000000227
+        },
+        "director": {
+          "mean": 0.00020058311205579146,
+          "p95": 0.00027000000000043656,
+          "p99": 0.004549999999994725,
+          "max": 0.04296999999996842
+        },
+        "spawn": {
+          "mean": 0.00006998406797677974,
+          "p95": 0,
+          "p99": 0.003349999999954889,
+          "max": 0.022629999999935535
+        },
+        "encode": {
+          "mean": 0.000644159018483052,
+          "p95": 0.0014699999999265856,
+          "p99": 0.003100000000017644,
+          "max": 0.04795999999998912
+        }
+      },
+      "runtime": {
+        "elapsedMs": 67.02197799999999,
+        "cpuMs": 131.914,
+        "initialMemory": {
+          "rss": 169635840,
+          "heapTotal": 61915136,
+          "heapUsed": 33848048,
+          "external": 13392303,
+          "arrayBuffers": 3931087
+        },
+        "memory": {
+          "rss": 175665152,
+          "heapTotal": 63750144,
+          "heapUsed": 34527840,
+          "external": 13212835,
+          "arrayBuffers": 3751619
+        },
+        "hordePayloadBytesPerSecond": 519.2310143388211
+      }
+    },
+    {
+      "scenario": {
+        "kind": "director-contact",
+        "operators": 4,
+        "seconds": 1500
+      },
+      "config": {
+        "difficultyId": "normal",
+        "simulationSeed": 421337,
+        "missionSeed": null,
+        "worldSeed": null,
+        "generatorVersion": null,
+        "world": "world.bodenbruch",
+        "obstacles": 3,
+        "tickHz": 30,
+        "hordeHz": 10,
+        "activeCap": 200
+      },
+      "durationTicks": 10581,
+      "state": "MISSION_RESULTS",
+      "finalHp": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "active": {
+        "min": 0,
+        "max": 9,
+        "final": 5,
+        "mean": 3.1039599281731407,
+        "movedIds": 15,
+        "enemyDeaths": 10
+      },
+      "combat": {
+        "decisions": 13682,
+        "validations": 293,
+        "starts": 149,
+        "hits": 143,
+        "operatorStarts": 149,
+        "operatorHits": 143,
+        "operatorDamage": 1130,
+        "interruptions": 1,
+        "firstWindup": 1640,
+        "firstDamageFromStart": 14,
+        "hitSizes": {
+          "3": 1,
+          "4": 2,
+          "7": 1,
+          "8": 139
+        },
+        "hpTimeline": [
+          {
+            "firstHit": 4630,
+            "death": 6073,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          },
+          {
+            "firstHit": 4609,
+            "death": 5818,
+            "damage": 251,
+            "hits": 32,
+            "simultaneous": 1
+          },
+          {
+            "firstHit": 9973,
+            "death": 10581,
+            "damage": 300,
+            "hits": 38,
+            "simultaneous": 1
+          },
+          {
+            "firstHit": 9820,
+            "death": 10251,
+            "damage": 279,
+            "hits": 35,
+            "simultaneous": 1
+          }
+        ],
+        "pendingOperatorAttacks": 0,
+        "unsuccessfulOperatorStarts": 6,
+        "maxWindup": 3,
+        "maxActive": 2,
+        "maxRecovery": 4,
+        "rangeMean": 0.5204612040449863,
+        "resources": {
+          "shots": {
+            "primary": 1620,
+            "secondary": 0
+          },
+          "hits": {
+            "primary": 21,
+            "secondary": 0
+          },
+          "damage": {
+            "primary": 504,
+            "secondary": 0
+          },
+          "magazinesUsed": {
+            "primary": 32,
+            "secondary": 0
+          },
+          "roundsDiscarded": {
+            "primary": 0,
+            "secondary": 0
+          },
+          "reloadsInterrupted": 0,
+          "grenadesThrown": 0,
+          "grenadeDamageEnemies": 0,
+          "grenadeDamageNests": 0,
+          "grenadeKills": 0,
+          "meleeAttacks": 0,
+          "meleeHits": 0,
+          "meleeKills": 0,
+          "staggers": 0,
+          "friendlyFireDamage": {
+            "bullet": 70,
+            "explosion": 0,
+            "melee": 0
+          },
+          "selfDamage": 0,
+          "convictFriendlyDamage": 0,
+          "resupplyUses": 0,
+          "refilled": {
+            "primaryMagazines": 0,
+            "secondaryMagazines": 0,
+            "grenades": 0,
+            "stims": 0
+          },
+          "blasts": 0,
+          "blastQueryMsTotal": 0,
+          "blastQueryMsMax": 0
+        }
+      },
+      "targeting": {
+        "targetTicks": [
+          5471,
+          4838,
+          3924,
+          8635
+        ],
+        "switches": 4,
+        "acquisitions": 19,
+        "losses": 5
+      },
+      "navigation": {
+        "requests": 3086,
+        "builds": 0,
+        "hits": 0,
+        "deferred": 0,
+        "stuckPeak": 0,
+        "stuckEpisodes": 0,
+        "recoveryAttempts": 0,
+        "recoveries": 0,
+        "fallbacks": 0,
+        "unreachable": 0,
+        "overlapProbes": 0
+      },
+      "spawn": {
+        "checked": 545,
+        "waveChecked": 545,
+        "spawned": 15,
+        "waveSpawned": 15,
+        "capacityDeferrals": 0,
+        "budgetDeferrals": 0,
+        "rejected": {
+          "ground": 0,
+          "protected-area": 0,
+          "operator-distance": 176,
+          "structure": 0,
+          "occupied": 2,
+          "visible": 352,
+          "route": 0
+        },
+        "peakChecks": 4,
+        "peakWaveChecks": 4,
+        "peakSpawned": 1
+      },
+      "waves": [
+        {
+          "tick": 982,
+          "budget": 9
+        },
+        {
+          "tick": 1612,
+          "spawned": 9,
+          "reason": "completed"
+        },
+        {
+          "tick": 2938,
+          "budget": 9
+        },
+        {
+          "tick": 3718,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 5146,
+          "budget": 10
+        },
+        {
+          "tick": 5926,
+          "spawned": 0,
+          "reason": "blocked"
+        },
+        {
+          "tick": 7313,
+          "budget": 6
+        },
+        {
+          "tick": 7943,
+          "spawned": 6,
+          "reason": "completed"
+        },
+        {
+          "tick": 9360,
+          "budget": 6
+        },
+        {
+          "tick": 10140,
+          "spawned": 0,
+          "reason": "blocked"
+        }
+      ],
+      "holds": {},
+      "phases": [
+        {
+          "state": "CALM",
+          "start": 1,
+          "ticks": 981,
+          "pressureMax": 0,
+          "maxPopulation": 0,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 982,
+          "ticks": 180,
+          "pressureMax": 0.03636967275630344,
+          "maxPopulation": 2,
+          "spawnChecks": 2,
+          "spawns": 2,
+          "damage": 0,
+          "pressureMean": 0.006740613324624117,
+          "nearbyMean": 0.31666666666666665,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 1162,
+          "ticks": 240,
+          "pressureMax": 0.23983119876699738,
+          "maxPopulation": 9,
+          "spawnChecks": 9,
+          "spawns": 7,
+          "damage": 0,
+          "pressureMean": 0.08519470068168468,
+          "nearbyMean": 2.3875,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 1402,
+          "ticks": 210,
+          "pressureMax": 0.4094599151511613,
+          "maxPopulation": 8,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.3753942716724172,
+          "nearbyMean": 7.457142857142857,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 1612,
+          "ticks": 480,
+          "pressureMax": 0.3945139854499325,
+          "maxPopulation": 6,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.22584466390016694,
+          "nearbyMean": 1.8125,
+          "rangeMean": 0.0020833333333333333,
+          "attackMean": 0.035416666666666666
+        },
+        {
+          "state": "CALM",
+          "start": 2092,
+          "ticks": 846,
+          "pressureMax": 0.16168680840079724,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.16138602754704126,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 2938,
+          "ticks": 180,
+          "pressureMax": 0.161363636442985,
+          "maxPopulation": 2,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.16136363638484977,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 3118,
+          "ticks": 600,
+          "pressureMax": 0.16334566596287425,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.16156183428399082,
+          "nearbyMean": 1,
+          "rangeMean": 0.0016666666666666668,
+          "attackMean": 0.028333333333333332
+        },
+        {
+          "state": "RECOVERY",
+          "start": 3718,
+          "ticks": 480,
+          "pressureMax": 0.16136369936001987,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.1613636426626425,
+          "nearbyMean": 1,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 4198,
+          "ticks": 948,
+          "pressureMax": 0.2616292898147722,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 224,
+          "pressureMean": 0.20024322553756468,
+          "nearbyMean": 1,
+          "rangeMean": 1.140295358649789,
+          "attackMean": 0.5073839662447257
+        },
+        {
+          "state": "BUILDUP",
+          "start": 5146,
+          "ticks": 180,
+          "pressureMax": 0.2617172290077684,
+          "maxPopulation": 2,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 72,
+          "pressureMean": 0.251964046661039,
+          "nearbyMean": 1,
+          "rangeMean": 2,
+          "attackMean": 0.8666666666666667
+        },
+        {
+          "state": "ASSAULT",
+          "start": 5326,
+          "ticks": 600,
+          "pressureMax": 0.43533420074920237,
+          "maxPopulation": 2,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 227,
+          "pressureMean": 0.2979192683424489,
+          "nearbyMean": 1,
+          "rangeMean": 1.8216666666666668,
+          "attackMean": 0.8083333333333333
+        },
+        {
+          "state": "RECOVERY",
+          "start": 5926,
+          "ticks": 480,
+          "pressureMax": 0.3593293965654081,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 28,
+          "pressureMean": 0.21441940853325428,
+          "nearbyMean": 0.3125,
+          "rangeMean": 0.30833333333333335,
+          "attackMean": 0.14166666666666666
+        },
+        {
+          "state": "CALM",
+          "start": 6406,
+          "ticks": 907,
+          "pressureMax": 0.059382531064087564,
+          "maxPopulation": 2,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.05532464179410894,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 7313,
+          "ticks": 180,
+          "pressureMax": 0.060994829403627895,
+          "maxPopulation": 7,
+          "spawnChecks": 5,
+          "spawns": 5,
+          "damage": 0,
+          "pressureMean": 0.05906818926519271,
+          "nearbyMean": 0,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 7493,
+          "ticks": 240,
+          "pressureMax": 0.26824347181997993,
+          "maxPopulation": 8,
+          "spawnChecks": 1,
+          "spawns": 1,
+          "damage": 0,
+          "pressureMean": 0.16673259146652017,
+          "nearbyMean": 3.925,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "PEAK",
+          "start": 7733,
+          "ticks": 210,
+          "pressureMax": 0.2713530584104408,
+          "maxPopulation": 8,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.20062002190805292,
+          "nearbyMean": 3.3285714285714287,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "RECOVERY",
+          "start": 7943,
+          "ticks": 480,
+          "pressureMax": 0.17030007455137033,
+          "maxPopulation": 5,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.159457985712421,
+          "nearbyMean": 2.6729166666666666,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "CALM",
+          "start": 8423,
+          "ticks": 937,
+          "pressureMax": 0.16784090636956225,
+          "maxPopulation": 5,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.1629602969126679,
+          "nearbyMean": 2.911419423692636,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "BUILDUP",
+          "start": 9360,
+          "ticks": 180,
+          "pressureMax": 0.16784090900470675,
+          "maxPopulation": 5,
+          "spawnChecks": 16,
+          "spawns": 0,
+          "damage": 0,
+          "pressureMean": 0.167840908417483,
+          "nearbyMean": 3,
+          "rangeMean": 0,
+          "attackMean": 0
+        },
+        {
+          "state": "ASSAULT",
+          "start": 9540,
+          "ticks": 600,
+          "pressureMax": 0.46252923565184956,
+          "maxPopulation": 5,
+          "spawnChecks": 160,
+          "spawns": 0,
+          "damage": 248,
+          "pressureMean": 0.28609615048893666,
+          "nearbyMean": 3.6733333333333333,
+          "rangeMean": 1.9266666666666667,
+          "attackMean": 0.9166666666666666
+        },
+        {
+          "state": "RECOVERY",
+          "start": 10140,
+          "ticks": 441,
+          "pressureMax": 0.5969795572808493,
+          "maxPopulation": 5,
+          "spawnChecks": 0,
+          "spawns": 0,
+          "damage": 327,
+          "pressureMean": 0.5203109300038286,
+          "nearbyMean": 4,
+          "rangeMean": 3.7709750566893425,
+          "attackMean": 1.6780045351473922
+        }
+      ],
+      "ms": {
+        "tick": {
+          "mean": 0.004994108496361286,
+          "p95": 0.009639999999990323,
+          "p99": 0.016250000000013642,
+          "max": 0.31673000000000684
+        },
+        "ai": {
+          "mean": 0.00303318013420306,
+          "p95": 0.006130000000098335,
+          "p99": 0.00897999999995136,
+          "max": 0.20647999999994227
+        },
+        "target": {
+          "mean": 0.00013271807957650854,
+          "p95": 0.00021999999989930075,
+          "p99": 0.00026000000002568413,
+          "max": 0.003910000000018954
+        },
+        "navigation": {
+          "mean": 0.001968153860693939,
+          "p95": 0.004110000000082437,
+          "p99": 0.005629999999996471,
+          "max": 0.20326999999997497
+        },
+        "attack": {
+          "mean": 0.0002974454210379286,
+          "p95": 0.00046000000008916686,
+          "p99": 0.0013999999999896318,
+          "max": 0.16593000000000302
+        },
+        "director": {
+          "mean": 0.0001856564596911046,
+          "p95": 0.000279999999975189,
+          "p99": 0.004570000000057917,
+          "max": 0.04815999999993892
+        },
+        "spawn": {
+          "mean": 0.00005924307721361491,
+          "p95": 0,
+          "p99": 0.002920000000017353,
+          "max": 0.019559999999955835
+        },
+        "encode": {
+          "mean": 0.0005989679614406485,
+          "p95": 0.0012199999999893407,
+          "p99": 0.002230000000054133,
+          "max": 0.03179000000000087
+        }
+      },
+      "runtime": {
+        "elapsedMs": 83.11490200000003,
+        "cpuMs": 191.565,
+        "initialMemory": {
+          "rss": 175665152,
+          "heapTotal": 63750144,
+          "heapUsed": 30511208,
+          "external": 13878175,
+          "arrayBuffers": 4416959
+        },
+        "memory": {
+          "rss": 177369088,
+          "heapTotal": 65323008,
+          "heapUsed": 43232520,
+          "external": 13705527,
+          "arrayBuffers": 4244311
+        },
+        "hordePayloadBytesPerSecond": 396.7394386163879
+      }
+    }
+  ]
+}

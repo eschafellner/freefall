@@ -161,3 +161,11 @@ Der Missions-Snapshot enthält `meleeAttack` aus der Registry. Die Schabe beginn
 ## 7.4D · Director-Balance und Gameplay-Traces
 
 Das Objekt `director` in `balance/data/swarm.json` führt Zustandstakte, Pressure-Gewichte, Wellenbudgets und Spawn-Prüfgrenzen. Die Schwierigkeits-Caps und bisherigen Durchbruchs-, Patrouillen- und Nestparameter bleiben Quellen für das übrige Spawn-Verhalten. Registry-Validierung und der Missionssnapshot greifen vor dem Start des Laufs. Die sieben Missions-Fingerprints aus `npm run balance:trace` wurden für die geänderte Positionsprüfung, Reihenfolge der Spawn-Produzenten und die replizierte Director-Phase aktualisiert. Der Arena-Fingerprint blieb identisch. [Director-Balance](HORDE_ENCOUNTER_PACING.md)
+
+## 7.9A.2 · Rückstoßerholung der Kestrel
+
+Die Kestrel beginnt nach drei Serverticks mit der Erholung. Dadurch ändern sich Schussbahnen und daraus folgende Treffer in Arena und Missionen. Die acht Gameplay-Fingerabdrücke und der Balance-Release wurden für diese Änderung aktualisiert. Die prozedurale Missionszusammensetzung verwendet den neuen Registry-Hash nach dem bestehenden Seed-Verfahren. [Vergleich und Wiederherstellung der Baseline](COMBAT_BALANCE_7_9A_2.md)
+
+## 7.9B · Schabenangriffe und Wellenankunft
+
+Der Registry-Release `7.9B` (Schema 2, Hash `390e375eec0bf943`) verlängert den Schaben-Windup von 11 auf 14 Ticks und die Mindestdauer von PEAK von 120 auf 210 Ticks. Die acht Gameplay-Fingerabdrücke erfassen die Folgen des neuen Angriffstimings. Der versionierte 7.9A.2-Snapshot dient als Referenz für den reproduzierbaren Vorher-nachher-Vergleich. [Messung und Abnahme](MILESTONE_7_9B_REPORT.md)
