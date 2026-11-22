@@ -1,5 +1,26 @@
 [
   {
+    "id": "briefing-silence",
+    "title": "Briefing Silence",
+    "role": "briefing",
+    "rights": "Vom Projektinhaber bereitgestellt (eigene Werke), keine Drittlizenz",
+    "sourceFile": "Briefing Silence.mp3",
+    "sourceSha256": "5eef6be36fb0eb754f77d58ffb73264e6b4e3aaf6fc8767796472d9bc4e864ad",
+    "seconds": 194.8,
+    "sampleRate": 48000,
+    "channels": 2,
+    "lufs": -13.8,
+    "peakDbtp": -0.6,
+    "encoding": {
+      "ogg": "Vorbis q5, Metadaten und Cover entfernt",
+      "mp3": "Audiostrom unverändert kopiert, Metadaten und Cover entfernt"
+    },
+    "sha256": {
+      "ogg": "a8e7670be273045d1be9514b54e3aaa90b9afe72908144240cb1ae1b6e8c7922",
+      "mp3": "f71acde9fca21ab2b8574fbcc4e36825f12108b38f39a0df013a93ffe4ed475c"
+    }
+  },
+  {
     "id": "drop-larree-triomphale",
     "title": "L'Arrée Triomphale",
     "role": "drop",

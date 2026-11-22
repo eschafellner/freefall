@@ -6,11 +6,13 @@ const MUSIC_PATH = (import.meta.env?.BASE_URL ?? '/') + 'music/';
 
 /**
  * Score cues. Levels sit the -14.5 LUFS masters under the -23 LUFS effect mix; the music bus adds the player volume.
- * `tail`: seconds after the Albatross touchdown at which the drop score starts to fade.
+ * `tail`: seconds after the Albatross touchdown at which the drop score starts to fade. `loop`: repeats until its
+ * state ends. The briefing bed plays at 30 % of the master's level, well under the voices and the deck ambience.
  */
 export const MUSIC_TRACKS = {
-  drop: { file: 'drop-larree-triomphale', level: .85, fadeIn: 1.2, fadeOut: 6, tail: 15 },
-  balloon: { file: 'extraction-last-stand', level: .7, fadeIn: 2.5, fadeOut: 5, tail: 0 },
+  briefing: { file: 'briefing-silence', level: .3, fadeIn: 4, fadeOut: 3, tail: 0, loop: true },
+  drop: { file: 'drop-larree-triomphale', level: .85, fadeIn: 1.2, fadeOut: 6, tail: 15, loop: false },
+  balloon: { file: 'extraction-last-stand', level: .7, fadeIn: 2.5, fadeOut: 5, tail: 0, loop: false },
 } as const;
 export type MusicTrack = keyof typeof MUSIC_TRACKS;
 export interface MusicCue { track: MusicTrack; offset: number }
@@ -27,7 +29,8 @@ const phaseStart = (phase: string): number => {
 /**
  * Which score belongs to the mission state, and how far into it (seconds) a client joining late should start.
  * Drop: from the moment every operator has reported ready (boarding countdown) through the flight and a short tail
- * after touchdown. Balloon extraction: from activation until the mission result.
+ * after touchdown. Balloon extraction: from activation until the mission result. Briefing: quietly from the mission
+ * selection through boarding until the drop score takes over at the countdown.
  */
 export function musicCue(state: MissionSnapshot | undefined, tick: number, playing?: MusicTrack): MusicCue | undefined {
   if (!state || state.result) return;
@@ -40,6 +43,7 @@ export function musicCue(state: MissionSnapshot | undefined, tick: number, playi
   if (state.state === 'BOARDING' && state.boardingUntil > 0) {
     return { track: 'drop', offset: Math.max(0, tick - (state.boardingUntil - BOARDING_TICKS)) / NET.tickHz };
   }
+  if (state.state === 'MISSION_SELECTION' || state.state === 'BOARDING') return { track: 'briefing', offset: 0 };
   if (state.state === 'DEPLOYMENT' && state.phase !== 'DOCKED' && state.phase !== 'BOARDING') {
     return { track: 'drop', offset: (BOARDING_TICKS + phaseStart(state.phase) + Math.max(0, tick - state.phaseAt)) / NET.tickHz };
   }
@@ -91,6 +95,7 @@ export class MusicPlayer {
     if (!channel) {
       const element = new Audio();
       element.preload = 'auto';
+      element.loop = MUSIC_TRACKS[track].loop;
       const ogg = element.canPlayType('audio/ogg; codecs="vorbis"');
       element.src = MUSIC_PATH + MUSIC_TRACKS[track].file + (ogg ? '.ogg' : '.mp3');
       const source = context.createMediaElementSource(element);

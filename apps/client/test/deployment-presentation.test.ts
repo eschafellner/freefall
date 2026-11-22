@@ -18,7 +18,11 @@ test('the drop lasts about twenty seconds and keeps its phase order', () => {
 });
 
 test('drop score starts once every operator is ready and follows the flight for late joiners', () => {
-  assert.equal(musicCue(snapshot({ state: 'BOARDING' }), 10), undefined, 'not before everyone reported ready');
+  assert.equal(musicCue(snapshot({}), 10), undefined, 'quiet in the hub before a mission is selected');
+  assert.deepEqual(musicCue(snapshot({ state: 'MISSION_SELECTION' }), 10), { track: 'briefing', offset: 0 });
+  assert.deepEqual(musicCue(snapshot({ state: 'BOARDING' }), 10), { track: 'briefing', offset: 0 }, 'briefing bed until everyone reported ready');
+  assert.equal(MUSIC_TRACKS.briefing.level, .3, '30 % of the master level');
+  assert.ok(MUSIC_TRACKS.briefing.loop);
   const countdown = musicCue(snapshot({ state: 'BOARDING', boardingUntil: 100 + BOARDING_TICKS }), 100);
   assert.deepEqual(countdown, { track: 'drop', offset: 0 });
   // Mid re-entry: countdown + LOCKED + DROPPING + 30 ticks.

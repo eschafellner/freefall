@@ -32,4 +32,6 @@ Kamera-Erschütterung und Federung folgen der Einstellung „Wackeln“. Reduzie
 
 ## Musik
 
+Sobald der Host an der Missionskonsole einen Auftrag ausgewählt hat (`MISSION_SELECTION`), läuft „Briefing Silence“ in Schleife und bewusst leise mit 30 % des Masterpegels. Das Stück bleibt während des Boardings und wird vom Drop-Stück abgelöst, sobald der Countdown beginnt. Kehrt der Trupp in den Hub zurück, blendet es aus.
+
 Sobald alle Operatoren an Bord ihre Bereitschaft gemeldet haben und der Boarding-Countdown läuft, beginnt „L'Arrée Triomphale“. Das Stück begleitet den Drop. 15 Sekunden nach dem Aufschlag des Albatross blendet es über 6 Sekunden aus. Bricht der Countdown ab, blendet es ebenfalls aus. Wer später beitritt oder sich neu verbindet, hört das Stück an der passenden Stelle. `Music.ts` streamt die Datei über ein Media-Element in den Musikbus, statt sie als PCM zu dekodieren. Die Lautstärke regelt der neue Kanal **Musik** in den Audio-Einstellungen. [Quellen](music-sources.json) · [Ballonextraktion](EXTRACTION_BALLOON.md) · [Ablauf](visual-style/drop-sequenz.jpg)
