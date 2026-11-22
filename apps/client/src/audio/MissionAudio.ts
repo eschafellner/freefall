@@ -14,6 +14,7 @@ export interface AudioTransport {
 
 export { EventHistory as AudioEventHistory } from '../networking/EventHistory.ts';
 
+const CARRIER_ALARM_SOUND = false;
 const AIR_RANGE = [ALBATROSS.halfWidth * 3, 152] as const;
 
 export class MissionAudio {
@@ -103,7 +104,8 @@ export class MissionAudio {
 
   update(now: number, tick: number, state: MissionSnapshot, transport: AudioTransport, listener: AudioPosition, world: WorldDefinition): void {
     this.flushAlert(now);
-    this.alarm.update(state.result ? undefined : state);
+    // Carrier alarm sounds are switched off until the sound design is reworked (lamps still run).
+    if (CARRIER_ALARM_SOUND) this.alarm.update(state.result ? undefined : state);
     this.music.update(musicCue(state, tick, this.music.current), state.instanceId);
     const flying = state.state === 'DEPLOYMENT' && state.phase !== 'DOCKED';
     const lifting = state.extraction?.method === 'albatross' && state.extraction.phase === 'LIFT';

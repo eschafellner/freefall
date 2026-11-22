@@ -97,7 +97,7 @@ export class CarrierHologram {
         varying vec2 vUv; varying vec3 vNormal; varying vec3 vView; varying float vHeight;
         void main() {
           vec3 data = texture2D(map, vUv).rgb;
-          float facing = abs(dot(normalize(vNormal), normalize(vView)));
+          float facing = min(abs(dot(normalize(vNormal), normalize(vView))), 1.);
           float rim = pow(1. - facing, 2.2);
           vec2 grid = abs(fract(vUv * vec2(24., 12.)) - .5);
           float lines = smoothstep(.47, .5, max(grid.x, grid.y)) * .35;
@@ -176,7 +176,7 @@ export class CarrierHologram {
         uniform float time; uniform vec3 tint; varying vec2 vUv; varying vec3 vNormal; varying vec3 vView;
         void main() {
           float facing = abs(dot(normalize(vNormal), normalize(vView)));
-          float fall = pow(1. - vUv.y, 1.4);
+          float fall = pow(clamp(1. - vUv.y, 0., 1.), 1.4) * smoothstep(.5, 2.5, length(vView));
           float streak = .7 + .3 * sin(vUv.x * 80. + time * 2.) * sin(vUv.x * 31. - time * 1.3);
           gl_FragColor = vec4(tint * facing * facing * fall * streak * .3, 1.);
         }`,
@@ -200,7 +200,8 @@ export class CarrierHologram {
           vec3 p = vec3(cos(position.x + t * 2.) * radius, 1.12 + t * 1.9, sin(position.x + t * 2.) * radius);
           vFade = sin(t * 3.14159);
           vec4 view = modelViewMatrix * vec4(p, 1.);
-          gl_PointSize = (2. + 3. * position.z) * pixelRatio * 4. / -view.z;
+          // Clamped: a mote right in front of the camera must not become a screen-sized square.
+          gl_PointSize = view.z < -.4 ? min((2. + 3. * position.z) * pixelRatio * 4. / -view.z, 9. * pixelRatio) : 0.;
           gl_Position = projectionMatrix * view;
         }`,
       fragmentShader: /* glsl */ `

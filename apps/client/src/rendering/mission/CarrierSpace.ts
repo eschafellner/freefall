@@ -76,7 +76,7 @@ function body(radius: number, look: BodyLook, uniforms: { time: T.IUniform<numbe
         color += vec3(1., .93, .8) * pow(max(dot(n, h), 0.), 90.) * (1. - land) * (1. - cloud) * day * 1.6;
         float city = smoothstep(.8, .95, noise(p * 160.)) * smoothstep(.5, .75, noise(p * 9. + 3.)) * land * (1. - cloud);
         color += nightColor * city * cityAmount * (1. - day) * 1.8;
-        float fresnel = pow(1. - max(dot(n, view), 0.), 2.6);
+        float fresnel = pow(clamp(1. - dot(n, view), 0., 1.), 2.6);
         color += airColor * fresnel * (smoothstep(-.25, .5, ndl) * 1.8 + .04);
         gl_FragColor = vec4(color, 1.);
         #include <tonemapping_fragment>

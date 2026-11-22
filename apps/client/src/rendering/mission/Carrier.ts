@@ -71,7 +71,8 @@ function shaft(width: number, height: number, length: number, direction: T.Vecto
       uniform vec3 tint; uniform float strength; varying float vAlong; varying vec3 vNormal; varying vec3 vView;
       void main() {
         float facing = abs(dot(normalize(vNormal), normalize(vView)));
-        float fade = smoothstep(0., .06, vAlong) * pow(1. - vAlong, 1.8);
+        // Fade out close to the camera so walking through a shaft never pops.
+        float fade = smoothstep(0., .06, vAlong) * pow(max(1. - vAlong, 0.), 1.8) * smoothstep(.6, 3.5, length(vView));
         gl_FragColor = vec4(tint * strength * fade * (.2 + .8 * facing) * .03, 1.);
       }`,
     transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide,
@@ -113,7 +114,7 @@ export class Carrier {
     const cool = emitter(0x9fdcff, 1.25);
     const lcd = emitter(0x789383, .75);
     const red = this.alarm;
-    const glass = new T.MeshStandardMaterial({ color: 0x9ec9d8, roughness: .04, metalness: .9, transparent: true, opacity: .14,
+    const glass = new T.MeshStandardMaterial({ color: 0x9ec9d8, roughness: .22, metalness: .8, transparent: true, opacity: .14,
       depthWrite: false });
     const panel = structure.add.bind(structure);
     const detail = details.add.bind(details);

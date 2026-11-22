@@ -102,7 +102,7 @@ export class ArenaView {
   private readonly overview = { x: -1.8, z: 7.7 };
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
   private debugMarkers?: { server: T.Mesh; predicted: T.Mesh; collider: T.LineSegments; zones: T.Group };
-  private post?: { composer: EffectComposer; render: RenderPass; bloom: UnrealBloomPass; output: OutputPass; fxaa: ShaderPass };
+  private post?: { composer: EffectComposer; render: RenderPass; sanitize: ShaderPass; bloom: UnrealBloomPass; output: OutputPass; fxaa: ShaderPass };
 
   private readonly container: HTMLElement;
 
@@ -227,13 +227,25 @@ export class ArenaView {
       const composer = new EffectComposer(this.renderer);
       const render = new RenderPass(this.scene, this.camera);
       const bloom = new UnrealBloomPass(new T.Vector2(256, 256), carrierBloom, .28, 1.5);
+      // Bloom smears single invalid or extreme pixels (NaN, Inf, tiny specular peaks) into flashing blocks; clamp first.
+      const sanitize = new ShaderPass({
+        uniforms: { tDiffuse: { value: null } },
+        vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+        fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
+          void main() {
+            vec4 c = texture2D(tDiffuse, vUv);
+            bool bad = any(isnan(c.rgb)) || any(isinf(c.rgb));
+            gl_FragColor = vec4(bad ? vec3(0.) : min(c.rgb, vec3(24.)), c.a);
+          }`,
+      });
       const output = new OutputPass();
       const fxaaPass = new ShaderPass(FXAAShader);
       composer.addPass(render);
+      composer.addPass(sanitize);
       composer.addPass(bloom);
       composer.addPass(output);
       composer.addPass(fxaaPass);
-      this.post = { composer, render, bloom, output, fxaa: fxaaPass };
+      this.post = { composer, render, sanitize, bloom, output, fxaa: fxaaPass };
     } else if (!wantPost) {
       this.disposePost();
     }
@@ -477,7 +489,7 @@ export class ArenaView {
       : this.weather.update(state?.result ? undefined : weatherState, mission?.surface, mission?.atmosphere, missionTick, dt, this.camera,
         this.quality, cameraPreferences.reducedMotion, this.renderer.getPixelRatio(), mode === 'surface' && !flying, Boolean(state?.debug));
     const post = this.post && (this.quality.fxaa || (renderCarrier && this.quality.carrierBloom > 0)) ? this.post : undefined;
-    if (this.post) this.post.bloom.enabled = renderCarrier && this.quality.carrierBloom > 0;
+    if (this.post) this.post.bloom.enabled = this.post.sanitize.enabled = renderCarrier && this.quality.carrierBloom > 0;
     if (this.light.update(mode, Boolean(post), this.camera.position.x, this.camera.position.z, mission?.atmosphere, weather)) {
       this.refreshShadows();
     }
@@ -645,6 +657,7 @@ export class ArenaView {
     if (!this.post) return;
     this.post.render.dispose();
     this.post.bloom.dispose();
+    this.post.sanitize.dispose();
     this.post.output.dispose();
     this.post.fxaa.dispose();
     this.post.composer.dispose();

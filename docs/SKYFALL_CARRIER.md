@@ -35,7 +35,7 @@ Der Room für Operation Bodenbruch beginnt auf Deck 03. Die zentrale Messe verbi
 
 `CarrierBeacons`: sechs Drehleuchten (zwei an der Luftschleuse mit echtem Spotlicht, zwei im Hangar, zwei in der Messe) mit Kuppel, Spiegel, zwei gegenläufigen Lichtkegeln und Lichtblitz. Unter Rotalarm dimmen die Arbeitslichter und kippen ins Rot, die Lichtleisten pulsieren.
 
-Der Klaxon ist synthetisiert: verstimmte Sägezahn- und Rechteckoszillatoren mit ansteigender Tonhöhe, weiche Sättigung, Hornfilter mit Formant, Membranschnarren und ein tiefer Rumpfimpuls nach jedem Stoß. Er läuft über den Environment-Bus mit dem Carrier-Hall. Die alte Sinus-Sirene in `FlightAudio` entfällt.
+**Derzeit deaktiviert** (`CARRIER_ALARM_SOUND` in `MissionAudio.ts`): Gong und Klaxon spielen nicht, die Drehleuchten laufen weiter. Der Klaxon ist synthetisiert: verstimmte Sägezahn- und Rechteckoszillatoren mit ansteigender Tonhöhe, weiche Sättigung, Hornfilter mit Formant, Membranschnarren und ein tiefer Rumpfimpuls nach jedem Stoß. Er läuft über den Environment-Bus mit dem Carrier-Hall. Die alte Sinus-Sirene in `FlightAudio` entfällt.
 
 ## Prüfung
 

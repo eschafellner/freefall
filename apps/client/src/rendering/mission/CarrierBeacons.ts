@@ -35,7 +35,7 @@ export class CarrierBeacons {
 
   constructor(mounts: readonly BeaconMount[]) {
     const housing = new T.MeshStandardMaterial({ color: 0x1d2120, roughness: .5, metalness: .7 });
-    const mirror = new T.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0, roughness: .1, metalness: 1 });
+    const mirror = new T.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0, roughness: .35, metalness: 1 });
     this.beam = new T.ShaderMaterial({
       uniforms: { tint: { value: RED.clone() }, strength: { value: 0 } },
       vertexShader: /* glsl */ `
@@ -49,8 +49,10 @@ export class CarrierBeacons {
         uniform vec3 tint; uniform float strength; varying vec2 vUv; varying vec3 vNormal; varying vec3 vView;
         void main() {
           float facing = abs(dot(normalize(vNormal), normalize(vView)));
-          float along = pow(vUv.y, 2.2);
-          gl_FragColor = vec4(tint * strength * facing * facing * along * .9, 1.);
+          float along = pow(clamp(vUv.y, 0., 1.), 2.2);
+          // Soft near the camera: a sweeping cone passing through the view must not flash.
+          float near = smoothstep(.8, 4., length(vView));
+          gl_FragColor = vec4(tint * strength * facing * facing * along * near * .9, 1.);
         }`,
       transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide,
     });
