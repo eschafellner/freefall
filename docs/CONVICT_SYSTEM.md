@@ -14,4 +14,4 @@ Jede Mission initialisiert vier Convicts mit instancebezogenen Entity-IDs. Sie r
 | Albtraum | `restricted-issue` | `kestrel-restricted` | 84 / 0 |
 | FREEFALL | `minimum-issue` | `kestrel-minimum` | 72 / 0 |
 
-Die provisorischen Datenprofile skalieren auch Waffenschaden, Feuerrate und Magazingröße. Der Server bestimmt alle Werte. Die Clientmodelle verwenden vorhandene Soldatenrigs und Waffen mit eigener Kennfarbe. Individuelle Rüstungs- und Waffenmodelle pro Profil sowie animiertes Sitzen stehen aus. Balancing und Übernahme in eine spätere Equipment-Registry sind offen.
+Die provisorischen Datenprofile skalieren auch Waffenschaden, Feuerrate und Magazingröße. Der Server bestimmt alle Werte. Die Clientmodelle verwenden das Soldatenrig in der Variante `convict` (Overall mit Reflexstreifen, Atemmaske, Gewahrsamshalsband, Schrottplatten) und die vorhandenen Waffen. [Charaktersystem](CHARACTER_SYSTEM.md) Individuelle Rüstungs- und Waffenmodelle pro Profil sowie animiertes Sitzen stehen aus. Balancing und Übernahme in eine spätere Equipment-Registry sind offen.

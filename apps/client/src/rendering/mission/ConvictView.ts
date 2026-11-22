@@ -11,7 +11,7 @@ import { createKestrel } from '../weapons/Kestrel.ts';
 import { stencil } from './ShipParts.ts';
 
 export class ConvictView {
-  private readonly parts = createSoldierParts({ olive: 0x9c492c, fabric: 0x723f31 });
+  private readonly parts = createSoldierParts({ olive: 0xb4592a, fabric: 0x9a4b26, variant: 'convict' });
   private readonly rifle = createKestrel();
   private readonly models = Array.from({ length: 4 }, () => new PlayerVisualController(this.parts, this.rifle, 0xc47541, false));
   private readonly batch: PlayerRigBatches;

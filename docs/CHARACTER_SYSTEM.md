@@ -6,6 +6,10 @@
 
 Der prozedurale Soldat ist ein funktionaler Ersatz für ein geskinntes Produktionsmodell. Er verwendet meterbasierte Proportionen, eigenständig modellierte Schutzplatten, Helm, Handschuhe, Stiefel, Taschen und einen Funkrucksack. Stoff und Polymer verwenden matte Materialien, die Waffe einen metallischen Materialansatz. Eine Schulter- und Rückenmarkierung in jeder Squad-Farbe entspricht dem HUD-Slot. Die vorhandene Arena-Beleuchtung wird weiterverwendet. [Waffenhaltung](character/waffenhaltung.jpg) · [Nachladen](character/nachladen.jpg)
 
+**Modellüberarbeitung 2026-11-22.** Die Teile entstehen aus abgerundeten Grundformen (`ModelParts`): mehrstufig gefaste Platten, Kuppeln für Helm, Schulter- und Knieschützer, Kapseln und größenabhängig unterteilte Ellipsoide. Platten, Gläser und Metallteile tragen über das Vertexattribut `surface` einen geringeren Rauheitsfaktor als Stoff. Brillengläser und Statusleuchten haben ein schwaches Eigenleuchten. Eine eingebrannte Vertex-Schattierung dunkelt Fugen, Überlappungen und Unterseiten ab. Der Operator hat jetzt einen runden Helm mit Rand, Seitenschienen, NVG-Halter, Brille, Gehörschutz und Kinnriemen, abgerundete Schulter- und Knieschützer, Plattenträger mit Front- und Rückenplatte, Taschen mit Laschen, Kragen, Handschuhe mit Fingerblock und Daumen sowie Stiefel mit Zehenkappe, Fersenkappe und Sohle. Rund 10.400 Dreiecke pro Operator, Richtwert 25.000. Gelenkpunkte, Segmentlängen, Anker und Animation sind unverändert.
+
+Convicts nutzen dasselbe Rig mit der Variante `convict`: oranger Overall mit Reflexstreifen, Kapuze mit Atemmaske, Doppelfilter und einfacher Brille, ein Gewahrsamshalsband mit Statusleuchte, ungleiche, festgeschnallte Schrottplatten, Arbeitshandschuhe, abgetragene Stiefel und ein Seesack mit der bisherigen Kennzeichnung. [Vergleich vorher/nachher](visual-style/modelle-vorher-nachher.jpg)
+
 | Slot | Zweck |
 | --- | --- |
 | `Helmet` | Zubehör am Kopf |
