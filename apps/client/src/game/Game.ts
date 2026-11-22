@@ -23,6 +23,7 @@ import { Match } from '../networking/Match.ts';
 import type { GameMode, JoinMode } from '../networking/Match.ts';
 import { shotIdentity } from '../networking/ShotHistory.ts';
 import { shotMarker } from './HitFeedback.ts';
+import { DryTrigger, weaponEmpty } from './DryFire.ts';
 import { DamageFeedback } from './DamageFeedback.ts';
 import { MissionPresentation, PresentationNotices } from './MissionPresentation.ts';
 import type { QualityName } from '../rendering/GraphicsQuality.ts';
@@ -118,6 +119,8 @@ export interface GameStatus {
   /** Short HUD line for friendly fire, e.g. "Eigenbeschuss · OP 02". */
   friendlyNotice: string;
   respawn: number;
+  /** Server tick of the last local empty-trigger click (HUD emphasis). */
+  dryFireTick?: number;
   eventTiming?: { shot?: number; action?: number; mission?: number; poseWait?: number };
   audio: { voices: number; peak: number; dropped: number; diagnostics?: ReturnType<AudioEngine['metrics']> & {
     planet?: string; weather?: string; wind?: string; rate: number; enemyMs: number; enemyPeakMs: number; updateMs: number;
@@ -172,6 +175,7 @@ export class Game {
   private tick = 0;
   readonly audio = new AudioEngine();
   private readonly weaponAudio = new WeaponAudio(this.audio);
+  private readonly dryTrigger = new DryTrigger();
   /** Client-side prediction of the authoritative recoil (camera only, never sent to the server). */
   private readonly recoil = createRecoilState();
   private recoilTick = 0;
@@ -593,7 +597,12 @@ export class Game {
       (mission.state === 'ACTIVE_MISSION' || mission.state === 'OBJECTIVES_COMPLETED' ||
         mission.state === 'EXTRACTION_AVAILABLE' || mission.state === 'EXTRACTION_IN_PROGRESS'));
     const busy = !own || own.hp <= 0 || !!own.equipment?.action || reloading || !combat;
-    if (!allowsPostureAction(this.prediction.posture, 'fire') || !input.fire || busy || ammo <= 0 || this.recoilTick < this.recoilFireAt) return;
+    const allowed = allowsPostureAction(this.prediction.posture, 'fire');
+    if (this.dryTrigger.update(input.fire && allowed && !busy, !!own && weaponEmpty(own, ammo), this.recoilTick >= this.recoilFireAt)) {
+      this.weaponAudio.dryFire(slot, this.status.ownId, this.listener);
+      this.status.dryFireTick = this.status.serverTick;
+    }
+    if (!allowed || !input.fire || busy || ammo <= 0 || this.recoilTick < this.recoilFireAt) return;
     applyShotRecoil(this.recoil, recoil, spread, this.recoilTick);
     this.recoilFireAt = nextShotAt(this.recoilFireAt, this.recoilTick, weapon.fireInterval);
     const listener = this.listener;

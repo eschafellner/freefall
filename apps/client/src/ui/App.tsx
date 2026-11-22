@@ -489,7 +489,8 @@ export function App() {
         <span><kbd>{bindings.label('STAND_UP')}</kbd> Aufstehen</span><span><kbd>{bindings.label('AIM')}</kbd> Zielen</span>
         <span><kbd>{bindings.label('FIRE')}</kbd> Feuern</span><span><kbd>Esc</kbd> Menü</span>
       </div>}
-      {active && own && status.locked && !inCarrier && !cinematic && <WeaponReadout player={own} tick={status.serverTick}/>}
+      {active && own && status.locked && !inCarrier && !cinematic && <WeaponReadout player={own} tick={status.serverTick}
+        dryFireTick={status.dryFireTick} resupply={status.missionRoom}/>}
     </footer>}
   </main>;
 }

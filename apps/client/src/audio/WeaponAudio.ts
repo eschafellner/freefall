@@ -55,7 +55,7 @@ export class WeaponAudio {
   private remoteHandling?: PlayersSnapshot;
   private planetMix?: { reflections: number; distantCutoff: number };
   private random = 0x51ed;
-  private readonly counts = { own: 0, remote: 0, remove: 0, insert: 0, finish: 0, switch: 0, casing: 0, unavailable: 0 };
+  private readonly counts = { own: 0, remote: 0, remove: 0, insert: 0, finish: 0, switch: 0, casing: 0, dry: 0, unavailable: 0 };
 
   constructor(engine: AudioEngine) {
     this.engine = engine;
@@ -237,6 +237,23 @@ export class WeaponAudio {
       this.counts.casing++;
     }
     this.counts[own ? 'own' : 'remote']++;
+    return true;
+  }
+
+  /**
+   * Own empty trigger: hammer/striker click synthesised from noise and a short metallic ring, so no recording is
+   * needed. Kestrel sounds lower and heavier than the P-01 striker.
+   */
+  dryFire(slot: WeaponSlot, owner: string, listener: Listener): boolean {
+    if (!this.engine.running) return false;
+    const voice = this.voice(`${owner}-dry`, listener, listener, true, .09, slot === 'primary' ? .62 : .54, PRIORITY.combat);
+    if (!voice) return false;
+    const primary = slot === 'primary';
+    const { at } = voice;
+    this.noise(voice, at, .018, 'bandpass', primary ? 2900 : 4100, 5, .55, .0008);
+    this.noise(voice, at + .006, .03, 'bandpass', primary ? 1250 : 1700, 2.5, .22, .001);
+    this.tone(voice, at + .002, .045, primary ? 2350 : 3100, primary ? 2200 : 2950, .045, 'triangle');
+    this.counts.dry++;
     return true;
   }
 

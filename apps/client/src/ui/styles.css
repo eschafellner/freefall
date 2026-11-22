@@ -293,6 +293,9 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
 .weapon.readout > strong.ammo.empty { color: #f0a175; }
 .kit-note { display: block; font: 11px/1.4 var(--mono); color: #c8ccbe; }
 .kit-note.warn { color: #f0a175; }
+.kit-note.flash { animation: dry-flash .45s ease-out; }
+@keyframes dry-flash { from { color: #fff0cf; text-shadow: 0 0 6px #f0a175; } }
+@media (prefers-reduced-motion: reduce) { .kit-note.flash { animation: none; } }
 .kit-line.cooling b { color: #8e9483; }
 .reticle.ally .reticle-confirmation { border: 2px dashed #90d2ff; transform: none; border-radius: 0; }
 .friendly-notice { position: absolute; left: 50%; top: calc(50% + 34px); transform: translateX(-50%); font: 11px/1 var(--mono);

@@ -1,4 +1,5 @@
 import { bindings } from '../input/Bindings.ts';
+import { emptyWeaponHint } from '../game/DryFire.ts';
 import { BASE_LOADOUT, FRAG, MELEE, NET, PLAYER, STIM, allowsPostureAction } from '@freefall/shared';
 import type { PlayerState } from '@freefall/shared';
 
@@ -27,7 +28,8 @@ const RELOAD_LABEL = {
   RELOAD_COMPLETE: 'Durchladen', RELOAD_INTERRUPTED: 'Nachladen abgebrochen', READY: '',
 } as const;
 
-export function WeaponReadout({ player, tick }: { player: PlayerState; tick: number }) {
+export function WeaponReadout({ player, tick, dryFireTick, resupply = false }:
+  { player: PlayerState; tick: number; dryFireTick?: number; resupply?: boolean }) {
   const gear = player.equipment;
   const slot = gear?.slot ?? 'primary';
   const other = slot === 'primary' ? 'secondary' : 'primary';
@@ -39,7 +41,9 @@ export function WeaponReadout({ player, tick }: { player: PlayerState; tick: num
   const interrupted = reload?.phase === 'RELOAD_INTERRUPTED' && tick - reload.at < NET.tickHz;
   const mags = gear?.magazines[slot] ?? 0;
   const ammo = player.ammo ?? 0;
-  const dry = !reloading && !mags && ammo <= weapon.magazineSize * .25;
+  const empty = reloading ? undefined : emptyWeaponHint(player, (action) => bindings.label(action), resupply);
+  const dry = !empty && !reloading && !mags && ammo <= weapon.magazineSize * .25;
+  const clicked = dryFireTick !== undefined && tick - dryFireTick >= 0 && tick - dryFireTick < NET.tickHz * 1.5;
   const meleeLeft = gear ? gear.meleeReadyAt - tick : 0;
   const grounded = player.posture?.current === 'PRONE' || player.posture?.current === 'SUPINE';
   const canGrenade = !player.posture || allowsPostureAction(player.posture, 'grenade');
@@ -56,6 +60,8 @@ export function WeaponReadout({ player, tick }: { player: PlayerState; tick: num
     {reloading && tick < reload.insertAt && ammo > 0 && <small className="kit-note">Beim Magazinwechsel gehen {ammo} Schuss verloren.</small>}
     {interrupted && <small className="kit-note" role="status">{RELOAD_LABEL.RELOAD_INTERRUPTED}</small>}
     {dry && <small className="kit-note warn" role="status">Keine Reservemagazine</small>}
+    {empty && <small key={clicked ? dryFireTick : 'idle'} className={`kit-note warn${clicked ? ' flash' : ''}`} role="status">
+      Keine Munition · {empty.key && <><kbd>{empty.key}</kbd> </>}{empty.text}</small>}
     {gear && <>
       <div className="kit-line"><span><kbd>{bindings.label(other === 'primary' ? 'SWITCH_PRIMARY' : 'SWITCH_SECONDARY')}</kbd> {spare.displayName}</span>
         <b>{gear.inactiveAmmo}/{spare.magazineSize} · {gear.magazines[other]} MAG</b></div>
