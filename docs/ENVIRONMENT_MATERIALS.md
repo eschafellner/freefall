@@ -39,3 +39,17 @@ Terrain-Texturarray inklusive Mipmaps rechnerisch **1,33 MiB**, jedes 128²-Paar
 ## Prüfung 7.7E
 
 In Sand und Hardpan unterbricht eine zweite periodische Störfunktion die Rippen im Texturtile. Farb- und Höhenausschlag sind schwächer. Der Shader nutzt dieselben Texturzugriffe und Kollisionsproxies. [Vorher/Nachher](playtest/7-7e/desert-ab.jpg)
+
+## Felsoberflächen
+
+Felsen, Bogenpfeiler, der Wüstenbogen und Eisblöcke auf generierten Planeten nutzen `applyRockSurface()` aus `PlanetMaterials.ts`. Bisher lag die 128²-Gesteinskachel über den UVs einer Ikosaederkugel, die pro Instanz auf die Kollisionsgröße skaliert wurde. Auf großen Felsen verschwamm das Detail zu einer einheitlichen Fläche.
+
+- **Weltbezogene Projektion.** Albedo und Normalmap werden triplanar in Weltkoordinaten abgetastet, mit 1,6 m Wiederholung bei Fels und 2,4 m bei Eis. Die Größe der Struktur ist dadurch unabhängig von der Felsgröße. Eine breite Tonvariation bricht große Flächen auf.
+- **Felsfuß.** Die untersten 0,65 m über dem gemittelten Boden unter dem Fels werden abgedunkelt und zum Bodenton des Planeten verblendet. Die Bodenhöhe kommt als Instanzattribut `rockGround` aus Mitte und vier Kantenpunkten der Grundfläche.
+- **Belag.** Nach oben zeigende Flächen tragen fleckig Moos (Grüne Ebene, Wald), Flugsand (Wüste) oder Schnee (Eis). Eisblöcke haben etwas mehr Deckung. Unter dem Belag wird das Relief der Normalmap weicher. Auf **Low** entfällt der Belag.
+
+Geometrie, Kollision, Draw Calls und Instanzen bleiben unverändert. Pro Felsfragment kommen bis zu acht Texturzugriffe statt zwei hinzu. Eine Frametime-Messung auf Zielhardware steht aus.
+
+![Felsen vorher (links) und nachher (rechts) auf Grüner Ebene, Wüste und Eis](visual-style/felsen-vorher-nachher.jpg)
+
+Aufnahmen mit `scripts/playtest-planet-atmosphere.mjs`, ANGLE/OpenGL, Medium, 1280 × 720, Welt-Seeds 17, 31 und 48.

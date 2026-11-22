@@ -241,3 +241,114 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
   };
   return { ground, detailRange, prop, textures };
 }
+
+export interface RockSurfaceOptions {
+  /** Ground colour the rock foot blends into. */
+  ground: number;
+  /** Colour of the deposit on upward faces (moss, drift sand, snow). */
+  dust: number;
+  /** 0 = no deposit, 1 = heavy deposit. */
+  coverage: number;
+  /** Texture repeat in metres. */
+  metres: number;
+}
+
+/** Shared toggles that follow the graphics quality (deposit is skipped on Low). */
+export interface RockSurfaceControls { dusting: { value: number } }
+
+/** Height of the darkened, ground-tinted band at the rock foot in metres. */
+export const ROCK_CONTACT_HEIGHT = .65;
+
+/**
+ * Turns a `prop()` material into a world-space rock surface: triplanar albedo and normal detail with a fixed size in
+ * metres (instead of the stretched sphere UVs), a darkened, ground-tinted foot and a planet deposit on upward faces.
+ * Meshes using it need a per-vertex or per-instance `rockGround` attribute holding the ground height under the rock.
+ */
+export function applyRockSurface(material: T.MeshStandardMaterial, options: RockSurfaceOptions,
+  controls: RockSurfaceControls): void {
+  const uniforms = {
+    rockScale: { value: 1 / options.metres },
+    rockGroundColor: { value: new T.Color(options.ground) },
+    rockDustColor: { value: new T.Color(options.dust) },
+    rockCoverage: { value: options.coverage },
+    rockContact: { value: ROCK_CONTACT_HEIGHT },
+    rockDusting: controls.dusting,
+  };
+  material.customProgramCacheKey = () => 'planet-rock-surface-v1';
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', `
+      #include <common>
+      attribute float rockGround;
+      varying vec3 vRockWorld;
+      varying vec3 vRockNormal;
+      varying float vRockRise;
+    `).replace('#include <project_vertex>', `
+      #include <project_vertex>
+      mat4 rockModel = modelMatrix;
+      #ifdef USE_INSTANCING
+        rockModel = modelMatrix * instanceMatrix;
+      #endif
+      vec4 rockWorld = rockModel * vec4(transformed, 1.0);
+      vRockWorld = rockWorld.xyz;
+      // Rocks are scaled non-uniformly: normals need the inverse transpose.
+      vRockNormal = normalize(transpose(inverse(mat3(rockModel))) * objectNormal);
+      vRockRise = rockWorld.y - rockGround;
+    `);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `
+      #include <common>
+      uniform float rockScale;
+      uniform vec3 rockGroundColor;
+      uniform vec3 rockDustColor;
+      uniform float rockCoverage;
+      uniform float rockContact;
+      uniform float rockDusting;
+      varying vec3 vRockWorld;
+      varying vec3 vRockNormal;
+      varying float vRockRise;
+    `).replace('#include <map_fragment>', `
+      vec3 rockN = normalize(vRockNormal);
+      vec3 rockBlend = pow(abs(rockN), vec3(4.0));
+      rockBlend /= dot(rockBlend, vec3(1.0));
+      vec3 rockP = vRockWorld * rockScale;
+      vec4 rockAlbedo = texture2D(map, rockP.zy) * rockBlend.x + texture2D(map, rockP.xz) * rockBlend.y
+        + texture2D(map, rockP.xy) * rockBlend.z;
+      // Broad tone variation breaks up large faces; the tile itself gets a little more contrast than on small props.
+      float rockMacro = texture2D(map, vRockWorld.xz * rockScale * .19 + .37).r;
+      float rockBreak = texture2D(map, vRockWorld.zy * rockScale * .61 + .11).r;
+      diffuseColor.rgb *= clamp(rockAlbedo.rgb * 1.45 - .38, 0.0, 1.2) * (.8 + .32 * rockMacro);
+      // Foot: ambient-occlusion substitute and a soft tint toward the surrounding ground.
+      float rockFoot = 1.0 - smoothstep(0.0, rockContact, vRockRise);
+      rockFoot *= rockFoot;
+      diffuseColor.rgb = mix(diffuseColor.rgb, rockGroundColor * (.55 + .45 * rockAlbedo.r), rockFoot * .42);
+      diffuseColor.rgb *= 1.0 - .38 * rockFoot;
+      float rockDeposit = 0.0;
+      if (rockDusting > 0.0 && rockCoverage > 0.0) {
+        // Broad world-space breakup so the deposit gathers in patches instead of a uniform cap.
+        float patches = rockMacro * .6 + rockBreak * .4;
+        float facing = rockN.y + (patches - .74) * 1.6;
+        rockDeposit = smoothstep(.9 - .4 * rockCoverage, 1.15 - .3 * rockCoverage, facing) * rockDusting;
+        rockDeposit *= 1.0 - rockFoot;
+        diffuseColor.rgb = mix(diffuseColor.rgb, rockDustColor * (.7 + .4 * rockAlbedo.r), rockDeposit * .9);
+      }
+    `).replace('#include <normal_fragment_maps>', `
+      {
+        // Triplanar UDN blend in world space, then into view space.
+        vec2 nx = (texture2D(normalMap, rockP.zy).xy * 2.0 - 1.0) * normalScale;
+        vec2 ny = (texture2D(normalMap, rockP.xz).xy * 2.0 - 1.0) * normalScale;
+        vec2 nz = (texture2D(normalMap, rockP.xy).xy * 2.0 - 1.0) * normalScale;
+        // Deposits soften the relief they cover.
+        float relief = 1.0 - .6 * rockDeposit;
+        vec3 worldNormal = normalize(
+          vec3(rockN.x, nx.y * relief + rockN.y, nx.x * relief + rockN.z) * rockBlend.x
+          + vec3(ny.x * relief + rockN.x, rockN.y, ny.y * relief + rockN.z) * rockBlend.y
+          + vec3(nz.x * relief + rockN.x, nz.y * relief + rockN.y, rockN.z) * rockBlend.z);
+        normal = normalize(mat3(viewMatrix) * worldNormal);
+        #ifdef DOUBLE_SIDED
+          normal *= faceDirection;
+        #endif
+      }
+    `);
+  };
+  material.needsUpdate = true;
+}

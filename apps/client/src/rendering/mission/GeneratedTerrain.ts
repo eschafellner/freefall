@@ -5,7 +5,8 @@ import {
 import type { Circle, Obstacle, WorldDefinition } from '@freefall/shared';
 import { applyVegetationWind } from '../environment/VegetationWind.ts';
 import type { VegetationWind } from '../environment/VegetationWind.ts';
-import { createPlanetMaterials } from '../environment/PlanetMaterials.ts';
+import { applyRockSurface, createPlanetMaterials } from '../environment/PlanetMaterials.ts';
+import type { RockSurfaceControls, RockSurfaceOptions } from '../environment/PlanetMaterials.ts';
 import { detailSeed } from '../environment/EnvironmentDetailPlacement.ts';
 import { surfaceSample } from '../environment/PlanetSurfaces.ts';
 import { GRAPHICS_QUALITY } from '../GraphicsQuality.ts';
@@ -35,6 +36,34 @@ function coarseIndices(cells: number): number[] {
 }
 
 interface Props<T> { x: number; z: number; items: T[] }
+
+/** Deposit on upward rock faces per planet: moss on the green worlds, drift sand in the desert, snow on ice. */
+export function rockDeposit(planet: string, surface: { base: number; vegetation: number }, frozen: boolean): RockSurfaceOptions {
+  const deposit: Record<string, [number, number]> = {
+    // Moss sits darker and less saturated than the lit grass around it.
+    'green-plains': [0x4f5a2c, .4], desert: [surface.base, .42], ice: [0xe8eef2, .78], [FOREST_ID]: [0x45542c, .55],
+  };
+  const [dust, coverage] = deposit[planet] ?? [surface.base, 0];
+  return { ground: surface.base, dust, coverage: frozen ? Math.min(1, coverage + .1) : coverage, metres: frozen ? 2.4 : 1.6 };
+}
+
+/** Mean ground height under a rock footprint (centre and the four edge midpoints). */
+function footGround(world: WorldDefinition, o: Obstacle): number {
+  return (groundHeight(world, o.x, o.z) + groundHeight(world, o.x + o.halfX, o.z) + groundHeight(world, o.x - o.halfX, o.z)
+    + groundHeight(world, o.x, o.z + o.halfZ) + groundHeight(world, o.x, o.z - o.halfZ)) / 5;
+}
+
+/** Geometry view sharing the shape's buffers, with its own per-instance ground heights. */
+function withGround(shape: T.BufferGeometry, heights: Float32Array): T.BufferGeometry {
+  const geometry = new T.BufferGeometry();
+  geometry.name = shape.name;
+  for (const [name, attribute] of Object.entries(shape.attributes)) geometry.setAttribute(name, attribute);
+  geometry.setIndex(shape.index);
+  geometry.boundingBox = shape.boundingBox;
+  geometry.boundingSphere = shape.boundingSphere;
+  geometry.setAttribute('rockGround', new T.InstancedBufferAttribute(heights, 1));
+  return geometry;
+}
 interface PropBatch { near: T.InstancedMesh; far: T.InstancedMesh; x: number; z: number; rockBounds?: T.Box3 }
 
 function propRegions<T extends Obstacle>(items: readonly T[], half: number, width: number): Props<T>[] {
@@ -77,6 +106,7 @@ export class GeneratedTerrain {
   private readonly propBatches: PropBatch[] = [];
   private readonly detailRange: { value: T.Vector2 };
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
+  private readonly rockControls: RockSurfaceControls = { dusting: { value: 1 } };
 
   constructor(world: WorldDefinition, reservations: readonly Circle[], anisotropy: number, wind?: VegetationWind) {
     const field = world.terrain!;
@@ -137,6 +167,7 @@ export class GeneratedTerrain {
     this.root.add(this.details.root);
 
     const stone = materials.prop('rock', surface.rock, .93);
+    applyRockSurface(stone, rockDeposit(id, surface, false), this.rockControls);
     const bridge = world.obstacles.find(({ kind }) => kind === 'arch-span');
     for (const [frozen, rocks] of [
       [false, world.obstacles.filter(({ kind }) => kind === 'rock' || kind === 'arch-pier')],
@@ -144,10 +175,12 @@ export class GeneratedTerrain {
     ] as const) {
       if (!rocks.length) continue;
       const rockMaterial = frozen ? materials.prop('ice', surface.exposed, .39) : stone;
+      if (frozen) applyRockSurface(rockMaterial, rockDeposit(id, surface, true), this.rockControls);
       const nearShape = rockGeometry(frozen, true), farShape = rockGeometry(frozen, false);
       for (const { x, z, items } of propRegions(rocks, half, width * 2)) {
-        const near = new T.InstancedMesh(nearShape, rockMaterial, items.length);
-        const far = new T.InstancedMesh(farShape, rockMaterial, items.length);
+        const heights = Float32Array.from(items, (obstacle) => footGround(world, obstacle));
+        const near = new T.InstancedMesh(withGround(nearShape, heights), rockMaterial, items.length);
+        const far = new T.InstancedMesh(withGround(farShape, heights), rockMaterial, items.length);
         for (const [i, obstacle] of items.entries()) {
           const bottom = obstacle.bottom ?? 0;
           transform.position.set(obstacle.x, (obstacle.height + bottom) / 2, obstacle.z);
@@ -172,6 +205,8 @@ export class GeneratedTerrain {
     if (bridge) {
       const shape = new T.TorusGeometry(4.3, 1.05, 7, 20, Math.PI);
       shape.name = 'sandstone-arch';
+      const archGround = groundHeight(world, bridge.x, bridge.z);
+      shape.setAttribute('rockGround', new T.Float32BufferAttribute(new Float32Array(shape.getAttribute('position').count).fill(archGround), 1));
       const arch = new T.Mesh(shape, stone);
       arch.position.set(bridge.x, bridge.height - 5.35, bridge.z);
       arch.scale.z = 1.45;
@@ -265,6 +300,7 @@ export class GeneratedTerrain {
   configure(quality: GraphicsQuality): void {
     this.quality = quality;
     this.detailRange.value.set(quality.terrainTextureDistance * .68, quality.terrainTextureDistance);
+    this.rockControls.dusting.value = quality === GRAPHICS_QUALITY.low ? 0 : 1;
     this.details.configure(quality);
   }
 
