@@ -3,6 +3,7 @@ import { noise, smoothstep } from './noise.ts';
 import { PLANET_SURFACES } from './PlanetSurfaces.ts';
 import type { SurfaceFinish } from './PlanetSurfaces.ts';
 import { repeatSurfaceMap } from './SurfaceMaterials.ts';
+import { vivid } from '../ToneMapping.ts';
 
 const TAU = Math.PI * 2;
 const TERRAIN_TILE = 256;
@@ -153,7 +154,7 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
   const textures: T.Texture[] = [atlas];
   const detailRange = { value: new T.Vector2(72, 112) };
   const colors = layers.map(([, color, roughness]) => {
-    const rgb = new T.Color(color);
+    const rgb = vivid(new T.Color(color));
     return new T.Vector4(rgb.r, rgb.g, rgb.b, roughness);
   });
   const scales = new T.Vector4(...layers.map(([, , , metres]) => 1 / metres));
@@ -259,7 +260,7 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
     map.name = finish + ':albedo';
     normalMap.name = finish + ':normal';
     textures.push(map, normalMap);
-    return new T.MeshStandardMaterial({ name: finish, color, roughness, metalness: 0, map, normalMap,
+    return new T.MeshStandardMaterial({ name: finish, color: vivid(new T.Color(color)), roughness, metalness: 0, map, normalMap,
       normalScale: new T.Vector2(.52, .52) });
   };
   return { ground, detailRange, prop, textures };

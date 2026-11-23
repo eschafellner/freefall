@@ -41,6 +41,7 @@ import { AtmosphereController } from './environment/AtmosphereController.ts';
 import { createLighting } from './environment/Lighting.ts';
 import { createSurfaceMaterials } from './environment/SurfaceMaterials.ts';
 import { HORIZON_REACH } from './mission/PlanetHorizon.ts';
+import { TONE_MAPPING } from './ToneMapping.ts';
 
 const FLIGHT_PHASES = new Set(['DROPPING', 'ATMOSPHERIC_ENTRY', 'BRAKING']);
 
@@ -78,6 +79,7 @@ export class ArenaView {
   private readonly observer: ResizeObserver;
   private readonly terrain: ReturnType<typeof createTerrain>;
   private readonly light: ReturnType<typeof createLighting>;
+  private readonly viewDirection = new T.Vector3();
   private readonly details: GroundDetails;
   private readonly arenaRoot = new T.Group();
   private readonly materials: ReturnType<typeof createSurfaceMaterials>;
@@ -114,7 +116,7 @@ export class ArenaView {
     this.renderer = new T.WebGLRenderer({ canvas: this.canvas, antialias: false, powerPreference: 'high-performance' });
     this.gpuTimer = new GpuFrameTimer(this.renderer.getContext() as WebGL2RenderingContext);
     this.renderer.outputColorSpace = T.SRGBColorSpace;
-    this.renderer.toneMapping = T.ACESFilmicToneMapping;
+    this.renderer.toneMapping = TONE_MAPPING;
     this.renderer.shadowMap.type = T.PCFShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.info.autoReset = false;
@@ -490,9 +492,12 @@ export class ArenaView {
       ? this.weather.finish(state.instanceId)
       : this.weather.update(state?.result ? undefined : weatherState, mission?.surface, mission?.atmosphere, missionTick, dt, this.camera,
         this.quality, cameraPreferences.reducedMotion, this.renderer.getPixelRatio(), mode === 'surface' && !flying, Boolean(state?.debug));
+    mission?.environment.setTwilight(weather?.glowAmount ?? 0);
+    mission?.environment.setCloudCover(weather ? weather.skyAmount / .58 : 0);
     const post = this.post && (this.quality.fxaa || (renderCarrier && this.quality.carrierBloom > 0)) ? this.post : undefined;
     if (this.post) this.post.bloom.enabled = this.post.sanitize.enabled = renderCarrier && this.quality.carrierBloom > 0;
-    if (this.light.update(mode, Boolean(post), this.camera.position.x, this.camera.position.z, mission?.atmosphere, weather)) {
+    if (this.light.update(mode, Boolean(post), this.camera.position.x, this.camera.position.z, mission?.atmosphere, weather,
+      this.camera.getWorldDirection(this.viewDirection))) {
       this.refreshShadows();
     }
     this.renderer.toneMappingExposure = this.light.exposure;

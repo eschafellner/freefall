@@ -19,6 +19,9 @@ import { coniferCrown } from './Conifer.ts';
 import { randomSource } from '../environment/noise.ts';
 import { fieldSampler, localRelief, macroTint } from '../environment/TerrainMacro.ts';
 import { createForestBelt, createPlanetHorizon } from './PlanetHorizon.ts';
+import { vividHex } from '../ToneMapping.ts';
+import { applyCloudShadows, createCloudShadows } from '../environment/CloudShadows.ts';
+import type { CloudShadowUniform } from '../environment/CloudShadows.ts';
 
 // Keep every vertex along a shared border. Interior fans use only the coarse lattice.
 function coarseIndices(cells: number): number[] {
@@ -48,7 +51,8 @@ export function rockDeposit(planet: string, surface: { base: number; vegetation:
     // Moss sits darker and less saturated than the lit grass around it.
     'green-plains': [0x4f5a2c, .4], desert: [surface.base, .42], ice: [0xe8eef2, .78], [FOREST_ID]: [0x45542c, .55],
   };
-  const [dust, coverage] = deposit[planet] ?? [surface.base, 0];
+  const [base, coverage] = deposit[planet] ?? [surface.base, 0];
+  const dust = vividHex(base);
   return { ground: surface.base, dust, coverage: frozen ? Math.min(1, coverage + .1) : coverage, metres: frozen ? 2.4 : 1.6 };
 }
 
@@ -118,6 +122,11 @@ export class GeneratedTerrain {
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
   private readonly rockControls: RockSurfaceControls = { dusting: { value: 1 } };
   private belt?: { mesh: T.InstancedMesh; total: number };
+  private readonly cloud: CloudShadowUniform;
+  private readonly cloudDrift = new T.Vector2(1, .4).normalize();
+  private cloudCover = 0;
+  private cloudClock = 0;
+  private readonly wind?: VegetationWind;
 
   constructor(world: WorldDefinition, reservations: readonly Circle[], anisotropy: number, wind?: VegetationWind) {
     const field = world.terrain!;
@@ -128,6 +137,9 @@ export class GeneratedTerrain {
     const seed = detailSeed(world);
     const materials = createPlanetMaterials(id, seed, anisotropy);
     const { ground } = materials;
+    this.wind = wind;
+    this.cloud = createCloudShadows(profile.atmosphere.sky.cloudThreshold);
+    applyCloudShadows(ground, this.cloud);
     const fieldAt = fieldSampler(field);
     const tint = [0, 0, 0];
     this.warTraces = new PlanetWarTraces(world, reservations);
@@ -184,15 +196,16 @@ export class GeneratedTerrain {
       this.chunks.push({ near: terrainMesh, far: farMesh, x, z });
     }
     this.root.add(createPlanetHorizon(id, seed, field, ground));
-    this.details = new PlanetGroundDetails(world, reservations, width, cells / tile, wind);
+    this.details = new PlanetGroundDetails(world, reservations, width, cells / tile, wind, this.cloud);
     this.root.add(this.details.root);
-    this.midProps = new PlanetMidProps(world, reservations, width, cells / tile, wind);
+    this.midProps = new PlanetMidProps(world, reservations, width, cells / tile, wind, this.cloud);
     this.root.add(this.midProps.root);
     this.life = new AmbientLife(world, wind);
     this.root.add(this.life.root);
 
     const stone = materials.prop('rock', surface.rock, .93);
     applyRockSurface(stone, rockDeposit(id, surface, false), this.rockControls);
+    applyCloudShadows(stone, this.cloud);
     const bridge = world.obstacles.find(({ kind }) => kind === 'arch-span');
     for (const [frozen, rocks] of [
       [false, world.obstacles.filter(({ kind }, index) => (kind === 'rock' && !this.traces.solids.has(index)) || kind === 'arch-pier')],
@@ -200,7 +213,10 @@ export class GeneratedTerrain {
     ] as const) {
       if (!rocks.length) continue;
       const rockMaterial = frozen ? materials.prop('ice', surface.exposed, .39) : stone;
-      if (frozen) applyRockSurface(rockMaterial, rockDeposit(id, surface, true), this.rockControls);
+      if (frozen) {
+        applyRockSurface(rockMaterial, rockDeposit(id, surface, true), this.rockControls);
+        applyCloudShadows(rockMaterial, this.cloud);
+      }
       const nearShape = rockGeometry(frozen, true), farShape = rockGeometry(frozen, false);
       for (const { x, z, items } of propRegions(rocks, half, width * 2)) {
         const heights = Float32Array.from(items, (obstacle) => footGround(world, obstacle));
@@ -260,7 +276,7 @@ export class GeneratedTerrain {
     crownShape.name = crownId + '/near';
     farShape.name = crownId + '/far';
     const crownMaterial = new T.MeshStandardMaterial({
-      color: forest ? 0x566b50 : 0x445433, metalness: 0, roughness: .96,
+      color: vividHex(forest ? 0x566b50 : 0x445433, 1.35), metalness: 0, roughness: .96,
       vertexColors: forest, side: forest ? T.DoubleSide : T.FrontSide,
     });
     const farCrownMaterial = forest && wind ? crownMaterial.clone() : crownMaterial;
@@ -268,11 +284,12 @@ export class GeneratedTerrain {
       applyVegetationWind(crownMaterial, wind, 'crown');
       applyVegetationWind(farCrownMaterial, wind, 'crown-far');
     }
+    for (const material of new Set([trunkMaterial, crownMaterial, farCrownMaterial])) applyCloudShadows(material, this.cloud);
     const random = randomSource(seed);
     const layers = forest ? 1 : 5;
     if (forest) {
       const belt = createForestBelt(seed, field, farShape, new T.MeshStandardMaterial({
-        name: 'Forest horizon crowns', color: 0x566b50, metalness: 0, roughness: .96, vertexColors: true, side: T.DoubleSide,
+        name: 'Forest horizon crowns', color: vividHex(0x566b50, 1.35), metalness: 0, roughness: .96, vertexColors: true, side: T.DoubleSide,
       }));
       this.root.add(belt);
       this.belt = { mesh: belt, total: belt.count };
@@ -331,6 +348,12 @@ export class GeneratedTerrain {
     }
   }
 
+  /** Dawn/dusk strength (0 by day): bioluminescent wildlife brightens. */
+  setTwilight(amount: number): void { this.life.setTwilight(amount); }
+
+  /** Weather cloud amount (0 clear … 1 overcast): cloud shadows are strongest under broken cloud. */
+  setCloudCover(amount: number): void { this.cloudCover = Math.max(0, Math.min(1, amount)); }
+
   configure(quality: GraphicsQuality): void {
     this.quality = quality;
     this.detailRange.value.set(quality.terrainTextureDistance * .68, quality.terrainTextureDistance);
@@ -359,6 +382,16 @@ export class GeneratedTerrain {
       near.castShadow = near.visible && !low && range < 69;
       far.visible = !near.visible;
     }
+    // Cloud shadows drift with the wind; heavy overcast flattens them, clear sky keeps a few.
+    const now = performance.now() / 1000;
+    const dt = this.cloudClock ? Math.min(.2, now - this.cloudClock) : 0;
+    this.cloudClock = now;
+    const flow = this.wind?.flow.value;
+    if (flow && Math.hypot(flow.x, flow.y) > .01) this.cloudDrift.set(flow.x, flow.y).normalize();
+    const cloud = this.cloud.value;
+    cloud.x = (cloud.x - this.cloudDrift.x * dt * 4.5) % 100000;
+    cloud.y = (cloud.y - this.cloudDrift.y * dt * 4.5) % 100000;
+    cloud.z = (low ? .55 : .75) * (1 - this.cloudCover * .5);
     this.details.update(camera);
     this.midProps.update(camera);
     this.life.update(camera);

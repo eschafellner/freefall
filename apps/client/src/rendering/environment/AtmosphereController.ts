@@ -33,15 +33,17 @@ export const TIME_OF_DAY_LIGHT: Readonly<Record<TimeOfDay, Readonly<TimeOfDayLig
     environment: 1.15, exposure: .97, sky: .9, desaturate: .5, glow: 0, glowColor: 0xffffff, zenith: .22, zenithColor: 0x9aa4ad,
     fogColor: 0xa9b1b5, fogMix: .45,
   },
+  // Morgenrot: rose-orange low sun, violet-blue zenith, pink haze.
   dawn: {
-    elevation: .32, azimuth: -1.15, sun: .8, sunColor: 0xffbf96, fill: .88, fillSky: 0x9cadd8, fillGround: 0x7d6b66, fillMix: .55,
-    environment: .82, exposure: .97, sky: .86, desaturate: .08, glow: .55, glowColor: 0xffae80, zenith: .48, zenithColor: 0x7084b4,
-    fogColor: 0xcdb6b2, fogMix: .42,
+    elevation: .32, azimuth: -1.15, sun: .86, sunColor: 0xffa46c, fill: .9, fillSky: 0xa4a6dc, fillGround: 0x8a6a62, fillMix: .6,
+    environment: .82, exposure: 1, sky: .9, desaturate: .04, glow: 1, glowColor: 0xff8656, zenith: .55, zenithColor: 0x6676c2,
+    fogColor: 0xdba496, fogMix: .52,
   },
+  // Abendrot: deep orange-red sun, glowing horizon band, indigo zenith.
   dusk: {
-    elevation: .26, azimuth: 1.99, sun: .84, sunColor: 0xff9d5c, fill: .82, fillSky: 0x8f8ec6, fillGround: 0x6f5a52, fillMix: .58,
-    environment: .76, exposure: .95, sky: .78, desaturate: .06, glow: .7, glowColor: 0xff8f4a, zenith: .56, zenithColor: 0x535e98,
-    fogColor: 0xcda68c, fogMix: .46,
+    elevation: .26, azimuth: 1.99, sun: .9, sunColor: 0xff7e3c, fill: .84, fillSky: 0x9488cc, fillGround: 0x7a5648, fillMix: .62,
+    environment: .76, exposure: .98, sky: .84, desaturate: .03, glow: 1.2, glowColor: 0xff6630, zenith: .62, zenithColor: 0x4a5199,
+    fogColor: 0xdc916c, fogMix: .55,
   },
 };
 

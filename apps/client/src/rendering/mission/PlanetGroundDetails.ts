@@ -6,6 +6,9 @@ import { applyVegetationWind } from '../environment/VegetationWind.ts';
 import type { VegetationWind } from '../environment/VegetationWind.ts';
 import { detailGeometry } from '../environment/EnvironmentDetailAssets.ts';
 import type { GraphicsQuality } from '../GraphicsQuality.ts';
+import { vivid } from '../ToneMapping.ts';
+import { applyCloudShadows } from '../environment/CloudShadows.ts';
+import type { CloudShadowUniform } from '../environment/CloudShadows.ts';
 
 interface Batch {
   readonly mesh: T.InstancedMesh;
@@ -24,7 +27,8 @@ export class PlanetGroundDetails {
   private readonly range = { value: 0 };
   private readonly half: number;
 
-  constructor(world: WorldDefinition, reservations: readonly Circle[], width: number, chunkCount: number, wind?: VegetationWind) {
+  constructor(world: WorldDefinition, reservations: readonly Circle[], width: number, chunkCount: number, wind?: VegetationWind,
+    cloud?: CloudShadowUniform) {
     this.half = width / 2;
     const sites = detailClearances(world, reservations);
     const geometry = new Map<DetailAssetId, T.BufferGeometry>();
@@ -33,6 +37,7 @@ export class PlanetGroundDetails {
     if (wind && vegetation) applyVegetationWind(vegetation, wind, 'ground');
     const frozen = this.material(.61);
     const white = this.material(.92);
+    if (cloud) for (const material of [natural, vegetation, frozen, white]) if (material) applyCloudShadows(material, cloud);
     const transform = new T.Object3D();
     const up = new T.Vector3(0, 1, 0), normal = new T.Vector3();
     const turn = new T.Quaternion();
@@ -63,7 +68,7 @@ export class PlanetGroundDetails {
           transform.updateMatrix();
           mesh.setMatrixAt(i, transform.matrix);
           const [a, b] = DETAIL_ASSETS[id].colors;
-          color.setHex(a).lerp(tint.setHex(b), detail.tint);
+          vivid(color.setHex(a).lerp(tint.setHex(b), detail.tint));
           mesh.setColorAt(i, color);
         }
         // Bounds cover every instance, including those restored by switching to High.

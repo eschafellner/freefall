@@ -32,28 +32,28 @@ interface LifeProfile {
 export const LIFE_PROFILES: Readonly<Record<string, LifeProfile>> = {
   [GREEN_PLAINS_ID]: {
     // Segelrochen: violet-grey mantas sailing in loose circles; Schwebeblasen: gas bladders with glowing cores.
-    fliers: [{ kind: 'manta', flocks: 3, perFlock: 5, altitude: [22, 42], circle: [26, 50], speed: .16, size: [1.6, 2.6], flap: 1.1,
-      body: 0x6d6280, wing: 0x9d8fb0, tip: 0x5fd6c8 }],
+    fliers: [{ kind: 'manta', flocks: 2, perFlock: 4, altitude: [9, 20], circle: [18, 34], speed: .15, size: [2.4, 3.4], flap: .9,
+      body: 0x5e4f78, wing: 0x9a84b8, tip: 0x5fe6d2 }],
     floaters: { count: 12, height: [3, 9], size: .9, skin: 0xb59ad6, glow: 0xe07bff },
     motes: { swarms: 10, perSwarm: 30, color: 0xd38bff, size: .16, spread: 1.4, height: [.5, 1.8], drift: false },
   },
   [DESERT_ID]: {
     // Hitzesegler riding the thermals; Funkenkäfer; dust devils.
-    fliers: [{ kind: 'glider', flocks: 2, perFlock: 4, altitude: [40, 70], circle: [30, 55], speed: .1, size: [2.4, 3.4], flap: .5,
-      body: 0x5a3a28, wing: 0xb48a5a, tip: 0x3a241a }],
+    fliers: [{ kind: 'glider', flocks: 2, perFlock: 2, altitude: [22, 38], circle: [22, 40], speed: .11, size: [2.4, 3.2], flap: .55,
+      body: 0x6a3f28, wing: 0xc08a52, tip: 0xffb24a }],
     motes: { swarms: 6, perSwarm: 18, color: 0xffb347, size: .12, spread: 1.1, height: [.3, 1.2], drift: false },
     devils: { count: 3, color: 0xc9a777 },
   },
   [ICE_ID]: {
     // Frostrochen gliding low over the ice; Frostmotten drifting in pale light.
-    fliers: [{ kind: 'manta', flocks: 2, perFlock: 4, altitude: [14, 32], circle: [24, 44], speed: .12, size: [1.8, 2.8], flap: .7,
-      body: 0x9fb4c6, wing: 0xdce8f0, tip: 0x7fe3ff }],
+    fliers: [{ kind: 'manta', flocks: 2, perFlock: 2, altitude: [8, 18], circle: [18, 32], speed: .12, size: [2.2, 3.2], flap: .65,
+      body: 0x7f9ab2, wing: 0xd2e4f0, tip: 0x6fe8ff }],
     motes: { swarms: 8, perSwarm: 24, color: 0x9ff2ff, size: .14, spread: 2.6, height: [.5, 3], drift: true },
   },
   [FOREST_ID]: {
     // Vierflügler darting between trunks; Leuchtsporen; falling needles; bladders over clearings.
-    fliers: [{ kind: 'quad', flocks: 4, perFlock: 3, altitude: [3, 10], circle: [6, 14], speed: .55, size: [.7, 1.1], flap: 9,
-      body: 0x2d3b2a, wing: 0x8fd6c4, tip: 0x3fffd2 }],
+    fliers: [{ kind: 'quad', flocks: 2, perFlock: 3, altitude: [3, 9], circle: [6, 12], speed: .5, size: [1, 1.4], flap: 9,
+      body: 0x2b3a2c, wing: 0x9fdccb, tip: 0x3fffd2 }],
     floaters: { count: 8, height: [4, 10], size: .8, skin: 0x7fc9b8, glow: 0x52ffd8 },
     motes: { swarms: 14, perSwarm: 26, color: 0x6dffe0, size: .13, spread: 3, height: [.5, 6], drift: true },
     fall: { count: 220, color: 0x9a9258 },
@@ -63,49 +63,147 @@ export const LIFE_PROFILES: Readonly<Record<string, LifeProfile>> = {
 const RANGE = 75;
 const colorOf = (hex: number) => new T.Color(hex);
 
-/** Flat creature meshes; attribute `span` (0 body … 1 tip) drives the wing beat in the vertex shader. */
-function flierGeometry(kind: FlierKind, body: number, wing: number, tip: number): T.BufferGeometry {
-  const positions: number[] = [], spans: number[] = [], colors: number[] = [];
-  const b = colorOf(body), w = colorOf(wing), t = colorOf(tip);
-  const tri = (pts: [number, number, number, number][]) => {
-    for (const [x, y, z, span] of pts) {
-      positions.push(x, y, z);
-      spans.push(span);
-      const c = span > .85 ? t : span > .05 ? w.clone().lerp(b, 1 - span) : b;
-      colors.push(c.r, c.g, c.b);
+/**
+ * Creature meshes with volume. Attributes: `span` (0 body … 1 wing tip) drives the wing beat, `tail` (0 root … 1 tip)
+ * the tail sway. The glow geometry shares both attributes so markings move with the wings.
+ */
+class CreatureBuilder {
+  readonly positions: number[] = [];
+  readonly colors: number[] = [];
+  readonly spans: number[] = [];
+  readonly tails: number[] = [];
+  vertex(p: T.Vector3Tuple, c: T.Color, span: number, tail = 0) {
+    this.positions.push(...p);
+    this.colors.push(c.r, c.g, c.b);
+    this.spans.push(span);
+    this.tails.push(tail);
+  }
+  tri(a: T.Vector3Tuple, b: T.Vector3Tuple, c: T.Vector3Tuple, color: T.Color | [T.Color, T.Color, T.Color], spans: [number, number, number],
+    tails: [number, number, number] = [0, 0, 0]) {
+    const cs = Array.isArray(color) ? color : [color, color, color];
+    this.vertex(a, cs[0], spans[0], tails[0]);
+    this.vertex(b, cs[1], spans[1], tails[1]);
+    this.vertex(c, cs[2], spans[2], tails[2]);
+  }
+  /** Ellipsoid from an icosahedron, all span 0. */
+  ellipsoid(centre: T.Vector3Tuple, size: T.Vector3Tuple, top: T.Color, belly: T.Color, detail = 1, tail = 0) {
+    const shape = new T.IcosahedronGeometry(1, detail);
+    const p = shape.getAttribute('position');
+    for (let i = 0; i < p.count; i++) {
+      const y = p.getY(i);
+      this.vertex([centre[0] + p.getX(i) * size[0], centre[1] + y * size[1], centre[2] + p.getZ(i) * size[2]],
+        belly.clone().lerp(top, y * .5 + .5), 0, tail);
     }
-  };
+    shape.dispose();
+  }
+  /** Wing membrane as a grid from root edge to tip, with darker veins running toward the tip. */
+  membrane(side: number, root: [T.Vector3Tuple, T.Vector3Tuple], tip: T.Vector3Tuple, trailing: number, base: T.Color, edge: T.Color,
+    vein: T.Color, rows = 5, cols = 3, veins = 4) {
+    const point = (u: number, v: number): T.Vector3Tuple => {
+      // u: 0 root … 1 tip; v: 0 leading … 1 trailing edge. The trailing edge is scalloped between the spars.
+      const lead: T.Vector3Tuple = [root[0][0] + (tip[0] - root[0][0]) * u, root[0][1] + (tip[1] - root[0][1]) * u + Math.sin(u * Math.PI) * .08,
+        root[0][2] + (tip[2] - root[0][2]) * u];
+      const back: T.Vector3Tuple = [root[1][0] + (tip[0] - root[1][0]) * u, root[1][1] + (tip[1] - root[1][1]) * u,
+        root[1][2] + (tip[2] - root[1][2]) * u - Math.sin(u * Math.PI) * trailing * (1 - .35 * Math.abs(Math.sin(u * veins * Math.PI)))];
+      return [side * (lead[0] + (back[0] - lead[0]) * v), lead[1] + (back[1] - lead[1]) * v - v * (1 - v) * .06, lead[2] + (back[2] - lead[2]) * v];
+    };
+    const color = (u: number, v: number) => {
+      const c = base.clone().lerp(edge, Math.pow(u, 1.6));
+      const veinMask = Math.pow(Math.abs(Math.cos((u * .4 + v) * veins * Math.PI * .5)), 24);
+      return c.lerp(vein, veinMask * .55 + v * .12);
+    };
+    for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
+      const u0 = i / rows, u1 = (i + 1) / rows, v0 = j / cols, v1 = (j + 1) / cols;
+      const a = point(u0, v0), b = point(u1, v0), c = point(u1, v1), d = point(u0, v1);
+      this.tri(a, b, c, [color(u0, v0), color(u1, v0), color(u1, v1)], [u0, u1, u1]);
+      this.tri(a, c, d, [color(u0, v0), color(u1, v1), color(u0, v1)], [u0, u1, u0]);
+    }
+  }
+  /** Tapered tail made of segments that sway. */
+  tailCone(from: T.Vector3Tuple, length: number, radius: number, c: T.Color, segments = 5) {
+    for (let s = 0; s < segments; s++) {
+      const t0 = s / segments, t1 = (s + 1) / segments;
+      const r0 = radius * (1 - t0), r1 = radius * (1 - t1);
+      const z0 = from[2] - length * t0, z1 = from[2] - length * t1;
+      for (let k = 0; k < 4; k++) {
+        const a0 = k / 4 * Math.PI * 2, a1 = (k + 1) / 4 * Math.PI * 2;
+        const p = (r: number, a: number, z: number): T.Vector3Tuple => [from[0] + Math.cos(a) * r, from[1] + Math.sin(a) * r * .7, z];
+        this.tri(p(r0, a0, z0), p(r1, a0, z1), p(r1, a1, z1), c, [0, 0, 0], [t0, t1, t1]);
+        this.tri(p(r0, a0, z0), p(r1, a1, z1), p(r0, a1, z0), c, [0, 0, 0], [t0, t1, t0]);
+      }
+    }
+  }
+  geometry(name: string): T.BufferGeometry {
+    const geometry = new T.BufferGeometry();
+    geometry.setAttribute('position', new T.Float32BufferAttribute(this.positions, 3));
+    geometry.setAttribute('color', new T.Float32BufferAttribute(this.colors, 3));
+    geometry.setAttribute('span', new T.Float32BufferAttribute(this.spans, 1));
+    geometry.setAttribute('tail', new T.Float32BufferAttribute(this.tails, 1));
+    geometry.computeVertexNormals();
+    geometry.name = name;
+    return geometry;
+  }
+}
+
+/** Body and glowing markings of one species, nose along local +Z, wingspan about 2.6–4 units. */
+function creature(kind: FlierKind, bodyHex: number, wingHex: number, tipHex: number): { body: T.BufferGeometry; glow: T.BufferGeometry } {
+  const body = new CreatureBuilder(), glow = new CreatureBuilder();
+  const b = colorOf(bodyHex), w = colorOf(wingHex), t = colorOf(tipHex);
+  const belly = b.clone().lerp(new T.Color(0xffffff), .35), dark = b.clone().multiplyScalar(.55);
+  const white = new T.Color(1, 1, 1);
   if (kind === 'manta') {
+    // Segelrochen / Frostrochen: broad diamond with cephalic fins, scalloped trailing edge and a long whip tail.
+    body.ellipsoid([0, 0, .05], [.34, .16, .85], b, belly);
+    body.ellipsoid([0, .02, .8], [.2, .1, .22], b, belly, 0);
     for (const s of [-1, 1]) {
-      tri([[0, .05, .7, 0], [s * .55, 0, .1, .4], [0, .08, -.4, 0]]);
-      tri([[s * .55, 0, .1, .4], [s * 1.35, -.05, -.25, 1], [0, .08, -.4, 0]]);
-      tri([[s * .55, 0, .1, .4], [s * 1.1, -.03, .2, .85], [s * 1.35, -.05, -.25, 1]]);
-      tri([[0, .08, -.4, 0], [s * .5, 0, -.45, .35], [0, 0, -1.6, 0]]);
+      body.membrane(s, [[.22, .03, .55], [.26, 0, -.55]], [1.45, -.04, -.35], .35, w, t.clone().lerp(w, .4), dark, 6, 3, 3);
+      // Cephalic fins curling forward from the head.
+      body.tri([s * .14, .02, .95], [s * .26, .04, 1.25], [s * .3, -.02, .95], [b, w, b], [0, .05, 0]);
+      // Glowing leading-edge stripe and three spots along the wing.
+      for (let i = 0; i < 6; i++) {
+        const u0 = i / 6, u1 = (i + 1) / 6;
+        const lead = (u: number): T.Vector3Tuple => [s * (.22 + 1.23 * u), .045 + Math.sin(u * Math.PI) * .08, .55 - .9 * u];
+        const back = (u: number): T.Vector3Tuple => [s * (.22 + 1.2 * u), .04 + Math.sin(u * Math.PI) * .08, .48 - .9 * u];
+        glow.tri(lead(u0), lead(u1), back(u1), white, [u0, u1, u1]);
+        glow.tri(lead(u0), back(u1), back(u0), white, [u0, u1, u0]);
+      }
+      for (const [u, z] of [[.3, .05], [.5, -.1], [.68, -.22]]) {
+        const x = s * (.22 + 1.2 * u), y = .06 + Math.sin(u * Math.PI) * .07, r = .05;
+        glow.tri([x - r, y, z], [x + r, y, z], [x, y, z + r * 1.6], white, [u, u, u]);
+      }
     }
-    tri([[0, .05, .7, 0], [.15, -.05, .2, 0], [-.15, -.05, .2, 0]]);
+    body.tailCone([0, 0, -.75], 1.6, .07, dark);
+    glow.tri([-.03, .17, .4], [.03, .17, .4], [0, .17, -.5], white, [0, 0, 0]);
   } else if (kind === 'glider') {
+    // Hitzesegler: long fingered wings, slender neck with a head crest, forked tail.
+    body.ellipsoid([0, 0, 0], [.16, .14, .55], b, belly);
+    body.ellipsoid([0, .06, .72], [.07, .06, .2], b, belly, 0);
+    body.ellipsoid([0, .07, .98], [.08, .07, .16], b, belly, 0);
+    body.tri([0, .12, .95], [0, .32, .7], [0, .1, .8], [b, t, b], [0, 0, 0]);
     for (const s of [-1, 1]) {
-      tri([[0, 0, .5, 0], [s * 1.0, .05, .05, .45], [0, 0, -.4, 0]]);
-      tri([[s * 1.0, .05, .05, .45], [s * 2.0, .12, -.25, 1], [s * .9, .04, -.2, .4]]);
-      tri([[s * 1.0, .05, .05, .45], [s * 1.9, .1, -.05, .95], [s * 2.0, .12, -.25, 1]]);
-      tri([[0, 0, -.4, 0], [s * .35, 0, -1.05, .2], [0, 0, -.8, 0]]);
+      body.membrane(s, [[.12, .03, .25], [.14, 0, -.3]], [2.1, .1, -.45], .45, w, w.clone().lerp(dark, .3), dark, 7, 2, 5);
+      // Finger spars along the membrane.
+      for (const f of [.35, .6, .85]) body.tri([s * .14, .05, .2], [s * 2.1 * f, .09 * f + .05, -.45 * f + .05], [s * 2.1 * f, .06 * f + .04, -.45 * f + .02], dark, [0, f, f]);
+      body.tri([s * .03, 0, -.5], [s * .32, -.02, -1.2], [s * .12, 0, -.95], dark, [0, 0, 0], [0, 1, .7]);
+      glow.tri([s * .07, .11, .97], [s * .09, .12, 1.0], [s * .08, .1, 1.02], white, [0, 0, 0]);
     }
   } else {
-    // Four slim wings in two pairs on a segmented body.
-    for (const [z, len] of [[.15, 1], [-.12, .85]] as const) for (const s of [-1, 1]) {
-      tri([[0, .02, z + .07, 0], [s * len * .9, .04, z + .1, 1], [s * len * .85, .03, z - .06, .95]]);
-      tri([[0, .02, z + .07, 0], [s * len * .85, .03, z - .06, .95], [0, .02, z - .07, 0]]);
+    // Vierflügler: segmented body, two pairs of veined wings, long antennae, glowing abdomen tip.
+    body.ellipsoid([0, 0, .32], [.09, .08, .12], b, belly, 0);
+    body.ellipsoid([0, 0, .08], [.11, .1, .16], b, belly, 0);
+    body.ellipsoid([0, 0, -.35], [.08, .07, .38], b, belly, 1);
+    for (const s of [-1, 1]) {
+      body.tri([s * .03, .05, .4], [s * .35, .25, 1.0], [s * .33, .26, .98], dark, [0, .3, .3]);
+      for (const [z, len, rake] of [[.14, 1.15, .12], [-.02, .95, -.18]] as const) {
+        body.membrane(s, [[.06, .06, z + .05], [.06, .05, z - .07]], [len, .08, z + rake], .14, w, t.clone().lerp(w, .5), dark, 4, 2, 6);
+      }
     }
-    tri([[0, .05, .45, 0], [.05, 0, -.6, 0], [-.05, 0, -.6, 0]]);
-    tri([[0, .05, .45, 0], [0, -.04, -.6, 0], [.05, 0, -.6, 0]]);
+    for (let k = 0; k < 4; k++) {
+      const a0 = k / 4 * Math.PI * 2, a1 = (k + 1) / 4 * Math.PI * 2, r = .05;
+      glow.tri([Math.cos(a0) * r, Math.sin(a0) * r, -.68], [Math.cos(a1) * r, Math.sin(a1) * r, -.68], [0, 0, -.8], white, [0, 0, 0]);
+    }
   }
-  const geometry = new T.BufferGeometry();
-  geometry.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('span', new T.Float32BufferAttribute(spans, 1));
-  geometry.setAttribute('color', new T.Float32BufferAttribute(colors, 3));
-  geometry.computeVertexNormals();
-  geometry.name = 'life/' + kind;
-  return geometry;
+  return { body: body.geometry('life/' + kind), glow: glow.geometry('life/' + kind + '/glow') };
 }
 
 interface Flock { cx: number; cz: number; radius: number; altitude: number; speed: number; phase: number }
@@ -117,7 +215,10 @@ export class AmbientLife {
   private readonly time = { value: 0 };
   private readonly random: () => number;
   private readonly wind?: VegetationWind;
-  private readonly flierSets: { mesh: T.InstancedMesh; spec: Fliers; flocks: Flock[]; sizes: number[] }[] = [];
+  private readonly flierSets: { mesh: T.InstancedMesh; markings: T.InstancedMesh; spec: Fliers; flocks: Flock[]; sizes: number[] }[] = [];
+  /** Bioluminescent materials: dim by day, bright at dawn and dusk. */
+  private readonly glowMaterials: { material: T.MeshBasicMaterial; base: T.Color }[] = [];
+  private twilight = 0;
   private floaters?: { bladders: T.InstancedMesh; tendrils: T.InstancedMesh; state: { x: number; z: number; h: number; s: number; p: number }[] };
   private motes?: { points: T.Points; centres: T.BufferAttribute; spec: Motes; swarms: { x: number; y: number; z: number }[] };
   private fall?: T.Points;
@@ -146,37 +247,52 @@ export class AmbientLife {
     return groundHeight(this.world, Math.max(-h, Math.min(h, x)), Math.max(-h, Math.min(h, z)));
   }
 
-  private addFliers(spec: Fliers): void {
-    const count = spec.flocks * spec.perFlock;
-    const material = new T.MeshStandardMaterial({ vertexColors: true, side: T.DoubleSide, roughness: .7, metalness: 0 });
-    const time = this.time, flap = spec.flap;
-    material.customProgramCacheKey = () => 'ambient-flier-v1';
+  /** Shared wing beat: gliding phases with bursts of flapping, wing tips lagging, tail swaying. */
+  private flap(material: T.Material, key: string, flap: number): void {
+    const time = this.time;
+    material.customProgramCacheKey = () => 'ambient-flier-v2/' + key;
     material.onBeforeCompile = (shader) => {
       shader.uniforms.lifeTime = time;
       shader.vertexShader = shader.vertexShader.replace('#include <common>', `
         #include <common>
         attribute float span;
+        attribute float tail;
         uniform float lifeTime;
       `).replace('#include <begin_vertex>', `
         #include <begin_vertex>
         float lifePhase = instanceMatrix[3].x * .37 + instanceMatrix[3].z * .23;
-        float beat = sin(lifeTime * ${flap.toFixed(2)} * 6.2832 + lifePhase);
-        // Membrane wings ripple from root to tip; gliders mostly hold still.
-        transformed.y += beat * span * span * .55 + sin(lifeTime * 3.1 + lifePhase + span * 2.5) * span * .08;
+        float bursts = smoothstep(.3, .75, sin(lifeTime * .32 + lifePhase) * .5 + .5);
+        float beat = sin(lifeTime * ${flap.toFixed(2)} * 6.2832 * (.6 + .4 * bursts) + lifePhase - span * .9);
+        transformed.y += beat * span * span * (.12 + .5 * bursts) + span * .07;
+        transformed.y += sin(lifeTime * 2.3 + lifePhase + span * 3.) * span * .03;
+        transformed.x += sin(lifeTime * 2.1 + lifePhase - tail * 2.6) * tail * tail * .35;
       `);
     };
-    const mesh = new T.InstancedMesh(flierGeometry(spec.kind, spec.body, spec.wing, spec.tip), material, count);
+  }
+
+  private addFliers(spec: Fliers): void {
+    const count = spec.flocks * spec.perFlock;
+    const { body, glow } = creature(spec.kind, spec.body, spec.wing, spec.tip);
+    const material = new T.MeshStandardMaterial({ vertexColors: true, side: T.DoubleSide, roughness: .62, metalness: 0 });
+    this.flap(material, spec.kind, spec.flap);
+    const shine = new T.MeshBasicMaterial({ color: spec.tip, side: T.DoubleSide, transparent: true, blending: T.AdditiveBlending, depthWrite: false });
+    this.flap(shine, spec.kind + '/glow', spec.flap);
+    this.glowMaterials.push({ material: shine, base: colorOf(spec.tip) });
+    const mesh = new T.InstancedMesh(body, material, count);
+    const markings = new T.InstancedMesh(glow, shine, count);
     mesh.name = 'Ambient fliers ' + spec.kind;
-    mesh.frustumCulled = false;
+    markings.name = 'Ambient flier markings ' + spec.kind;
+    mesh.frustumCulled = markings.frustumCulled = false;
+    mesh.castShadow = spec.kind !== 'quad';
     const flocks = Array.from({ length: spec.flocks }, () => ({
-      cx: (this.random() * 2 - 1) * 150, cz: (this.random() * 2 - 1) * 150,
+      cx: (this.random() * 2 - 1) * 120, cz: (this.random() * 2 - 1) * 120,
       radius: spec.circle[0] + this.random() * (spec.circle[1] - spec.circle[0]),
       altitude: spec.altitude[0] + this.random() * (spec.altitude[1] - spec.altitude[0]),
       speed: spec.speed * (.8 + this.random() * .4) * (this.random() < .5 ? -1 : 1), phase: this.random() * 6.3,
     }));
     const sizes = Array.from({ length: count }, () => spec.size[0] + this.random() * (spec.size[1] - spec.size[0]));
-    this.flierSets.push({ mesh, spec, flocks, sizes });
-    this.root.add(mesh);
+    this.flierSets.push({ mesh, markings, spec, flocks, sizes });
+    this.root.add(mesh, markings);
   }
 
   private addFloaters(spec: Floaters): void {
@@ -233,7 +349,7 @@ export class AmbientLife {
 
   private glowMaterial(color: number, size: number, additive: boolean, vertex: string): T.ShaderMaterial {
     return new T.ShaderMaterial({
-      uniforms: { lifeTime: this.time, lifeColor: { value: colorOf(color) }, lifeSize: { value: size }, lifeView: this.view },
+      uniforms: { lifeTime: this.time, lifeColor: { value: colorOf(color) }, lifeSize: { value: size }, lifeView: this.view, lifeGlow: { value: 1 } },
       transparent: true, depthWrite: false, blending: additive ? T.AdditiveBlending : T.NormalBlending,
       vertexShader: `
         uniform float lifeTime, lifeSize;
@@ -244,13 +360,14 @@ export class AmbientLife {
       `,
       fragmentShader: `
         uniform vec3 lifeColor;
+        uniform float lifeGlow;
         varying float vAlpha;
         void main() {
           vec2 c = gl_PointCoord * 2. - 1.;
           float r = dot(c, c);
           if (r > 1.) discard;
           float core = exp(-r * 4.);
-          gl_FragColor = vec4(lifeColor * (${additive ? '.6 + 1.6 * core' : '1.'}), vAlpha * ${additive ? 'core' : '(1. - r)'});
+          gl_FragColor = vec4(lifeColor * (${additive ? '(.6 + 1.6 * core) * lifeGlow' : '1.'}), vAlpha * ${additive ? 'core' : '(1. - r)'});
         }
       `,
     });
@@ -368,6 +485,9 @@ export class AmbientLife {
     this.root.add(points);
   }
 
+  /** 0 by day, 1 in full dawn or dusk light: bioluminescence brightens. */
+  setTwilight(amount: number): void { this.twilight = Math.max(0, Math.min(1, amount)); }
+
   configure(quality: GraphicsQuality): void {
     this.density = quality.weatherParticles >= 300 ? 1 : quality.weatherParticles >= 150 ? .75 : .4;
     for (const points of [this.motes?.points, this.fall, this.devils?.points]) {
@@ -392,8 +512,11 @@ export class AmbientLife {
     this.root.visible = camera.position.y - below < 70;
     if (!this.root.visible) return;
     const t = this.time.value, transform = this.transform;
+    const glow = .35 + .65 * this.twilight;
+    for (const { material, base } of this.glowMaterials) material.color.copy(base).multiplyScalar(glow);
+    if (this.motes) (this.motes.points.material as T.ShaderMaterial).uniforms.lifeGlow.value = .7 + .8 * this.twilight;
 
-    for (const { mesh, spec, flocks, sizes } of this.flierSets) {
+    for (const { mesh, markings, spec, flocks, sizes } of this.flierSets) {
       for (const [f, flock] of flocks.entries()) {
         // Flocks drift with the camera so they stay in view, re-centring when far behind.
         if (Math.hypot(flock.cx - x, flock.cz - z) > 140) { flock.cx = x + (this.random() * 2 - 1) * 80; flock.cz = z + (this.random() * 2 - 1) * 80; }
@@ -403,7 +526,9 @@ export class AmbientLife {
           const angle = flock.phase + t * flock.speed * (spec.kind === 'quad' ? 1.6 : 1) + k * (spec.kind === 'quad' ? 2.1 : .45);
           const r = flock.radius * (1 + .18 * Math.sin(k * 1.7 + t * .2));
           const px = flock.cx + Math.cos(angle) * r, pz = flock.cz + Math.sin(angle) * r;
-          const py = ground + flock.altitude + Math.sin(t * .4 + k) * (spec.kind === 'quad' ? 1.5 : 3) + k * .6;
+          // Slow climbs and occasional swoops toward the ground.
+          const swoop = Math.max(0, Math.sin(t * .07 + flock.phase + k * .3)) ** 6 * flock.altitude * .45;
+          const py = ground + flock.altitude - swoop + Math.sin(t * .4 + k) * (spec.kind === 'quad' ? 1.2 : 2.2) + k * .5;
           const dir = Math.sign(flock.speed);
           transform.position.set(px, Math.max(py, this.ground(px, pz) + 2), pz);
           // Heading along the circle tangent (nose is local +Z), banking into the turn.
@@ -412,9 +537,10 @@ export class AmbientLife {
           transform.scale.setScalar(sizes[i]);
           transform.updateMatrix();
           mesh.setMatrixAt(i, transform.matrix);
+          markings.setMatrixAt(i, transform.matrix);
         }
       }
-      mesh.instanceMatrix.needsUpdate = true;
+      mesh.instanceMatrix.needsUpdate = markings.instanceMatrix.needsUpdate = true;
     }
 
     if (this.floaters) {

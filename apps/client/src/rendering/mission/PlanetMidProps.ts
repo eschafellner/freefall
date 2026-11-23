@@ -9,6 +9,8 @@ import { applyVegetationWind } from '../environment/VegetationWind.ts';
 import type { VegetationWind } from '../environment/VegetationWind.ts';
 import type { GraphicsQuality } from '../GraphicsQuality.ts';
 import { chunkDistanceSquared } from './PlanetGroundDetails.ts';
+import { applyCloudShadows } from '../environment/CloudShadows.ts';
+import type { CloudShadowUniform } from '../environment/CloudShadows.ts';
 
 interface Batch {
   readonly mesh: T.InstancedMesh;
@@ -30,7 +32,8 @@ export class PlanetMidProps {
   private shadows = false;
   readonly placements: number;
 
-  constructor(world: WorldDefinition, reservations: readonly Circle[], width: number, chunkCount: number, wind?: VegetationWind) {
+  constructor(world: WorldDefinition, reservations: readonly Circle[], width: number, chunkCount: number, wind?: VegetationWind,
+    cloud?: CloudShadowUniform) {
     this.root.name = 'Mid props';
     this.half = width * REGION / 2;
     const sites = detailClearances(world, reservations);
@@ -38,6 +41,7 @@ export class PlanetMidProps {
       foliage: this.material(.92), solid: this.material(.93), ice: this.material(.32),
     };
     if (wind) applyVegetationWind(materials.foliage, wind, 'ground');
+    if (cloud) for (const material of Object.values(materials)) applyCloudShadows(material, cloud);
     const geometry = new Map<MidPropId, T.BufferGeometry>();
     const transform = new T.Object3D();
     const up = new T.Vector3(0, 1, 0), normal = new T.Vector3(), turn = new T.Quaternion();

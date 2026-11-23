@@ -65,6 +65,7 @@ try {
     await page.keyboard.press('KeyE');
     await page.getByRole('heading', { name: 'Einsatzplanung' }).waitFor();
     await page.getByRole('combobox').filter({ has: page.locator(`option[value="${planet}"]`) }).selectOption(planet);
+    if (process.env.FREEFALL_TIME) await page.getByLabel('Tageszeit', { exact: true }).selectOption(process.env.FREEFALL_TIME);
     await page.getByLabel('Welt-Seed', { exact: true }).fill(String(seed));
     await page.getByLabel('Vorlage').selectOption('relay-defense');
     await page.getByLabel('Missions-Seed', { exact: true }).fill('0');
@@ -89,7 +90,7 @@ try {
         life: operator.life + 1 });
       if (!(await page.locator('.in-game').count())) await enter('Einsatz betreten');
       await delay(900);
-      await page.screenshot({ path: join(output, planet + '-' + name + '.png') });
+      await page.screenshot({ path: join(output, planet + (process.env.FREEFALL_TIME ? '-' + process.env.FREEFALL_TIME : '') + '-' + name + '.png') });
       if (process.env.FREEFALL_VISUAL_DEBUG) console.log(name, Math.round(x), Math.round(z), target && JSON.stringify(target));
     };
     const h = world.half;
@@ -136,7 +137,7 @@ try {
       const yaw = Math.atan2(x, -z), pitch = Math.min(1.1, Math.atan2(y, Math.hypot(x, z)) * .9);
       await turn(wrap(yaw - viewYaw), pitch - viewPitch);
       await delay(700);
-      await page.screenshot({ path: join(output, planet + '-' + name + '.png') });
+      await page.screenshot({ path: join(output, planet + (process.env.FREEFALL_TIME ? '-' + process.env.FREEFALL_TIME : '') + '-' + name + '.png') });
     };
     const atmosphere = WORLD_PROFILES.get(planet).atmosphere;
     const day = TIME_OF_DAY_LIGHT[mission.atmosphere?.timeOfDay ?? 'day'];

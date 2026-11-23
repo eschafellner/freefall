@@ -102,7 +102,7 @@ test('all time presets stay within readable light and fog bounds on all four pla
       assert.ok(frame);
       rig.update('surface', false, 0, 0, atmosphere, frame);
       const where = id + ' ' + preset + ' exposure ' + rig.exposure.toFixed(3) + ' sun ' + rig.sun.intensity.toFixed(3) + ' y ' + rig.sun.position.y.toFixed(1);
-      assert.ok(rig.exposure > .84 && rig.exposure < 1.10, where);
+      assert.ok(rig.exposure > .84 && rig.exposure < 1.18, where);
       assert.ok(rig.sun.intensity >= .58, where);
       assert.ok((scene.fog as T.FogExp2).density <= .0081, where);
       assert.ok(rig.sun.position.y > 15, where);

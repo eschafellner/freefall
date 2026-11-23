@@ -1,6 +1,7 @@
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { randomSource } from './noise.ts';
+import { vividColors } from '../ToneMapping.ts';
 
 export type MidPropMaterial = 'foliage' | 'solid' | 'ice';
 
@@ -374,6 +375,7 @@ export function midPropGeometry(id: MidPropId): T.BufferGeometry {
     geometry.computeBoundingBox();
   }
   geometry.computeBoundingSphere();
+  vividColors(geometry);
   geometry.name = 'mid/' + id;
   return geometry;
 }

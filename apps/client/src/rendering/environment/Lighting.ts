@@ -2,6 +2,7 @@ import * as T from 'three';
 import type { AtmosphereSettings, PlanetAtmosphereProfile } from '@freefall/shared';
 import type { AtmosphereLighting } from './AtmosphereController.ts';
 import { noise, smoothstep } from './noise.ts';
+import { TONE_GRADE } from '../ToneMapping.ts';
 
 export type LightingScene = 'arena' | 'carrier' | 'surface';
 
@@ -215,10 +216,14 @@ function mapFogToDisplay(color: T.Color, exposure: number): void {
   const ar = fit(.59719 * r + .35458 * g + .04823 * b);
   const ag = fit(.076 * r + .90834 * g + .01566 * b);
   const ab = fit(.0284 * r + .13383 * g + .83777 * b);
+  const r2 = 1.60475 * ar - .53108 * ag - .07367 * ab, g2 = -.10208 * ar + 1.10813 * ag - .00605 * ab;
+  const b2 = -.00327 * ar - .07276 * ag + 1.07602 * ab;
+  // Same saturation step as the custom tone mapping.
+  const luma = .2126 * r2 + .7152 * g2 + .0722 * b2, k = TONE_GRADE.saturation;
   color.setRGB(
-    T.MathUtils.clamp(1.60475 * ar - .53108 * ag - .07367 * ab, 0, 1),
-    T.MathUtils.clamp(-.10208 * ar + 1.10813 * ag - .00605 * ab, 0, 1),
-    T.MathUtils.clamp(-.00327 * ar - .07276 * ag + 1.07602 * ab, 0, 1),
+    T.MathUtils.clamp(luma + (r2 - luma) * k, 0, 1),
+    T.MathUtils.clamp(luma + (g2 - luma) * k, 0, 1),
+    T.MathUtils.clamp(luma + (b2 - luma) * k, 0, 1),
   );
 }
 
@@ -232,6 +237,7 @@ function blendedSky() {
     bakedSunColor: { value: new T.Color() }, directSunColor: { value: new T.Color() },
     glow: { value: 0 }, shiftSun: { value: 0 },
     horizonGlow: { value: new T.Color() }, horizonAmount: { value: 0 }, zenithTint: { value: new T.Color() }, zenithAmount: { value: 0 },
+    coverage: { value: null as T.Texture | null },
   };
   const material = new T.ShaderMaterial({
     uniforms, depthWrite: false, depthFunc: T.LessEqualDepth,
@@ -250,6 +256,7 @@ function blendedSky() {
       uniform float amount, brightness, glow, shiftSun;
       uniform vec3 horizonGlow, zenithTint;
       uniform float horizonAmount, zenithAmount;
+      uniform sampler2D coverage;
       varying vec2 screen;
       void main() {
         vec3 ray = normalize(transpose(mat3(viewMatrix)) * vec3(screen.x / projectionMatrix[0][0],
@@ -273,6 +280,9 @@ function blendedSky() {
         shaded += horizonGlow * horizonAmount * band * band * (.35 + .65 * toward * toward * toward);
         // Low sun colours the whole sky, clouds included, most on the sun side.
         shaded = mix(shaded, shaded * (.55 + horizonGlow * .6), horizonAmount * .55 * (.35 + .65 * toward));
+        // Cloud undersides catch the low sun: strongest toward it and in the lower sky.
+        float cloud = texture2D(coverage, equirectUv(ray)).r * smoothstep(-.02, .06, ray.y);
+        shaded += horizonGlow * horizonAmount * cloud * (.18 + 1.1 * toward * toward * toward) * (1. - smoothstep(.35, .85, ray.y)) * .55;
         float horizonBlend = (1. - smoothstep(.012, .18, abs(ray.y))) * min(1., amount * 3.);
         gl_FragColor = vec4(mix(shaded, horizon, horizonBlend), 1.);
         #include <tonemapping_fragment>
@@ -330,7 +340,8 @@ export function createLighting(scene: T.Scene, hdr: boolean) {
   let sunElevation = 1;
   let sunAzimuth = 0;
 
-  function update(mode: LightingScene, post: boolean, x: number, z: number, atmosphere?: PlanetAtmosphereProfile, weather?: AtmosphereLighting): boolean {
+  function update(mode: LightingScene, post: boolean, x: number, z: number, atmosphere?: PlanetAtmosphereProfile, weather?: AtmosphereLighting,
+    view?: T.Vector3): boolean {
     const planet = mode === 'surface' ? atmosphere : undefined;
     const profile = planet ?? (mode === 'carrier' ? CARRIER : ARENA);
     const applied = Boolean(planet && weather);
@@ -375,6 +386,14 @@ export function createLighting(scene: T.Scene, hdr: boolean) {
     if (planet && weather && planetSky) {
       exposure = profile.exposure * weather.exposure;
       fog.color.copy(weather.fog);
+      if (view && weather.glowAmount > 0) {
+        // Haze glows warm toward the low sun and stays cool on the opposite side.
+        sunOffset(profile, weather.elevation, weather.azimuth, turned).setY(0).normalize();
+        const facing = Math.hypot(view.x, view.z) > 1e-4 ? (view.x * turned.x + view.z * turned.z) / Math.hypot(view.x, view.z) : 0;
+        const toward = Math.max(0, facing) ** 2, away = Math.max(0, -facing);
+        fog.color.lerp(scratchColor.copy(weather.glow), weather.glowAmount * toward * .32)
+          .lerp(scratchColor.copy(weather.zenith), weather.zenithAmount * away * .18);
+      }
       if (!post) mapFogToDisplay(fog.color, exposure);
       fog.density = weather.fogDensity;
       sun.color.setHex(profile.sun.color).multiply(weather.sunTint);
@@ -385,6 +404,7 @@ export function createLighting(scene: T.Scene, hdr: boolean) {
       scene.environmentIntensity = profile.environmentIntensity * weather.environment;
       if (blend.mesh.visible) {
         blend.uniforms.sourceSky.value = planetSky.texture;
+        blend.uniforms.coverage.value = planetSky.coverage;
         blend.uniforms.tint.value.copy(weather.skyTint);
         blend.uniforms.horizon.value.copy(weather.fog);
         blend.uniforms.amount.value = weather.skyAmount;

@@ -1,6 +1,7 @@
 import * as T from 'three';
 import { Parts, around, mix, rgb, scale, smooth } from './MidPropAssets.ts';
 import type { RGB } from './MidPropAssets.ts';
+import { vividColors } from '../ToneMapping.ts';
 
 export type TraceMaterial = 'metal' | 'solid' | 'resin' | 'lamp';
 
@@ -197,6 +198,7 @@ export function traceGeometry(id: TraceId): T.BufferGeometry {
   const geometry = parts.merge();
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
+  vividColors(geometry, 1.12);
   geometry.name = 'trace/' + id;
   return geometry;
 }

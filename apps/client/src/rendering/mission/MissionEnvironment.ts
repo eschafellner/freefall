@@ -281,6 +281,10 @@ export class MissionEnvironment {
 
   update(camera: T.Camera): void { this.generated?.update(camera); }
 
+  setTwilight(amount: number): void { this.generated?.setTwilight(amount); }
+
+  setCloudCover(amount: number): void { this.generated?.setCloudCover(amount); }
+
   updateObjectives(objectives: readonly ObjectiveSnapshot[]): void {
     if (this.objectives === objectives) return;
     this.objectives = objectives;
