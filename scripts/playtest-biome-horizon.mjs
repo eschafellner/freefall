@@ -6,7 +6,9 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { matchMaker } from '@colyseus/core';
-import { groundHeight, openGround } from '@freefall/shared';
+import { generateWorld, groundHeight, openGround } from '@freefall/shared';
+import { detailClearances } from '../apps/client/src/rendering/environment/EnvironmentDetailPlacement.ts';
+import { placeWarTraces } from '../apps/client/src/rendering/environment/WarTracePlacement.ts';
 import { build, preview } from 'vite';
 import { startServer } from '../apps/server/src/server.ts';
 
@@ -77,20 +79,40 @@ try {
       }
       return [x, z];
     };
-    // yaw = atan2(dirX, -dirZ)
-    const place = async (name, x, z, dirX, dirZ) => {
+    // Facing (dirX, dirZ) in world XZ.
+    const place = async (name, x, z, dirX, dirZ, target) => {
       [x, z] = free(x, z);
+      if (target) [dirX, dirZ] = [target.x - x, target.z - z];
       Object.assign(operator, { x, z, yaw: Math.atan2(dirX, -dirZ), y: groundHeight(world, x, z), protectedUntil: Infinity,
         life: operator.life + 1 });
       if (!(await page.locator('.in-game').count())) await enter('Einsatz betreten');
       await delay(900);
       await page.screenshot({ path: join(output, planet + '-' + name + '.png') });
+      if (process.env.FREEFALL_VISUAL_DEBUG) console.log(name, Math.round(x), Math.round(z), target && JSON.stringify(target));
     };
     const h = world.half;
     await place('edge', -h + 30, 0, -1, 0);
     await place('corner', h - 40, h - 40, 1, 1);
     await place('inward', h - 20, 10, -1, 0);
     await place('center', 0, 0, .3, -1);
+    // Phase D: battle site, outpost and swarm nest.
+    const { relays, balloonSites } = generateWorld(planet, seed);
+    // Same reservations as the client: Game.setMission plus GeneratedTerrain's interaction zones.
+    const { plan } = mission;
+    const zones = plan.objectives.map(({ definition }) => definition).filter(({ kind }) => kind === 'activate');
+    const traces = placeWarTraces(world, detailClearances(world, [...relays, ...balloonSites, plan.extraction.albatross,
+      plan.extraction.balloon, ...zones]));
+    // The client keeps the view yaw of the first placement (facing -X), so stand east of the target.
+    const look = async (name, target, distance) => {
+      const x = Math.min(world.half - 4, target.x + distance), z = target.z;
+      await place(name, x, z, -1, 0);
+    };
+    if (traces.sites[0]) await look('outpost', traces.sites[0], 10);
+    const wreck = [...traces.solids.keys()].map((index) => world.obstacles[index])[0];
+    if (wreck) await look('wreck', wreck, Math.max(wreck.halfX, wreck.halfZ) + 14);
+    if (traces.sites[1]) await look('battle', traces.sites[1], 18);
+    if (world.initialNests[0]) await look('nest', world.initialNests[0], 30);
+    console.log(planet, 'Spuren', traces.props.length, 'Decals', traces.decals.length, 'Wracks', traces.solids.size);
     if (errors.length) console.log(planet, 'Fehler', errors);
     await page.close();
   }

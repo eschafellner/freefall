@@ -14,6 +14,9 @@ import { GRAPHICS_QUALITY } from '../src/rendering/GraphicsQuality.ts';
 import { MID_PROPS, midPropGeometry } from '../src/rendering/environment/MidPropAssets.ts';
 import type { MidPropId } from '../src/rendering/environment/MidPropAssets.ts';
 import { placeChunkMidProps } from '../src/rendering/environment/MidPropPlacement.ts';
+import { WAR_TRACES, traceGeometry } from '../src/rendering/environment/WarTraceAssets.ts';
+import type { TraceId } from '../src/rendering/environment/WarTraceAssets.ts';
+import { placeWarTraces } from '../src/rendering/environment/WarTracePlacement.ts';
 
 const worlds = [['green-plains', 17], ['desert', 31], ['ice', 48], ['forest', 63]] as const;
 
@@ -143,13 +146,13 @@ test('quality changes keep terrain vertices, collision prop instances and shared
   assert.equal(count(trunks), world.obstacles.filter(({ kind }) => kind === 'tree').length);
   assert.ok(rocks.some(({ name, visible }) => name.endsWith('/far') && visible));
   assert.ok(rocks.some(({ name, visible }) => !name.endsWith('/far') && visible));
-  assert.equal(count(rocks), world.obstacles.filter(({ kind }) => kind === 'rock').length);
+  assert.equal(count(rocks), world.obstacles.filter(({ kind }, index) => kind === 'rock' && !terrain.traces.solids.has(index)).length);
   assert.ok(details.every((mesh) => !mesh.castShadow && mesh.material instanceof T.Material && !mesh.material.transparent));
   assert.ok(new Set(details.map((mesh) => mesh.geometry)).size < details.length);
   camera.position.set(1000, 50, 1000);
   terrain.update(camera);
   assert.equal(count(details), 0);
-  assert.equal(count(rocks), world.obstacles.filter(({ kind }) => kind === 'rock').length);
+  assert.equal(count(rocks), world.obstacles.filter(({ kind }, index) => kind === 'rock' && !terrain.traces.solids.has(index)).length);
   assert.equal(JSON.stringify(world), original);
 
   const resources = new Set<T.BufferGeometry | T.Material | T.Texture | T.InstancedMesh>(terrain.textures);
@@ -233,6 +236,42 @@ test('mid props replay per chunk, stay clear of reservations and solids, and swi
   terrain.update(camera);
   assert.equal(visible(), 0);
   disposeMissionMeshes(terrain.root, new Set(), [], terrain.textures);
+});
+
+test('war traces are deterministic, keep mission reservations clear and only reskin medium rocks', (t) => {
+  for (const [planet, seed] of worlds) {
+    const { world, relays, balloonSites } = generateWorld(planet, seed)!;
+    const reserved = detailClearances(world, [...relays, ...balloonSites]);
+    const traces = placeWarTraces(world, reserved);
+    assert.deepEqual(placeWarTraces(world, reserved), traces);
+    assert.ok(traces.sites.length >= 3 && traces.props.length > 60 && traces.decals.length > 10, planet);
+    const swarm = [...world.initialNests.map(({ x, z }) => ({ x, z })), ...world.breachRegions];
+    for (const prop of traces.props) {
+      const radius = WAR_TRACES[prop.asset].radius * prop.scale;
+      assert.equal(prop.y, groundHeight(world, prop.x, prop.z));
+      assert.ok(openGround(world, prop.x, prop.z, radius * .5), prop.asset);
+      for (const site of reserved) {
+        const zone = swarm.some(({ x, z }) => x === site.x && z === site.z);
+        assert.ok(Math.hypot(prop.x - site.x, prop.z - site.z) >= (zone ? site.radius * .55 : site.radius + radius), prop.asset);
+      }
+    }
+    for (const [index] of traces.solids) {
+      const rock = world.obstacles[index];
+      assert.equal(rock.kind, 'rock');
+      assert.ok(rock.halfX < 3.6 && rock.halfZ < 3.6);
+    }
+    t.diagnostic(planet + ' · ' + traces.props.length + ' traces · ' + traces.decals.length + ' decals · ' + traces.solids.size + ' wrecks');
+  }
+  for (const id of Object.keys(WAR_TRACES) as TraceId[]) {
+    const shape = traceGeometry(id), info = WAR_TRACES[id], normal = shape.getAttribute('normal');
+    assert.ok(normal.count > 0 && normal.count / 3 <= 900, id);
+    if (!('solid' in info)) {
+      const box = shape.boundingBox!;
+      assert.ok(box.max.y <= info.height + .08 && Math.max(-box.min.x, box.max.x, -box.min.z, box.max.z) <= info.radius + .1, id);
+    }
+    for (let i = 0; i < normal.count; i++) assert.ok(Number.isFinite(normal.getX(i) + normal.getY(i) + normal.getZ(i)), id);
+    shape.dispose();
+  }
 });
 
 test('the existing Three GLB pipeline imports an in-memory metre-scale mesh and rejects an invalid asset', async () => {

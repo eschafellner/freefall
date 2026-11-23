@@ -34,20 +34,20 @@ export const MID_PROPS = {
 
 export type MidPropId = keyof typeof MID_PROPS;
 
-type RGB = readonly [number, number, number];
-const rgb = (hex: number): RGB => {
+export type RGB = readonly [number, number, number];
+export const rgb = (hex: number): RGB => {
   const c = new T.Color(hex);
   return [c.r, c.g, c.b];
 };
-const scale = (c: RGB, k: number): RGB => [c[0] * k, c[1] * k, c[2] * k];
-const mix = (a: RGB, b: RGB, t: number): RGB => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-const smooth = (a: number, b: number, v: number) => {
+export const scale = (c: RGB, k: number): RGB => [c[0] * k, c[1] * k, c[2] * k];
+export const mix = (a: RGB, b: RGB, t: number): RGB => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+export const smooth = (a: number, b: number, v: number) => {
   const t = Math.max(0, Math.min(1, (v - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
 
 /** Collects parts as non-indexed geometries with position, normal and colour. */
-class Parts {
+export class Parts {
   readonly list: T.BufferGeometry[] = [];
   readonly random: () => number;
   constructor(seed: number) { this.random = randomSource(seed); }
@@ -156,6 +156,14 @@ class Parts {
     this.add(geometry, (p, n) => mix(deep, bright, smooth(0, height, p.y) * .6 + Math.max(0, n.y) * .4));
   }
 
+  /** Box with optional rotation; colour from position and normal. */
+  box(center: T.Vector3Tuple, size: T.Vector3Tuple, rotation: T.Vector3Tuple, color: (p: T.Vector3, n: T.Vector3) => RGB) {
+    const geometry = new T.BoxGeometry(...size);
+    geometry.applyMatrix4(new T.Matrix4().compose(new T.Vector3(...center),
+      new T.Quaternion().setFromEuler(new T.Euler(...rotation)), new T.Vector3(1, 1, 1)));
+    this.add(geometry, color);
+  }
+
   merge(): T.BufferGeometry {
     const merged = mergeGeometries(this.list, false)!;
     for (const part of this.list) part.dispose();
@@ -163,7 +171,7 @@ class Parts {
   }
 }
 
-const around = (random: () => number, count: number, reach: number, fn: (x: number, z: number, i: number, angle: number) => void) => {
+export const around = (random: () => number, count: number, reach: number, fn: (x: number, z: number, i: number, angle: number) => void) => {
   for (let i = 0; i < count; i++) {
     const angle = i * 2.39996 + random() * .5, r = reach * Math.sqrt((i + .5) / count) * (.7 + random() * .3);
     fn(Math.cos(angle) * r, Math.sin(angle) * r, i, angle);

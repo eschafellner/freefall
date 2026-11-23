@@ -13,6 +13,7 @@ import { GRAPHICS_QUALITY } from '../GraphicsQuality.ts';
 import type { GraphicsQuality } from '../GraphicsQuality.ts';
 import { PlanetGroundDetails } from './PlanetGroundDetails.ts';
 import { PlanetMidProps } from './PlanetMidProps.ts';
+import { PlanetWarTraces } from './PlanetWarTraces.ts';
 import { coniferCrown } from './Conifer.ts';
 import { randomSource } from '../environment/noise.ts';
 import { fieldSampler, localRelief, macroTint } from '../environment/TerrainMacro.ts';
@@ -107,6 +108,9 @@ export class GeneratedTerrain {
   private readonly chunks: { near: T.Mesh; far: T.Mesh; x: number; z: number }[] = [];
   private readonly details: PlanetGroundDetails;
   private readonly midProps: PlanetMidProps;
+  /** Battle sites and swarm growth; `traces.solids` lists the rocks drawn as wrecks or ruins. */
+  readonly warTraces: PlanetWarTraces;
+  get traces() { return this.warTraces.traces; }
   private readonly propBatches: PropBatch[] = [];
   private readonly detailRange: { value: T.Vector2 };
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
@@ -124,7 +128,11 @@ export class GeneratedTerrain {
     const { ground } = materials;
     const fieldAt = fieldSampler(field);
     const tint = [0, 0, 0];
+    this.warTraces = new PlanetWarTraces(world, reservations);
+    // Rock and bark textures are appended to the same list later; decal textures join it here.
+    materials.textures.push(...this.warTraces.textures);
     this.textures = materials.textures;
+    this.root.add(this.warTraces.root);
     this.detailRange = materials.detailRange;
     const transform = new T.Object3D();
     const color = new T.Color();
@@ -183,7 +191,7 @@ export class GeneratedTerrain {
     applyRockSurface(stone, rockDeposit(id, surface, false), this.rockControls);
     const bridge = world.obstacles.find(({ kind }) => kind === 'arch-span');
     for (const [frozen, rocks] of [
-      [false, world.obstacles.filter(({ kind }) => kind === 'rock' || kind === 'arch-pier')],
+      [false, world.obstacles.filter(({ kind }, index) => (kind === 'rock' && !this.traces.solids.has(index)) || kind === 'arch-pier')],
       [true, world.obstacles.filter(({ kind }) => kind === 'ice')],
     ] as const) {
       if (!rocks.length) continue;
@@ -324,6 +332,7 @@ export class GeneratedTerrain {
     if (this.belt) this.belt.mesh.count = Math.round(this.belt.total * (quality === GRAPHICS_QUALITY.low ? .45 : 1));
     this.details.configure(quality);
     this.midProps.configure(quality);
+    this.warTraces.configure(quality);
   }
 
   update(camera: T.Camera): void {
