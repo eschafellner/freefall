@@ -33,13 +33,13 @@ interface DensityProfile {
 
 /** Maximum candidate counts per 60 m chunk. Large and medium solids use the 7.6 world profile. */
 export const DETAIL_DENSITY: Readonly<Record<string, DensityProfile>> = {
-  [ICE_ID]: { small: 112, vegetation: 0, surface: 112, landmark: 20, cluster: .41,
+  [ICE_ID]: { small: 150, vegetation: 0, surface: 170, landmark: 34, cluster: .41,
     families: { small: ['ice-chip', 'scree'], vegetation: [], surface: ['drift'], landmark: ['ice-chip'] } },
-  [DESERT_ID]: { small: 230, vegetation: 85, surface: 0, landmark: 38, cluster: .52,
+  [DESERT_ID]: { small: 270, vegetation: 150, surface: 0, landmark: 52, cluster: .5,
     families: { small: ['pebble', 'scree'], vegetation: ['scrub'], surface: [], landmark: ['scree'] } },
-  [GREEN_PLAINS_ID]: { small: 155, vegetation: 705, surface: 0, landmark: 20, cluster: .42,
+  [GREEN_PLAINS_ID]: { small: 175, vegetation: 1050, surface: 0, landmark: 34, cluster: .4,
     families: { small: ['pebble', 'scree'], vegetation: ['grass', 'forb'], surface: [], landmark: ['scree'] } },
-  [FOREST_ID]: { small: 125, vegetation: 330, surface: 245, landmark: 104, cluster: .44,
+  [FOREST_ID]: { small: 150, vegetation: 440, surface: 320, landmark: 130, cluster: .42,
     families: { small: ['pebble'], vegetation: ['fern', 'forb'], surface: ['litter'], landmark: ['deadwood'] } },
 };
 

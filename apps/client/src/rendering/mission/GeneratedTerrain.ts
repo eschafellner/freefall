@@ -12,6 +12,7 @@ import { surfaceSample } from '../environment/PlanetSurfaces.ts';
 import { GRAPHICS_QUALITY } from '../GraphicsQuality.ts';
 import type { GraphicsQuality } from '../GraphicsQuality.ts';
 import { PlanetGroundDetails } from './PlanetGroundDetails.ts';
+import { PlanetMidProps } from './PlanetMidProps.ts';
 import { coniferCrown } from './Conifer.ts';
 import { randomSource } from '../environment/noise.ts';
 import { fieldSampler, localRelief, macroTint } from '../environment/TerrainMacro.ts';
@@ -105,6 +106,7 @@ export class GeneratedTerrain {
   readonly textures: readonly T.Texture[];
   private readonly chunks: { near: T.Mesh; far: T.Mesh; x: number; z: number }[] = [];
   private readonly details: PlanetGroundDetails;
+  private readonly midProps: PlanetMidProps;
   private readonly propBatches: PropBatch[] = [];
   private readonly detailRange: { value: T.Vector2 };
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
@@ -174,6 +176,8 @@ export class GeneratedTerrain {
     this.root.add(createPlanetHorizon(id, seed, field, ground));
     this.details = new PlanetGroundDetails(world, reservations, width, cells / tile, wind);
     this.root.add(this.details.root);
+    this.midProps = new PlanetMidProps(world, reservations, width, cells / tile, wind);
+    this.root.add(this.midProps.root);
 
     const stone = materials.prop('rock', surface.rock, .93);
     applyRockSurface(stone, rockDeposit(id, surface, false), this.rockControls);
@@ -319,6 +323,7 @@ export class GeneratedTerrain {
     this.rockControls.dusting.value = quality === GRAPHICS_QUALITY.low ? 0 : 1;
     if (this.belt) this.belt.mesh.count = Math.round(this.belt.total * (quality === GRAPHICS_QUALITY.low ? .45 : 1));
     this.details.configure(quality);
+    this.midProps.configure(quality);
   }
 
   update(camera: T.Camera): void {
@@ -339,5 +344,6 @@ export class GeneratedTerrain {
       far.visible = !near.visible;
     }
     this.details.update(camera);
+    this.midProps.update(camera);
   }
 }

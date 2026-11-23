@@ -4,7 +4,8 @@ export const GRAPHICS_QUALITY = {
     enemyNear: 12, enemyFar: 30, enemyShadowDistance: 10, effectSlots: 20, impactParticles: 3, fxaa: false,
     muzzleFlashes: 6, shellCasings: 4, muzzleLight: 0, muzzleDistance: 26, casingDistance: 0,
     explosionSlots: 4, explosionSmoke: 2, explosionDust: 2, explosionDebris: 4, explosionLight: 0,
-    environmentDetailDensity: .30, environmentDetailDistance: 21, terrainTextureDistance: 52, environmentLodDistance: 45,
+    environmentDetailDensity: .30, environmentDetailDistance: 26, terrainTextureDistance: 52, environmentLodDistance: 45,
+    midPropDensity: .45, midPropDistance: 58, midPropShadows: false,
     weatherParticles: 64, vegetationMotion: .58, carrierBloom: 0,
   },
   medium: {
@@ -12,7 +13,8 @@ export const GRAPHICS_QUALITY = {
     enemyNear: 21, enemyFar: 48, enemyShadowDistance: 23, effectSlots: 36, impactParticles: 6, fxaa: false,
     muzzleFlashes: 10, shellCasings: 16, muzzleLight: 0, muzzleDistance: 42, casingDistance: 13,
     explosionSlots: 8, explosionSmoke: 4, explosionDust: 4, explosionDebris: 8, explosionLight: 11,
-    environmentDetailDensity: .72, environmentDetailDistance: 40, terrainTextureDistance: 100, environmentLodDistance: 69,
+    environmentDetailDensity: .72, environmentDetailDistance: 48, terrainTextureDistance: 100, environmentLodDistance: 69,
+    midPropDensity: .82, midPropDistance: 92, midPropShadows: false,
     weatherParticles: 176, vegetationMotion: .84, carrierBloom: .38,
   },
   high: {
@@ -20,7 +22,8 @@ export const GRAPHICS_QUALITY = {
     enemyNear: 31, enemyFar: 67, enemyShadowDistance: 33, effectSlots: 56, impactParticles: 9, fxaa: true,
     muzzleFlashes: 16, shellCasings: 32, muzzleLight: 3.5, muzzleDistance: 58, casingDistance: 22,
     explosionSlots: 12, explosionSmoke: 6, explosionDust: 6, explosionDebris: 12, explosionLight: 20,
-    environmentDetailDensity: 1, environmentDetailDistance: 57, terrainTextureDistance: 142, environmentLodDistance: 92,
+    environmentDetailDensity: 1, environmentDetailDistance: 66, terrainTextureDistance: 142, environmentLodDistance: 92,
+    midPropDensity: 1, midPropDistance: 125, midPropShadows: true,
     weatherParticles: 320, vegetationMotion: 1, carrierBloom: .48,
   },
 } as const;

@@ -11,6 +11,9 @@ import { PLANET_SURFACES, surfaceSample } from '../src/rendering/environment/Pla
 import { disposeMissionMeshes } from '../src/rendering/mission/disposeMissionMeshes.ts';
 import { GeneratedTerrain } from '../src/rendering/mission/GeneratedTerrain.ts';
 import { GRAPHICS_QUALITY } from '../src/rendering/GraphicsQuality.ts';
+import { MID_PROPS, midPropGeometry } from '../src/rendering/environment/MidPropAssets.ts';
+import type { MidPropId } from '../src/rendering/environment/MidPropAssets.ts';
+import { placeChunkMidProps } from '../src/rendering/environment/MidPropPlacement.ts';
 
 const worlds = [['green-plains', 17], ['desert', 31], ['ice', 48], ['forest', 63]] as const;
 
@@ -168,6 +171,68 @@ test('quality changes keep terrain vertices, collision prop instances and shared
   assert.equal(disposed.size, resources.size);
   assert.ok([...disposed.values()].every((times) => times === 1));
   shared.dispose();
+});
+
+test('mid props replay per chunk, stay clear of reservations and solids, and switch with the graphics tier', (t) => {
+  for (const [planet, seed] of worlds) {
+    const plan = generateWorld(planet, seed)!;
+    const { world, relays, balloonSites, chunkCells } = plan;
+    const sites = detailClearances(world, [...relays, ...balloonSites]);
+    const width = world.terrain.step * chunkCells;
+    const count = world.terrain.cells / chunkCells;
+    const ids = new Set<string>();
+    const assets = new Map<string, number>();
+    for (let z = 0; z < count; z++) for (let x = 0; x < count; x++) {
+      const props = placeChunkMidProps(world, sites, x, z, width);
+      assert.deepEqual(placeChunkMidProps(world, sites, x, z, width), props);
+      for (const prop of props) {
+        assert.ok(!ids.has(prop.id));
+        ids.add(prop.id);
+        assets.set(prop.asset, (assets.get(prop.asset) ?? 0) + 1);
+        assert.equal(prop.y, groundHeight(world, prop.x, prop.z));
+        assert.ok(Math.abs(prop.x) <= world.half && Math.abs(prop.z) <= world.half);
+        for (const site of sites) assert.ok(Math.hypot(prop.x - site.x, prop.z - site.z) > site.radius);
+        // Root flares sit on trunks; everything else keeps its centre out of every solid.
+        if (prop.asset !== 'roots') assert.ok(openGround(world, prop.x, prop.z, .04));
+      }
+    }
+    assert.ok(ids.size > 600, planet + ' ' + ids.size);
+    assert.ok(assets.size >= 3);
+    const reserved = detailClearances(world, [{ x: -30, z: -30, radius: width * 2 }]);
+    assert.ok(placeChunkMidProps(world, reserved, 3, 3, width).every(({ asset }) => asset === 'roots'));
+    t.diagnostic(planet + ' · ' + ids.size + ' · ' + JSON.stringify(Object.fromEntries(assets)));
+  }
+  for (const id of Object.keys(MID_PROPS) as MidPropId[]) {
+    const shape = midPropGeometry(id), info = MID_PROPS[id];
+    const position = shape.getAttribute('position'), normal = shape.getAttribute('normal');
+    assert.ok(position.count > 0 && position.count / 3 <= 520, id);
+    const box = shape.boundingBox!;
+    assert.ok(box.min.y >= -.16 && box.max.y <= info.height + .05, id);
+    assert.ok(Math.max(-box.min.x, box.max.x, -box.min.z, box.max.z) <= info.radius + .05, id);
+    for (let i = 0; i < normal.count; i++) {
+      assert.ok(Math.abs(Math.hypot(normal.getX(i), normal.getY(i), normal.getZ(i)) - 1) < 1e-4, id);
+    }
+    shape.dispose();
+  }
+  const { world, relays, balloonSites } = generateWorld('forest', 63)!;
+  const terrain = new GeneratedTerrain(world, [...relays, ...balloonSites], 1);
+  const mids: T.InstancedMesh[] = [];
+  terrain.root.traverse((object) => { if (object instanceof T.InstancedMesh && object.name.startsWith('Mid prop ')) mids.push(object); });
+  assert.ok(mids.length > 0);
+  const camera = new T.PerspectiveCamera();
+  camera.position.set(0, groundHeight(world, 0, 0) + 1.6, 0);
+  const visible = () => mids.reduce((sum, mesh) => sum + (mesh.visible ? mesh.count : 0), 0);
+  terrain.configure(GRAPHICS_QUALITY.low);
+  terrain.update(camera);
+  const low = visible();
+  assert.ok(mids.every((mesh) => !mesh.castShadow));
+  terrain.configure(GRAPHICS_QUALITY.high);
+  terrain.update(camera);
+  assert.ok(visible() > low && low > 0);
+  camera.position.set(1000, 50, 1000);
+  terrain.update(camera);
+  assert.equal(visible(), 0);
+  disposeMissionMeshes(terrain.root, new Set(), [], terrain.textures);
 });
 
 test('the existing Three GLB pipeline imports an in-memory metre-scale mesh and rejects an invalid asset', async () => {

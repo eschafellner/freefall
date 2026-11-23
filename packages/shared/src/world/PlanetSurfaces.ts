@@ -50,7 +50,7 @@ export function surfaceSample(planet: string, seed: number, field: Heightfield, 
   };
 }
 
-export const ENVIRONMENT_CATALOG_VERSION = 1;
+export const ENVIRONMENT_CATALOG_VERSION = 2;
 
 export function detailSeed(world: WorldDefinition): number {
   return (Number.parseInt(world.id.slice(-8), 16) ^ Math.imul(ENVIRONMENT_CATALOG_VERSION, 0x3b9aca07)) >>> 0;

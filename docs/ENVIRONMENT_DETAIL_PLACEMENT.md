@@ -4,10 +4,12 @@
 
 | Kandidaten pro 60-m-Chunk | Klein/Geröll | Vegetation | Oberflächendetail | Landmarkendetail | Cluster-Schwelle |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Eis | 112 | 0 | 112 | 20 | .41 |
-| Wüste | 230 | 85 | 0 | 38 | .52 |
-| Ebene | 155 | 705 | 0 | 20 | .42 |
-| Wald | 125 | 330 | 245 | 104 | .44 |
+| Eis | 150 | 0 | 170 | 34 | .41 |
+| Wüste | 270 | 150 | 0 | 52 | .50 |
+| Ebene | 175 | 1050 | 0 | 34 | .40 |
+| Wald | 150 | 440 | 320 | 130 | .42 |
+
+Seit Katalogversion 2 (Biom-Phase B) sind die Dichten höher, und die Sichtweite der Bodendetails beträgt 26/48/66 m (Low/Medium/High). Die Versionsänderung erzeugt auch das Muster der Oberflächenschichten neu. Server und Client bleiben dabei synchron, weil beide `detailSeed` aus `@freefall/shared` verwenden. Mittelgroße Objekte beschreibt [Biom-Phase B](BIOME_MID_PROPS.md).
 
 Die Kandidaten stammen aus pro Kategorie gestaffelten Rastern. Große und mittlere physische Props stammen gemeinsam aus `WORLD_PROFILES.solidCount` und den vorhandenen Größenregeln im 7.6-Generator. Die Biome erstellen je 42, 40, 34 und 500 Solids als Startbudget. Die Logik für drei erste größere Platzierungsslots, die Waldcluster und den Sandsteinbogen liegt weiterhin dort.
 
