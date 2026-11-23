@@ -69,12 +69,22 @@ export function TeamPanel({ status, mission, expanded }: { status: GameStatus; m
   </section>;
 }
 
+export interface Alert { tone: string; label: string; value?: string }
+
+/** Hinweiszeilen oben in der Mitte, darunter der TAB-Hinweis (Einsatz und Carrier). */
+export function AlertStack({ items }: { items: readonly Alert[] }) {
+  return <div className="field-alerts" role="status">
+    {items.map((item) => <div key={item.label} className={`field-alert ${item.tone}`}><span>{item.label}</span>{item.value && <strong>{item.value}</strong>}</div>)}
+    <div className="intel-hint"><kbd>Tab</kbd> Einsatzinfo</div>
+  </div>;
+}
+
 /** Urgent mission state that must stay visible without TAB: extraction timer and swarm breaches. */
 export function FieldAlerts({ mission, status }: { mission: MissionSnapshot; status: GameStatus }) {
   const extraction = mission.extraction;
   const own = status.players.find((player) => player.id === status.ownId);
   const tethered = extraction?.method === 'balloon' && extraction.securedIds.includes(status.ownId);
-  const items: { tone: string; label: string; value?: string }[] = [];
+  const items: Alert[] = [];
   if (extraction) {
     const remaining = seconds(extraction.endsAt, status);
     items.push({ tone: 'extract', label: extraction.method === 'balloon' ? BALLOON.displayName : 'Albatross 02',
@@ -88,10 +98,7 @@ export function FieldAlerts({ mission, status }: { mission: MissionSnapshot; sta
     items.push({ tone: 'extract', label: 'Hauptziele erfüllt', value: `${bindings.label('BALLOON')} · Extraktionsballon einsetzen` });
   }
   if (mission.activeBreaches > 0) items.push({ tone: 'warn', label: 'Schwarmdurchbruch', value: `${mission.activeBreaches} aktiv` });
-  return <div className="field-alerts" role="status">
-    {items.map((item) => <div key={item.label} className={`field-alert ${item.tone}`}><span>{item.label}</span>{item.value && <strong>{item.value}</strong>}</div>)}
-    <div className="intel-hint"><kbd>Tab</kbd> Einsatzinfo</div>
-  </div>;
+  return <AlertStack items={items}/>;
 }
 
 /** TAB overlay: objectives and the mission parameters. */

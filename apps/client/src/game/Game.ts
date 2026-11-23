@@ -103,6 +103,8 @@ export interface GameStatus {
   atConsole: boolean;
   /** At the Carrier station "Ausrüstung" (loadout menu). */
   atLocker: boolean;
+  /** Station opened with INTERACT; stays open until the pointer is captured again or the operator walks away. */
+  station?: 'console' | 'locker';
   /** Own effective loadout as accepted by the server. */
   loadout: EffectiveLoadout;
   /** Last refusal of a loadout change. */
@@ -274,6 +276,7 @@ export class Game {
     this.view = new ArenaView(container, quality);
     this.input = new DesktopInput(this.view.canvas, (locked) => {
       if (locked) this.quietLock = false;
+      if (locked) this.status.station = undefined;
       this.status.locked = locked;
       this.emit();
     }, () => {
@@ -778,6 +781,7 @@ export class Game {
     if (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION') {
       if (distanceSquared(this.prediction.position, CARRIER_CONSOLE) <= CARRIER_CONSOLE.radius ** 2) {
         this.status.atConsole = true;
+        this.status.station = 'console';
         this.missionAudio.alert('confirm');
         if (this.input.locked) document.exitPointerLock();
         this.emit();
@@ -785,6 +789,7 @@ export class Game {
         const room = CARRIER_ROOMS.find((entry) => distanceSquared(this.prediction.position, entry) < 5 ** 2);
         if (room?.label === 'AUSRÜSTUNG') {
           this.status.atLocker = true;
+          this.status.station = 'locker';
           this.missionAudio.alert('confirm');
           if (this.input.locked) document.exitPointerLock();
           this.emit();
@@ -1068,6 +1073,9 @@ export class Game {
       const locker = CARRIER_ROOMS.find(({ label }) => label === 'AUSRÜSTUNG')!;
       this.status.atLocker = Boolean(mission && (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION') &&
         distanceSquared(this.prediction.position, locker) < 5 ** 2);
+      if ((this.status.station === 'console' && !this.status.atConsole) || (this.status.station === 'locker' && !this.status.atLocker)) {
+        this.status.station = undefined;
+      }
       this.status.interaction = this.interaction();
       this.status.respawn = own && !own.hp ? Math.max(0, (own.respawnTick - this.tick) / NET.tickHz) : 0;
       if (this.telemetry) this.collectMotion(now - this.sampleAt, own);

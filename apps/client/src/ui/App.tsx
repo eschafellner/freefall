@@ -11,8 +11,9 @@ import type { MissionDebugAction } from '@freefall/shared';
 import { CombatLoadout } from './EquipmentHud.tsx';
 import { TeamPanel } from './FieldHud.tsx';
 import { MissionHud, seconds } from './MissionHud.tsx';
-import { CarrierConsole, OperatorManifest } from './CarrierConsole.tsx';
+import { CarrierConsole } from './CarrierConsole.tsx';
 import { LoadoutPanel } from './LoadoutPanel.tsx';
+import { Terminal } from './Terminal.tsx';
 import type { GameMode, JoinMode } from '../networking/Match.ts';
 import type { AccountSession } from '@freefall/shared';
 import { AccountError, forgetSession, logout, restoreSession } from '../account/AccountClient.ts';
@@ -24,7 +25,7 @@ import { FullscreenSettings, enterFullscreenIfWanted } from './Fullscreen.tsx';
 import { UNLOCKS, formatResourceAmounts, hasResources } from '@freefall/shared';
 
 import { ControlSettings } from './ControlSettings.tsx';
-import { bindings } from '../input/Bindings.ts';
+import { bindings, keyboardCode } from '../input/Bindings.ts';
 
 const decimal = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 });
 const number = new Intl.NumberFormat('de-DE');
@@ -294,6 +295,24 @@ export function App() {
   // TAB (held) shows mission intel and the team's equipment; ESC releases the pointer and opens the pause menu.
   const [intel, setIntel] = useState(false);
   const showIntel = intel && status.locked && !result;
+  // Unlocked without a result: a Carrier station (opened with INTERACT) or the menu.
+  const menu = !status.locked && active && !entering && !result;
+  const station = menu && inCarrier && mission ? status.station : undefined;
+  const relock = () => { setFault(''); enterFullscreenIfWanted(); game.current?.lock(); };
+  const relockRef = useRef(relock);
+  relockRef.current = relock;
+  useEffect(() => {
+    if (!station) return;
+    // INTERACT closes the station again (Esc cannot: the browser grants no pointer lock for it).
+    const close = (event: KeyboardEvent) => {
+      if (event.repeat || (event.target instanceof HTMLElement && event.target.closest('input, select, textarea'))) return;
+      if (bindings.action(keyboardCode(event.code)) !== 'INTERACT') return;
+      event.preventDefault();
+      relockRef.current();
+    };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [station]);
 
   useEffect(() => {
     if (!surface.current) return;
@@ -520,61 +539,58 @@ export function App() {
     </TitleScreen>}
 
     {active && entering && !status.locked && <div className="entering" role="status">Verbinde mit dem {mode === 'mission' ? 'Skyfall Carrier' : 'Boreal Relay'} …</div>}
-    {!status.locked && active && !entering && <section className={result ? 'operations results' : status.atLocker && mission ? 'operations loadout-open' : 'operations'}
-      aria-label={result ? 'Einsatzergebnis' : 'Einsatzsteuerung'}>
-      <div className="eyebrow"><span />{active ? inCarrier ? 'Skyfall Carrier · Deck 03' : status.missionRoom ? missionName : 'Boreal Relay · Testarena' : 'KOOP · 1–4 SPIELER'}</div>
-      {active ? <>
-        <h1 className="room-heading">{result ? result.extractionSucceeded ? 'Einsatz erfolgreich' : 'Einsatz gescheitert'
-          : status.atConsole ? 'Einsatzplanung' : status.atLocker && mission ? 'Ausrüstung' : inCarrier ? 'Mannschaftsdeck' : 'Einsatz bereit'}</h1>
-        {result && <div key={result.id} className="mission-result">
-          <p>{result.extractionSucceeded ? `Extraktion bestätigt · ${result.extractedOperatorIds.length} Operator · ${result.extractionMethod === 'balloon' ? 'Rettungsballon' : 'Albatross 02'}`
-            : result.outcome === 'objective-unavailable' ? 'Missionsziel nicht verfügbar · Einsatz abgebrochen'
-            : 'Trupp ausgefallen · Keine Operatoren extrahiert'}</p>
-          {result.procedural && <p>{missionName} · Seed {result.procedural.seed}
-            {objectivesCompleted !== undefined && ` · ${objectivesCompleted} ${objectivesCompleted === 1 ? 'Ziel' : 'Ziele'} erfüllt`}</p>}
-          <p>Convicts im Statusbericht {result.convictsSurvived}/{result.convictsDeployed} lebend.
-            Albatross {result.albatrossSurvived ? 'erhalten' : 'zerstört'}.</p>
-          {reward && <div className="result-reward">{reward.baseExperience} Basis-EP + {reward.extractionBonusExperience} Extraktions-EP
-            <strong>{reward.totalExperience} EP</strong></div>}
-          {hasResources(pay) && <div className="result-reward">Einsatzlohn<strong>{formatResourceAmounts(pay)}</strong></div>}
-          {hasResources(result.samples) && <div className="result-reward">Extrahierte Proben (für den ganzen Trupp)<strong>{formatResourceAmounts(result.samples)}</strong></div>}
-          {status.progress?.resultId === result.id && <div className="result-progress" role="status">
-            {status.progress.level > status.progress.previousLevel && <strong className="level-up">Level {status.progress.level} erreicht</strong>}
-            <LevelMeter experience={status.progress.experience} compact/>
-            <small>Deinem Account gutgeschrieben: {status.progress.gained} EP</small>
-            {status.progress.resources && <small><ResourceGain credited={status.progress.resources.credited} forfeited={status.progress.resources.forfeited}/></small>}
-            {status.progress.resources && <ResourceBar balance={status.progress.resources.balance}/>}
-            {!!status.progress.unlocked?.length && <small>Neu freigeschaltet: {status.progress.unlocked
-              .map((id) => UNLOCKS.byId.get(id)?.displayName ?? id).join(', ')}</small>}
-          </div>}
-          <button className="primary" type="button" onClick={() => game.current?.action('return-vote')}
-            aria-pressed={mission.operators.some(({ id, endVote }) => id === status.ownId && endVote)}>
-            Rückkehr bestätigen <span>{seconds(mission.resultUntil, status)} s</span>
-          </button>
+    {!status.locked && active && !entering && result && <section className="operations results" aria-label="Einsatzergebnis">
+      <div className="eyebrow"><span />{status.missionRoom ? missionName : 'Boreal Relay · Testarena'}</div>
+      <h1 className="room-heading">{result.extractionSucceeded ? 'Einsatz erfolgreich' : 'Einsatz gescheitert'}</h1>
+      {result && <div key={result.id} className="mission-result">
+        <p>{result.extractionSucceeded ? `Extraktion bestätigt · ${result.extractedOperatorIds.length} Operator · ${result.extractionMethod === 'balloon' ? 'Rettungsballon' : 'Albatross 02'}`
+          : result.outcome === 'objective-unavailable' ? 'Missionsziel nicht verfügbar · Einsatz abgebrochen'
+          : 'Trupp ausgefallen · Keine Operatoren extrahiert'}</p>
+        {result.procedural && <p>{missionName} · Seed {result.procedural.seed}
+          {objectivesCompleted !== undefined && ` · ${objectivesCompleted} ${objectivesCompleted === 1 ? 'Ziel' : 'Ziele'} erfüllt`}</p>}
+        <p>Convicts im Statusbericht {result.convictsSurvived}/{result.convictsDeployed} lebend.
+          Albatross {result.albatrossSurvived ? 'erhalten' : 'zerstört'}.</p>
+        {reward && <div className="result-reward">{reward.baseExperience} Basis-EP + {reward.extractionBonusExperience} Extraktions-EP
+          <strong>{reward.totalExperience} EP</strong></div>}
+        {hasResources(pay) && <div className="result-reward">Einsatzlohn<strong>{formatResourceAmounts(pay)}</strong></div>}
+        {hasResources(result.samples) && <div className="result-reward">Extrahierte Proben (für den ganzen Trupp)<strong>{formatResourceAmounts(result.samples)}</strong></div>}
+        {status.progress?.resultId === result.id && <div className="result-progress" role="status">
+          {status.progress.level > status.progress.previousLevel && <strong className="level-up">Level {status.progress.level} erreicht</strong>}
+          <LevelMeter experience={status.progress.experience} compact/>
+          <small>Deinem Account gutgeschrieben: {status.progress.gained} EP</small>
+          {status.progress.resources && <small><ResourceGain credited={status.progress.resources.credited} forfeited={status.progress.resources.forfeited}/></small>}
+          {status.progress.resources && <ResourceBar balance={status.progress.resources.balance}/>}
+          {!!status.progress.unlocked?.length && <small>Neu freigeschaltet: {status.progress.unlocked
+            .map((id) => UNLOCKS.byId.get(id)?.displayName ?? id).join(', ')}</small>}
         </div>}
-        {!result && <div className="room">
-          <div><span>RAUMCODE</span><strong>{status.roomId}</strong></div>
-          <button className="text-button" type="button" onClick={() => void copyLink()}>{copied ? 'Kopiert' : 'Einladungslink kopieren'}</button>
-        </div>}
-        {mission && status.atConsole && !result && <CarrierConsole mission={mission} status={status}
-          select={(selection) => game.current?.select(selection)} start={() => game.current?.startMission()}/>}
-        {mission && status.atLocker && !result && <LoadoutPanel status={status} apply={(selection) => game.current?.setLoadout(selection)}/>}
-        {mission?.state === 'BOARDING' && <>
-          {mission.plan && <p>{mission.plan.briefing}</p>}
-          {mission.fallback && <p>Ersatzauftrag · Operation Bodenbruch</p>}
-          <OperatorManifest mission={mission} status={status}/>
-        </>}
-        {mission?.state === 'BOARDING' && status.host && <button className="secondary" type="button"
-          onClick={() => game.current?.cancelBoarding()}>Boarding abbrechen · zurück zur Missionskonsole</button>}
-        {!result && <button className="primary" type="button" onClick={() => { setFault(''); enterFullscreenIfWanted(); game.current?.lock(); }}
-          disabled={!status.ready || (status.missionRoom && !mission)}>
+        <button className="primary" type="button" onClick={() => game.current?.action('return-vote')}
+          aria-pressed={mission.operators.some(({ id, endVote }) => id === status.ownId && endVote)}>
+          Rückkehr bestätigen <span>{seconds(mission.resultUntil, status)} s</span>
+        </button>
+      </div>}
+    </section>}
+    {menu && station === 'console' && mission && <CarrierConsole mission={mission} status={status} close={relock} fault={fault}
+      select={(selection) => game.current?.select(selection)} start={() => game.current?.startMission()}/>}
+    {menu && station === 'locker' && <LoadoutPanel status={status} apply={(selection) => game.current?.setLoadout(selection)} close={relock} fault={fault}/>}
+    {menu && !station && <Terminal className="pause-terminal" fault={fault}
+      kicker={inCarrier ? 'Skyfall Carrier · Deck 03' : status.missionRoom ? missionName : 'Boreal Relay · Testarena'}
+      title={inCarrier ? 'Mannschaftsdeck' : status.missionRoom ? 'Einsatz' : 'Testarena'}
+      state={`${status.players.length} / ${MAX_PLAYERS} Operator`}
+      actions={<>
+        <button className="primary" type="button" onClick={relock} disabled={!status.ready || (status.missionRoom && !mission)}>
           {status.ready && (!status.missionRoom || mission) ? inCarrier ? 'Carrier betreten' : status.missionRoom ? 'Einsatz betreten' : 'Arena betreten' : 'Synchronisiere …'}
           <span aria-hidden="true">↗</span>
-        </button>}
-        <div className="session-actions">
-          <button className="text-button" type="button" onClick={() => void game.current?.leave()}>Raum verlassen</button>
-          <span>{status.players.length} / {MAX_PLAYERS} Operator</span>
+        </button>
+        <button className="text-button" type="button" onClick={() => void game.current?.leave()}>Raum verlassen</button>
+      </>}>
+      <div className="terminal-column">
+        <h3>Trupp einladen</h3>
+        <div className="room">
+          <div><span>RAUMCODE</span><strong>{status.roomId}</strong></div>
+          <button className="text-button" type="button" onClick={() => void copyLink()}>{copied ? 'Kopiert' : 'Einladungslink kopieren'}</button>
         </div>
+        {mission?.state === 'BOARDING' && status.host && <button className="secondary" type="button"
+          onClick={() => game.current?.cancelBoarding()}>Boarding abbrechen · zurück zur Missionskonsole</button>}
         {!status.missionRoom && <div className="horde-control">
           <label>Hordengröße</label><span>{status.host ? 'Host-Steuerung' : 'Host stellt ein'}</span>
           <div className="sizes" aria-label="Zahl der simulierten Gegner">
@@ -605,19 +621,21 @@ export function App() {
             {mission.convicts.length > 0 && <ul className="debug-convicts">{mission.convicts.map((convict) =>
               <li key={convict.id}>Convict {convict.slot + 1} · {convict.state} · {convict.hp}/{convict.maxHp} · {convict.equipmentId} · {convict.weaponId}</li>)}</ul>}
           </div>}
-      </> : null}
-      <label className="graphics-choice">Grafikqualität
-        <select value={quality} onChange={(event) => changeQuality(event.target.value as QualityName)} disabled={fatal}>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-      </label>
-      <FullscreenSettings/>
-      <ControlSettings onChange={() => refreshBindings((n) => n + 1)}/>
-      <AudioSettings game={game.current}/>
-      {fault && <div className="fault" role="alert">{fault}</div>}
-    </section>}
+      </div>
+      <div className="terminal-column terminal-settings">
+        <h3>Einstellungen</h3>
+        <label className="graphics-choice">Grafikqualität
+          <select value={quality} onChange={(event) => changeQuality(event.target.value as QualityName)} disabled={fatal}>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </label>
+        <FullscreenSettings/>
+        <ControlSettings onChange={() => refreshBindings((n) => n + 1)}/>
+        <AudioSettings game={game.current}/>
+      </div>
+    </Terminal>}
 
     {status.locked && !inCarrier && !cinematic && !result && own && own.hp > 0 && <>
       <div ref={reticle} className={`reticle ${status.hit ? 'hit' : ''} ${status.eliminated ? 'kill' : ''} ${status.allyHit ? 'ally' : ''}`} aria-hidden="true">
@@ -633,8 +651,8 @@ export function App() {
     {active && status.respawn > 0 && <div className="respawn" role="status"><strong>Außer Gefecht</strong><span>Respawn in {status.respawn.toFixed(1)} s</span></div>}
 
     {!result && <footer className="bottom">
-      {active && own && (!status.locked || !cinematic) && <TeamPanel status={status} mission={mission} expanded={showIntel}/>}
-      {active && !status.locked && !cinematic && <div className="controls">
+      {active && own && status.locked && !cinematic && <TeamPanel status={status} mission={mission} expanded={showIntel}/>}
+      {menu && !station && !cinematic && <div className="controls">
         <span><kbd>{(['MOVE_FORWARD', 'MOVE_LEFT', 'MOVE_BACKWARD', 'MOVE_RIGHT'] as const).map((action) => bindings.label(action)).join(' ')}</kbd> Bewegen</span>
         <span><kbd>{bindings.label('CROUCH')}</kbd> Ducken</span><span><kbd>{bindings.label('DIVE')}</kbd> Hechtsprung</span>
         <span><kbd>{bindings.label('STAND_UP')}</kbd> Aufstehen</span><span><kbd>{bindings.label('AIM')}</kbd> Zielen</span>
