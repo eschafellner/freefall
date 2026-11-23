@@ -237,6 +237,20 @@
     "date": "2026-11-20",
     "sha256": "cfb74a2ae95a9c8119c06e32ddae0ae1e111d4d8ad5e776bf668df14e55909ea"
   },
+  "237974": {
+    "file": "large-rocket-engine.mp3",
+    "original": "Large Rocket Engine",
+    "author": "Zovex",
+    "category": "world / landing",
+    "planet": "all",
+    "kind": "designed sound (Download vom Projektinhaber, 44,1 kHz Stereo-MP3)",
+    "page": "https://freesound.org/people/Zovex/sounds/237974/",
+    "source": "https://freesound.org/people/Zovex/sounds/237974/",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "date": "2026-11-23",
+    "sha256": "8ea1cdf6de9099f061a8dfd42fe04f04aef81808b60024e67948b35330712311"
+  },
   "rocket-engine": {
     "file": "rocket_engine.001.wav",
     "original": "rocket_engine.001.wav",

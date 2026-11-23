@@ -50,6 +50,7 @@ ONE_SHOTS = [
     ("radio", "kenney-radio", 0, .55, 300, 3900, -21, 0, 1),
     ("confirm", "kenney-confirm", 0, .49, 260, 4150, -19, 0, 1),
     ("hull-impact", "kenney-metal", 0, 1.1, 85, 4100, -18, 0, 1),
+    ("landing-burn", 237974, 0, 11, 38, 7500, -18, 0, 1),
     *[(f"schabe-chitter-{n}", f"bug-0{n}", 0, .68, 165, 5300, -22, 0, 1) for n in range(1, 4)],
     *[(f"schabe-impact-{n}", f"spit-0{n}", 0, .75, 93, 5900, -19, 0, 1) for n in range(1, 3)],
 ]

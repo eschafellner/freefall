@@ -1,9 +1,5 @@
 const CACHE_LIMIT = 80 * 1024 * 1024;
-const AUDIO_PATH = (import.meta.env?.BASE_URL ?? '/') + 'audio/';
-/** Vom Projektinhaber bereitgestellte Effekte liegen getrennt von der CC0-Bibliothek (Manifest: docs/sfx-sources.json). */
-const OWNED_PATH = (import.meta.env?.BASE_URL ?? '/') + 'sfx/';
-const OWNED = new Set(['landing-burn']);
-const pcmBytes = (buffer: AudioBuffer): number => buffer.length * buffer.numberOfChannels * 4;
+const AUDIO_PATH = (import.meta.env?.BASE_URL ?? '/') + 'audio/';const pcmBytes = (buffer: AudioBuffer): number => buffer.length * buffer.numberOfChannels * 4;
 
 export class AudioAssets {
   private readonly buffers = new Map<string, AudioBuffer>();
@@ -48,7 +44,7 @@ export class AudioAssets {
     for (const extension of this.preferMp3 ? ['mp3', 'ogg'] : ['ogg', 'mp3']) {
       try {
         const started = performance.now();
-        const response = await fetch((OWNED.has(id) ? OWNED_PATH : AUDIO_PATH) + id + '.' + extension, { signal: this.abort.signal });
+        const response = await fetch(AUDIO_PATH + id + '.' + extension, { signal: this.abort.signal });
         if (!response.ok) continue;
         const raw = await response.arrayBuffer();
         const fetched = performance.now();

@@ -1040,6 +1040,26 @@
     }
   },
   {
+    "id": "landing-burn",
+    "source": 237974,
+    "start": 0,
+    "sourceSeconds": 10.9453,
+    "seconds": 10.9453,
+    "channels": 1,
+    "hpfHz": 38,
+    "lpfHz": 7500,
+    "crossfade": 0,
+    "gainDb": -8.67,
+    "targetLufs": -18,
+    "lufs": -18.0,
+    "peakDbtp": -3.57,
+    "lra": 16.6,
+    "sha256": {
+      "ogg": "8ab477bba498389db86ee1226bedd008a7a887ba2300c933601b3b2a8bfe46f5",
+      "mp3": "77d739d52b0fbbcdac47cbd6f8a24e7071892f40b2e8b574b38db1051b4da9ec"
+    }
+  },
+  {
     "id": "hull-impact",
     "source": "kenney-metal",
     "start": 0,

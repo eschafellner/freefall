@@ -14,7 +14,7 @@ Der Client liefert **75 hörbare Master** in je Ogg Vorbis und MP3 aus. Auf die 
 | `snow`, `ice`, `sand`, `grass`, `dirt`, `rock`, `forest-floor` (je 4) | Bewegung und Körperkontakt | Vrymaa, SoundsLikeYukon, thesynesthiser, Fission9, aglinder und qubodup |
 | `schabe-hiss-1…3`, `schabe-chitter-1…3`, `schabe-impact-1…2` | Windup, Bewegung, Nahkampf, Tod und Nester | Kreaturendesign von Darsycho und rubberduck |
 | `carrier`, `lander`, `recovery`, `hull-impact` | Skyfall Carrier, Albatross 02, Bergungsjäger und Rumpf | gmason, Kenney und theMinesAreShakin |
-| `landing-burn` | Bremsschub des Albatross bei der Landung | vom Projektinhaber bereitgestellt |
+| `landing-burn` | Bremsschub des Albatross bei der Landung | [Zovex, „Large Rocket Engine“](https://freesound.org/people/Zovex/sounds/237974/) |
 | `radio`, `confirm` | Interface und Mission | Kenney Interface Sounds |
 
 Felix Blumes Mojave-Wind ist eine professionelle Außenaufnahme mit Schoeps-Mikrofonen und Sound-Devices-Recorder. Anya_Media und Garuda1982 dokumentieren ebenfalls ihre Aufnahmegeräte. Freesound lieferte öffentlich zugängliche HQ-MP3-Fassungen dieser Aufnahmen. Die in der Quellenliste als gestaltet gekennzeichneten Windsounds, Kreaturen, Triebwerke und UI-Cues sind Sounddesign. [Mojave-Aufnahme](https://freesound.org/people/felix.blume/sounds/187756/), [Waldaufnahme](https://freesound.org/people/Anya_Media/sounds/523389/), [Wiesenaufnahme](https://freesound.org/people/Garuda1982/sounds/639459/).
