@@ -16,6 +16,10 @@ Am 21. November 2026 wurden alle 16 Freesound-Quellen einzeln gegen die CC0-Anga
 
 Quellen, Lizenzen, Ausschnitte und Prüfsummen sind im [Waffen-Audiobericht](WEAPON_AUDIO_7_9A.md) und in den gemeinsamen JSON-Manifesten dokumentiert. Die ausgewählten Aufnahmen und Foley-Dateien stehen unter CC0 1.0. Das Spiel liefert die bearbeiteten Ausschnitte in Ogg und MP3 aus.
 
+## Bremsschub der Landung
+
+`landing-burn` (Ogg und MP3, mono, 32 kHz, in `apps/client/public/sfx` getrennt von der CC0-Bibliothek, [Manifest](sfx-sources.json)) stammt aus `large-rocket-engine.mp3`, das der Projektinhaber am 23.11.2026 bereitgestellt hat. Die Datei fällt nicht unter die CC0-Effektbibliothek. Herkunft und Lizenz sind noch nachzutragen. Bearbeitung: Downmix auf mono, Hochpass 38 Hz, Tiefpass 7,5 kHz, Lautheit auf −18 LUFS (Ergebnis ≈ −19 LUFS, Spitze −4,5 dBFS). SHA-256 Quelle `8ea1cdf6…0712311`, Ogg `8b7e90a8…aca192e`, MP3 `833c612f…1ce58b`.
+
 ## Musik
 
 „L'Arrée Triomphale“ (Drop) und „Last Stand“ (Ballonextraktion) sind eigene Werke, die der Projektinhaber bereitgestellt hat. Sie fallen nicht unter die CC0-Effektbibliothek und liegen deshalb getrennt in `apps/client/public/music` mit eigenem Manifest. Das Manifest enthält Prüfsummen der Quelle und beider Auslieferungsformate, Lautheit und Kodierung. Die MP3-Fassung ist der unveränderte Audiostrom ohne Metadaten und Cover, die Ogg-Fassung ist Vorbis q5. [Manifest](music-sources.json)

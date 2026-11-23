@@ -55,6 +55,22 @@ test('audio catalog covers every weather profile and the encoded assets match th
   assert.deepEqual(readdirSync(dir).sort(), expected.sort());
 });
 
+test('owner-provided effects outside the CC0 library match their manifest', () => {
+  const dir = new URL('../public/sfx/', here);
+  const manifest = JSON.parse(readFileSync(new URL('../../../docs/sfx-sources.json', here), 'utf8')) as
+    { id: string; rights: string; sha256: Record<string, string> }[];
+  const expected: string[] = [];
+  for (const asset of manifest) {
+    assert.ok(asset.rights);
+    for (const extension of ['ogg', 'mp3']) {
+      const file = asset.id + '.' + extension;
+      expected.push(file);
+      assert.equal(createHash('sha256').update(readFileSync(new URL(file, dir))).digest('hex'), asset.sha256[extension]);
+    }
+  }
+  assert.deepEqual(readdirSync(dir).sort(), expected.sort());
+});
+
 test('1,000 simultaneous voices leave protected seats and clean up at expiration', () => {
   const budget = new VoiceBudget();
   let cleans = 0;

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "landing-burn",
+    "title": "Large Rocket Engine",
+    "role": "Bremsschub des Albatross bei der Landung (BRAKING)",
+    "rights": "Vom Projektinhaber bereitgestellt, Herkunft und Lizenz noch nachzutragen",
+    "sourceFile": "large-rocket-engine.mp3",
+    "sourceSha256": "8ea1cdf6de9099f061a8dfd42fe04f04aef81808b60024e67948b35330712311",
+    "seconds": 11,
+    "sampleRate": 32000,
+    "channels": 1,
+    "lufs": -18.7,
+    "peakDbfs": -4.5,
+    "processing": "Downmix mono, Hochpass 38 Hz, Tiefpass 7,5 kHz, loudnorm I=-18 TP=-1.5, 32 kHz",
+    "encoding": {
+      "ogg": "Vorbis q4",
+      "mp3": "LAME 64 kbit/s, ohne Metadaten"
+    },
+    "sha256": {
+      "ogg": "8b7e90a8f55e4fd9ddbcac3a30aec70d4fbd17efa2bed7394517c0a11aca192e",
+      "mp3": "833c612f9820977d32a2f322c1996d3a3746b61314ecbde7ffd59e31331ce58b"
+    }
+  }
+]

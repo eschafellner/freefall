@@ -1,8 +1,8 @@
-import { ALBATROSS, NET, groundHeight } from '@freefall/shared';
+import { ALBATROSS, NET, groundHeight, isCarrierScene } from '@freefall/shared';
 import type { MissionEvent, MissionSnapshot, PositionXZ, WorldDefinition } from '@freefall/shared';
 import { FlightAudio } from '../rendering/mission/FlightAudio.ts';
 import { CarrierAlarm } from './CarrierAlarm.ts';
-import type { AudioEngine, AudioPosition } from './AudioEngine.ts';
+import type { AudioEngine, AudioPosition, SampleVoice } from './AudioEngine.ts';
 import { AudioLayers, Takes } from './Soundscape.ts';
 import { PRIORITY } from './VoiceBudget.ts';
 import { MusicPlayer, musicCue } from './Music.ts';
@@ -29,6 +29,8 @@ export class MissionAudio {
   private previous?: MissionSnapshot;
   private pendingAlert?: { id: string; expires: number; urgent: boolean };
   private nextNest = 0;
+  /** Bremsschub der Landung (`landing-burn`), läuft einmal durch BRAKING und wird beim Aufsetzen abgeschaltet. */
+  private burn?: SampleVoice;
   private nextAlert = 0;
 
   constructor(engine: AudioEngine) {
@@ -39,7 +41,7 @@ export class MissionAudio {
     this.music = new MusicPlayer(engine);
   }
 
-  warm(): void { this.engine.preload(['radio', 'confirm', 'lander', 'recovery', 'hull-impact']); }
+  warm(): void { this.engine.preload(['radio', 'confirm', 'lander', 'landing-burn', 'recovery', 'hull-impact']); }
 
   alert(id: 'radio' | 'confirm', urgent = false): void {
     const now = performance.now();
@@ -111,10 +113,12 @@ export class MissionAudio {
     this.music.update(musicCue(state, tick, this.music.current), state.instanceId);
     const flying = state.state === 'DEPLOYMENT' && state.phase !== 'DOCKED';
     const lifting = state.extraction?.method === 'albatross' && state.extraction.phase === 'LIFT';
-    const operational = state.albatross?.lifecycleState === 'OPERATIONAL' || state.albatross?.lifecycleState === 'DAMAGED';
-    const ship = !state.result && ((flying && DEPLOYMENT_SOUND) || lifting || (operational && state.state !== 'DEPLOYMENT')) ? transport.ship : undefined;
-    this.layers.set('ship', ship ? 'lander' : undefined, 'environment',
-      (flying || lifting ? .85 : state.albatross?.lifecycleState === 'DAMAGED' ? .23 : .30), 1.2, ship, AIR_RANGE);
+    // An Bord des Carriers (Hangar, Boarding, Freier Fall) laufen keine Triebwerke; der Albatross fällt antriebslos.
+    const docked = isCarrierScene(state.state, state.phase);
+    // Gelandet läuft kein Leerlauf; hörbar sind nur Bremsschub (landing-burn) und Abflug bei der Albatross-Extraktion.
+    const ship = !state.result && !docked && ((flying && DEPLOYMENT_SOUND) || lifting) ? transport.ship : undefined;
+    this.layers.set('ship', ship ? 'lander' : undefined, 'environment', .85, 1.2, ship, AIR_RANGE);
+    this.updateBurn(tick, state, transport.ship);
     const recovery = state.result ? undefined : transport.recovery;
     this.layers.set('recovery', recovery ? 'recovery' : undefined, 'environment',
       .79, .9, recovery, AIR_RANGE, 6.1);
@@ -130,6 +134,23 @@ export class MissionAudio {
     }
     if (candidate) this.cue('schabe-chitter', 3, candidate, listener, world,
       tick - candidate.lastSpawnAt < NET.tickHz * 2 ? .61 : .37, 46, .60);
+  }
+
+  /** Raketentriebwerke erst beim Bremsschub: Zündung mit BRAKING, Abschalten beim Aufsetzen. Spätere Beitritte steigen versetzt ein. */
+  private updateBurn(tick: number, state: MissionSnapshot, ship?: AudioPosition): void {
+    const burning = !state.result && state.state === 'DEPLOYMENT' && state.phase === 'BRAKING' && !!ship;
+    if (!burning) {
+      if (this.burn?.active) this.burn.fadeOut(state.phase === 'TOUCHDOWN' ? .45 : .25);
+      this.burn = undefined;
+      return;
+    }
+    if (this.burn?.active) {
+      this.burn.position(ship);
+      return;
+    }
+    const offset = Math.max(0, (tick - state.phaseAt) / NET.tickHz);
+    this.burn = this.engine.play('landing-burn', { bus: 'environment', level: .95, fade: offset > .2 ? .3 : .02, offset,
+      position: ship, range: AIR_RANGE, owner: 'landing-burn', priority: PRIORITY.combat, hrtf: true });
   }
 
   private hull(source: PositionXZ, listener: AudioPosition, world: WorldDefinition, level: number, pitch: number): void {
@@ -151,6 +172,8 @@ export class MissionAudio {
     this.alarm.clear();
     this.music.stop();
     this.layers.clear();
+    this.burn?.stop();
+    this.burn = undefined;
     this.takes.clear();
     this.previous = this.pendingAlert = undefined;
     this.nextNest = this.nextAlert = 0;
