@@ -8,7 +8,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { matchMaker } from '@colyseus/core';
 import { build, preview } from 'vite';
-import { ARENA_ROOM, BODENBRUCH_ROOM } from '@freefall/shared';
+import { ARENA_ROOM, BODENBRUCH_ROOM, UNLOCKS } from '@freefall/shared';
 import { startServer } from '../apps/server/src/server.ts';
 import { AccountService } from '../apps/server/src/accounts/AccountService.ts';
 import { AccountStore } from '../apps/server/src/accounts/AccountStore.ts';
@@ -81,7 +81,12 @@ try {
     await until(async () => (found = (await matchMaker.query({ name }))[0]), 'Raum ' + name);
     return matchMaker.getLocalRoomById(found.roomId);
   };
-  const mission = (await roomOf(BODENBRUCH_ROOM)).arena;
+  const missionRoom = await roomOf(BODENBRUCH_ROOM);
+  const mission = missionRoom.arena;
+  // Since b9cdc80 the VX-13 is bought in the Arsenal (level 2, 3,000 SKR). Grant it like `admin.js grant` would.
+  await until(() => missionRoom.operators.size > 0, 'Account im Raum');
+  const [account] = missionRoom.operators.values();
+  assert.deepEqual(store.grantUnlocks(account.id, [UNLOCKS.byId.get('weapon.vx-13')], 'admin'), ['weapon.vx-13']);
   await until(() => mission.players[0], 'Operator');
   const operator = mission.players[0];
   Object.assign(operator, { x: -16.5, z: 9, yaw: -Math.PI / 2, protectedUntil: Infinity, life: operator.life + 1 });
