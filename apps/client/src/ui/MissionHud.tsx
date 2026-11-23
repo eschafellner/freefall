@@ -12,6 +12,22 @@ const phaseText: Partial<Record<DeploymentPhase, string>> = {
   BRAKING: 'Bremsschub', TOUCHDOWN: 'Aufsetzen',
 };
 
+const SAMPLE_LABELS = [['tissue', 'Gewebe'], ['rock', 'Gestein'], ['artifact', 'Artefakte']] as const;
+
+/** Getragene Proben: eigene Menge und Stand des Trupps gegen das Limit. Nur sichtbar, wenn der Trupp Proben trägt. */
+function SampleHud({ mission, ownId }: { mission: MissionSnapshot; ownId: string }) {
+  const samples = mission.samples;
+  if (!samples) return null;
+  const own = samples.carried[ownId] ?? {};
+  const shown = SAMPLE_LABELS.filter(([id]) => samples.team[id] > 0);
+  if (!shown.length) return null;
+  return <aside className="sample-hud" aria-label="Getragene Proben">
+    {shown.map(([id, label]) => <div key={id} className={`sample ${id}${samples.team[id] >= samples.limits[id] ? ' full' : ''}`}>
+      <i aria-hidden="true"/><span>{label}</span><b>{own[id] ?? 0}</b><small>Trupp {samples.team[id]}/{samples.limits[id]}</small>
+    </div>)}
+  </aside>;
+}
+
 /** Mission overlays. In the field only urgent alerts stay on screen; objectives and parameters open with TAB. */
 export function MissionHud({ mission, status, intel = false }: { mission: MissionSnapshot; status: GameStatus; intel?: boolean }) {
   const name = mission.plan?.displayName ?? MISSION_REGISTRY.get(mission.missionId)?.displayName;
@@ -40,6 +56,7 @@ export function MissionHud({ mission, status, intel = false }: { mission: Missio
     </div>}
     {!carrier && !deployment && <>
       <FieldAlerts mission={mission} status={status}/>
+      <SampleHud mission={mission} ownId={status.ownId}/>
       <IntelOverlay mission={mission} status={status} open={intel}/>
     </>}
     {status.interaction && !deployment && <div className="interact-hint"><kbd>{bindings.label('INTERACT')}</kbd> {status.interaction}</div>}

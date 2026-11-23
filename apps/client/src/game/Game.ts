@@ -9,6 +9,8 @@ import type {
   AccountProgress, EffectiveLoadout, LoadoutReply, LoadoutSelection, RosterEntry, ServerMetrics, ShotEvent, SupplyContainerSnapshot, WeaponSlot,
 } from '@freefall/shared';
 import { shotRays } from '@freefall/shared';
+import { POI_LOOT } from '@freefall/shared';
+import type { PickupKind, PickupSnapshot } from '@freefall/shared';
 import { playerWeapon, resolveOwnLoadout, sameSelection, storeSelection, storedSelection } from './Loadouts.ts';
 import { AudioEngine } from '../audio/AudioEngine.ts';
 import type { AudioPosition, VolumeChannel } from '../audio/AudioEngine.ts';
@@ -154,6 +156,29 @@ export const INITIAL_STATUS: GameStatus = {
 };
 
 /** Container reach, mirrors `ResupplySystem.inReach` on the server. */
+const PICKUP_PROMPT: Record<PickupKind, string> = {
+  tissue: 'Gewebeprobe aufnehmen', rock: 'Gesteinsprobe aufnehmen', artifact: 'Artefakt aufnehmen', mark: 'Einsatzmarke aufnehmen',
+  ammo: 'Munitionsbox aufnehmen', stims: 'Erste-Hilfe-Kasten aufnehmen', grenades: 'Granatenkiste aufnehmen',
+};
+
+/** Nächster Gegenstand in Aufnahmereichweite (dieselbe Regel wie am Server). */
+function nearestPickup(pickups: readonly PickupSnapshot[] | undefined, position: { x: number; z: number }): PickupSnapshot | undefined {
+  let best: PickupSnapshot | undefined, range = POI_LOOT.range ** 2;
+  for (const pickup of pickups ?? []) {
+    const distance = (pickup.x - position.x) ** 2 + (pickup.z - position.z) ** 2;
+    if (distance <= range) { range = distance; best = pickup; }
+  }
+  return best;
+}
+
+/** Truppenstand bei Proben, z. B. " · 4/10". */
+function pickupSuffix(kind: PickupKind, mission: MissionSnapshot, _own: string): string {
+  if (kind !== 'tissue' && kind !== 'rock' && kind !== 'artifact') return '';
+  const samples = mission.samples;
+  if (!samples) return '';
+  return samples.team[kind] >= samples.limits[kind] ? ' · Limit erreicht' : ` · ${samples.team[kind]}/${samples.limits[kind]}`;
+}
+
 function supplyInReach(position: { x: number; z: number }, ship: { x: number }, container: SupplyContainerSnapshot): boolean {
   const lateral = (position.x - ship.x) * (container.side === 'left' ? -1 : 1);
   return lateral >= ALBATROSS.halfWidth + .2 &&
@@ -359,7 +384,8 @@ export class Game {
               : BODENBRUCH;
             this.surface = missionGround(definition.world);
             this.view.setMission(definition, generated && plan
-              ? [...generated.relays, ...generated.balloonSites, plan.extraction.albatross, plan.extraction.balloon]
+              ? [...generated.relays, ...generated.balloonSites, plan.extraction.albatross, plan.extraction.balloon,
+                ...(generated.world.pointsOfInterest ?? [])]
               : []);
           }
           if (this.incompatibleWorld) return;
@@ -910,6 +936,8 @@ export class Game {
       if (container.state === 'EMPTY') return 'Nachschubcontainer leer';
       return `Nachschub aufnehmen · ${container.charges}/${container.maxCharges}`;
     }
+    const pickup = combat && !container ? nearestPickup(mission.pickups, position) : undefined;
+    if (pickup) return PICKUP_PROMPT[pickup.kind] + pickupSuffix(pickup.kind, mission, this.status.ownId);
     const canSecure = canSecureExtraction(this.prediction.posture.current, position, this.prediction.world);
     if (mission.state === 'EXTRACTION_AVAILABLE' && mission.albatross?.extractionAvailable && inAlbatross(position, mission.albatross))
       return canSecure ? 'Albatross-Start anfordern' : 'Für die Extraktion aufrichten';

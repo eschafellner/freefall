@@ -323,9 +323,11 @@ test('Einsatzende im Raum schreibt EP gut, meldet sie und füllt die Historie', 
     // Albatross-Abflug mit dem Host an Bord: Der Host wird extrahiert, der Gast bleibt zurück.
     const mission = (matchMaker.getLocalRoomById(host.roomId) as unknown as { arena: {
       finish(extracted: string[]): void; collectSamples(id: string, amounts: object): boolean } }).arena;
-    // Host trägt Proben und wird extrahiert, der Gast fällt zurück: Die Proben gelten trotzdem für beide.
+    // Host trägt Proben und wird extrahiert, der Gast bleibt zurück: Die Proben des Hosts gelten trotzdem für beide.
+    // Auf Stufe 2 gibt es weder Gesteinsproben noch Artefakte (Limit 0).
     assert.equal(mission.collectSamples(host.sessionId, { tissue: 2, artifact: 1 }), true);
-    assert.equal(mission.collectSamples(guest.sessionId, { rock: 4 }), true);
+    assert.equal(mission.collectSamples(guest.sessionId, { tissue: 3 }), true);
+    assert.equal(mission.collectSamples(guest.sessionId, { rock: 4 }), false);
     mission.finish([host.sessionId]);
     const [mine, theirs] = await Promise.all([hostProgress, guestProgress]);
     assert.equal(mine.gained, 500);
@@ -338,8 +340,8 @@ test('Einsatzende im Raum schreibt EP gut, meldet sie und füllt die Historie', 
     assert.ok((mine.resources?.credited.marks ?? 0) >= 3, 'Stufe 2 bringt mindestens 3 Einsatzmarken');
     assert.deepEqual(theirs.resources?.credited, mine.resources?.credited, 'alle Teilnehmer erhalten dasselbe');
     assert.equal(mine.resources?.credited.tissue, 2);
-    assert.equal(mine.resources?.credited.artifact, 1);
-    assert.equal(mine.resources?.credited.rock, undefined, 'Proben des nicht extrahierten Gasts sind verloren');
+    assert.equal(mine.resources?.credited.artifact, undefined, 'Artefakte erst ab Stufe 6');
+    assert.equal(mine.resources?.credited.tissue, 2, 'Proben des nicht extrahierten Gasts sind verloren');
     assert.equal(mine.resources?.balance.credits, 5000 + mine.resources!.credited.credits!);
 
     const resynced = waitFor<AccountProgress>(host, ACCOUNT_PROGRESS_MESSAGE, () => true);

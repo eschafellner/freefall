@@ -1,4 +1,6 @@
 import type { Heightfield } from '../world/Terrain.ts';
+import { placePointsOfInterest } from '../world/PointsOfInterest.ts';
+import type { PointOfInterest } from '../world/PointsOfInterest.ts';
 import type { PositionXZ } from '../config/movement.ts';
 
 export interface Circle extends PositionXZ { radius: number }
@@ -14,7 +16,8 @@ export interface Obstacle extends PositionXZ {
   /** Top elevation. Solids start at ground level unless bottom is set. */
   height: number;
   bottom?: number;
-  kind: 'rock' | 'tree' | 'ice' | 'arch-pier' | 'arch-span' | 'bunker' | 'barrier' | 'container';
+  /** `debris`: Kollider eines Point of Interest; der Client stellt ihn als PoI-Modell dar. */
+  kind: 'rock' | 'tree' | 'ice' | 'arch-pier' | 'arch-span' | 'bunker' | 'barrier' | 'container' | 'debris';
 }
 export interface WorldDefinition {
   id: string;
@@ -27,6 +30,8 @@ export interface WorldDefinition {
   patrolRegions: readonly PatrolRegion[];
   breachRegions: readonly SwarmBreachRegion[];
   initialNests: readonly PositionXZ[];
+  /** Fundorte mit Vorräten und Proben (siehe `placePointsOfInterest`). */
+  pointsOfInterest?: readonly PointOfInterest[];
 }
 
 interface ObjectiveRules {
@@ -70,7 +75,7 @@ const obstacle = (x: number, z: number, halfX: number, halfZ: number, height: nu
   ({ x, z, halfX, halfZ, height, kind });
 const breach = (id: string, x: number, z: number, radius = 15): SwarmBreachRegion => ({ id, x, z, radius });
 
-export const BODENBRUCH_WORLD: WorldDefinition = {
+const BODENBRUCH_BASE: WorldDefinition = {
   id: 'world.bodenbruch', half: 210, deployment: { x: -144, z: 153, radius: 24, facing: .4 },
   obstacles: [
     obstacle(-166, 139, 9, 5, 4.6, 'bunker'), obstacle(-162, 153, 4, 1.65, 2.7, 'container'),
@@ -107,6 +112,13 @@ export const BODENBRUCH_WORLD: WorldDefinition = {
   ],
   initialNests: [{ x: -86, z: 78 }],
 };
+
+/** Feste Welt mit PoI aus einem festen Seed, abseits von Landezone, Relais, Nest, Durchbrüchen und Extraktionsfläche. */
+const bodenbruchPoints = placePointsOfInterest(BODENBRUCH_BASE, 0x5b0d3, [
+  BODENBRUCH_BASE.deployment, BODENBRUCH_BASE.serviceApron!, { x: -100, z: 34, radius: 12 }, { x: 92, z: -49, radius: 12 },
+  ...BODENBRUCH_BASE.initialNests.map((nest) => ({ ...nest, radius: 14 })), ...BODENBRUCH_BASE.breachRegions,
+]);
+export const BODENBRUCH_WORLD: WorldDefinition = { ...BODENBRUCH_BASE, obstacles: bodenbruchPoints.obstacles, pointsOfInterest: bodenbruchPoints.points };
 
 export const BODENBRUCH: MissionDefinition = {
   id: 'mission.operation_bodenbruch',

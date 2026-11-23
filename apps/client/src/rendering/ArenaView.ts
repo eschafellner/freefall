@@ -44,6 +44,7 @@ import { createLighting } from './environment/Lighting.ts';
 import { createSurfaceMaterials } from './environment/SurfaceMaterials.ts';
 import { HORIZON_REACH } from './mission/PlanetHorizon.ts';
 import { TONE_MAPPING } from './ToneMapping.ts';
+import { PointsOfInterestView } from './mission/PointsOfInterestView.ts';
 
 const FLIGHT_PHASES = new Set(['DROPPING', 'ATMOSPHERIC_ENTRY', 'BRAKING']);
 
@@ -92,6 +93,7 @@ export class ArenaView {
     definition: MissionDefinition;
     environment: MissionEnvironment;
     breach: SwarmBreachController;
+    pois: PointsOfInterestView;
     surface: MissionDefinition['world'];
     atmosphere?: PlanetAtmosphereProfile;
   };
@@ -153,11 +155,13 @@ export class ArenaView {
       const environment = new MissionEnvironment(definition, this.materials, reservations, anisotropy, this.weather.wind);
       const breach = new SwarmBreachController(this.materials);
       environment.root.add(breach.root);
+      const pois = new PointsOfInterestView(definition.world);
+      environment.root.add(pois.root);
       this.scene.add(environment.root);
       const surface = missionGround(definition.world);
       breach.world = surface;
       const atmosphere = surface.terrain && surface.planetId ? WORLD_PROFILES.get(surface.planetId)?.atmosphere : undefined;
-      this.mission = { definition, environment, breach, surface, atmosphere };
+      this.mission = { definition, environment, breach, pois, surface, atmosphere };
       if (!this.operation) {
         const carrier = new Carrier(), ship = new AlbatrossView(), recovery = new RecoveryView();
         const convicts = new ConvictView(this.scene);
@@ -436,6 +440,7 @@ export class ArenaView {
       if (mission && state) {
         operation.carrier.update(now, state, low, this.renderer.getPixelRatio());
         operation.ship.update(state, missionTick, this.quality, latest, mission.surface, cameraPreferences.reducedMotion);
+        mission.pois.update(state.pickups, now, cameraPreferences.reducedMotion);
         operation.recovery.update(state.result || state.state === 'RETURN_TO_CARRIER' ? undefined : state.extraction,
           missionTick, dt, latest, own, position, mission.surface);
         const ship = operation.ship.root;

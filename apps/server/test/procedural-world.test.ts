@@ -32,13 +32,13 @@ test('world identity survives serialization and is independent of mission seed',
   assert.equal(generator.validate(first.plan), undefined);
 });
 
-test('v2 world IDs do not depend on the JavaScript engine’s Math.hypot implementation', (t) => {
+test('v3 world IDs (with points of interest) do not depend on the JavaScript engine’s Math.hypot implementation', (t) => {
   t.mock.method(Math, 'hypot', (...values: number[]) => Math.sqrt(values.reduce((sum, value) => sum + value * value, 0)));
   const fixtures = [
-    ['green-plains', 17, 'world.generated.202ac8cea6fc721f'],
-    ['desert', 31, 'world.generated.c9488da7f6db9eb9'],
-    ['ice', 48, 'world.generated.4c70c5cf4d66f37a'],
-    ['forest', 63, 'world.generated.e10ac2f3d47c20ef'],
+    ['green-plains', 17, 'world.generated.779d0f4383462fd5'],
+    ['desert', 31, 'world.generated.1b64d096e9a372da'],
+    ['ice', 48, 'world.generated.8494c32f2a2d7a0d'],
+    ['forest', 63, 'world.generated.7966b075bdc295ce'],
   ] as const;
   for (const [planet, seed, id] of fixtures) assert.equal(generateWorld(planet, seed)?.identity.id, id, planet);
 });
@@ -47,8 +47,9 @@ test('v2 worlds gather solids into clusters and add each planet’s landmark for
   for (const { id } of WORLD_PROFILES.values()) for (let seed = 0; seed < 20; seed++) {
     const { world } = generateWorld(id, seed)!;
     const solids = world.obstacles.filter(({ kind }) => kind !== 'arch-span');
-    // Landmark pieces come on top of the scattered budget.
-    assert.ok(world.obstacles.length > WORLD_PROFILES.get(id)!.solidCount, id + ' ' + seed);
+    // Landmark pieces come on top of the scattered budget. Forest points of interest clear trees from their footprint.
+    if (id !== FOREST_ID) assert.ok(world.obstacles.length > WORLD_PROFILES.get(id)!.solidCount, id + ' ' + seed);
+    else assert.ok(world.obstacles.length > WORLD_PROFILES.get(id)!.solidCount * .8, id + ' ' + seed);
     // Every solid keeps a walkable gap to its neighbours (arch piers excepted, they frame the opening).
     for (const [i, a] of solids.entries()) for (const b of solids.slice(i + 1)) {
       if (a.kind === 'arch-pier' && b.kind === 'arch-pier') continue;

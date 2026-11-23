@@ -21,13 +21,15 @@ SKR und Einsatzmarken gibt es, sobald der Trupp die Hauptziele erfüllt hat. Ob 
 | SKR | 250 | 500 | 800 | 1.200 | 1.600 | 2.000 | 2.500 |
 | Einsatzmarken | 2 | 3 | 4 | 6 | 7 | 9 | 11 |
 
+**Einsatzmarken vom Boden** (15 % je PoI) zählen zusätzlich, auch ohne Hauptziele, und unterliegen nicht der Obergrenze je Mission.
+
 **Optionale Ziele.** Jedes erfüllte optionale Ziel (heute die Nestaufgabe) bringt zusätzlich 20 % der Basis-SKR und 1 Einsatzmarke. Eine Mission bringt höchstens 11 Einsatzmarken. Auf Stufe 7 erhöht ein optionales Ziel deshalb nur die SKR (2.500 → 3.000).
 
 ## Proben und Artefakte
 
-Jeder Operator trägt die Proben, die er aufgenommen hat (`MissionInstance.collectSamples`). Fällt er, sind seine Proben verloren. Bei der Extraktion werden die Proben aller extrahierten Operator zusammengezählt (`MissionResult.samples`). Jeder Teilnehmer der verriegelten Liste erhält die volle Menge, auch wer gefallen ist. Scheitert die Extraktion, sind alle Proben verloren. Proben brauchen keine erfüllten Hauptziele.
+Jeder Operator trägt die Proben, die er aufgenommen hat. Bei der Extraktion werden die Proben aller extrahierten Operator zusammengezählt (`MissionResult.samples`). Jeder Teilnehmer der verriegelten Liste erhält die volle Menge, auch wer gefallen ist. Scheitert die Extraktion, sind alle Proben verloren. Proben brauchen keine erfüllten Hauptziele.
 
-**Noch offen:** Points of Interest, an denen Proben liegen, und das Aufheben fallen gelassener Proben gibt es noch nicht. Bis dahin legt der Debugbefehl `sample:tissue`, `sample:rock` oder `sample:artifact` (`mission-debug`, nur in Debug-Räumen) dem Host eine Probe in den Rucksack. Debug-Räume schreiben nichts gut. Zum Testen der Abrechnung dient `admin.js grant-resource`.
+Proben liegen einzeln an den [Points of Interest](POINTS_OF_INTEREST.md). Fällt ein Operator, liegen seine Proben einzeln am Boden und können wieder aufgenommen werden. Der Trupp darf je Stufe nur eine begrenzte Menge tragen und extrahieren (Truppenlimit). Der Debugbefehl `sample:tissue`, `sample:rock` oder `sample:artifact` (`mission-debug`, nur in Debug-Räumen) legt dem Host eine Probe in den Rucksack. Debug-Räume schreiben nichts gut.
 
 ## Obergrenze
 
@@ -78,4 +80,4 @@ docker compose exec game node apps/server/dist/accounts/admin.js grant-resource 
 | Arsenal, Dienstakte | alle fünf Ressourcen mit Maximum; im Arsenal Preise |
 | Ergebnisbildschirm | Einsatzlohn, extrahierte Proben, Gutschrift mit verfallenem Teil, neues Guthaben |
 | Dienstakte je Einsatz | gutgeschriebene und verfallene Ressourcen |
-| HUD im Einsatz | getragene Proben, sobald es Points of Interest gibt (noch offen) |
+| HUD im Einsatz | getragene Proben und Truppenstand |

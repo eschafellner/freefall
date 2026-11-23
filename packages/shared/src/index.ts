@@ -25,6 +25,7 @@ export * from './definitions/proceduralMissions.ts';
 
 export * from './world/Terrain.ts';
 export * from './world/WorldGenerator.ts';
+export * from './world/PointsOfInterest.ts';
 export * from './world/PlanetProfiles.ts';
 export * from './world/PlanetWeather.ts';
 export * from './world/PlanetSurfaces.ts';

@@ -3,10 +3,12 @@ import type { PositionXZ } from '../config/movement.ts';
 import type { Circle, Obstacle, WorldDefinition } from '../definitions/missions.ts';
 import type { Heightfield } from './Terrain.ts';
 import { terrainHeight } from './Terrain.ts';
+import { placePointsOfInterest } from './PointsOfInterest.ts';
 import { DESERT_ID, FOREST_ID, GREEN_PLAINS_ID, ICE_ID, WORLD_PROFILES } from './PlanetProfiles.ts';
 import type { PlanetProfile } from './PlanetProfiles.ts';
 
-export const WORLD_GENERATOR_VERSION = 2;
+/** v3: acht Points of Interest je Welt (`PointsOfInterest.ts`). */
+export const WORLD_GENERATOR_VERSION = 3;
 export const WORLD_PLAN_VERSION = 1;
 export const WORLD_ASSET_VERSION = 1;
 export interface WorldIdentity {
@@ -271,9 +273,11 @@ export function generateWorld(planetId: string, seed: number): WorldPlan | undef
       height: ground + (tree ? large ? 6 : 3.5 : ice ? halfX * 1.44 : halfX * .95), kind: tree ? 'tree' : ice ? 'ice' : 'rock' });
   }
   addLandmarks(planetId, seed, terrain, reserved, obstacles);
+  const pois = placePointsOfInterest({ half, terrain, obstacles }, seed, reserved);
   const configuration = { planetId, biome, seed, formatVersion: WORLD_PLAN_VERSION, generatorVersion: WORLD_GENERATOR_VERSION,
     profileVersion: version, assetVersion: WORLD_ASSET_VERSION };
-  const content = { half, terrain, planetId, deployment, obstacles, patrolRegions, breachRegions, initialNests };
+  const content = { half, terrain, planetId, deployment, obstacles: pois.obstacles, patrolRegions, breachRegions, initialNests,
+    pointsOfInterest: pois.points };
   const id = 'world.generated.' + balanceHash([configuration, content, relays, balloonSites, chunkCells]);
   return { identity: { id, ...configuration }, world: { id, ...content }, chunkCells, relays, balloonSites };
 }

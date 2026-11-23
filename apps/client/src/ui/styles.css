@@ -602,3 +602,14 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
 .resource-gain span { color: #f2e2b8; }
 .resource-gain em { font-style: normal; color: #ffb38a; }
 @media (max-width: 900px) { .title-account .resource-bar { display: none; } }
+
+/* Getragene Proben im Einsatz */
+.sample-hud { position: fixed; right: 18px; bottom: 150px; display: grid; gap: 4px; font: 11px var(--mono); color: #ffffffb3; pointer-events: none; z-index: 3; }
+.sample-hud .sample { display: grid; grid-template-columns: 8px auto 2.2em auto; align-items: center; gap: 6px; padding: 4px 8px; background: #0b1214b8; border: 1px solid #ffffff1c; }
+.sample-hud i { width: 7px; height: 7px; border-radius: 2px; background: var(--sample); box-shadow: 0 0 6px var(--sample); }
+.sample-hud b { color: #fff; text-align: right; }
+.sample-hud small { color: #ffffff80; }
+.sample-hud .full small { color: #ffd88a; }
+.sample-hud .tissue { --sample: #e58a9a; }
+.sample-hud .rock { --sample: #b9a58c; }
+.sample-hud .artifact { --sample: #b48cff; }

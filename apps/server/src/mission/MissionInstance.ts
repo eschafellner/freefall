@@ -1,7 +1,7 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import {
   ALBATROSS, BALANCE, BOARDING_TICKS, allowsPostureAction, CARRIER_CONSOLE, CARRIER_SHIP, CARRIER_SPAWN, CARRIER_WORLD, DEPLOYMENT_PHASES,
-  WEATHER_VERSION, WORLD_PROFILES, isTimeOfDay, planetWeather, MISSION_REWARDS, NET, SAMPLE_IDS, missionResourceReward, groundHeight, isWorldSeed, PLANET_REGISTRY, PROCEDURAL_CONTRACT_ID, RESULT_TICKS,
+  WEATHER_VERSION, WORLD_PROFILES, isTimeOfDay, planetWeather, MISSION_REWARDS, NET, SAMPLE_IDS, missionResourceReward, sampleLimits, spawnPoiLoot, groundHeight, isWorldSeed, PLANET_REGISTRY, PROCEDURAL_CONTRACT_ID, RESULT_TICKS,
   canSecureExtraction, distanceSquared, inAlbatross, isCarrierScene, isOperatorGrounded, isOptionalObjective, landingShip, missionGround, newPosture, resolveMissionBalance,
 } from '@freefall/shared';
 import type {
@@ -16,6 +16,7 @@ import type { AllyTarget, MeleeObject } from '../systems/combat.ts';
 import type { ResupplyHooks } from '../systems/equipment.ts';
 import { Albatross } from './Albatross.ts';
 import { ResupplySystem } from './Resupply.ts';
+import { PickupSystem } from './Pickups.ts';
 import { Convicts } from './Convicts.ts';
 import { EncounterDirector } from './EncounterDirector.ts';
 import { ExtractionSystem } from './ExtractionSystem.ts';
@@ -72,11 +73,9 @@ export class MissionInstance extends Battlefield {
   private readonly ready = new Set<string>();
   private readonly returnVotes = new Set<string>();
   private readonly roster = new Set<string>();
-  /**
-   * Proben, die jeder Operator gerade trägt. Fällt ein Operator, sind seine Proben verloren; mit den Points of Interest
-   * werden sie stattdessen am Boden liegen und wieder aufgehoben werden können. Was extrahiert wird, gilt für den ganzen Trupp.
-   */
-  private readonly carriedSamples = new Map<string, Record<SampleId, number>>();
+  /** Beute der Points of Interest und getragene Proben (ab dem Einsatzstart). */
+  private pickups?: PickupSystem;
+  private pickupRevision = 0;
   private albatross?: Albatross;
   private convicts?: Convicts;
   private supply?: ResupplySystem;
@@ -324,6 +323,11 @@ export class MissionInstance extends Battlefield {
     }
     this.boardingUntil = 0;
     for (const player of this.connected) this.roster.add(player.id);
+    // Beute der Points of Interest: Menge und Probenarten nach Schwierigkeit, Lage aus dem Welt-Seed.
+    const world = this.surface;
+    const loot = spawnPoiLoot(world, (plan?.seed ?? randomInt(0x7fffffff)) ^ 0x2f1d, this.difficulty.level);
+    this.pickups = new PickupSystem(world, loot, sampleLimits(this.difficulty.level, loot.filter(({ kind }) => kind === 'artifact').length));
+    this.pickupRevision = 0;
     if (this.captureMissionTelemetry) this.telemetry = new MissionTelemetry(this, this.roster);
     this.emit({ type: 'MissionStarted', tick: this.tick, missionId: this.definition.id, difficultyId: this.difficulty.id, balanceHash: this.balance.configHash });
     this.nextDeploymentPhase();
@@ -402,6 +406,12 @@ export class MissionInstance extends Battlefield {
     this.lastInteraction.set(player, this.tick + 6);
     if (this.state === 'BOARDING') return this.action(id, 'ready');
     const container = this.simulatesCombat && this.canMove(player) ? this.supply?.reachable(player) : undefined;
+    const pickup = !container && this.simulatesCombat && this.pickups && this.canMove(player) ? this.pickups.take(player) : undefined;
+    if (pickup) {
+      this.feedback.push({ id, code: pickup });
+      if (this.pickups!.revision !== this.pickupRevision) { this.pickupRevision = this.pickups!.revision; this.flowRevision++; }
+      return pickup !== 'pickup-full' && pickup !== 'pickup-limit';
+    }
     if (container) {
       // Validated again on the tick the action starts and on the tick it completes. Every reason the action
       // would not start is reported here, so the operator never presses E without an answer.
@@ -519,9 +529,11 @@ export class MissionInstance extends Battlefield {
     const plan = this.plan;
     const baseExperience = this.primaryCompleted ? MISSION_REWARDS.baseExperience : 0;
     const extractionBonusExperience = extracted.length ? Math.round(baseExperience * MISSION_REWARDS.extractionBonusRate) : 0;
-    const samples = this.extractedSamples(extracted);
+    const samples = this.pickups?.extracted(extracted) ?? {};
+    const marksFound = this.pickups?.marksFound ?? 0;
     const resources = missionResourceReward({ difficultyLevel: this.difficulty.level, primaryObjectivesCompleted: this.primaryCompleted,
-      optionalObjectivesCompleted: this.objectives.snapshot().filter(({ id, state }) => optional.has(id) && state === 'complete').length, samples });
+      optionalObjectivesCompleted: this.objectives.snapshot().filter(({ id, state }) => optional.has(id) && state === 'complete').length, samples,
+      marksFound });
     this.result = {
       id: this.instanceId + '/result', missionInstanceId: this.instanceId,
       missionId: this.definition.id, difficultyId: this.difficulty.id, balanceHash: this.balance.configHash,
@@ -537,7 +549,7 @@ export class MissionInstance extends Battlefield {
         const kills = this.players.find((player) => player?.id === operatorId)?.kills ?? 0;
         return { operatorId, baseExperience, extractionBonusExperience: bonus, totalExperience: baseExperience + bonus, kills, resources: { ...resources } };
       }),
-      samples,
+      samples, marksFound,
       missionName: plan?.displayName ?? this.definition.displayName,
       planetId: plan?.planetId ?? this.selection?.planetId,
       combat: this.stats.snapshot(),
@@ -569,7 +581,7 @@ export class MissionInstance extends Battlefield {
     this.phase = 'DOCKED'; this.phaseIndex = -1;
     this.phaseAt = this.phaseUntil = this.boardingUntil = this.resultUntil = this.returnUntil = 0;
     this.primaryCompleted = false;
-    this.ready.clear(); this.roster.clear(); this.returnVotes.clear(); this.carriedSamples.clear();
+    this.ready.clear(); this.roster.clear(); this.returnVotes.clear(); this.pickups = undefined;
     this.objectives = new ObjectiveManager(this.definition.objectives, this.emit);
     this.director = this.createDirector();
     this.combatTargets = this.director.nests;
@@ -630,7 +642,11 @@ export class MissionInstance extends Battlefield {
     }
     this.convicts!.update(this.tick, this.horde, this.surface, this.shots);
     const living = connected.filter(({ hp }) => hp > 0);
-    for (const player of this.players) if (player && player.hp <= 0) this.carriedSamples.delete(player.id);
+    if (this.pickups) {
+      // Gefallene Operator lassen ihre Proben einzeln fallen.
+      for (const player of this.players) if (player && player.hp <= 0) this.pickups.drop(player.id, player);
+      if (this.pickups.revision !== this.pickupRevision) { this.pickupRevision = this.pickups.revision; this.flowRevision++; }
+    }
     const beforeObjectives = this.profileEnemyAI ? performance.now() : 0;
     this.objectives.update(this.tick, this.director.nests.destroyed, living, this.surface);
     if (this.profileEnemyAI) this.objectiveUpdateMs = performance.now() - beforeObjectives;
@@ -676,31 +692,20 @@ export class MissionInstance extends Battlefield {
     }
   }
 
-  /** Ein Operator nimmt Proben auf (später über Points of Interest). Nur lebende Operator im Einsatz. */
+  /** Legt einem Operator Proben direkt in den Rucksack (Debug, Tests), begrenzt auf das Truppenlimit. */
   collectSamples(operatorId: string, amounts: SampleAmounts): boolean {
     const player = this.player(operatorId);
-    if (!player || player.hp <= 0 || !this.roster.has(operatorId) || !this.simulatesCombat || this.result) return false;
-    const carried = this.carriedSamples.get(operatorId) ?? { tissue: 0, rock: 0, artifact: 0 };
-    for (const id of SAMPLE_IDS) carried[id] += Math.max(0, Math.floor(amounts[id] ?? 0));
-    this.carriedSamples.set(operatorId, carried);
-    return true;
+    if (!player || player.hp <= 0 || !this.roster.has(operatorId) || !this.simulatesCombat || this.result || !this.pickups) return false;
+    return this.pickups.carry(operatorId, amounts);
   }
 
   /** Proben, die ein Operator gerade trägt. */
   samplesCarriedBy(operatorId: string): SampleAmounts {
-    return { ...this.carriedSamples.get(operatorId) };
+    return this.pickups?.carriedBy(operatorId) ?? {};
   }
 
-  /** Summe der Proben aller extrahierten Operator. */
-  private extractedSamples(extracted: readonly string[]): SampleAmounts {
-    const total: SampleAmounts = {};
-    for (const operatorId of extracted) {
-      const carried = this.carriedSamples.get(operatorId);
-      if (!carried) continue;
-      for (const id of SAMPLE_IDS) if (carried[id]) total[id] = (total[id] ?? 0) + carried[id];
-    }
-    return total;
-  }
+  /** Beute der Points of Interest (Tests, Debug). */
+  get pickupSystem(): PickupSystem | undefined { return this.pickups; }
 
   debug(id: string, action: unknown): boolean {
     const player = this.player(id);
@@ -785,6 +790,8 @@ export class MissionInstance extends Battlefield {
       phaseUntil: this.phaseUntil, boardingUntil: this.boardingUntil, primaryObjectivesCompleted: this.primaryCompleted,
       resultUntil: this.resultUntil, objectives: this.objectives.snapshot(), result: this.result,
       extraction: this.extraction.snapshot(), albatross: ship, convicts,
+      ...(this.pickups && !aboardCarrier && { pickups: this.pickups.snapshot(),
+        samples: { limits: this.pickups.limits, team: this.pickups.teamCarried(), carried: this.pickups.carriedSnapshot() } }),
       operators: this.players.flatMap((player) => player ? [{
         id: player.id, connected: !this.disconnected.has(player.id),
         participating: this.roster.has(player.id) || (this.acceptsNewOperators && !this.disconnected.has(player.id)),

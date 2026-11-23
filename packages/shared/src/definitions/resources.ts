@@ -64,10 +64,12 @@ export interface MissionResourceInput {
   optionalObjectivesCompleted: number;
   /** Vom Trupp extrahierte Proben; sie gelten für jeden Teilnehmer. */
   samples?: SampleAmounts;
+  /** Am Boden gefundene Einsatzmarken; zählen zusätzlich zur Obergrenze je Mission und auch ohne Hauptziele. */
+  marksFound?: number;
 }
 
 /** Ressourcen, die jeder Teilnehmer für den Einsatz erhält (vor Anwendung der Obergrenzen). */
-export function missionResourceReward({ difficultyLevel, primaryObjectivesCompleted, optionalObjectivesCompleted, samples = {} }: MissionResourceInput): ResourceAmounts {
+export function missionResourceReward({ difficultyLevel, primaryObjectivesCompleted, optionalObjectivesCompleted, samples = {}, marksFound = 0 }: MissionResourceInput): ResourceAmounts {
   const reward: ResourceAmounts = {};
   const table = MISSION_RESOURCE_REWARDS;
   if (primaryObjectivesCompleted) {
@@ -76,6 +78,8 @@ export function missionResourceReward({ difficultyLevel, primaryObjectivesComple
     reward.credits = Math.round(table.credits[index] * (1 + table.optionalCreditRate * optional));
     reward.marks = Math.min(table.maxMarksPerMission, table.marks[index] + table.optionalMarks * optional);
   }
+  const found = Math.max(0, Math.floor(marksFound));
+  if (found) reward.marks = (reward.marks ?? 0) + found;
   for (const id of SAMPLE_IDS) {
     const amount = Math.max(0, Math.floor(samples[id] ?? 0));
     if (amount) reward[id] = amount;

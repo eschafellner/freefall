@@ -37,6 +37,15 @@ const FEEDBACK: Readonly<Record<string, string>> = {
   'resupply-busy': 'Aktion läuft bereits',
   'resupply-reloading': 'Erst nachladen, dann Nachschub aufnehmen',
   'resupply-posture': 'Nachschub in dieser Haltung nicht möglich',
+  'pickup-tissue': 'Gewebeprobe aufgenommen',
+  'pickup-rock': 'Gesteinsprobe aufgenommen',
+  'pickup-artifact': 'Artefakt aufgenommen',
+  'pickup-mark': 'Einsatzmarke gefunden · gilt für den ganzen Trupp',
+  'pickup-ammo': 'Munition aufgenommen',
+  'pickup-stims': 'Stims aufgenommen',
+  'pickup-grenades': 'Granaten aufgenommen',
+  'pickup-full': 'Vollständig versorgt',
+  'pickup-limit': 'Probenlimit des Trupps erreicht',
 };
 
 export function endpoint(): string {

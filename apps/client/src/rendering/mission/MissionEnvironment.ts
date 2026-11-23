@@ -169,7 +169,7 @@ export class MissionEnvironment {
       parts.get(material)!.push({ matrix: cursor.matrix.clone(), color: tint });
     };
     for (const o of world.obstacles) {
-      if (o.kind === 'rock') continue;
+      if (o.kind === 'rock' || o.kind === 'debris') continue;
       const { x, z, halfX, halfZ, height: h } = o;
       const w = halfX * 2;
       const d = halfZ * 2;

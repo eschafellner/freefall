@@ -79,14 +79,15 @@ const GOLDEN_TRACES = {
   // 7.9B: the longer Schabe windup changes contact, damage, and downstream simulation.
   // 2026-11-22: the drop sequence takes 606 instead of 249 ticks; mission traces shift in time only
   // (the old phase durations reproduce the previous mission fingerprints exactly), the arena is unchanged.
+  // 2026-11-23: Operation Bodenbruch has eight points of interest; their colliders change routes and contacts.
   arena: 'f52a57b052421856f0b7b5a5e783d5760bb6397e8c54799d1def266cbf03967f',
-  'mission.easy': 'ec8818b06f272a59c912227e2d41160a260efa2a522e8651a6c4f2d4210902e3',
-  'mission.normal': '0314627f0f8df3612caed11c731c72edb7912b41073bd18b553a714a4bd02878',
-  'mission.challenging': 'dc9a0ee4205b8c7690a7e65950db89f6825a023794e3e7d2c9fefdafc6ad4267',
-  'mission.hard': '5f64e3134a53db2fba0084d83b595791e2c7a996c6819299e3e99a513e58ba3a',
-  'mission.extreme': '99a5c7e8d933b6a50111f5772a38ddbdfcf21478490e43507f25c791e2e0cc3c',
-  'mission.nightmare': 'cdd3767d4667759cda7080580c5a5fa358f3fe516842247ef6bde7909dc24380',
-  'mission.freefall': '578242d4cff2d87cfdca5b806d4c139e8717e1a45e5859f9b2d76a29b710e006',
+  'mission.easy': 'ed4a1d2695b90c9a260ff27139dc0c33c48b7a07bdaba6b06c99be16edf12752',
+  'mission.normal': 'ea6978c830cb2da9ca037421ec00b7257abc58b4b51cdd8bfa85e1ff13c10a85',
+  'mission.challenging': '1a36bc008a227ef33f557c4470c38145e4e7ffd68d951a268620baf1233dd3c5',
+  'mission.hard': '15abc2f2f55b54f9de70ceadcdda3fa0355e0925c14478bede1ef2fc392ebc81',
+  'mission.extreme': '27ec066b3399305dfb477545db9a1c7b6e6c162a0805b6c485ba448092663113',
+  'mission.nightmare': 'c6880bde4d1800aff2827ee077a8a1dc9eda9526d1d1565b6b7d757f8e96a05d',
+  'mission.freefall': 'fbd0c3a8ea8872f1a99379e9962a4f62f806e0ecf594cac7abc1b4561065a55a',
 };
 
 // ---------------------------------------------------------------------------------------------------------------

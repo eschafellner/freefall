@@ -19,7 +19,7 @@ const terrainSurfaces: Record<SurfaceFinish, ImpactSurface> = {
 
 const obstacleSurfaces: Record<Obstacle['kind'], ImpactSurface> = {
   rock: 'rock', tree: 'wood', ice: 'ice', 'arch-pier': 'rock', 'arch-span': 'rock',
-  bunker: 'concrete', barrier: 'concrete', container: 'metal',
+  bunker: 'concrete', barrier: 'concrete', container: 'metal', debris: 'metal',
 };
 
 export function impactSurface(world: WorldDefinition | undefined, x: number, z: number, obstacle?: Obstacle): ImpactSurface {

@@ -3,6 +3,7 @@ import type { CombatTelemetry } from './messages.ts';
 import type { TimeOfDay } from '../world/PlanetWeather.ts';
 import type { MissionPlan } from './missionPlan.ts';
 import type { ResourceAmounts, SampleAmounts } from '../definitions/resources.ts';
+import type { PickupSnapshot } from '../world/PointsOfInterest.ts';
 import { MISSION_REGISTRY } from '../definitions/missions.ts';
 import { BALANCE } from '../balance/defaults.ts';
 
@@ -148,6 +149,8 @@ export interface MissionResult {
     resources?: ResourceAmounts }[];
   /** Vom Trupp extrahierte Proben und Artefakte. Sie gelten für jeden Teilnehmer der verriegelten Liste. */
   samples?: SampleAmounts;
+  /** Am Boden gefundene Einsatzmarken; sie gelten sofort für den ganzen Trupp. */
+  marksFound?: number;
   /** Anzeigename des Auftrags (generierter Plan oder feste Mission). */
   missionName?: string;
   planetId?: string;
@@ -232,6 +235,10 @@ export interface MissionSnapshot {
   breachCount: number;
   nestsDestroyed: number;
   debug: boolean;
+  /** Aufnehmbare Gegenstände an den Points of Interest (nur im Einsatz). */
+  pickups?: PickupSnapshot[];
+  /** Getragene Proben: Truppenlimit, Summe des Trupps und je Operator. */
+  samples?: { limits: Required<SampleAmounts>; team: Required<SampleAmounts>; carried: Record<string, SampleAmounts> };
 }
 
 export function missionObjectives(snapshot: MissionSnapshot) {

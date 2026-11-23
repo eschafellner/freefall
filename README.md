@@ -85,7 +85,7 @@ Der Prototyp ist für lokale Tests ausgelegt. Spieler-Accounts mit Name#Tag und 
 
 [Architektur](docs/ARCHITECTURE.md) · [Performance und Messprotokoll](docs/PERFORMANCE.md) · [Boreal Relay und Rendering](docs/VISUAL_STYLE.md) · [Spielercharakter](docs/CHARACTER_SYSTEM.md) · [Fraktionen](docs/FACTIONS.md) · [Missionssystem](docs/MISSION_SYSTEM.md) · [Operation Bodenbruch](docs/MISSIONS/OPERATION_BODENBRUCH.md)
 
-[Spieler-Accounts](docs/ACCOUNTS.md) · [Skyfall Carrier](docs/SKYFALL_CARRIER.md) · [Game Flow](docs/GAME_FLOW.md) · [Extraktion](docs/EXTRACTION_SYSTEM.md) · [Missionsbelohnungen](docs/MISSION_REWARDS.md) · [Ressourcen](docs/RESOURCES.md)
+[Spieler-Accounts](docs/ACCOUNTS.md) · [Skyfall Carrier](docs/SKYFALL_CARRIER.md) · [Game Flow](docs/GAME_FLOW.md) · [Extraktion](docs/EXTRACTION_SYSTEM.md) · [Missionsbelohnungen](docs/MISSION_REWARDS.md) · [Ressourcen](docs/RESOURCES.md) · [Points of Interest](docs/POINTS_OF_INTEREST.md)
 
 ## Integration und Release-Abnahme · 7.9E
 
