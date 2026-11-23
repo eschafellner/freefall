@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { UNLOCKS, UNLOCK_KINDS, accountPasswordError, unlockBlocker } from '@freefall/shared';
+import { UNLOCKS, UNLOCK_KINDS, accountPasswordError, formatResourceAmounts, hasResources, missingResources, unlockBlocker } from '@freefall/shared';
 import type { AccountProfile, AccountUnlock } from '@freefall/shared';
 import { AccountError, changePassword, deleteAccount, downloadExport, revokeOtherSessions, unlock, unlocks } from '../account/AccountClient.ts';
+import { ResourceBar } from './Resources.tsx';
 
 const message = (error: unknown, fallback: string) => error instanceof AccountError ? error.message : fallback;
 const SOURCE: Record<AccountUnlock['source'], string> = { starter: 'Grundausstattung', level: 'Levelstufe', choice: 'Ausgewählt', admin: 'Vergeben' };
@@ -76,7 +77,7 @@ export function AccountSettings({ token, account, onBack, onDeleted }: {
     <details className="account-section danger">
       <summary>Konto löschen</summary>
       <form onSubmit={submitDelete}>
-        <p>Löscht den Operator mit Level, EP, Dienstakte und Freischaltungen endgültig. In den Einsätzen deiner Mitspieler erscheint dein Name danach nicht mehr.</p>
+        <p>Löscht den Operator mit Level, EP, Ressourcen, Dienstakte und Freischaltungen endgültig. In den Einsätzen deiner Mitspieler erscheint dein Name danach nicht mehr.</p>
         <label className="title-field">Zur Bestätigung {account.handle} eingeben
           <input value={confirm} onChange={(event) => setConfirm(event.target.value)} autoComplete="off" spellCheck={false} required/></label>
         <label className="title-field">Passwort
@@ -91,7 +92,9 @@ export function AccountSettings({ token, account, onBack, onDeleted }: {
 }
 
 /** Arsenal: Waffen, Attachments, Verbesserungen und Forschung mit Freischaltstatus. */
-export function Arsenal({ token, account, onBack }: { token: string; account: AccountProfile; onBack: () => void }) {
+export function Arsenal({ token, account, onBack, onAccount }: {
+  token: string; account: AccountProfile; onBack: () => void; onAccount: (account: AccountProfile) => void;
+}) {
   const [owned, setOwned] = useState<AccountUnlock[]>();
   const [fault, setFault] = useState('');
   const [busy, setBusy] = useState(false);
@@ -105,11 +108,16 @@ export function Arsenal({ token, account, onBack }: { token: string; account: Ac
 
   async function choose(id: string) {
     setBusy(true); setFault('');
-    try { setOwned(await unlock(token, id)); } catch (error) { setFault(message(error, 'Freischaltung fehlgeschlagen.')); } finally { setBusy(false); }
+    try {
+      const result = await unlock(token, id);
+      setOwned(result.unlocks);
+      if (result.account) onAccount(result.account);
+    } catch (error) { setFault(message(error, 'Freischaltung fehlgeschlagen.')); } finally { setBusy(false); }
   }
 
   return <div className="title-card arsenal">
     <div className="title-card-head"><span>Arsenal · Level {account.level}</span></div>
+    <ResourceBar balance={account.resources} max/>
     {!owned && !fault && <p role="status">Lade Freischaltungen …</p>}
     {owned && UNLOCK_KINDS.map(({ kind, label }) => {
       const entries = UNLOCKS.list.filter((entry) => entry.kind === kind);
@@ -119,11 +127,15 @@ export function Arsenal({ token, account, onBack }: { token: string; account: Ac
         <ul>{entries.map((entry) => {
           const mine = have.get(entry.id);
           const blocker = mine ? undefined : unlockBlocker(entry, account.level, ids, UNLOCKS);
+          const price = hasResources(entry.cost) ? formatResourceAmounts(entry.cost) : '';
+          const missing = price && account.resources ? missingResources(account.resources, entry.cost!) : {};
           return <li key={entry.id} className={mine ? 'unlocked' : 'locked'}>
-            <div><strong>{entry.displayName}</strong><small>{entry.description}</small></div>
+            <div><strong>{entry.displayName}</strong><small>{entry.description}</small>
+              {!mine && price && <small className="arsenal-price">Preis: {price}</small>}</div>
             {mine ? <em>{SOURCE[mine.source]}</em>
               : blocker ? <em>{blocker}</em>
-              : entry.acquisition === 'choice' ? <button className="secondary" type="button" disabled={busy} onClick={() => void choose(entry.id)}>Freischalten</button>
+              : entry.acquisition === 'choice' ? hasResources(missing) ? <em>fehlen {formatResourceAmounts(missing)}</em>
+                : <button className="secondary" type="button" disabled={busy} onClick={() => void choose(entry.id)}>{price ? `Freischalten · ${price}` : 'Freischalten'}</button>
               : <em>beim nächsten Abgleich</em>}
           </li>;
         })}</ul>
@@ -150,7 +162,7 @@ export function PrivacyNotice({ onBack }: { onBack: () => void }) {
       <li>Passwort nur als nicht umkehrbarer Hash (scrypt), nie im Klartext.</li>
       <li>Sitzungen: Zeitpunkt der Anmeldung und letzten Nutzung. Das Sitzungstoken liegt nur als Hash auf dem Server.</li>
       <li>Einsätze: Auftrag, Planet, Schwierigkeit, Ausgang, Ziele, Dauer, EP, Abschüsse und Mitspieler.</li>
-      <li>EP-Buchungen und Freischaltungen.</li>
+      <li>EP- und Ressourcenbuchungen (Sektor-Kredits, Einsatzmarken, Proben, Artefakte) und Freischaltungen.</li>
       <li>Im Browser (localStorage): Sitzungstoken, zuletzt verwendeter Operatorname sowie Grafik-, Steuerungs-, Kamera- und Audioeinstellungen.</li>
     </ul>
     <h2>Verbindungsdaten</h2>

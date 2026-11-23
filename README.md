@@ -81,11 +81,11 @@ npm run start:server
 
 Starte in einem zweiten Terminal `npm run preview -w @freefall/client` und öffne [die Build-Vorschau](http://127.0.0.1:4173/). Das Client-Artefakt liegt in `apps/client/dist`. Der Gameserver liest optional `FREEFALL_HOST`, `FREEFALL_PORT` und `FREEFALL_DATA_DIR` (Ablage der Account-Datenbank). Mit `VITE_FREEFALL_SERVER` lässt sich die Server-URL beim Start von Vite oder beim Bauen des Clients festlegen.
 
-Der Prototyp ist für lokale Tests ausgelegt. Spieler-Accounts mit Name#Tag und Passwort, EP-Gutschrift, Level, Dienstakte, Kontoverwaltung (Export, Löschung) und das Freischaltungssystem sind vorhanden. Neue Ausrüstungsinhalte, Loadout-Auswahl, Schiffsupgrades und mobile Steuerung sind spätere Meilensteine.
+Der Prototyp ist für lokale Tests ausgelegt. Spieler-Accounts mit Name#Tag und Passwort, EP-Gutschrift, Level, Ressourcen (Sektor-Kredits, Einsatzmarken, Proben, Artefakte), Dienstakte, Kontoverwaltung (Export, Löschung) und das Freischaltungssystem sind vorhanden. Neue Ausrüstungsinhalte, Loadout-Auswahl, Schiffsupgrades und mobile Steuerung sind spätere Meilensteine.
 
 [Architektur](docs/ARCHITECTURE.md) · [Performance und Messprotokoll](docs/PERFORMANCE.md) · [Boreal Relay und Rendering](docs/VISUAL_STYLE.md) · [Spielercharakter](docs/CHARACTER_SYSTEM.md) · [Fraktionen](docs/FACTIONS.md) · [Missionssystem](docs/MISSION_SYSTEM.md) · [Operation Bodenbruch](docs/MISSIONS/OPERATION_BODENBRUCH.md)
 
-[Spieler-Accounts](docs/ACCOUNTS.md) · [Skyfall Carrier](docs/SKYFALL_CARRIER.md) · [Game Flow](docs/GAME_FLOW.md) · [Extraktion](docs/EXTRACTION_SYSTEM.md) · [Missionsbelohnungen](docs/MISSION_REWARDS.md)
+[Spieler-Accounts](docs/ACCOUNTS.md) · [Skyfall Carrier](docs/SKYFALL_CARRIER.md) · [Game Flow](docs/GAME_FLOW.md) · [Extraktion](docs/EXTRACTION_SYSTEM.md) · [Missionsbelohnungen](docs/MISSION_REWARDS.md) · [Ressourcen](docs/RESOURCES.md)
 
 ## Integration und Release-Abnahme · 7.9E
 

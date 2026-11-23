@@ -22,9 +22,10 @@ export function missionRecord(result: MissionResult, identities: ReadonlyMap<str
     objectivesTotal: objectives.length,
     durationSeconds: (result.durationTicks ?? 0) / NET.tickHz,
     balanceHash: result.balanceHash,
-    participants: result.rewards.flatMap(({ operatorId, totalExperience, kills }) => {
+    participants: result.rewards.flatMap(({ operatorId, totalExperience, kills, resources }) => {
       const accountId = identities.get(operatorId);
-      return accountId ? [{ accountId, experience: totalExperience, extracted: result.extractedOperatorIds.includes(operatorId), kills: kills ?? 0 }] : [];
+      return accountId ? [{ accountId, experience: totalExperience, extracted: result.extractedOperatorIds.includes(operatorId), kills: kills ?? 0,
+        resources: resources ?? {} }] : [];
     }),
   };
 }

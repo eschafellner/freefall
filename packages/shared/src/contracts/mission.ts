@@ -2,6 +2,7 @@ import type { PositionXZ } from '../config/movement.ts';
 import type { CombatTelemetry } from './messages.ts';
 import type { TimeOfDay } from '../world/PlanetWeather.ts';
 import type { MissionPlan } from './missionPlan.ts';
+import type { ResourceAmounts, SampleAmounts } from '../definitions/resources.ts';
 import { MISSION_REGISTRY } from '../definitions/missions.ts';
 import { BALANCE } from '../balance/defaults.ts';
 
@@ -142,7 +143,11 @@ export interface MissionResult {
   albatrossSurvived: boolean;
   baseExperience: number;
   extractionBonusExperience: number;
-  rewards: { operatorId: string; baseExperience: number; extractionBonusExperience: number; totalExperience: number; kills?: number }[];
+  rewards: { operatorId: string; baseExperience: number; extractionBonusExperience: number; totalExperience: number; kills?: number;
+    /** Ressourcen für diesen Teilnehmer vor Anwendung der Obergrenzen (SKR, Marken, extrahierte Proben). */
+    resources?: ResourceAmounts }[];
+  /** Vom Trupp extrahierte Proben und Artefakte. Sie gelten für jeden Teilnehmer der verriegelten Liste. */
+  samples?: SampleAmounts;
   /** Anzeigename des Auftrags (generierter Plan oder feste Mission). */
   missionName?: string;
   planetId?: string;

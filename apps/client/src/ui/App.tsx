@@ -18,9 +18,10 @@ import type { AccountSession } from '@freefall/shared';
 import { AccountError, forgetSession, logout, restoreSession } from '../account/AccountClient.ts';
 import { LoginPanel, TitleScreen } from './TitleScreen.tsx';
 import { LevelMeter, ServiceRecord } from './ServiceRecord.tsx';
+import { ResourceBar, ResourceGain } from './Resources.tsx';
 import { AccountSettings, Arsenal, PrivacyNotice } from './AccountPanels.tsx';
 import { FullscreenSettings, enterFullscreenIfWanted } from './Fullscreen.tsx';
-import { UNLOCKS } from '@freefall/shared';
+import { UNLOCKS, formatResourceAmounts, hasResources } from '@freefall/shared';
 
 import { ControlSettings } from './ControlSettings.tsx';
 import { bindings } from '../input/Bindings.ts';
@@ -286,6 +287,8 @@ export function App() {
   const cinematic = mission?.state === 'DEPLOYMENT' ||
     (mission?.extraction?.phase === 'LIFT' && mission.extraction.securedIds.includes(status.ownId));
   const reward = result?.rewards.find(({ operatorId }) => operatorId === status.ownId);
+  // Einsatzlohn ohne Proben; die stehen in einer eigenen Zeile.
+  const pay = reward?.resources && { credits: reward.resources.credits, marks: reward.resources.marks };
   const objectivesCompleted = result?.objectives?.filter(({ state }) => state === 'complete').length;
   const own = status.players.find((player) => player.id === status.ownId);
   // TAB (held) shows mission intel and the team's equipment; ESC releases the pointer and opens the pause menu.
@@ -469,6 +472,7 @@ export function App() {
       account={session && <div className="title-account">
         <span>{session.account.handle}</span>
         <LevelMeter experience={session.account.experience} compact/>
+        <ResourceBar balance={session.account.resources} ids={['credits', 'marks']}/>
         <nav className="title-account-nav" aria-label="Konto">
           {([['record', 'Dienstakte'], ['arsenal', 'Arsenal'], ['account', 'Konto']] as const).map(([view, label]) =>
             <button key={view} className="title-link" type="button" aria-pressed={lobbyView === view}
@@ -480,7 +484,8 @@ export function App() {
         : !accountChecked ? <div className="title-card" role="status"><p>Verbindung zur Einsatzleitstelle …</p></div>
         : !session ? <LoginPanel notice={accountNotice} onSession={(next) => { setAccountNotice(''); setSession(next); }}/>
         : lobbyView === 'record' ? <ServiceRecord token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}/>
-        : lobbyView === 'arsenal' ? <Arsenal token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}/>
+        : lobbyView === 'arsenal' ? <Arsenal token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}
+          onAccount={(account) => setSession((current) => current && { ...current, account })}/>
         : lobbyView === 'account' ? <AccountSettings token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}
           onDeleted={() => { setSession(undefined); setLobbyView('lobby'); setAccountNotice('Konto gelöscht.'); }}/>
         : <div className="title-card title-lobby">
@@ -531,10 +536,14 @@ export function App() {
             Albatross {result.albatrossSurvived ? 'erhalten' : 'zerstört'}.</p>
           {reward && <div className="result-reward">{reward.baseExperience} Basis-EP + {reward.extractionBonusExperience} Extraktions-EP
             <strong>{reward.totalExperience} EP</strong></div>}
+          {hasResources(pay) && <div className="result-reward">Einsatzlohn<strong>{formatResourceAmounts(pay)}</strong></div>}
+          {hasResources(result.samples) && <div className="result-reward">Extrahierte Proben (für den ganzen Trupp)<strong>{formatResourceAmounts(result.samples)}</strong></div>}
           {status.progress?.resultId === result.id && <div className="result-progress" role="status">
             {status.progress.level > status.progress.previousLevel && <strong className="level-up">Level {status.progress.level} erreicht</strong>}
             <LevelMeter experience={status.progress.experience} compact/>
             <small>Deinem Account gutgeschrieben: {status.progress.gained} EP</small>
+            {status.progress.resources && <small><ResourceGain credited={status.progress.resources.credited} forfeited={status.progress.resources.forfeited}/></small>}
+            {status.progress.resources && <ResourceBar balance={status.progress.resources.balance}/>}
             {!!status.progress.unlocked?.length && <small>Neu freigeschaltet: {status.progress.unlocked
               .map((id) => UNLOCKS.byId.get(id)?.displayName ?? id).join(', ')}</small>}
           </div>}

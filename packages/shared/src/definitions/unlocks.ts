@@ -1,6 +1,8 @@
 import { BALANCE } from '../balance/defaults.ts';
 import type { LoadoutSelection } from '../balance/definitions.ts';
 import { presetSelection } from '../balance/resolver.ts';
+import { RESOURCE_BY_ID, RESOURCE_IDS } from './resources.ts';
+import type { ResourceAmounts } from './resources.ts';
 
 export type { LoadoutSelection } from '../balance/definitions.ts';
 
@@ -14,8 +16,8 @@ const standard = presetSelection(BALANCE);
  *
  * - `starter`: Grundausstattung, jeder Account besitzt sie.
  * - `level`: wird automatisch vergeben, sobald Level und Voraussetzungen erfüllt sind.
- * - `choice`: der Spieler schaltet sie selbst frei, sobald Level und Voraussetzungen erfüllt sind. Kosten kommen mit
- *   einer eigenen Währung (offen, siehe docs/ACCOUNTS.md).
+ * - `choice`: der Spieler schaltet sie selbst frei, sobald Level und Voraussetzungen erfüllt sind. Optional mit
+ *   Kosten in Ressourcen (`cost`, siehe docs/RESOURCES.md), die beim Freischalten abgebucht werden.
  */
 export type UnlockKind = 'research' | 'upgrade' | 'weapon' | 'attachment';
 export type UnlockAcquisition = 'starter' | 'level' | 'choice';
@@ -36,6 +38,8 @@ export interface UnlockDefinition {
   equipmentId?: string;
   /** Spielwirkung: Attachment für einen Slot einer Waffe (`attachmentSlots` in weapons.json). */
   attachment?: { weaponId: string; slot: string };
+  /** Preis beim Freischalten (nur `choice`), z. B. `{ credits: 2500 }` oder `{ marks: 20, tissue: 5 }`. Keine Rückerstattung. */
+  cost?: ResourceAmounts;
 }
 
 export const UNLOCK_KINDS: readonly { kind: UnlockKind; label: string }[] = [
@@ -62,6 +66,17 @@ export function createUnlockRegistry(list: readonly UnlockDefinition[]): UnlockR
       if (!byId.has(required)) throw new Error(`Freischaltung ${unlock.id}: Voraussetzung ${required} fehlt oder steht weiter unten`);
     }
     if (unlock.acquisition === 'starter' && (unlock.level !== 1 || unlock.requires.length)) throw new Error(`Freischaltung ${unlock.id}: Grundausstattung ohne Bedingungen`);
+    if (unlock.cost) {
+      if (unlock.acquisition !== 'choice') throw new Error(`Freischaltung ${unlock.id}: Kosten nur bei Auswahl (choice)`);
+      for (const [resource, amount] of Object.entries(unlock.cost)) {
+        const definition = RESOURCE_BY_ID.get(resource as never);
+        if (!definition) throw new Error(`Freischaltung ${unlock.id}: unbekannte Ressource ${resource}`);
+        if (!Number.isInteger(amount) || amount! <= 0 || amount! > definition.max) {
+          throw new Error(`Freischaltung ${unlock.id}: Preis ${resource} muss eine ganze Zahl von 1 bis ${definition.max} sein`);
+        }
+      }
+      if (!RESOURCE_IDS.some((id) => unlock.cost![id])) throw new Error(`Freischaltung ${unlock.id}: leerer Preis`);
+    }
     byId.set(unlock.id, unlock);
   }
   return { list, byId };

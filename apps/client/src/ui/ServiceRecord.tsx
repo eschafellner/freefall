@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { DIFFICULTY_REGISTRY, PLANET_REGISTRY, levelProgress } from '@freefall/shared';
 import type { AccountProfile, MissionHistoryEntry } from '@freefall/shared';
 import { AccountError, missionHistory } from '../account/AccountClient.ts';
+import { ResourceBar, ResourceGain } from './Resources.tsx';
 
 const number = new Intl.NumberFormat('de-DE');
 const date = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -37,6 +38,7 @@ export function ServiceRecord({ token, account, onBack }: { token: string; accou
   return <div className="title-card service-record">
     <div className="title-card-head"><span>Dienstakte · {account.handle}</span></div>
     <LevelMeter experience={account.experience}/>
+    <ResourceBar balance={account.resources} max/>
     {fault && <div className="fault" role="alert">{fault}</div>}
     {!entries && !fault && <p role="status">Lade Einsätze …</p>}
     {entries?.length === 0 && <p>Noch keine abgeschlossenen Einsätze.</p>}
@@ -57,6 +59,7 @@ export function ServiceRecord({ token, account, onBack }: { token: string; accou
           <span>{entry.kills} Abschüsse</span>
           <span>{clock(entry.durationSeconds)}</span>
         </div>
+        <div className="record-meta"><ResourceGain credited={entry.resources} forfeited={entry.forfeited}/></div>
         {entry.squad.length > 0 && <div className="record-squad">mit {entry.squad.join(', ')}</div>}
       </li>)}
     </ol>}

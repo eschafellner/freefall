@@ -89,7 +89,7 @@ Regeln, die `createUnlockRegistry` beim Laden prüft: IDs sind eindeutig, Voraus
 | Endpunkt | Inhalt |
 | --- | --- |
 | `GET /api/account/unlocks` | Eigene Freischaltungen mit Quelle und Zeitpunkt |
-| `POST /api/account/unlocks` | `{ id }`: Freischaltung per Auswahl |
+| `POST /api/account/unlocks` | `{ id }`: Freischaltung per Auswahl, Preis wird abgebucht. Antwort mit aktualisiertem Profil |
 | `POST /api/account/password` | `{ current, next }` |
 | `POST /api/account/sessions/revoke-others` | Andere Sitzungen beenden |
 | `GET /api/account/export` | Datenexport als JSON-Datei |
@@ -106,7 +106,7 @@ Beim Einsatzende erzeugt `MissionInstance` genau ein `MissionResult`. Der Raum l
 
 Debug-Räume (`FREEFALL_MISSION_DEBUG=1`) schreiben nichts gut, weil Debugbefehle Ziele und Extraktion erzwingen können. Im Gastmodus gibt es keine Abrechnung.
 
-Die EP-Beträge selbst stehen unverändert in `MISSION_REWARDS` ([Missionsbelohnungen](MISSION_REWARDS.md)). Fehlgeschlagene Einsätze erscheinen mit 0 EP in der Historie, im EP-Buch gibt es dafür keine Buchung.
+Die EP-Beträge selbst stehen unverändert in `MISSION_REWARDS` ([Missionsbelohnungen](MISSION_REWARDS.md)). Sektor-Kredits, Einsatzmarken und Proben bucht dieselbe Transaktion ins Ressourcenbuch ([Ressourcen](RESOURCES.md)). Fehlgeschlagene Einsätze erscheinen mit 0 EP in der Historie, im EP-Buch gibt es dafür keine Buchung.
 
 ### Levelkurve
 
@@ -144,13 +144,14 @@ docker compose exec game node apps/server/dist/accounts/admin.js reset-password 
 docker compose exec game node apps/server/dist/accounts/admin.js backup /data/freefall-backup.db
 docker compose exec game node apps/server/dist/accounts/admin.js reconcile
 docker compose exec game node apps/server/dist/accounts/admin.js grant "Name#1234" weapon.kestrel-ar-01
+docker compose exec game node apps/server/dist/accounts/admin.js grant-resource "Name#1234" credits 2000
 ```
 
-`reconcile` berechnet die EP-Summen aus dem EP-Buch neu. `reset-password` setzt ein zufälliges Passwort, gibt es aus und beendet alle Sitzungen des Accounts. Ohne E-Mail gibt es keine Selbsthilfe bei vergessenem Passwort. `backup` schreibt mit `VACUUM INTO` eine konsistente Kopie, auch während der Server läuft. Die Kopie liegt danach im Volume und kann mit `docker cp` gesichert werden.
+`reconcile` berechnet die EP-Summen aus dem EP-Buch und die Ressourcen aus dem Ressourcenbuch neu. `reset-password` setzt ein zufälliges Passwort, gibt es aus und beendet alle Sitzungen des Accounts. Ohne E-Mail gibt es keine Selbsthilfe bei vergessenem Passwort. `backup` schreibt mit `VACUUM INTO` eine konsistente Kopie, auch während der Server läuft. Die Kopie liegt danach im Volume und kann mit `docker cp` gesichert werden.
 
 ## Nächste Schritte
 
 - **Weitere Login-Arten.** `account_credentials` ist dafür vorbereitet: Jede Art ist eine eigene Zeile (`kind`) am selben Account. Passkeys (WebAuthn) kämen ohne fremden Dienst aus, brauchen aber eine Bibliothek zur Prüfung der Signaturen. Discord- oder Google-Login braucht eine registrierte App mit Client-ID und Secret. Beides ist eine Produktentscheidung und noch offen.
-- **Währung für Freischaltungen.** `choice`-Freischaltungen kosten noch nichts. Ob dafür EP, Forschungspunkte oder Material aus Einsätzen ausgegeben werden, ist eine Designfrage. Sie betrifft das EP-Buch (`experience_ledger`), das dafür eine zweite Währung oder negative Buchungen bekäme.
+- **Preise für Freischaltungen.** `choice`-Freischaltungen können mit `cost` Ressourcen kosten ([Ressourcen](RESOURCES.md)). Konkrete Preise kommen mit neuen Inhalten.
 - **Inhalte.** Neue Waffen, Attachments, Verbesserungen und Forschung entstehen in der Balance-Registry und bekommen dann einen Eintrag in `UNLOCKS`. Erst mit einer Loadout-Auswahl wirken Freischaltungen im Spiel.
 - **Abrechnungsregel.** Wer nach dem Abflug geht, erhält weiter die Basis-EP, falls der Trupp die Hauptziele erfüllt. Ob das so bleiben soll, ist eine Designfrage.

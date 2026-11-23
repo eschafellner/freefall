@@ -7,7 +7,8 @@ import { test } from 'node:test';
 import { Client } from '@colyseus/sdk';
 import type { Room } from '@colyseus/sdk';
 import { matchMaker } from '@colyseus/core';
-import { ACCOUNT_PROGRESS_MESSAGE, ARENA_ROOM, BALANCE, BODENBRUCH_ROOM, PROGRESSION, ROSTER_MESSAGE, STANDARD_LOADOUT, UNLOCKS, accountNameError,
+import { ACCOUNT_PROGRESS_MESSAGE, ARENA_ROOM, BALANCE, BODENBRUCH_ROOM, MISSION_RESOURCE_REWARDS, PROGRESSION, RESOURCES, ROSTER_MESSAGE, STANDARD_LOADOUT, UNLOCKS,
+  accountNameError, creditResources, missionResourceReward, startingBalance,
   accountNameKey, accountPasswordError, automaticUnlocks, createUnlockRegistry, experienceForLevel, levelForExperience, levelProgress,
   missingLoadoutUnlocks, parseAccountHandle } from '@freefall/shared';
 import type { UnlockDefinition } from '@freefall/shared';
@@ -186,7 +187,9 @@ test('Bestehende Datenbank mit Schema 1 wird ohne Datenverlust migriert', async 
   const store = new AccountStore(path);
   try {
     assert.equal(store.schemaVersion, MIGRATIONS.length);
-    assert.deepEqual(store.find('veteran', 7), { id: 'alt', name: 'Veteran', tag: '0007', handle: 'Veteran#0007', level: 1, experience: 0, createdAt: 1 });
+    assert.deepEqual(store.find('veteran', 7), { id: 'alt', name: 'Veteran', tag: '0007', handle: 'Veteran#0007', level: 1, experience: 0,
+      resources: { credits: 5000, marks: 0, tissue: 0, rock: 0, artifact: 0 }, createdAt: 1 }, 'bestehende Accounts erhalten das Startguthaben');
+    assert.equal(store.reconcileResources(), 0, 'Startguthaben steht auch im Buch');
   } finally {
     store.close();
   }
@@ -228,8 +231,10 @@ test('Einsatzabrechnung schreibt jede Ergebnis-ID genau einmal gut', async () =>
       { accountId: a.id, experience: 500, extracted: true, kills: 31 },
       { accountId: b.id, experience: 400, extracted: false, kills: 12 },
     ]));
-    assert.deepEqual(first?.get(a.id), { resultId: 'i-1/result', gained: 500, experience: 500, level: 2, previousLevel: 1 });
-    assert.deepEqual(first?.get(b.id), { resultId: 'i-1/result', gained: 400, experience: 400, level: 1, previousLevel: 1 });
+    const balance = startingBalance();
+    const none = { credited: {}, forfeited: {}, balance };
+    assert.deepEqual(first?.get(a.id), { resultId: 'i-1/result', gained: 500, experience: 500, level: 2, previousLevel: 1, resources: none });
+    assert.deepEqual(first?.get(b.id), { resultId: 'i-1/result', gained: 400, experience: 400, level: 1, previousLevel: 1, resources: none });
     assert.equal(store.settleMission(record('i-1/result', [{ accountId: a.id, experience: 500, extracted: true, kills: 31 }])), undefined,
       'zweite Abrechnung derselben Ergebnis-ID');
     assert.equal(store.byId(a.id)?.experience, 500);
@@ -238,12 +243,12 @@ test('Einsatzabrechnung schreibt jede Ergebnis-ID genau einmal gut', async () =>
     now += 60_000;
     const failed = store.settleMission({ ...record('i-2/result', [{ accountId: a.id, experience: 0, extracted: false, kills: 4 }]), outcome: 'team-lost',
       primaryObjectivesCompleted: false });
-    assert.deepEqual(failed?.get(a.id), { resultId: 'i-2/result', gained: 0, experience: 500, level: 2, previousLevel: 2 });
+    assert.deepEqual(failed?.get(a.id), { resultId: 'i-2/result', gained: 0, experience: 500, level: 2, previousLevel: 2, resources: none });
     const history = store.missionHistory(a.id);
     assert.deepEqual(history.map(({ resultId }) => resultId), ['i-2/result', 'i-1/result'], 'neueste zuerst, auch Fehlschläge');
     assert.deepEqual(history[1], { resultId: 'i-1/result', finishedAt: 5_000, missionId: 'procedural', missionName: 'Relais Nord', planetId: 'forest',
       difficultyId: 'normal', outcome: 'extracted', primaryObjectivesCompleted: true, objectivesCompleted: 2, objectivesTotal: 3,
-      durationSeconds: 612, extracted: true, experience: 500, kills: 31, squad: [b.handle] });
+      durationSeconds: 612, extracted: true, experience: 500, resources: {}, forfeited: {}, kills: 31, squad: [b.handle] });
     const ledger = store.db.prepare('SELECT COUNT(*) AS n FROM experience_ledger').get() as { n: number };
     assert.equal(ledger.n, 2, 'keine Buchung für 0 EP');
     store.db.prepare('UPDATE accounts SET experience = 9 WHERE id = ?').run(a.id);
@@ -274,8 +279,8 @@ test('Ergebnis wird über die Session-Zuordnung den Accounts zugeordnet', () => 
   assert.equal(mapped.objectivesCompleted, 1);
   assert.equal(mapped.objectivesTotal, 2);
   assert.deepEqual(mapped.participants, [
-    { accountId: 'acc-1', experience: 500, extracted: true, kills: 9 },
-    { accountId: 'acc-2', experience: 400, extracted: false, kills: 3 },
+    { accountId: 'acc-1', experience: 500, extracted: true, kills: 9, resources: {} },
+    { accountId: 'acc-2', experience: 400, extracted: false, kills: 3, resources: {} },
   ]);
 });
 
@@ -316,7 +321,11 @@ test('Einsatzende im Raum schreibt EP gut, meldet sie und füllt die Historie', 
     const guestProgress = waitFor<AccountProgress>(guest, ACCOUNT_PROGRESS_MESSAGE, () => true, 8000);
     const roster = waitFor<RosterEntry[]>(guest, ROSTER_MESSAGE, (entries) => entries.some(({ level }) => level === 2), 8000);
     // Albatross-Abflug mit dem Host an Bord: Der Host wird extrahiert, der Gast bleibt zurück.
-    const mission = (matchMaker.getLocalRoomById(host.roomId) as unknown as { arena: { finish(extracted: string[]): void } }).arena;
+    const mission = (matchMaker.getLocalRoomById(host.roomId) as unknown as { arena: {
+      finish(extracted: string[]): void; collectSamples(id: string, amounts: object): boolean } }).arena;
+    // Host trägt Proben und wird extrahiert, der Gast fällt zurück: Die Proben gelten trotzdem für beide.
+    assert.equal(mission.collectSamples(host.sessionId, { tissue: 2, artifact: 1 }), true);
+    assert.equal(mission.collectSamples(guest.sessionId, { rock: 4 }), true);
     mission.finish([host.sessionId]);
     const [mine, theirs] = await Promise.all([hostProgress, guestProgress]);
     assert.equal(mine.gained, 500);
@@ -325,6 +334,13 @@ test('Einsatzende im Raum schreibt EP gut, meldet sie und füllt die Historie', 
     assert.equal(theirs.gained, 400);
     assert.equal(theirs.level, 1);
     assert.equal((await roster).find(({ id }) => id === host.sessionId)?.level, 2);
+    assert.ok((mine.resources?.credited.credits ?? 0) >= 500, 'Stufe 2 bringt mindestens 500 SKR');
+    assert.ok((mine.resources?.credited.marks ?? 0) >= 3, 'Stufe 2 bringt mindestens 3 Einsatzmarken');
+    assert.deepEqual(theirs.resources?.credited, mine.resources?.credited, 'alle Teilnehmer erhalten dasselbe');
+    assert.equal(mine.resources?.credited.tissue, 2);
+    assert.equal(mine.resources?.credited.artifact, 1);
+    assert.equal(mine.resources?.credited.rock, undefined, 'Proben des nicht extrahierten Gasts sind verloren');
+    assert.equal(mine.resources?.balance.credits, 5000 + mine.resources!.credited.credits!);
 
     const resynced = waitFor<AccountProgress>(host, ACCOUNT_PROGRESS_MESSAGE, () => true);
     host.send('sync-state');
@@ -337,6 +353,7 @@ test('Einsatzende im Raum schreibt EP gut, meldet sie und füllt die Historie', 
     assert.equal(missions[0].extracted, true);
     assert.equal(missions[0].experience, 500);
     assert.deepEqual(missions[0].squad, [guestSession.account.handle]);
+    assert.deepEqual(missions[0].resources, mine.resources?.credited);
     const profile = await (await fetch(base + '/api/account', { headers: { Authorization: 'Bearer ' + hostSession.token } })).json() as { account: { experience: number; level: number } };
     assert.deepEqual([profile.account.experience, profile.account.level], [500, 2]);
   } finally {
@@ -353,6 +370,66 @@ test('Debug-Räume schreiben keine EP gut', () => {
   assert.equal(Reflect.get(LocalMissionDebugRoom.prototype, 'debug', {}), true);
 });
 
+test('Ressourcen: Startwerte, Obergrenzen und Einsatzlohn nach Schwierigkeit', () => {
+  assert.deepEqual(RESOURCES.map(({ id, start, max }) => [id, start, max]),
+    [['credits', 5000, 50_000], ['marks', 0, 250], ['tissue', 0, 300], ['rock', 0, 150], ['artifact', 0, 100]]);
+  const reward = (difficultyLevel: number, optionalObjectivesCompleted = 0, primaryObjectivesCompleted = true) =>
+    missionResourceReward({ difficultyLevel, primaryObjectivesCompleted, optionalObjectivesCompleted });
+  assert.deepEqual(reward(2), { credits: 500, marks: 3 });
+  assert.deepEqual(reward(7), { credits: 2500, marks: 11 });
+  assert.deepEqual(reward(2, 1), { credits: 600, marks: 4 }, 'optionales Ziel: +20 % SKR, +1 Marke');
+  assert.deepEqual(reward(7, 2), { credits: 3500, marks: 11 }, 'höchstens 11 Marken je Mission');
+  assert.deepEqual(reward(5, 0, false), {}, 'ohne Hauptziele kein Lohn');
+  assert.deepEqual(missionResourceReward({ difficultyLevel: 3, primaryObjectivesCompleted: false, optionalObjectivesCompleted: 0, samples: { tissue: 3 } }),
+    { tissue: 3 }, 'extrahierte Proben zählen auch ohne Hauptziele');
+  for (let level = 2; level <= 7; level++) {
+    assert.ok(MISSION_RESOURCE_REWARDS.credits[level - 1] > MISSION_RESOURCE_REWARDS.credits[level - 2]);
+    assert.ok(MISSION_RESOURCE_REWARDS.marks[level - 1] > MISSION_RESOURCE_REWARDS.marks[level - 2]);
+  }
+  assert.deepEqual(creditResources({ ...startingBalance(), credits: 49_800, artifact: 100 }, { credits: 500, marks: 3, artifact: 2 }),
+    { credited: { credits: 200, marks: 3 }, forfeited: { credits: 300, artifact: 2 } });
+});
+
+test('Ressourcenbuch: Obergrenze, Kauf ohne Rückerstattung, Abgleich', async () => {
+  const registry = createUnlockRegistry([
+    unlock('weapon.base', { acquisition: 'starter' }),
+    unlock('weapon.carbine', { acquisition: 'choice', level: 2, cost: { credits: 3000 } }),
+    unlock('upgrade.visor', { acquisition: 'choice', level: 1, cost: { marks: 5, tissue: 2 } }),
+  ]);
+  const service = new AccountService(new AccountStore(':memory:'), { unlocks: registry });
+  try {
+    const account = (await service.store.register('Kestrel', 'geheimes-passwort'))!;
+    assert.deepEqual(account.resources, startingBalance(), 'neue Accounts starten mit 5.000 SKR');
+    assert.deepEqual(service.unlock({ id: account.id, level: 1 }, 'weapon.carbine'), { ok: false, reason: 'Noch nicht verfügbar: ab Level 2.' },
+      'Waffen bleiben an das Level gebunden');
+    assert.deepEqual(service.unlock({ id: account.id, level: 1 }, 'upgrade.visor'), { ok: false, reason: 'Nicht genug Ressourcen: Es fehlen 5 Marken · 2 Gewebe.' });
+    assert.deepEqual(service.unlock({ id: account.id, level: 2 }, 'weapon.carbine'), { ok: true });
+    assert.equal(service.store.resources(account.id).credits, 2000);
+    assert.equal(service.unlock({ id: account.id, level: 2 }, 'weapon.carbine').ok, false, 'kein zweiter Kauf');
+    assert.equal(service.store.resources(account.id).credits, 2000);
+    assert.deepEqual(service.unlock({ id: account.id, level: 1 }, 'upgrade.visor'), { ok: false, reason: 'Nicht genug Ressourcen: Es fehlen 5 Marken · 2 Gewebe.' });
+    assert.equal(service.owned(account.id).has('upgrade.visor'), false, 'gescheiterter Kauf schaltet nichts frei');
+
+    const settled = service.store.settleMission(record('r-1/result', [{ accountId: account.id, experience: 400, extracted: true, kills: 0,
+      resources: { credits: 49_000, marks: 6, tissue: 400 } }]));
+    assert.deepEqual(settled?.get(account.id)?.resources, { credited: { credits: 48_000, marks: 6, tissue: 300 }, forfeited: { credits: 1000, tissue: 100 },
+      balance: { credits: 50_000, marks: 6, tissue: 300, rock: 0, artifact: 0 } });
+    assert.deepEqual(service.store.missionHistory(account.id)[0].forfeited, { credits: 1000, tissue: 100 });
+    assert.deepEqual(service.unlock({ id: account.id, level: 1 }, 'upgrade.visor'), { ok: true });
+    assert.deepEqual(service.store.resources(account.id), { credits: 50_000, marks: 1, tissue: 298, rock: 0, artifact: 0 });
+    assert.deepEqual(service.store.grantResources(account.id, { artifact: 120 }, 'test'), { credited: { artifact: 100 }, forfeited: { artifact: 20 } });
+
+    service.store.db.prepare("UPDATE account_resources SET amount = 7 WHERE account_id = ? AND resource = 'credits'").run(account.id);
+    assert.equal(service.store.reconcileResources(), 1);
+    assert.equal(service.store.resources(account.id).credits, 50_000);
+    const exported = service.store.exportAccount(account.id) as { resourceLedger: { resource: string; amount: number; reason: string }[] };
+    assert.deepEqual(exported.resourceLedger.filter(({ reason }) => reason === 'unlock').map(({ resource, amount }) => [resource, amount]),
+      [['credits', -3000], ['marks', -5], ['tissue', -2]]);
+  } finally {
+    service.store.close();
+  }
+});
+
 const unlock = (id: string, extra: Partial<UnlockDefinition> = {}): UnlockDefinition => ({
   id, kind: id.split('.')[0] as UnlockDefinition['kind'], displayName: id, description: '', acquisition: 'level', level: 1, requires: [], ...extra,
 });
@@ -362,6 +439,9 @@ test('Freischaltungsregister: stabile IDs, gültige Verweise, Standardausrüstun
   assert.throws(() => createUnlockRegistry([unlock('weapon.a', { requires: ['research.b'] }), unlock('research.b')]), /Voraussetzung/);
   assert.throws(() => createUnlockRegistry([unlock('Weapon A')]), /ungültige ID/);
   assert.throws(() => createUnlockRegistry([unlock('research.x', { kind: 'weapon' })]), /ungültige ID/);
+  assert.throws(() => createUnlockRegistry([unlock('weapon.a', { cost: { credits: 100 } })]), /Kosten nur bei Auswahl/);
+  assert.throws(() => createUnlockRegistry([unlock('weapon.a', { acquisition: 'choice', cost: { credits: 60_000 } })]), /Preis/);
+  assert.throws(() => createUnlockRegistry([unlock('weapon.a', { acquisition: 'choice', cost: { gold: 1 } as never })]), /unbekannte Ressource/);
   for (const entry of UNLOCKS.list) {
     if (entry.weaponId) assert.ok(BALANCE.weapon(entry.weaponId), entry.id);
     if (entry.attachment) assert.ok(BALANCE.weapon(entry.attachment.weaponId).attachmentSlots.includes(entry.attachment.slot), entry.id);

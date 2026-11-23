@@ -193,7 +193,8 @@ export class FreefallRoom extends Room {
       credited.set(accountId, progress);
       this.progress.set(sessionId, progress);
       const account = this.operators.get(sessionId);
-      if (account) this.operators.set(sessionId, { ...account, experience: progress.experience, level: progress.level });
+      if (account) this.operators.set(sessionId, { ...account, experience: progress.experience, level: progress.level,
+        ...(progress.resources && { resources: progress.resources.balance }) });
       this.clients.getById(sessionId)?.send(ACCOUNT_PROGRESS_MESSAGE, progress);
     }
     this.broadcast(ROSTER_MESSAGE, this.roster());

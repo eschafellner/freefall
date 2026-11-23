@@ -1,12 +1,12 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import {
   ALBATROSS, BALANCE, BOARDING_TICKS, allowsPostureAction, CARRIER_CONSOLE, CARRIER_SHIP, CARRIER_SPAWN, CARRIER_WORLD, DEPLOYMENT_PHASES,
-  WEATHER_VERSION, WORLD_PROFILES, isTimeOfDay, planetWeather, MISSION_REWARDS, NET, groundHeight, isWorldSeed, PLANET_REGISTRY, PROCEDURAL_CONTRACT_ID, RESULT_TICKS,
+  WEATHER_VERSION, WORLD_PROFILES, isTimeOfDay, planetWeather, MISSION_REWARDS, NET, SAMPLE_IDS, missionResourceReward, groundHeight, isWorldSeed, PLANET_REGISTRY, PROCEDURAL_CONTRACT_ID, RESULT_TICKS,
   canSecureExtraction, distanceSquared, inAlbatross, isCarrierScene, isOperatorGrounded, isOptionalObjective, landingShip, missionGround, newPosture, resolveMissionBalance,
 } from '@freefall/shared';
 import type {
   BalanceRegistry, DeploymentPhase, EffectiveGrenade, GrenadeState, MissionBalance, MissionDefinition, MissionEvent, MissionResult,
-  MissionFallback, MissionGenerationSelection, MissionSelection, MissionSnapshot, MissionState, PositionXZ, ShotEvent, WorldDefinition,
+  MissionFallback, MissionGenerationSelection, MissionSelection, MissionSnapshot, MissionState, PositionXZ, SampleAmounts, SampleId, ShotEvent, WorldDefinition,
 } from '@freefall/shared';
 import { Battlefield, seededRandom } from '../simulation/Battlefield.ts';
 import { cancelEquipment, clearMoves, refillPlayer, reloading, respawnPlayer } from '../simulation/Player.ts';
@@ -72,6 +72,11 @@ export class MissionInstance extends Battlefield {
   private readonly ready = new Set<string>();
   private readonly returnVotes = new Set<string>();
   private readonly roster = new Set<string>();
+  /**
+   * Proben, die jeder Operator gerade trägt. Fällt ein Operator, sind seine Proben verloren; mit den Points of Interest
+   * werden sie stattdessen am Boden liegen und wieder aufgehoben werden können. Was extrahiert wird, gilt für den ganzen Trupp.
+   */
+  private readonly carriedSamples = new Map<string, Record<SampleId, number>>();
   private albatross?: Albatross;
   private convicts?: Convicts;
   private supply?: ResupplySystem;
@@ -514,6 +519,9 @@ export class MissionInstance extends Battlefield {
     const plan = this.plan;
     const baseExperience = this.primaryCompleted ? MISSION_REWARDS.baseExperience : 0;
     const extractionBonusExperience = extracted.length ? Math.round(baseExperience * MISSION_REWARDS.extractionBonusRate) : 0;
+    const samples = this.extractedSamples(extracted);
+    const resources = missionResourceReward({ difficultyLevel: this.difficulty.level, primaryObjectivesCompleted: this.primaryCompleted,
+      optionalObjectivesCompleted: this.objectives.snapshot().filter(({ id, state }) => optional.has(id) && state === 'complete').length, samples });
     this.result = {
       id: this.instanceId + '/result', missionInstanceId: this.instanceId,
       missionId: this.definition.id, difficultyId: this.difficulty.id, balanceHash: this.balance.configHash,
@@ -527,8 +535,9 @@ export class MissionInstance extends Battlefield {
       rewards: [...this.roster].map((operatorId) => {
         const bonus = extracted.includes(operatorId) ? extractionBonusExperience : 0;
         const kills = this.players.find((player) => player?.id === operatorId)?.kills ?? 0;
-        return { operatorId, baseExperience, extractionBonusExperience: bonus, totalExperience: baseExperience + bonus, kills };
+        return { operatorId, baseExperience, extractionBonusExperience: bonus, totalExperience: baseExperience + bonus, kills, resources: { ...resources } };
       }),
+      samples,
       missionName: plan?.displayName ?? this.definition.displayName,
       planetId: plan?.planetId ?? this.selection?.planetId,
       combat: this.stats.snapshot(),
@@ -560,7 +569,7 @@ export class MissionInstance extends Battlefield {
     this.phase = 'DOCKED'; this.phaseIndex = -1;
     this.phaseAt = this.phaseUntil = this.boardingUntil = this.resultUntil = this.returnUntil = 0;
     this.primaryCompleted = false;
-    this.ready.clear(); this.roster.clear(); this.returnVotes.clear();
+    this.ready.clear(); this.roster.clear(); this.returnVotes.clear(); this.carriedSamples.clear();
     this.objectives = new ObjectiveManager(this.definition.objectives, this.emit);
     this.director = this.createDirector();
     this.combatTargets = this.director.nests;
@@ -621,6 +630,7 @@ export class MissionInstance extends Battlefield {
     }
     this.convicts!.update(this.tick, this.horde, this.surface, this.shots);
     const living = connected.filter(({ hp }) => hp > 0);
+    for (const player of this.players) if (player && player.hp <= 0) this.carriedSamples.delete(player.id);
     const beforeObjectives = this.profileEnemyAI ? performance.now() : 0;
     this.objectives.update(this.tick, this.director.nests.destroyed, living, this.surface);
     if (this.profileEnemyAI) this.objectiveUpdateMs = performance.now() - beforeObjectives;
@@ -666,6 +676,32 @@ export class MissionInstance extends Battlefield {
     }
   }
 
+  /** Ein Operator nimmt Proben auf (später über Points of Interest). Nur lebende Operator im Einsatz. */
+  collectSamples(operatorId: string, amounts: SampleAmounts): boolean {
+    const player = this.player(operatorId);
+    if (!player || player.hp <= 0 || !this.roster.has(operatorId) || !this.simulatesCombat || this.result) return false;
+    const carried = this.carriedSamples.get(operatorId) ?? { tissue: 0, rock: 0, artifact: 0 };
+    for (const id of SAMPLE_IDS) carried[id] += Math.max(0, Math.floor(amounts[id] ?? 0));
+    this.carriedSamples.set(operatorId, carried);
+    return true;
+  }
+
+  /** Proben, die ein Operator gerade trägt. */
+  samplesCarriedBy(operatorId: string): SampleAmounts {
+    return { ...this.carriedSamples.get(operatorId) };
+  }
+
+  /** Summe der Proben aller extrahierten Operator. */
+  private extractedSamples(extracted: readonly string[]): SampleAmounts {
+    const total: SampleAmounts = {};
+    for (const operatorId of extracted) {
+      const carried = this.carriedSamples.get(operatorId);
+      if (!carried) continue;
+      for (const id of SAMPLE_IDS) if (carried[id]) total[id] = (total[id] ?? 0) + carried[id];
+    }
+    return total;
+  }
+
   debug(id: string, action: unknown): boolean {
     const player = this.player(id);
     if (!player || typeof action !== 'string') return false;
@@ -700,6 +736,11 @@ export class MissionInstance extends Battlefield {
     if (action === 'objectives' && this.state === 'ACTIVE_MISSION') {
       this.objectives.debugComplete(this.tick);
       return true;
+    }
+    // Proben zum Testen der Anzeige: sample:tissue, sample:rock, sample:artifact (Debug-Räume schreiben nichts gut).
+    if (action.startsWith('sample:')) {
+      const kind = action.slice(7) as SampleId;
+      return SAMPLE_IDS.includes(kind) && this.collectSamples(id, { [kind]: 1 });
     }
     if (action === 'damage-thruster') {
       const index = this.albatross!.thrusters.findIndex(({ health }) => health > 0);

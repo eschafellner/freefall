@@ -583,3 +583,22 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
 .fullscreen-settings { display: grid; gap: 8px; margin-top: 12px; font-size: 12px; color: var(--muted); }
 .fullscreen-settings label { display: flex; align-items: center; gap: 8px; }
 .title-screen .fullscreen-settings { color: #ffffffb3; }
+
+/* Ressourcen */
+.resource-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none; font: 11px var(--mono); }
+.resource { display: flex; align-items: baseline; gap: 5px; color: #ffffff99; }
+.resource i { width: 7px; height: 7px; border-radius: 2px; align-self: center; background: var(--resource, #fff); box-shadow: 0 0 6px var(--resource, #fff); }
+.resource b { color: #fff; font-weight: 600; }
+.resource b small { color: #ffffff73; font-weight: 400; }
+.resource.full b { color: #ffd88a; }
+.resource.credits { --resource: #f2c86b; }
+.resource.marks { --resource: #9cc4ff; }
+.resource.tissue { --resource: #e58a9a; }
+.resource.rock { --resource: #b9a58c; }
+.resource.artifact { --resource: #b48cff; }
+.arsenal .resource-bar, .service-record .resource-bar { padding: 8px 12px; border-radius: 10px; background: #ffffff0a; }
+.arsenal-group li small.arsenal-price { color: #f2c86bcc; font: 11px var(--mono); }
+.resource-gain { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; }
+.resource-gain span { color: #f2e2b8; }
+.resource-gain em { font-style: normal; color: #ffb38a; }
+@media (max-width: 900px) { .title-account .resource-bar { display: none; } }

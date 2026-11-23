@@ -2,6 +2,7 @@
  * Spieler-Accounts: Namensregeln, Operator-Handle (Name#1234) und die Profil- und Roster-Verträge zwischen Server und
  * Client. Client und Server prüfen mit denselben Funktionen; maßgeblich bleibt der Server.
  */
+import type { ResourceAmounts, ResourceBalance } from '../definitions/resources.ts';
 
 export const ACCOUNT_NAME_LENGTH = { min: 3, max: 16 } as const;
 export const ACCOUNT_PASSWORD_LENGTH = { min: 8, max: 128 } as const;
@@ -19,6 +20,8 @@ export interface AccountProfile {
   handle: string;
   level: number;
   experience: number;
+  /** Guthaben je Ressource (siehe `RESOURCES`). */
+  resources: ResourceBalance;
   createdAt: number;
 }
 
@@ -44,6 +47,8 @@ export interface AccountProgress {
   previousLevel: number;
   /** Durch den Aufstieg neu freigeschaltete IDs (siehe `UNLOCKS`). */
   unlocked?: string[];
+  /** Ressourcen des Einsatzes: gutgeschrieben, an der Obergrenze verfallen und das neue Guthaben. */
+  resources?: { credited: ResourceAmounts; forfeited: ResourceAmounts; balance: ResourceBalance };
 }
 
 export interface AccountUnlock { id: string; source: 'starter' | 'level' | 'choice' | 'admin'; unlockedAt: number }
@@ -62,6 +67,10 @@ export interface MissionHistoryEntry {
   durationSeconds: number;
   extracted: boolean;
   experience: number;
+  /** Gutgeschriebene Ressourcen dieses Einsatzes. */
+  resources: ResourceAmounts;
+  /** An der Obergrenze verfallene Ressourcen. */
+  forfeited: ResourceAmounts;
   kills: number;
   /** Mitspieler (ohne den abfragenden Account) als Name#Tag. */
   squad: string[];

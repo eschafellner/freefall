@@ -102,8 +102,10 @@ export async function unlocks(token: string): Promise<AccountUnlock[]> {
   return (await request<{ unlocks: AccountUnlock[] }>('GET', '/account/unlocks', undefined, token))?.unlocks ?? [];
 }
 
-export async function unlock(token: string, id: string): Promise<AccountUnlock[]> {
-  return (await request<{ unlocks: AccountUnlock[] }>('POST', '/account/unlocks', { id }, token))?.unlocks ?? [];
+/** Freischaltung per Auswahl. Der Server bucht den Preis ab und liefert das aktualisierte Profil. */
+export async function unlock(token: string, id: string): Promise<{ unlocks: AccountUnlock[]; account?: AccountProfile }> {
+  const result = await request<{ unlocks: AccountUnlock[]; account?: AccountProfile }>('POST', '/account/unlocks', { id }, token);
+  return { unlocks: result?.unlocks ?? [], account: result?.account };
 }
 
 export async function logout(token: string): Promise<void> {

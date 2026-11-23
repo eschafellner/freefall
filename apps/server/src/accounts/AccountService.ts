@@ -1,4 +1,4 @@
-import { STANDARD_LOADOUT, UNLOCKS, automaticUnlocks, missingLoadoutUnlocks, unlockBlocker } from '@freefall/shared';
+import { STANDARD_LOADOUT, UNLOCKS, automaticUnlocks, formatResourceAmounts, hasResources, missingLoadoutUnlocks, unlockBlocker } from '@freefall/shared';
 import type { AccountProfile, LoadoutSelection, UnlockRegistry } from '@freefall/shared';
 import { AccountStore } from './AccountStore.ts';
 import { MissionSettlement } from './MissionSettlement.ts';
@@ -93,7 +93,7 @@ export class AccountService {
     return [...starter, ...level];
   }
 
-  /** Freischaltung per Auswahl. Liefert einen Grund, wenn sie nicht möglich ist. */
+  /** Freischaltung per Auswahl, mit Abbuchung des Preises (`cost`). Liefert einen Grund, wenn sie nicht möglich ist. */
   unlock(account: Pick<AccountProfile, 'id' | 'level'>, id: string): { ok: true } | { ok: false; reason: string } {
     const unlock = this.unlockRegistry.byId.get(id);
     if (!unlock) return { ok: false, reason: 'Unbekannte Freischaltung.' };
@@ -103,8 +103,14 @@ export class AccountService {
     if (unlock.acquisition !== 'choice') return { ok: false, reason: 'Wird automatisch mit dem Level freigeschaltet.' };
     const blocker = unlockBlocker(unlock, account.level, owned, this.unlockRegistry);
     if (blocker) return { ok: false, reason: `Noch nicht verfügbar: ${blocker}.` };
-    this.store.grantUnlocks(account.id, [unlock], 'choice');
-    return { ok: true };
+    if (!hasResources(unlock.cost)) {
+      this.store.grantUnlocks(account.id, [unlock], 'choice');
+      return { ok: true };
+    }
+    const purchase = this.store.purchaseUnlock(account.id, unlock, unlock.cost!);
+    if (purchase.ok) return { ok: true };
+    if (purchase.reason === 'owned') return { ok: false, reason: 'Bereits freigeschaltet.' };
+    return { ok: false, reason: `Nicht genug Ressourcen: Es fehlen ${formatResourceAmounts(purchase.missing)}.` };
   }
 
   /** Fehlende Freischaltungen für ein Loadout; leer, wenn der Account es nutzen darf. */

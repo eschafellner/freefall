@@ -64,7 +64,8 @@ const RATE_LIMITED = new ApiError(429, 'rate-limited', 'Zu viele Versuche. Warte
  * - `POST /api/auth/login` { handle: "Name#1234", password } → 200 { token, account }
  * - `GET /api/account` (Bearer) → 200 { account }
  * - `GET /api/account/missions?limit=20` (Bearer) → 200 { missions }
- * - `GET /api/account/unlocks`, `POST /api/account/unlocks` { id } (Bearer) → { unlocks }
+ * - `GET /api/account/unlocks` (Bearer) → { unlocks }
+ * - `POST /api/account/unlocks` { id } (Bearer) → { unlocks, account }: Freischaltung, Preis wird abgebucht
  * - `POST /api/account/password` { current, next } (Bearer) → { revokedSessions }
  * - `POST /api/account/sessions/revoke-others` (Bearer) → { revokedSessions }
  * - `GET /api/account/export` (Bearer) → JSON-Datei mit allen gespeicherten Daten
@@ -148,7 +149,7 @@ export function accountApi(accounts: AccountService) {
       const body = await readJson(req);
       const result = accounts.unlock(account, text(body.id));
       if (!result.ok) throw new ApiError(409, 'bad-request', result.reason);
-      send(res, 201, { unlocks: accounts.store.unlocks(account.id) });
+      send(res, 201, { unlocks: accounts.store.unlocks(account.id), account: accounts.store.byId(account.id) });
       return;
     }
     if (req.method === 'POST' && path === '/account/password') {
