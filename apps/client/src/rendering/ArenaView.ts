@@ -40,6 +40,7 @@ import { GroundDetails } from './environment/GroundDetails.ts';
 import { AtmosphereController } from './environment/AtmosphereController.ts';
 import { createLighting } from './environment/Lighting.ts';
 import { createSurfaceMaterials } from './environment/SurfaceMaterials.ts';
+import { HORIZON_REACH } from './mission/PlanetHorizon.ts';
 
 const FLIGHT_PHASES = new Set(['DROPPING', 'ATMOSPHERIC_ENTRY', 'BRAKING']);
 
@@ -181,7 +182,8 @@ export class ArenaView {
       this.mission.environment.debug.visible = false;
       this.mission.environment.configureQuality(this.quality);
     }
-    this.camera.far = definition ? 470 : 325;
+    // Generated planets render the horizon backdrop out to the skyline.
+    this.camera.far = definition ? definition.world.terrain ? Math.ceil(HORIZON_REACH(definition.world.half)) + 50 : 470 : 325;
     this.camera.updateProjectionMatrix();
     this.canvas.setAttribute('aria-label', definition ? definition.displayName : '3D-Einsatzgebiet Boreal Relay');
     this.markers.root.hidden = true;

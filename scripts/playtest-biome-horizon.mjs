@@ -1,0 +1,102 @@
+// Phase A biome review: horizon backdrop and macro ground colour on all four planets.
+// PLAYWRIGHT_MODULE=… node --conditions=development scripts/playtest-biome-horizon.mjs [outDir]
+import { mkdir, mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
+import { fileURLToPath } from 'node:url';
+import { matchMaker } from '@colyseus/core';
+import { groundHeight, openGround } from '@freefall/shared';
+import { build, preview } from 'vite';
+import { startServer } from '../apps/server/src/server.ts';
+
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const angle = process.env.FREEFALL_BROWSER_ANGLE ?? 'swiftshader';
+const quality = process.env.FREEFALL_QUALITY ?? 'medium';
+const output = process.argv[2] ?? await mkdtemp(join(tmpdir(), 'freefall-biome-'));
+await mkdir(output, { recursive: true });
+const outDir = await mkdtemp(join(tmpdir(), 'freefall-biome-dist-'));
+console.log('Aufnahmen', output);
+process.env.FREEFALL_MISSION_DEBUG = '1';
+const server = await startServer(0, '127.0.0.1', false);
+let web, browser;
+
+async function until(predicate, label) {
+  const deadline = performance.now() + 15000;
+  while (!predicate()) {
+    if (performance.now() > deadline) throw new Error('Timed out: ' + label);
+    await delay(30);
+  }
+}
+
+try {
+  process.env.VITE_FREEFALL_SERVER = 'http://127.0.0.1:' + server.transport.server.address().port;
+  const config = { root: fileURLToPath(new URL('../apps/client', import.meta.url)), build: { outDir }, logLevel: 'error' };
+  await build(config);
+  web = await preview({ ...config, preview: { host: '127.0.0.1', port: 0, strictPort: true } });
+  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE, chromiumSandbox: false,
+    args: ['--use-gl=angle', '--use-angle=' + angle, '--enable-gpu', '--ignore-gpu-blocklist',
+      ...(angle === 'swiftshader' ? ['--enable-unsafe-swiftshader'] : [])] });
+  for (const [planet, seed] of [['green-plains', 17], ['desert', 31], ['ice', 48], ['forest', 63]]) {
+    if (process.env.FREEFALL_VISUAL_PLANET && process.env.FREEFALL_VISUAL_PLANET !== planet) continue;
+    const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('console', (entry) => { if (entry.type() === 'error') errors.push(entry.text()); });
+    await page.goto('http://127.0.0.1:' + web.httpServer.address().port);
+    await page.getByLabel('Grafikqualität').selectOption(quality);
+    await page.getByRole('button', { name: 'Raum erstellen' }).click();
+    const enter = async (name) => {
+      await page.getByRole('button', { name }).focus();
+      await page.keyboard.press('Enter');
+      await page.locator('.in-game').waitFor();
+    };
+    await page.getByRole('button', { name: 'Carrier betreten' }).waitFor();
+    const room = matchMaker.getLocalRoomById(await page.locator('.room strong').innerText());
+    const { arena: mission } = room;
+    const operator = mission.players[0];
+    await enter('Carrier betreten');
+    Object.assign(operator, { x: 0, z: 3, life: operator.life + 1 });
+    await page.getByText('Missionskonsole öffnen').waitFor();
+    await page.keyboard.press('KeyE');
+    await page.getByRole('heading', { name: 'Einsatzplanung' }).waitFor();
+    await page.getByRole('combobox').filter({ has: page.locator(`option[value="${planet}"]`) }).selectOption(planet);
+    await page.getByLabel('Welt-Seed', { exact: true }).fill(String(seed));
+    await page.getByLabel('Vorlage').selectOption('relay-defense');
+    await page.getByLabel('Missions-Seed', { exact: true }).fill('0');
+    await page.getByRole('button', { name: 'Neuen Auftrag erzeugen' }).click();
+    await page.getByText(`Welt-Seed ${seed} · Weltgenerator v1`, { exact: true }).first().waitFor();
+    await page.getByRole('button', { name: 'Boarding für diesen Auftrag freigeben' }).click();
+    await until(() => mission.state === 'BOARDING', 'Boarding');
+    mission.debug(operator.id, 'land');
+    const { world } = mission.definition;
+    const free = (x, z) => {
+      for (let r = 0; r < 60; r += 2) for (let a = 0; a < 8; a++) {
+        const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r;
+        if (Math.abs(px) < world.half - 3 && Math.abs(pz) < world.half - 3 && openGround(world, px, pz, 2)) return [px, pz];
+      }
+      return [x, z];
+    };
+    // yaw = atan2(dirX, -dirZ)
+    const place = async (name, x, z, dirX, dirZ) => {
+      [x, z] = free(x, z);
+      Object.assign(operator, { x, z, yaw: Math.atan2(dirX, -dirZ), y: groundHeight(world, x, z), protectedUntil: Infinity,
+        life: operator.life + 1 });
+      if (!(await page.locator('.in-game').count())) await enter('Einsatz betreten');
+      await delay(900);
+      await page.screenshot({ path: join(output, planet + '-' + name + '.png') });
+    };
+    const h = world.half;
+    await place('edge', -h + 30, 0, -1, 0);
+    await place('corner', h - 40, h - 40, 1, 1);
+    await place('inward', h - 20, 10, -1, 0);
+    await place('center', 0, 0, .3, -1);
+    if (errors.length) console.log(planet, 'Fehler', errors);
+    await page.close();
+  }
+} finally {
+  await browser?.close();
+  await web?.close();
+  await server.gracefullyShutdown(false).catch(() => {});
+  process.exit(0);
+}

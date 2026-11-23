@@ -7,6 +7,12 @@ import { repeatSurfaceMap } from './SurfaceMaterials.ts';
 const TAU = Math.PI * 2;
 const TERRAIN_TILE = 256;
 const PROP_TILE = 128;
+/**
+ * Ground haze beyond the playable range: past `start` metres the fog distance grows by `stretch` only, and the fog
+ * never fully hides the ground, so the horizon backdrop reads as a silhouette. Terrain and backdrop share it, which
+ * keeps the seam invisible and the haze monotonic with distance.
+ */
+export const GROUND_HAZE = { start: 260, stretch: .2, cap: .82 } as const;
 
 interface Grain { shade: number; height: number; roughness: number }
 
@@ -146,7 +152,6 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
 
   const textures: T.Texture[] = [atlas];
   const detailRange = { value: new T.Vector2(72, 112) };
-  const ground = new T.MeshStandardMaterial({ name: 'Planet terrain PBR', metalness: 0 });
   const colors = layers.map(([, color, roughness]) => {
     const rgb = new T.Color(color);
     return new T.Vector4(rgb.r, rgb.g, rgb.b, roughness);
@@ -154,22 +159,27 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
   const scales = new T.Vector4(...layers.map(([, , , metres]) => 1 / metres));
   const angle = seed / 0x100000000 * TAU;
   const facing = new T.Vector2(Math.cos(angle), Math.sin(angle));
-  ground.customProgramCacheKey = () => 'planet-surface-pbr-v1';
+  const ground = new T.MeshStandardMaterial({ name: 'Planet terrain PBR', metalness: 0 });
+  ground.customProgramCacheKey = () => 'planet-surface-pbr-v2';
   ground.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, {
       planetTile: { value: atlas }, planetColors: { value: colors }, planetScale: { value: scales },
       planetFacing: { value: facing }, planetDetailRange: detailRange,
+      groundHaze: { value: new T.Vector3(GROUND_HAZE.start, GROUND_HAZE.stretch, GROUND_HAZE.cap) },
     });
     shader.vertexShader = shader.vertexShader.replace('#include <common>', `
       #include <common>
       attribute vec4 surfaceWeights;
       attribute float surfaceTone;
+      attribute vec3 surfaceMacro;
       varying vec4 vPlanetWeights;
       varying vec3 vPlanetGround;
+      varying vec3 vPlanetMacro;
     `).replace('#include <begin_vertex>', `
       #include <begin_vertex>
       vPlanetWeights = surfaceWeights;
       vPlanetGround = vec3(position.xz, surfaceTone);
+      vPlanetMacro = surfaceMacro;
     `);
     shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `
       #include <common>
@@ -180,6 +190,8 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
       uniform vec2 planetDetailRange;
       varying vec4 vPlanetWeights;
       varying vec3 vPlanetGround;
+      varying vec3 vPlanetMacro;
+      uniform vec3 groundHaze;
     `).replace('#include <color_fragment>', `
       #include <color_fragment>
       vec4 weights = max(vPlanetWeights, 0.0);
@@ -205,7 +217,7 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
         }
         surface += weight * finish;
       }
-      diffuseColor.rgb *= surface.rgb * vPlanetGround.z;
+      diffuseColor.rgb *= surface.rgb * vPlanetGround.z * vPlanetMacro;
     `).replace('#include <roughnessmap_fragment>', `
       #include <roughnessmap_fragment>
       roughnessFactor *= surface.a;
@@ -218,6 +230,17 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
         vec3 bitangent = cross(tangent, normal);
         normal = normalize(normal + tangent * microNormal.x + bitangent * microNormal.y);
       }
+    `).replace('#include <fog_fragment>', `
+      #ifdef USE_FOG
+        #ifdef FOG_EXP2
+          // Slower haze past the playable range so distant ridges read as silhouettes instead of vanishing.
+          float hazeDepth = vFogDepth > groundHaze.x ? groundHaze.x + (vFogDepth - groundHaze.x) * groundHaze.y : vFogDepth;
+          float fogFactor = min(1.0 - exp(-fogDensity * fogDensity * hazeDepth * hazeDepth), groundHaze.z);
+        #else
+          float fogFactor = smoothstep(fogNear, fogFar, vFogDepth);
+        #endif
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogFactor);
+      #endif
     `);
   };
 

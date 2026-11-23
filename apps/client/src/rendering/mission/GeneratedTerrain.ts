@@ -14,6 +14,8 @@ import type { GraphicsQuality } from '../GraphicsQuality.ts';
 import { PlanetGroundDetails } from './PlanetGroundDetails.ts';
 import { coniferCrown } from './Conifer.ts';
 import { randomSource } from '../environment/noise.ts';
+import { fieldSampler, localRelief, macroTint } from '../environment/TerrainMacro.ts';
+import { createForestBelt, createPlanetHorizon } from './PlanetHorizon.ts';
 
 // Keep every vertex along a shared border. Interior fans use only the coarse lattice.
 function coarseIndices(cells: number): number[] {
@@ -107,6 +109,7 @@ export class GeneratedTerrain {
   private readonly detailRange: { value: T.Vector2 };
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
   private readonly rockControls: RockSurfaceControls = { dusting: { value: 1 } };
+  private belt?: { mesh: T.InstancedMesh; total: number };
 
   constructor(world: WorldDefinition, reservations: readonly Circle[], anisotropy: number, wind?: VegetationWind) {
     const field = world.terrain!;
@@ -117,6 +120,8 @@ export class GeneratedTerrain {
     const seed = detailSeed(world);
     const materials = createPlanetMaterials(id, seed, anisotropy);
     const { ground } = materials;
+    const fieldAt = fieldSampler(field);
+    const tint = [0, 0, 0];
     this.textures = materials.textures;
     this.detailRange = materials.detailRange;
     const transform = new T.Object3D();
@@ -125,7 +130,8 @@ export class GeneratedTerrain {
     const width = tile * step;
 
     for (let cz = 0; cz < cells; cz += tile) for (let cx = 0; cx < cells; cx += tile) {
-      const positions: number[] = [], normals: number[] = [], weights: number[] = [], tones: number[] = [], indices: number[] = [];
+      const positions: number[] = [], normals: number[] = [], weights: number[] = [], tones: number[] = [], macro: number[] = [];
+      const indices: number[] = [];
       for (let j = 0; j <= tile; j++) for (let i = 0; i <= tile; i++) {
         const ix = cx + i, iz = cz + j;
         const x = ix * step - half, z = iz * step - half;
@@ -137,6 +143,7 @@ export class GeneratedTerrain {
         const sample = surfaceSample(id, seed, field, x, z, height, Math.hypot(dx, dz));
         weights.push(...sample.weights);
         tones.push(sample.tone);
+        macro.push(...macroTint(id, seed, x, z, localRelief(height, fieldAt, x, z), tint));
         if (i < tile && j < tile) {
           const a = j * (tile + 1) + i, b = a + 1, c = a + tile + 1, d = c + 1;
           indices.push(a, c, b, b, c, d);
@@ -147,6 +154,7 @@ export class GeneratedTerrain {
       geometry.setAttribute('normal', new T.Float32BufferAttribute(normals, 3));
       geometry.setAttribute('surfaceWeights', new T.Float32BufferAttribute(weights, 4));
       geometry.setAttribute('surfaceTone', new T.Float32BufferAttribute(tones, 1));
+      geometry.setAttribute('surfaceMacro', new T.Float32BufferAttribute(macro, 3));
       geometry.setIndex(indices);
       const terrainMesh = new T.Mesh(geometry, ground);
       terrainMesh.name = worldChunkId(world.id, cx / tile, cz / tile);
@@ -163,6 +171,7 @@ export class GeneratedTerrain {
       const x = cx * step - half + width / 2, z = cz * step - half + width / 2;
       this.chunks.push({ near: terrainMesh, far: farMesh, x, z });
     }
+    this.root.add(createPlanetHorizon(id, seed, field, ground));
     this.details = new PlanetGroundDetails(world, reservations, width, cells / tile, wind);
     this.root.add(this.details.root);
 
@@ -245,6 +254,13 @@ export class GeneratedTerrain {
     }
     const random = randomSource(seed);
     const layers = forest ? 1 : 5;
+    if (forest) {
+      const belt = createForestBelt(seed, field, farShape, new T.MeshStandardMaterial({
+        name: 'Forest horizon crowns', color: 0x566b50, metalness: 0, roughness: .96, vertexColors: true, side: T.DoubleSide,
+      }));
+      this.root.add(belt);
+      this.belt = { mesh: belt, total: belt.count };
+    }
     for (const region of propRegions(trees, half, width)) {
       const trunks = new T.InstancedMesh(trunkShape, trunkMaterial, region.items.length);
       const crowns = new T.InstancedMesh(crownShape, crownMaterial, region.items.length * layers);
@@ -301,6 +317,7 @@ export class GeneratedTerrain {
     this.quality = quality;
     this.detailRange.value.set(quality.terrainTextureDistance * .68, quality.terrainTextureDistance);
     this.rockControls.dusting.value = quality === GRAPHICS_QUALITY.low ? 0 : 1;
+    if (this.belt) this.belt.mesh.count = Math.round(this.belt.total * (quality === GRAPHICS_QUALITY.low ? .45 : 1));
     this.details.configure(quality);
   }
 
