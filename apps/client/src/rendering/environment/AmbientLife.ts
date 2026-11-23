@@ -225,6 +225,7 @@ export class AmbientLife {
   private devils?: { points: T.Points; centres: T.Vector4[]; heading: number[] };
   private readonly view = { value: new T.Vector3() };
   private last = 0;
+  private clock = 0;
   private density = 1;
   private readonly transform = new T.Object3D();
 
@@ -261,11 +262,14 @@ export class AmbientLife {
       `).replace('#include <begin_vertex>', `
         #include <begin_vertex>
         float lifePhase = instanceMatrix[3].x * .37 + instanceMatrix[3].z * .23;
-        float bursts = smoothstep(.3, .75, sin(lifeTime * .32 + lifePhase) * .5 + .5);
-        float beat = sin(lifeTime * ${flap.toFixed(2)} * 6.2832 * (.6 + .4 * bursts) + lifePhase - span * .9);
-        transformed.y += beat * span * span * (.12 + .5 * bursts) + span * .07;
-        transformed.y += sin(lifeTime * 2.3 + lifePhase + span * 3.) * span * .03;
-        transformed.x += sin(lifeTime * 2.1 + lifePhase - tail * 2.6) * tail * tail * .35;
+        // Constant beat frequency; only the amplitude follows the glide/flap envelope. (Modulating the frequency itself
+        // multiplies the envelope's rate of change by the running time and produced sudden frantic flapping.)
+        // All rates complete whole cycles in the 3600 s time wrap, so nothing jumps when it wraps.
+        float bursts = smoothstep(.3, .75, sin(lifeTime * 6.2832 / 20. + lifePhase) * .5 + .5);
+        float beat = sin(lifeTime * ${(Math.round(flap * 3600) / 3600).toFixed(6)} * 6.2832 + lifePhase - span * .9);
+        transformed.y += beat * span * span * (.06 + .5 * bursts) + span * .07;
+        transformed.y += sin(lifeTime * 6.2832 / 2.5 + lifePhase + span * 3.) * span * .03;
+        transformed.x += sin(lifeTime * 6.2832 / 3. + lifePhase - tail * 2.6) * tail * tail * .35;
       `);
     };
   }
@@ -323,8 +327,8 @@ export class AmbientLife {
         .replace('#include <begin_vertex>', `
           #include <begin_vertex>
           float hang = max(0., -.5 - position.y);
-          transformed.x += sin(lifeTime * 1.3 + hang * 1.7 + instanceMatrix[3].x) * hang * .12;
-          transformed.z += cos(lifeTime * 1.1 + hang * 1.5 + instanceMatrix[3].z) * hang * .12;
+          transformed.x += sin(lifeTime * 6.2832 / 5. + hang * 1.7 + instanceMatrix[3].x) * hang * .12;
+          transformed.z += cos(lifeTime * 6.2832 / 6. + hang * 1.5 + instanceMatrix[3].z) * hang * .12;
         `);
     };
     glow.customProgramCacheKey = () => 'ambient-tendril-v1';
@@ -462,9 +466,10 @@ export class AmbientLife {
       void main() {
         vec4 s = lifeSeed;
         vec4 c = lifeDevils[int(s.x + .5)];
-        float h = fract(s.y + lifeTime * (.05 + s.w * .05));
+        float h = fract(s.y + lifeTime * (1. + floor(s.w * 4.)) / 20.);
         float r = .4 + h * h * 4.5;
-        float a = s.z + lifeTime * (2.6 - h * 1.2);
+        // Constant spin rate (period 3 s); the spiral comes from height, not from a time-varying speed.
+        float a = s.z + lifeTime * 6.2832 / 3. - h * 3.5;
         vec3 p = vec3(c.x + cos(a) * r, c.y + h * 18., c.z + sin(a) * r);
         vec4 view = modelViewMatrix * vec4(p, 1.);
         vAlpha = c.w * .32 * smoothstep(0., .08, h) * (1. - smoothstep(.65, 1., h));
@@ -504,14 +509,16 @@ export class AmbientLife {
     const now = performance.now() / 1000;
     const dt = this.last ? Math.min(.1, now - this.last) : 0;
     this.last = now;
+    // Shaders get a wrapped time (float precision); CPU motion uses the continuous clock so flocks never jump.
     this.time.value = now % 3600;
+    this.clock = now;
     const { x, z } = camera.position;
     this.view.value.copy(camera.position);
     const below = this.ground(x, z);
     // Hidden during the drop and from the ship: the creatures belong to the ground view.
     this.root.visible = camera.position.y - below < 70;
     if (!this.root.visible) return;
-    const t = this.time.value, transform = this.transform;
+    const t = this.clock, transform = this.transform;
     const glow = .35 + .65 * this.twilight;
     for (const { material, base } of this.glowMaterials) material.color.copy(base).multiplyScalar(glow);
     if (this.motes) (this.motes.points.material as T.ShaderMaterial).uniforms.lifeGlow.value = .7 + .8 * this.twilight;
