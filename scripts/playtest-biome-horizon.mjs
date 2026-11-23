@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { matchMaker } from '@colyseus/core';
-import { generateWorld, groundHeight, openGround } from '@freefall/shared';
+import { WORLD_GENERATOR_VERSION, generateWorld, groundHeight, openGround } from '@freefall/shared';
 import { detailClearances } from '../apps/client/src/rendering/environment/EnvironmentDetailPlacement.ts';
 import { placeWarTraces } from '../apps/client/src/rendering/environment/WarTracePlacement.ts';
 import { build, preview } from 'vite';
@@ -67,7 +67,7 @@ try {
     await page.getByLabel('Vorlage').selectOption('relay-defense');
     await page.getByLabel('Missions-Seed', { exact: true }).fill('0');
     await page.getByRole('button', { name: 'Neuen Auftrag erzeugen' }).click();
-    await page.getByText(`Welt-Seed ${seed} · Weltgenerator v1`, { exact: true }).first().waitFor();
+    await page.getByText(`Welt-Seed ${seed} · Weltgenerator v${WORLD_GENERATOR_VERSION}`, { exact: true }).first().waitFor();
     await page.getByRole('button', { name: 'Boarding für diesen Auftrag freigeben' }).click();
     await until(() => mission.state === 'BOARDING', 'Boarding');
     mission.debug(operator.id, 'land');
@@ -112,13 +112,22 @@ try {
     if (wreck) await look('wreck', wreck, Math.max(wreck.halfX, wreck.halfZ) + 14);
     if (traces.sites[1]) await look('battle', traces.sites[1], 18);
     if (world.initialNests[0]) await look('nest', world.initialNests[0], 30);
+    // Phase C: the named landmark formations are appended after the scattered solids.
+    const formation = world.obstacles.slice(-4);
+    if (formation.length) {
+      const centre = { x: formation.reduce((s, o) => s + o.x, 0) / formation.length, z: formation.reduce((s, o) => s + o.z, 0) / formation.length };
+      await look('landmark', centre, 26);
+    }
     console.log(planet, 'Spuren', traces.props.length, 'Decals', traces.decals.length, 'Wracks', traces.solids.size);
     if (errors.length) console.log(planet, 'Fehler', errors);
     await page.close();
   }
+} catch (error) {
+  console.error(error);
+  process.exitCode = 1;
 } finally {
   await browser?.close();
   await web?.close();
   await server.gracefullyShutdown(false).catch(() => {});
-  process.exit(0);
+  process.exit(process.exitCode ?? 0);
 }

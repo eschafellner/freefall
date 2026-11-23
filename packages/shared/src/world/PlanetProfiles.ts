@@ -46,7 +46,7 @@ export interface PlanetProfile {
   readonly landmarks: readonly string[];
 }
 
-const scale = { half: 240, step: 4, chunkCells: 15, grade: .46, version: 1 };
+const scale = { half: 240, step: 4, chunkCells: 15, grade: .46, version: 2 };
 export const GREEN_PLAINS_ID = 'green-plains';
 export const DESERT_ID = 'desert';
 export const ICE_ID = 'ice';
@@ -55,7 +55,7 @@ export const FOREST_ID = 'forest';
 export const WORLD_PROFILES: ReadonlyMap<string, PlanetProfile> = new Map(Object.entries({
   [GREEN_PLAINS_ID]: {
     ...scale, id: GREEN_PLAINS_ID, displayName: 'Grüne Ebene', biome: 'temperate-grassland',
-    relief: [16, 6.5, 1.25], solidCount: 34,
+    relief: [16, 6.5, 1.25], solidCount: 60,
     surface: { base: 0x626d3e, exposed: 0x514834, rock: 0x74746b, vegetation: 0x7d8348 },
     atmosphere: {
       id: 'green-plains.daylight.v1', exposure: 1,
@@ -69,7 +69,7 @@ export const WORLD_PROFILES: ReadonlyMap<string, PlanetProfile> = new Map(Object
   },
   [DESERT_ID]: {
     ...scale, id: DESERT_ID, displayName: 'Wüste', biome: 'arid-desert', grade: .51,
-    relief: [12, 7, 1.1], solidCount: 40,
+    relief: [12, 7, 1.1], solidCount: 66,
     surface: { base: 0xa08358, exposed: 0x876444, rock: 0x80614c, vegetation: 0x887650 },
     atmosphere: {
       id: 'desert.dry-day.v1', exposure: .98,
@@ -83,7 +83,7 @@ export const WORLD_PROFILES: ReadonlyMap<string, PlanetProfile> = new Map(Object
   },
   [ICE_ID]: {
     ...scale, id: ICE_ID, displayName: 'Eiswelt', biome: 'glacial', grade: .49,
-    relief: [18, 8, 1.5], solidCount: 42,
+    relief: [18, 8, 1.5], solidCount: 70,
     surface: { base: 0xc3cbd0, exposed: 0x7b9ba7, rock: 0x606d75, vegetation: 0x91aabb },
     atmosphere: {
       id: 'ice.overcast-day.v1', exposure: .92,

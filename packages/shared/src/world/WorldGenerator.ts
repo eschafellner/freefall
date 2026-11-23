@@ -6,7 +6,7 @@ import { terrainHeight } from './Terrain.ts';
 import { DESERT_ID, FOREST_ID, GREEN_PLAINS_ID, ICE_ID, WORLD_PROFILES } from './PlanetProfiles.ts';
 import type { PlanetProfile } from './PlanetProfiles.ts';
 
-export const WORLD_GENERATOR_VERSION = 1;
+export const WORLD_GENERATOR_VERSION = 2;
 export const WORLD_PLAN_VERSION = 1;
 export const WORLD_ASSET_VERSION = 1;
 export interface WorldIdentity {
@@ -111,6 +111,103 @@ function createTerrain(profile: PlanetProfile, seed: number, flat: readonly Circ
     heightsCm: heights.map((height) => Math.round(height * 100)) };
 }
 
+const CLUSTERS = 6;
+
+/**
+ * Named landmark formations per planet (v2). Each piece passes the same reservation and spacing rules as the scattered
+ * solids; a formation that does not fit simply ends up with fewer pieces.
+ */
+function addLandmarks(planetId: string, seed: number, terrain: Heightfield, reserved: readonly Circle[], obstacles: Obstacle[]): void {
+  const noise = (slot: number, lane: number) => worldNoise(seed ^ 0x2d5f, slot, lane);
+  const fits = (x: number, z: number, halfX: number, halfZ: number, gap: number) => {
+    const width = worldLength(halfX, halfZ);
+    return Math.max(Math.abs(x), Math.abs(z)) < terrain.half - width - 6 &&
+      !reserved.some((site) => worldLength(site.x - x, site.z - z) < site.radius + width + 7) &&
+      !obstacles.some((other) => worldLength(other.x - x, other.z - z) < Math.max(other.halfX, other.halfZ) + width + gap);
+  };
+  const rock = (x: number, z: number, halfX: number, halfZ: number, rise: number, kind: 'rock' | 'ice' = 'rock', gap = 3.2) => {
+    x = Math.round(x * 10) / 10;
+    z = Math.round(z * 10) / 10;
+    if (!fits(x, z, halfX, halfZ, gap)) return false;
+    const ground = terrainHeight(terrain, x, z);
+    obstacles.push({ x, z, halfX, halfZ, bottom: ground - worldLength(halfX, halfZ) * .46, height: ground + rise, kind });
+    return true;
+  };
+  const tree = (x: number, z: number, half: number, large: boolean) => {
+    x = Math.round(x * 10) / 10;
+    z = Math.round(z * 10) / 10;
+    if (!fits(x, z, half, half, 3)) return false;
+    const ground = terrainHeight(terrain, x, z);
+    obstacles.push({ x, z, halfX: half, halfZ: half, bottom: ground - half * .65, height: ground + (large ? 6 : 3.5), kind: 'tree' });
+    return true;
+  };
+  /** Open spot from a coarse sample grid, scored by height (crests) or by noise. */
+  const site = (slot: number, score: (x: number, z: number) => number) => {
+    let best: PositionXZ | undefined, value = -Infinity;
+    for (let k = 0; k < 48; k++) {
+      const x = (noise(slot * 97 + k, 0) * 2 - 1) * (terrain.half - 40), z = (noise(slot * 97 + k, 1) * 2 - 1) * (terrain.half - 40);
+      if (!fits(x, z, 14, 14, 4)) continue;
+      const s = score(x, z);
+      if (s > value) { value = s; best = { x, z }; }
+    }
+    return best;
+  };
+  const ring = (centre: PositionXZ, count: number, radius: number, place: (x: number, z: number, k: number) => void, slot: number) => {
+    const turn = noise(slot, 5) * Math.PI * 2;
+    for (let k = 0; k < count; k++) {
+      const angle = turn + k / count * Math.PI * 2 + (noise(slot, 10 + k) - .5) * .5;
+      const r = radius * (.75 + noise(slot, 30 + k) * .5);
+      place(centre.x + Math.cos(angle) * r, centre.z + Math.sin(angle) * r, k);
+    }
+  };
+  const crest = (x: number, z: number) => terrainHeight(terrain, x, z);
+
+  if (planetId === GREEN_PLAINS_ID) {
+    // Hügelgruppe: a tor of boulders crowning the highest open crest.
+    const tor = site(1, crest);
+    if (tor) {
+      rock(tor.x, tor.z, 2.6, 2.1, 3.4);
+      ring(tor, 6, 7.5, (x, z, k) => rock(x, z, 1.1 + noise(2, k) * 1.2, .9 + noise(3, k), 1.4 + noise(4, k) * 1.6), 2);
+    }
+    // Baumgruppen: two groves of broad-leaved trees.
+    for (let g = 0; g < 2; g++) {
+      const grove = site(10 + g, (x, z) => noise(Math.round(x), Math.round(z)));
+      if (grove) ring(grove, 8, 9, (x, z, k) => tree(x, z, .42 + noise(20 + g, k) * .2, k === 0), 20 + g);
+    }
+  } else if (planetId === DESERT_ID) {
+    // Felsnadeln: tall sandstone pillars on a rise.
+    const spires = site(1, crest);
+    if (spires) ring(spires, 5, 6.5, (x, z, k) => rock(x, z, 1.1 + noise(2, k) * .5, 1 + noise(3, k) * .4, 4.5 + noise(4, k) * 3.5, 'rock', 2.6), 2);
+    // Dünenkamm: a line of low, elongated ledges along the dune ridge direction.
+    const ridge = site(5, crest);
+    if (ridge) {
+      const bearing = noise(6, 0) * Math.PI;
+      for (let k = -3; k <= 3; k++) {
+        const along = k * 7.5 + (noise(7, k + 3) - .5) * 2;
+        rock(ridge.x + Math.cos(bearing) * along, ridge.z + Math.sin(bearing) * along, 2 + noise(8, k + 3), .9 + noise(9, k + 3) * .4, 1.1 + noise(10, k + 3) * .7);
+      }
+    }
+  } else if (planetId === ICE_ID) {
+    // Eisformation: a jagged crown of tall ice blocks.
+    for (let f = 0; f < 2; f++) {
+      const formation = site(1 + f * 7, f ? (x, z) => -crest(x, z) : crest);
+      if (!formation) continue;
+      rock(formation.x, formation.z, 2, 1.7, 6.5 + noise(2, f) * 2, 'ice');
+      ring(formation, 6, 7, (x, z, k) => rock(x, z, 1 + noise(3 + f, k) * .9, .9 + noise(4 + f, k) * .7, 2.5 + noise(5 + f, k) * 3.5, 'ice', 2.6), 3 + f);
+    }
+  } else if (planetId === FOREST_ID) {
+    // Alter Baum: one giant trunk in its own clearing.
+    const old = site(1, (x, z) => -obstacles.filter((o) => Math.abs(o.x - x) < 12 && Math.abs(o.z - z) < 12).length);
+    if (old) tree(old.x, old.z, 1.45, true);
+    // Felsformation: a ring of mossy boulders.
+    const formation = site(4, crest);
+    if (formation) {
+      rock(formation.x, formation.z, 2.4, 2, 3);
+      ring(formation, 5, 6.5, (x, z, k) => rock(x, z, 1 + noise(5, k), .9 + noise(6, k) * .8, 1.3 + noise(7, k) * 1.5), 5);
+    }
+  }
+}
+
 function jitter(seed: number, slot: number, x: number, z: number, range: number): PositionXZ {
   return { x: x + Math.round((worldNoise(seed, slot, 0) * 2 - 1) * range),
     z: z + Math.round((worldNoise(seed, slot, 1) * 2 - 1) * range) };
@@ -136,9 +233,18 @@ export function generateWorld(planetId: string, seed: number): WorldPlan | undef
   const terrain = createTerrain(profile, seed, [deployment, ...relays, ...balloonSites, { ...nest, radius: 8 }]);
   const reserved = [deployment, ...relays, ...balloonSites, { ...nest, radius: 12 }, ...breachRegions];
   const obstacles: Obstacle[] = [];
+  const forest = planetId === FOREST_ID;
+  // v2: most solids gather around a few cluster centres; the rest stay scattered. Forest keeps its noise-driven stands.
+  const centres = Array.from({ length: CLUSTERS }, (_, k) => jitter(seed ^ 0x3c11, k, 0, 0, 190));
+  const candidate = (i: number): PositionXZ & { clustered: boolean } => {
+    if (forest || i < 3 || worldNoise(seed ^ 0x51a7, i, 0) < .3) return { ...jitter(seed ^ 0x9b12, i, 0, 0, 216), clustered: false };
+    const centre = centres[Math.floor(worldNoise(seed ^ 0x51a7, i, 1) * CLUSTERS)];
+    const angle = worldNoise(seed ^ 0x51a7, i, 2) * Math.PI * 2;
+    const reach = 5 + worldNoise(seed ^ 0x51a7, i, 3) ** .8 * 30;
+    return { x: Math.round(centre.x + Math.cos(angle) * reach), z: Math.round(centre.z + Math.sin(angle) * reach), clustered: true };
+  };
   for (let i = 0; i < profile.solidCount * 13 && obstacles.length < profile.solidCount; i++) {
-    const { x, z } = jitter(seed ^ 0x9b12, i, 0, 0, 216);
-    const forest = planetId === FOREST_ID;
+    const { x, z, clustered } = candidate(i);
     const large = obstacles.length < 3;
     const tree = planetId === GREEN_PLAINS_ID ? !large && obstacles.length % 3 === 0 : forest && obstacles.length % 12 !== 1;
     if (forest && !large && valueNoise(seed ^ 0x73da, x, z, 58) < -.04) continue;
@@ -148,7 +254,7 @@ export function generateWorld(planetId: string, seed: number): WorldPlan | undef
     const halfZ = halfX * (.72 + worldNoise(seed, i, 5) * .35);
     const width = worldLength(halfX, halfZ);
     if (reserved.some((site) => worldLength(site.x - x, site.z - z) < site.radius + width + 7) ||
-        obstacles.some((other) => worldLength(other.x - x, other.z - z) < other.halfX + width + (forest ? 3.5 : 6))) continue;
+        obstacles.some((other) => worldLength(other.x - x, other.z - z) < other.halfX + width + (forest ? 3.5 : clustered ? 4 : 6))) continue;
     const ground = terrainHeight(terrain, x, z);
     const arc = planetId === DESERT_ID && obstacles.length === 0;
     if (arc) {
@@ -164,6 +270,7 @@ export function generateWorld(planetId: string, seed: number): WorldPlan | undef
     obstacles.push({ x, z, halfX, halfZ, bottom: ground - width * .46,
       height: ground + (tree ? large ? 6 : 3.5 : ice ? halfX * 1.44 : halfX * .95), kind: tree ? 'tree' : ice ? 'ice' : 'rock' });
   }
+  addLandmarks(planetId, seed, terrain, reserved, obstacles);
   const configuration = { planetId, biome, seed, formatVersion: WORLD_PLAN_VERSION, generatorVersion: WORLD_GENERATOR_VERSION,
     profileVersion: version, assetVersion: WORLD_ASSET_VERSION };
   const content = { half, terrain, planetId, deployment, obstacles, patrolRegions, breachRegions, initialNests };

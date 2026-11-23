@@ -11,7 +11,7 @@
 
 Seit Katalogversion 2 (Biom-Phase B) sind die Dichten höher, und die Sichtweite der Bodendetails beträgt 26/48/66 m (Low/Medium/High). Die Versionsänderung erzeugt auch das Muster der Oberflächenschichten neu. Server und Client bleiben dabei synchron, weil beide `detailSeed` aus `@freefall/shared` verwenden. Mittelgroße Objekte beschreibt [Biom-Phase B](BIOME_MID_PROPS.md).
 
-Die Kandidaten stammen aus pro Kategorie gestaffelten Rastern. Große und mittlere physische Props stammen gemeinsam aus `WORLD_PROFILES.solidCount` und den vorhandenen Größenregeln im 7.6-Generator. Die Biome erstellen je 42, 40, 34 und 500 Solids als Startbudget. Die Logik für drei erste größere Platzierungsslots, die Waldcluster und den Sandsteinbogen liegt weiterhin dort.
+Die Kandidaten stammen aus pro Kategorie gestaffelten Rastern. Große und mittlere physische Props stammen gemeinsam aus `WORLD_PROFILES.solidCount` und den vorhandenen Größenregeln im 7.6-Generator. Seit Weltgenerator v2 haben Eis, Wüste, Ebene und Wald ein Startbudget von 70, 66, 60 und 500 Solids. Dazu kommen benannte Landmarken ([Biom-Phase C](BIOME_LANDMARKS.md)). Die Logik für drei erste größere Platzierungsslots, die Waldcluster und den Sandsteinbogen liegt weiterhin dort.
 
 Ein Terrain-Sample bestimmt die tatsächliche Kontakthöhe. Die Platzierung prüft Grad und Materialgewicht, setzt Höhe und Ausrichtung anhand der Terrain-Tangente und hält anhand des Assetradius Abstand von physischen Hindernissen. Landmarkenkandidaten werden im Umkreis von 7 m einer physischen Formation gewertet. Die Pflanzen reagieren auf mehrskaliges Rauschen. Moderate Dichten und die festen Kandidatenraster halten Lichtungen und Abstände lesbar.
 

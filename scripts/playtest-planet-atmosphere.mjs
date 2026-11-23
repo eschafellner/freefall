@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { matchMaker } from '@colyseus/core';
-import { BALLOON, NET, SCHABE_TYPE, groundHeight, missionGround, openGround, terrainVertex } from '@freefall/shared';
+import { BALLOON, NET, SCHABE_TYPE, WORLD_GENERATOR_VERSION, groundHeight, missionGround, openGround, terrainVertex } from '@freefall/shared';
 import { build, preview } from 'vite';
 import { startServer } from '../apps/server/src/server.ts';
 import { clearMoves } from '../apps/server/src/simulation/Player.ts';
@@ -77,7 +77,7 @@ try {
     await page.getByLabel('Vorlage').selectOption('relay-defense');
     await page.getByLabel('Missions-Seed', { exact: true }).fill('0');
     await page.getByRole('button', { name: 'Neuen Auftrag erzeugen' }).click();
-    await page.getByText(`Welt-Seed ${seed} · Weltgenerator v1`, { exact: true }).first().waitFor();
+    await page.getByText(`Welt-Seed ${seed} · Weltgenerator v${WORLD_GENERATOR_VERSION}`, { exact: true }).first().waitFor();
     await page.getByRole('button', { name: 'Boarding für diesen Auftrag freigeben' }).click();
     await until(() => mission.state === 'BOARDING', 'Boarding');
     const started = performance.now();

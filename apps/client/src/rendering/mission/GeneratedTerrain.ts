@@ -279,7 +279,9 @@ export class GeneratedTerrain {
       const distant = new T.InstancedMesh(farShape, farCrownMaterial, region.items.length);
       for (const [i, tree] of region.items.entries()) {
         const base = groundHeight(world, tree.x, tree.z);
-        const height = (forest ? 8.3 : 5.6) + random() * (forest ? 4.6 : 2.2) + (tree.halfX > .8 ? 3 : 0);
+        // Landmark giants (halfX > 1.2, the forest's "Alter Baum") tower over the canopy.
+        const giant = tree.halfX > 1.2;
+        const height = (forest ? 8.3 : 5.6) + random() * (forest ? 4.6 : 2.2) + (giant ? 9 : tree.halfX > .8 ? 3 : 0);
         transform.rotation.set(0, random() * Math.PI, 0);
         const foot = base - .24;
         transform.position.set(tree.x, foot + height / 2, tree.z);
@@ -287,7 +289,7 @@ export class GeneratedTerrain {
         transform.updateMatrix();
         trunks.setMatrixAt(i, transform.matrix);
         transform.position.y = forest ? base : base + height * .91;
-        const width = forest ? height * (.21 + random() * .08) : 2;
+        const width = forest ? height * (.21 + random() * .08) * (giant ? 1.25 : 1) : 2;
         transform.scale.set(width, forest ? height : 1.9, width);
         transform.updateMatrix();
         distant.setMatrixAt(i, transform.matrix);

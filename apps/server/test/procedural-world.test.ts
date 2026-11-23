@@ -32,15 +32,36 @@ test('world identity survives serialization and is independent of mission seed',
   assert.equal(generator.validate(first.plan), undefined);
 });
 
-test('v1 world IDs do not depend on the JavaScript engine’s Math.hypot implementation', (t) => {
+test('v2 world IDs do not depend on the JavaScript engine’s Math.hypot implementation', (t) => {
   t.mock.method(Math, 'hypot', (...values: number[]) => Math.sqrt(values.reduce((sum, value) => sum + value * value, 0)));
   const fixtures = [
-    ['green-plains', 17, 'world.generated.68c909076155c5e5'],
-    ['desert', 31, 'world.generated.728819ca01df0109'],
-    ['ice', 48, 'world.generated.b9ec957f0a62f9c4'],
-    ['forest', 63, 'world.generated.acdc7ec0c04dd3da'],
+    ['green-plains', 17, 'world.generated.202ac8cea6fc721f'],
+    ['desert', 31, 'world.generated.c9488da7f6db9eb9'],
+    ['ice', 48, 'world.generated.4c70c5cf4d66f37a'],
+    ['forest', 63, 'world.generated.e10ac2f3d47c20ef'],
   ] as const;
   for (const [planet, seed, id] of fixtures) assert.equal(generateWorld(planet, seed)?.identity.id, id, planet);
+});
+
+test('v2 worlds gather solids into clusters and add each planet’s landmark formation', () => {
+  for (const { id } of WORLD_PROFILES.values()) for (let seed = 0; seed < 20; seed++) {
+    const { world } = generateWorld(id, seed)!;
+    const solids = world.obstacles.filter(({ kind }) => kind !== 'arch-span');
+    // Landmark pieces come on top of the scattered budget.
+    assert.ok(world.obstacles.length > WORLD_PROFILES.get(id)!.solidCount, id + ' ' + seed);
+    // Every solid keeps a walkable gap to its neighbours (arch piers excepted, they frame the opening).
+    for (const [i, a] of solids.entries()) for (const b of solids.slice(i + 1)) {
+      if (a.kind === 'arch-pier' && b.kind === 'arch-pier') continue;
+      const gap = Math.hypot(a.x - b.x, a.z - b.z) - Math.hypot(a.halfX, a.halfZ) - Math.hypot(b.halfX, b.halfZ);
+      assert.ok(gap > -Math.max(a.halfX, a.halfZ, b.halfX, b.halfZ), id + ' ' + seed);
+    }
+    if (id !== FOREST_ID) {
+      // Clustering: the median distance to the nearest other solid is clearly below the v1 scatter (~40 m).
+      const nearest = solids.map((a) => Math.min(...solids.filter((b) => b !== a).map((b) => Math.hypot(a.x - b.x, a.z - b.z))))
+        .sort((a, b) => a - b);
+      assert.ok(nearest[nearest.length >> 1] < 20, id + ' ' + seed + ' ' + nearest[nearest.length >> 1]);
+    }
+  }
 });
 
 for (const { id: planetId } of WORLD_PROFILES.values()) test(`100 ${planetId} seeds produce walkable terrain and validated missions`, (t) => {

@@ -5,13 +5,13 @@ import { WORLD_PROFILES, generateWorld, restoreWorld } from '@freefall/shared';
 import { createLighting } from '../src/rendering/environment/Lighting.ts';
 
 const referenceWorlds = [
-  ['green-plains', 17, '68c909076155c5e5'],
-  ['desert', 31, '728819ca01df0109'],
-  ['ice', 48, 'b9ec957f0a62f9c4'],
-  ['forest', 63, 'acdc7ec0c04dd3da'],
+  ['green-plains', 17, '202ac8cea6fc721f'],
+  ['desert', 31, 'c9488da7f6db9eb9'],
+  ['ice', 48, '4c70c5cf4d66f37a'],
+  ['forest', 63, 'e10ac2f3d47c20ef'],
 ] as const;
 
-test('every generated planet has a distinct, readable atmosphere and retains its 7.6 world identity', () => {
+test('every generated planet has a distinct, readable atmosphere and retains its v2 world identity', () => {
   assert.equal(WORLD_PROFILES.size, referenceWorlds.length);
   const ids = new Set<string>();
   for (const [id, seed, hash] of referenceWorlds) {
