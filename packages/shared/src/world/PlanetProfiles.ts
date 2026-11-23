@@ -1,3 +1,28 @@
+/** An extra star: lights the scene without shadows and appears as a disc in the sky. */
+export interface CelestialSun {
+  readonly offset: readonly [x: number, y: number, z: number];
+  readonly color: number;
+  readonly intensity: number;
+  /** Angular radius of the disc in radians. */
+  readonly size: number;
+}
+/** Moon or planet in the sky, lit by the main sun. */
+export interface CelestialBody {
+  readonly offset: readonly [x: number, y: number, z: number];
+  readonly size: number;
+  readonly color: number;
+  /** Gas giant cloud bands (0 = none). */
+  readonly bands?: number;
+  /** Ring outer radius in planet radii (0 = none). */
+  readonly ring?: number;
+}
+export interface CelestialSettings {
+  /** Angular radius of the main sun's disc in radians (Earth's sun ≈ .0047). */
+  readonly sunSize: number;
+  readonly suns: readonly CelestialSun[];
+  readonly bodies: readonly CelestialBody[];
+}
+
 export interface AtmosphereSettings {
   readonly exposure: number;
   readonly sun: {
@@ -19,6 +44,7 @@ export interface AtmosphereSettings {
     readonly hazeHeight: number;
     readonly sunGlow: number;
   };
+  readonly celestial?: CelestialSettings;
 }
 
 export interface PlanetAtmosphereProfile extends AtmosphereSettings {
@@ -64,6 +90,8 @@ export const WORLD_PROFILES: ReadonlyMap<string, PlanetProfile> = new Map(Object
       shadow: { extent: 81, radius: 2.6 }, fog: { color: 0xa5b3ad, density: .0035 },
       sky: { zenith: 0x7795ac, clouds: 0xd8dad4, cloudShadow: 0x7a8791, belowHorizon: 0x666e5d,
         cloudThreshold: .42, cloudScale: .92, hazeHeight: .28, sunGlow: .75 },
+      celestial: { sunSize: .0085, suns: [],
+        bodies: [{ offset: [62, 21, -70], size: .085, color: 0xc9b9a0, bands: 7, ring: 2.15 }] },
     },
     landmarks: ['Hügelgruppe', 'Felsblock', 'Baumgruppe'],
   },
@@ -72,12 +100,17 @@ export const WORLD_PROFILES: ReadonlyMap<string, PlanetProfile> = new Map(Object
     relief: [12, 7, 1.1], solidCount: 66,
     surface: { base: 0xa08358, exposed: 0x876444, rock: 0x80614c, vegetation: 0x887650 },
     atmosphere: {
-      id: 'desert.dry-day.v1', exposure: .98,
-      sun: { offset: [76, 62, 44], color: 0xffe4c5, intensity: 1.94 },
-      fill: { sky: 0xc7d5db, ground: 0x9e8368, intensity: 1.08 }, environmentIntensity: .28,
+      id: 'desert.three-suns.v2', exposure: .94,
+      sun: { offset: [76, 62, 44], color: 0xffe9cf, intensity: 1.8 },
+      fill: { sky: 0xd2cfc8, ground: 0xa58466, intensity: 1.04 }, environmentIntensity: .28,
       shadow: { extent: 85, radius: 1.45 }, fog: { color: 0xbca993, density: .0041 },
       sky: { zenith: 0x899fa7, clouds: 0xd5c8b7, cloudShadow: 0xb3aa9d, belowHorizon: 0x8d7a66,
-        cloudThreshold: .69, cloudScale: .73, hazeHeight: .54, sunGlow: 1.08 },
+        cloudThreshold: .69, cloudScale: .73, hazeHeight: .54, sunGlow: .7 },
+      // A hot primary, a swollen orange companion low in the west and a small blue-white dwarf.
+      celestial: { sunSize: .011, bodies: [], suns: [
+        { offset: [-58, 30, 66], color: 0xff7f3a, intensity: .48, size: .024 },
+        { offset: [20, 80, -48], color: 0xbfd6ff, intensity: .24, size: .0035 },
+      ] },
     },
     landmarks: ['Canyon', 'Sandsteinbogen', 'Dünenkamm'],
   },
@@ -86,12 +119,14 @@ export const WORLD_PROFILES: ReadonlyMap<string, PlanetProfile> = new Map(Object
     relief: [18, 8, 1.5], solidCount: 70,
     surface: { base: 0xc3cbd0, exposed: 0x7b9ba7, rock: 0x606d75, vegetation: 0x91aabb },
     atmosphere: {
-      id: 'ice.overcast-day.v1', exposure: .92,
-      sun: { offset: [-38, 65, 81], color: 0xe0edff, intensity: 1.08 },
+      id: 'ice.small-sun.v2', exposure: .92,
+      sun: { offset: [-38, 60, 81], color: 0xe2ecff, intensity: 1.08 },
       fill: { sky: 0xd3e0ed, ground: 0x8699af, intensity: 1.38 }, environmentIntensity: .29,
-      shadow: { extent: 84, radius: 3.45 }, fog: { color: 0xabbac6, density: .0044 },
-      sky: { zenith: 0x8297ac, clouds: 0xc0cbd1, cloudShadow: 0x657586, belowHorizon: 0x85919b,
-        cloudThreshold: .24, cloudScale: .86, hazeHeight: .36, sunGlow: .24 },
+      shadow: { extent: 84, radius: 2.1 }, fog: { color: 0xabbac6, density: .0044 },
+      sky: { zenith: 0x7a92ab, clouds: 0xc0cbd1, cloudShadow: 0x657586, belowHorizon: 0x85919b,
+        cloudThreshold: .36, cloudScale: .86, hazeHeight: .36, sunGlow: .2 },
+      // A far, small white star: point-like disc, crisp shadows, little warmth.
+      celestial: { sunSize: .0032, suns: [], bodies: [] },
     },
     landmarks: ['Gletscherzunge', 'Eisformation', 'Eisplateau'],
   },
@@ -106,6 +141,10 @@ export const WORLD_PROFILES: ReadonlyMap<string, PlanetProfile> = new Map(Object
       shadow: { extent: 76, radius: 2.75 }, fog: { color: 0x85938b, density: .0052 },
       sky: { zenith: 0x7b9294, clouds: 0xc2c9be, cloudShadow: 0x73827f, belowHorizon: 0x59655b,
         cloudThreshold: .36, cloudScale: 1.07, hazeHeight: .34, sunGlow: .49 },
+      celestial: { sunSize: .0085, suns: [], bodies: [
+        { offset: [-70, 38, 52], size: .032, color: 0xb6c4c0 },
+        { offset: [-40, 46, 75], size: .014, color: 0xc9a98a },
+      ] },
     },
     landmarks: ['Waldlichtung', 'Alter Baum', 'Felsformation'],
   },

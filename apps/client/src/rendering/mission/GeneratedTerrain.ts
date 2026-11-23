@@ -14,6 +14,7 @@ import type { GraphicsQuality } from '../GraphicsQuality.ts';
 import { PlanetGroundDetails } from './PlanetGroundDetails.ts';
 import { PlanetMidProps } from './PlanetMidProps.ts';
 import { PlanetWarTraces } from './PlanetWarTraces.ts';
+import { AmbientLife } from '../environment/AmbientLife.ts';
 import { coniferCrown } from './Conifer.ts';
 import { randomSource } from '../environment/noise.ts';
 import { fieldSampler, localRelief, macroTint } from '../environment/TerrainMacro.ts';
@@ -108,6 +109,7 @@ export class GeneratedTerrain {
   private readonly chunks: { near: T.Mesh; far: T.Mesh; x: number; z: number }[] = [];
   private readonly details: PlanetGroundDetails;
   private readonly midProps: PlanetMidProps;
+  private readonly life: AmbientLife;
   /** Battle sites and swarm growth; `traces.solids` lists the rocks drawn as wrecks or ruins. */
   readonly warTraces: PlanetWarTraces;
   get traces() { return this.warTraces.traces; }
@@ -186,6 +188,8 @@ export class GeneratedTerrain {
     this.root.add(this.details.root);
     this.midProps = new PlanetMidProps(world, reservations, width, cells / tile, wind);
     this.root.add(this.midProps.root);
+    this.life = new AmbientLife(world, wind);
+    this.root.add(this.life.root);
 
     const stone = materials.prop('rock', surface.rock, .93);
     applyRockSurface(stone, rockDeposit(id, surface, false), this.rockControls);
@@ -334,6 +338,7 @@ export class GeneratedTerrain {
     if (this.belt) this.belt.mesh.count = Math.round(this.belt.total * (quality === GRAPHICS_QUALITY.low ? .45 : 1));
     this.details.configure(quality);
     this.midProps.configure(quality);
+    this.life.configure(quality);
     this.warTraces.configure(quality);
   }
 
@@ -356,5 +361,6 @@ export class GeneratedTerrain {
     }
     this.details.update(camera);
     this.midProps.update(camera);
+    this.life.update(camera);
   }
 }

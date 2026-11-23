@@ -17,6 +17,7 @@ import { placeChunkMidProps } from '../src/rendering/environment/MidPropPlacemen
 import { WAR_TRACES, traceGeometry } from '../src/rendering/environment/WarTraceAssets.ts';
 import type { TraceId } from '../src/rendering/environment/WarTraceAssets.ts';
 import { placeWarTraces } from '../src/rendering/environment/WarTracePlacement.ts';
+import { AmbientLife, LIFE_PROFILES } from '../src/rendering/environment/AmbientLife.ts';
 
 const worlds = [['green-plains', 17], ['desert', 31], ['ice', 48], ['forest', 63]] as const;
 
@@ -271,6 +272,30 @@ test('war traces are deterministic, keep mission reservations clear and only res
     }
     for (let i = 0; i < normal.count; i++) assert.ok(Number.isFinite(normal.getX(i) + normal.getY(i) + normal.getZ(i)), id);
     shape.dispose();
+  }
+});
+
+test('ambient life builds alien species per planet, animates on update and hides from the drop altitude', () => {
+  for (const [planet, seed] of worlds) {
+    const { world } = generateWorld(planet, seed)!;
+    const life = new AmbientLife(world);
+    const profile = LIFE_PROFILES[planet];
+    assert.ok(profile.fliers.length > 0, planet);
+    const fliers = life.root.children.filter((child): child is T.InstancedMesh => child instanceof T.InstancedMesh && child.name.startsWith('Ambient fliers'));
+    assert.equal(fliers.reduce((sum, mesh) => sum + mesh.count, 0), profile.fliers.reduce((sum, spec) => sum + spec.flocks * spec.perFlock, 0));
+    life.configure(GRAPHICS_QUALITY.low);
+    const camera = new T.PerspectiveCamera();
+    camera.position.set(0, groundHeight(world, 0, 0) + 1.6, 0);
+    life.update(camera);
+    const before = fliers[0].instanceMatrix.array.slice();
+    life.update(camera);
+    assert.ok(life.root.visible);
+    for (const mesh of fliers) for (const value of mesh.instanceMatrix.array) assert.ok(Number.isFinite(value), planet);
+    assert.equal(before.length, fliers[0].instanceMatrix.array.length);
+    camera.position.y += 400;
+    life.update(camera);
+    assert.equal(life.root.visible, false);
+    disposeMissionMeshes(life.root, new Set(), [], []);
   }
 });
 

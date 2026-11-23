@@ -6,7 +6,9 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { matchMaker } from '@colyseus/core';
-import { WORLD_GENERATOR_VERSION, generateWorld, groundHeight, openGround } from '@freefall/shared';
+import { WORLD_GENERATOR_VERSION, WORLD_PROFILES, generateWorld, groundHeight, openGround } from '@freefall/shared';
+import { TIME_OF_DAY_LIGHT } from '../apps/client/src/rendering/environment/AtmosphereController.ts';
+import { sunOffset } from '../apps/client/src/rendering/environment/Lighting.ts';
 import { detailClearances } from '../apps/client/src/rendering/environment/EnvironmentDetailPlacement.ts';
 import { placeWarTraces } from '../apps/client/src/rendering/environment/WarTracePlacement.ts';
 import { build, preview } from 'vite';
@@ -119,6 +121,32 @@ try {
       await look('landmark', centre, 26);
     }
     console.log(planet, 'Spuren', traces.props.length, 'Decals', traces.decals.length, 'Wracks', traces.solids.size);
+    // Phase E: look up at the suns and moons. The client view starts at the first placement's yaw (facing -X).
+    let viewYaw = -Math.PI / 2, viewPitch = 0;
+    const turn = async (deltaYaw, deltaPitch) => {
+      const steps = Math.ceil(Math.max(Math.abs(deltaYaw), Math.abs(deltaPitch)) / .00235 / 150) || 1;
+      await page.locator('.in-game canvas').evaluate((canvas, [mx, my, n]) => {
+        for (let i = 0; i < n; i++) canvas.dispatchEvent(new MouseEvent('mousemove', { movementX: mx, movementY: my }));
+      }, [deltaYaw / .00235 / steps, -deltaPitch / .00235 / steps, steps]);
+      viewYaw += deltaYaw;
+      viewPitch += deltaPitch;
+    };
+    const aim = async (name, [x, y, z]) => {
+      const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+      const yaw = Math.atan2(x, -z), pitch = Math.min(1.1, Math.atan2(y, Math.hypot(x, z)) * .9);
+      await turn(wrap(yaw - viewYaw), pitch - viewPitch);
+      await delay(700);
+      await page.screenshot({ path: join(output, planet + '-' + name + '.png') });
+    };
+    const atmosphere = WORLD_PROFILES.get(planet).atmosphere;
+    const day = TIME_OF_DAY_LIGHT[mission.atmosphere?.timeOfDay ?? 'day'];
+    const toArray = (v) => [v.x, v.y, v.z];
+    const { Vector3 } = await import('three');
+    const direction = (offset) => toArray(sunOffset({ ...atmosphere, sun: { ...atmosphere.sun, offset } }, day.elevation, day.azimuth, new Vector3()));
+    await aim('sky-sun', direction(atmosphere.sun.offset));
+    for (const [i, star] of (atmosphere.celestial?.suns ?? []).entries()) await aim('sky-star' + i, direction(star.offset));
+    for (const [i, body] of (atmosphere.celestial?.bodies ?? []).entries()) await aim('sky-body' + i, body.offset);
+    console.log(planet, 'Tageszeit', mission.atmosphere?.timeOfDay);
     if (errors.length) console.log(planet, 'Fehler', errors);
     await page.close();
   }

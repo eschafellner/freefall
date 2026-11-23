@@ -91,7 +91,10 @@ test('surface, carrier and arena reuse one light rig and replace the active sky 
   lighting.update('arena', false, 0, 0);
   assert.equal(scene.background, arena);
   assert.equal(fog.density, .0068);
-  assert.equal(scene.children.filter((child) => child instanceof T.Light).length, 2);
+  // Sun, fill and the two companion-star lights, which stay dark outside a multi-sun planet.
+  const lights = scene.children.filter((child): child is T.Light => child instanceof T.Light);
+  assert.equal(lights.length, 4);
+  assert.equal(lights.filter((light) => light.intensity > 0).length, 2);
   lighting.dispose();
   assert.equal(disposed, 3);
   assert.equal(scene.background, null);
