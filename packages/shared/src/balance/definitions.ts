@@ -4,35 +4,125 @@
  */
 import { MAX_ENEMIES, SIMULATION_HZ } from '../config/limits.ts';
 import {
-  arr, bool, count, id, nonNegative, num, obj, oneOf, positive, record, reserved, str,
+  arr, bool, count, either, id, nonNegative, num, obj, oneOf, positive, record, reserved, str,
 } from './schema.ts';
 import type { Infer } from './schema.ts';
 
 const MOVEMENT_7_2B = 'waffenabhängige Laufgeschwindigkeit ist noch nicht in Server und Prediction verdrahtet';
 
 export const manifestSchema = obj({
-  schemaVersion: oneOf([2] as const),
+  schemaVersion: oneOf([3] as const),
   release: str(),
   description: str(),
+});
+
+/** Armor classes and penetration share one scale: a hit penetrates when penetration ≥ armor class. */
+export const ARMOR_CLASS_COUNT = 7;
+export const DAMAGE_TYPES = ['kinetic', 'explosive'] as const;
+export type DamageType = (typeof DAMAGE_TYPES)[number];
+/** Weapon stats an ammunition type may modify (stat key `weapon.<id>.<stat>`, layer `ammunition`). */
+export const AMMO_MODIFIABLE_STATS = [
+  'damage', 'penetration', 'muzzleVelocity', 'roundsPerSecond', 'recoilPitch', 'recoilYaw', 'spreadHip', 'spreadAim', 'pelletSpread',
+] as const;
+
+const armorClass = () => count({ min: 1, max: ARMOR_CLASS_COUNT });
+
+export const caliberSchema = obj({
+  id: id(),
+  /** Shown in HUD and catalog, e.g. "5,55 × 39 mm". */
+  displayName: str(),
+  family: oneOf(['pistol', 'rifle', 'shotgun'] as const),
+  /** Damage per projectile before ammunition, weapon and equipment modifiers. */
+  damage: positive({ max: 10_000 }),
+  /** Projectiles per shot. Above 1 (shot) every pellet is its own hitscan ray with its own damage. */
+  projectilesPerShot: count({ min: 1, max: 32 }),
+  /** Half-angle in degrees of the pellet cone around the (already spread) aim direction. 0 for single projectiles. */
+  pelletSpreadDegrees: nonNegative({ max: 20 }),
+  /** Muzzle velocity in m/s. Hitscan: scales damage falloff distances and drives presentation, not flight time. */
+  muzzleVelocity: positive({ max: 3000 }),
+  /** Penetration level on the armor class scale (1 = minimal … 7). */
+  penetration: armorClass(),
+  /** Damage falloff over the distance from the muzzle, at the caliber's reference velocity. */
+  falloff: obj({
+    /** Full damage up to this distance. */
+    startMeters: nonNegative({ max: 2000 }),
+    /** Linear decrease until this distance, constant `minMultiplier` beyond. */
+    endMeters: positive({ max: 4000 }),
+    minMultiplier: num({ min: 0, max: 1 }),
+  }),
+});
+
+export const ammoSchema = obj({
+  id: id(),
+  caliberId: id(),
+  displayName: str(),
+  /** Short label for HUD and magazines, e.g. "VM". */
+  shortName: str(),
+  damageType: oneOf(DAMAGE_TYPES),
+  /** Applied on the `ammunition` layer, before equipment modifiers. */
+  modifiers: arr(obj({
+    stat: oneOf(AMMO_MODIFIABLE_STATS),
+    operation: oneOf(['add', 'multiply', 'divide'] as const),
+    value: num(),
+  })),
+});
+
+export const ammunitionSchema = obj({
+  armor: obj({
+    /** Fraction of the damage a non-penetrating hit still deals (blunt trauma). */
+    nonPenetratingDamageFraction: num({ min: 0, max: 1 }),
+    /** Exactly ARMOR_CLASS_COUNT entries, level 1 … 7. Penetration level n uses the label of class n. */
+    classes: arr(obj({ level: armorClass(), displayName: str(), penetrationName: str() })),
+  }),
+  calibers: arr(caliberSchema, { min: 1 }),
+  ammunition: arr(ammoSchema, { min: 1 }),
 });
 
 export const weaponSchema = obj({
   id: id(),
   displayName: str(),
-  category: oneOf(['assault-rifle', 'pistol'] as const),
+  category: oneOf(['assault-rifle', 'pistol', 'shotgun'] as const),
   slot: oneOf(['primary', 'secondary'] as const),
-  damage: positive(),
+  /** Defines damage, penetration, velocity, falloff and the usable ammunition (`ammunition.json`). */
+  caliberId: id(),
+  /** Ammunition loaded when no other is selected. Must belong to `caliberId`. */
+  defaultAmmoId: id(),
+  /** How the weapon changes its ammunition, e.g. barrel length. Multiplies the caliber values. */
+  ballistics: obj({
+    damageMultiplier: positive({ max: 5 }),
+    /** Also scales the falloff distances (faster projectiles keep their energy longer). */
+    velocityMultiplier: positive({ max: 3 }),
+  }),
   /** Shots per second. One shot per tick at most. */
   roundsPerSecond: positive({ max: SIMULATION_HZ }),
   magazineSize: count({ min: 1, max: 500 }),
-  /** Full spare magazines at mission start. Partially used magazines are discarded on reload. */
-  reserveMagazines: count({ max: 50 }),
-  /** Carry capacity for spare magazines. Resupply never exceeds it. */
-  maxReserveMagazines: count({ max: 50 }),
+  /**
+   * How rounds get into the weapon.
+   *   - `magazine`: `reserve` counts full spare magazines; a reload swaps the magazine, the rest is discarded.
+   *   - `single`: `reserve` counts loose rounds; a reload inserts one round per `reloadSeconds` cycle until the
+   *     weapon is full, the reserve is empty or the operator fires (fire input ends the reload between rounds).
+   * `chamberRounds` (0 or 1): one extra round in the chamber on top of `magazineSize`.
+   */
+  feed: either(
+    obj({ type: oneOf(['magazine'] as const), chamberRounds: count({ max: 1 }) }),
+    obj({
+      type: oneOf(['single'] as const), chamberRounds: count({ max: 1 }),
+      /** Raising the weapon to the loading port before the first round. */
+      startSeconds: nonNegative({ max: 5 }),
+      /** Empty weapon: the first round goes straight into the chamber and takes this long instead of `reloadSeconds`. */
+      chamberSeconds: positive({ max: 5 }),
+    }),
+    'feed: { type: "magazine", chamberRounds } oder { type: "single", chamberRounds, startSeconds, chamberSeconds } erwartet',
+  ),
+  /** Spare reserve at mission start: magazines (`feed.type: magazine`) or loose rounds (`single`). */
+  reserve: count({ max: 500 }),
+  /** Carry capacity of the reserve, same unit. Resupply never exceeds it. */
+  maxReserve: count({ max: 500 }),
+  /** Magazine feed: whole reload. Single feed: one round cycle. */
   reloadSeconds: positive({ max: 30 }),
   /**
-   * Reload state machine as fractions of `reloadSeconds`: the old magazine leaves the weapon at `removalAt`; the
-   * ammunition transaction (one spare magazine → full magazine, rest discarded) happens atomically at `insertionAt`.
+   * Reload state machine as fractions of `reloadSeconds`: the old magazine (or the hand with the next round) leaves at
+   * `removalAt`; the ammunition transaction happens atomically at `insertionAt` (single feed: once per round).
    */
   reloadTimeline: obj({ removalAt: num({ min: 0, max: 1 }), insertionAt: num({ above: 0, max: 1 }) }),
   effectiveRange: positive({ max: 1000 }),
@@ -75,7 +165,7 @@ export const weaponSchema = obj({
   }),
   assets: obj({ visual: id() }),
   /** Audio cue IDs. Each cue needs a profile in `combat.json › audio.weapons`. */
-  sounds: obj({ fire: oneOf(['rifle', 'pistol'] as const) }),
+  sounds: obj({ fire: oneOf(['rifle', 'pistol', 'shotgun'] as const) }),
   attachmentSlots: arr(id()),
 });
 
@@ -87,6 +177,8 @@ export const grenadeSchema = obj({
   releaseSeconds: nonNegative({ max: 10 }),
   fuseSeconds: positive({ max: 30 }),
   baseDamage: nonNegative(),
+  /** Penetration level against armor classes. Blast damage is of type `explosive`. */
+  penetration: armorClass(),
   blastRadius: positive({ max: 100 }),
   falloff: oneOf(['linear'] as const),
   /** Keyed by structure definition ID. Structures without an entry take the blast damage unchanged. */
@@ -114,6 +206,8 @@ export const meleeSchema = obj({
   id: id(),
   displayName: str(),
   damage: nonNegative({ max: 10_000 }),
+  /** Penetration level against armor classes. Melee damage is of type `kinetic`. */
+  penetration: armorClass(),
   /** Reach in meters from the operator to the edge of the target's hit radius. */
   range: positive({ max: 10 }),
   /** Full width of the frontal hit cone in degrees. */
@@ -131,6 +225,31 @@ export const meleeSchema = obj({
   knockbackDistance: nonNegative({ max: 5 }),
 });
 
+/**
+ * Stat modifier of an equipment item on the `equipment` layer. `primary.<stat>` and `secondary.<stat>` address the
+ * weapon in that slot (e.g. `primary.maxReserve`); other keys are used as written (e.g. `melee.<id>.damage`).
+ */
+const equipmentModifierSchema = obj({
+  stat: str(/^[a-z0-9][a-zA-Z0-9._-]*$/, 'Stat-Schlüssel erwartet'),
+  operation: oneOf(['add', 'multiply', 'divide'] as const),
+  value: num(),
+});
+
+export const backpackSchema = obj({
+  id: id(),
+  displayName: str(),
+  description: str(),
+  modifiers: arr(equipmentModifierSchema),
+});
+
+/** Body armor. Its modifiers resolve separately and may only target operator stats (`operator.slide.*`). */
+export const bodyArmorSchema = obj({
+  id: id(),
+  displayName: str(),
+  description: str(),
+  modifiers: arr(equipmentModifierSchema),
+});
+
 export const loadoutSchema = obj({
   id: id(),
   primaryWeaponId: id(),
@@ -138,6 +257,8 @@ export const loadoutSchema = obj({
   grenadeId: id(),
   medicalId: id(),
   meleeId: id(),
+  backpackId: id(),
+  armorId: id(),
   weaponSwitchSeconds: positive({ max: 10 }),
 });
 
@@ -150,6 +271,7 @@ export const resupplySchema = obj({
   /** Distance from the container center to the operator. */
   interactionRange: positive({ max: 10 }),
   /** Granted per container charge, each capped at the carry capacity. */
+  /** Single-feed weapons receive `magazineSize` rounds per granted magazine (magazine equivalents). */
   perUse: obj({
     primaryMagazines: count({ max: 50 }),
     secondaryMagazines: count({ max: 50 }),
@@ -194,11 +316,10 @@ export const enemySchema = obj({
   wireType: count({ max: 255 }),
   visualAssetId: id(),
   gameplay: enemyGameplaySchema,
-  resistances: obj({
-    armor: reserved(0, 'Gegnerpanzerung wird bisher nicht in der Schadensberechnung berücksichtigt'),
-    bulletMultiplier: reserved(1, 'Gegnerresistenzen werden bisher nicht berücksichtigt'),
-    explosiveMultiplier: reserved(1, 'Gegnerresistenzen werden bisher nicht berücksichtigt'),
-  }),
+  /** 1 = unarmored. Hits with lower penetration deal only `nonPenetratingDamageFraction`. */
+  armorClass: armorClass(),
+  /** Damage multiplier per damage type, after armor. */
+  resistances: obj({ kinetic: nonNegative({ max: 10 }), explosive: nonNegative({ max: 10 }) }),
   ai: obj({ detectionRange: positive({ max: 500 }) }),
 });
 
@@ -207,6 +328,7 @@ export const nestSchema = obj({
   factionId: id(),
   spawnArchetypeId: id(),
   maxHealth: positive({ max: 1_000_000 }),
+  armorClass: armorClass(),
   spawnIntervalSeconds: positive({ max: 600 }),
   breachEmergeSeconds: nonNegative({ max: 120 }),
   minSpawnIntervalTicks: count({ min: 1, max: 3600 }),
@@ -292,7 +414,7 @@ export const combatSchema = obj({
     distantBlendEnd: positive({ max: 2000 }),
     speedOfSound: positive({ max: 2000 }),
     limiterThresholdDb: num({ min: -40, max: 0 }),
-    weapons: obj({ rifle: weaponAudioSchema, pistol: weaponAudioSchema }),
+    weapons: obj({ rifle: weaponAudioSchema, pistol: weaponAudioSchema, shotgun: weaponAudioSchema }),
     explosion: obj({ gain: nonNegative({ max: 4 }), bodyHz: positive({ max: 1000 }), tailGain: nonNegative({ max: 4 }) }),
     environments: obj({ carrier: environmentAudioSchema, 'open-field': environmentAudioSchema, outpost: environmentAudioSchema }),
   }),
@@ -465,6 +587,8 @@ export const convictSquadSchema = obj({
   idleRescanTicks: count({ min: 1, max: 300 }),
   /** Convicts reload with the reload duration of this registered weapon. */
   reloadWeaponId: id(),
+  /** Penetration level of convict shots against enemy armor classes. */
+  penetration: armorClass(),
 });
 
 export const convictKitSchema = obj({
@@ -556,10 +680,13 @@ export const movementSchema = obj({
 export const SOURCE_SCHEMAS = {
   manifest: manifestSchema,
   weapons: obj({ weapons: arr(weaponSchema, { min: 1 }) }),
+  ammunition: ammunitionSchema,
   equipment: obj({
     grenades: arr(grenadeSchema, { min: 1 }),
     medical: arr(medicalSchema, { min: 1 }),
     melee: arr(meleeSchema, { min: 1 }),
+    backpacks: arr(backpackSchema, { min: 1 }),
+    armors: arr(bodyArmorSchema, { min: 1 }),
     loadouts: arr(loadoutSchema, { min: 1 }),
     resupply: resupplySchema,
   }),
@@ -575,6 +702,12 @@ export const SOURCE_SCHEMAS = {
 
 export type BalanceManifest = Infer<typeof manifestSchema>;
 export type WeaponDefinition = Infer<typeof weaponSchema>;
+export type CaliberDefinition = Infer<typeof caliberSchema>;
+export type AmmoDefinition = Infer<typeof ammoSchema>;
+export type AmmoModifier = AmmoDefinition['modifiers'][number];
+export type ArmorRules = Infer<typeof ammunitionSchema>['armor'];
+export type ArmorClassDefinition = ArmorRules['classes'][number];
+export type EnemyResistances = EnemyArchetype['resistances'];
 export type GrenadeDefinition = Infer<typeof grenadeSchema>;
 export type MedicalDefinition = Infer<typeof medicalSchema>;
 export type MeleeDefinition = Infer<typeof meleeSchema>;
@@ -588,6 +721,21 @@ export type WeaponAudioProfile = CombatDefinition['audio']['weapons']['rifle'];
 export type EnvironmentAudioProfile = CombatDefinition['audio']['environments']['carrier'];
 export type AudioEnvironmentId = keyof CombatDefinition['audio']['environments'];
 export type LoadoutDefinition = Infer<typeof loadoutSchema>;
+export type BackpackDefinition = Infer<typeof backpackSchema>;
+export type BodyArmorDefinition = Infer<typeof bodyArmorSchema>;
+export type WeaponFeed = WeaponDefinition['feed'];
+/** Player-chosen loadout (Carrier › Ausrüstung). Every ID refers to the balance registry. */
+export interface LoadoutSelection {
+  readonly primaryWeaponId: string;
+  readonly secondaryWeaponId: string;
+  readonly meleeId: string;
+  /** Tactical slot: grenade. */
+  readonly grenadeId: string;
+  readonly medicalId: string;
+  readonly backpackId: string;
+  readonly armorId: string;
+}
+export const LOADOUT_SELECTION_KEYS = ['primaryWeaponId', 'secondaryWeaponId', 'meleeId', 'grenadeId', 'medicalId', 'backpackId', 'armorId'] as const;
 export type ResupplyRules = Infer<typeof resupplySchema>;
 export type OperatorDefinition = Infer<typeof operatorSchema>;
 export type FactionDefinition = Infer<typeof factionSchema>;
@@ -604,7 +752,7 @@ export type WeaponSlot = WeaponDefinition['slot'];
 
 /** File name of each source, used in error messages. */
 export const SOURCE_FILES: Readonly<Record<keyof typeof SOURCE_SCHEMAS, string>> = {
-  manifest: 'manifest.json', weapons: 'weapons.json', equipment: 'equipment.json', operators: 'operators.json',
+  manifest: 'manifest.json', weapons: 'weapons.json', ammunition: 'ammunition.json', equipment: 'equipment.json', operators: 'operators.json',
   enemies: 'enemies.json', structures: 'structures.json', swarm: 'swarm.json', convicts: 'convicts.json',
   difficulty: 'difficulty.json', combat: 'combat.json', movement: 'movement.json',
 };

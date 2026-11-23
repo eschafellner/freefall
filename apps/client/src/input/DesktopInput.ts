@@ -78,6 +78,8 @@ export class DesktopInput {
       return true;
     };
     window.addEventListener('keydown', (event) => {
+      // Mit Keyboard Lock (Vollbild in Chromium) erreicht Esc die Seite, statt die Mauserfassung zu beenden.
+      if (event.code === 'Escape' && this.locked) document.exitPointerLock();
       if (!this.active) return;
       if (!event.repeat) press(keyboardCode(event.code));
       if (event.code.startsWith('Key') || event.code !== 'Escape' && this.keys.has(keyboardCode(event.code))) event.preventDefault();

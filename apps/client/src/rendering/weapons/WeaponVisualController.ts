@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { SERVICE_PISTOL, TEST_RIFLE } from '@freefall/shared';
+import { BALANCE, SERVICE_PISTOL, TEST_RIFLE } from '@freefall/shared';
 import type { createKestrel } from './Kestrel.ts';
 
 export const ATTACHMENT_SLOTS = ['Muzzle', 'Barrel', 'Optic', 'Underbarrel', 'Magazine', 'Stock'] as const;
@@ -33,15 +33,23 @@ export class WeaponVisualController {
   private importedMagazine?: T.Object3D;
   private readonly slide?: T.Mesh;
   private slideTravel = 0;
+  /** Pump action (VX-13): the forend racks back and forward after every shot instead of a locking slide. */
+  private readonly pump: boolean;
   /** Same reload timeline as the server state machine (`weapons.json › reloadTimeline`). */
   private readonly timeline: { readonly removalAt: number; readonly insertionAt: number };
 
   private readonly layout: typeof SOCKETS;
 
-  constructor(parts: Omit<ReturnType<typeof createKestrel>['pistol'], 'slide'> & { slide?: T.BufferGeometry }, pistol = false) {
-    this.timeline = (pistol ? SERVICE_PISTOL : TEST_RIFLE).reloadTimeline;
+  constructor(parts: Omit<ReturnType<typeof createKestrel>['pistol'], 'slide'> & { slide?: T.BufferGeometry },
+    kind: boolean | 'shotgun' = false) {
+    const pistol = kind === true;
+    this.pump = kind === 'shotgun';
+    this.timeline = (pistol ? SERVICE_PISTOL : this.pump ? BALANCE.weapon('vx-13') : TEST_RIFLE).reloadTimeline;
     this.layout = pistol ? { ...SOCKETS, Muzzle: [0, .064, -.154], EjectionPort: [.021, .074, -.052], SupportHand: [-.028, -.018, -.023],
-      Optic: [0, .085, 0], Magazine: [0, -.016, .008] } : SOCKETS;
+      Optic: [0, .085, 0], Magazine: [0, -.016, .008] }
+      : this.pump ? { ...SOCKETS, Muzzle: [0, .098, -.866], EjectionPort: [.036, .086, -.115], SupportHand: [-.022, .03, -.40],
+        Barrel: [0, .098, -.62], Optic: [0, .128, -.12], Underbarrel: [0, .02, -.52], Magazine: [0, .03, -.165], Stock: [0, .07, .06] }
+      : SOCKETS;
     for (const name of Object.keys(SOCKETS) as WeaponSocket[]) {
       const socket = new T.Group();
       socket.name = name;
@@ -57,7 +65,7 @@ export class WeaponVisualController {
     this.receiver = new T.Mesh(parts.body, parts.finish);
     this.fallbackMagazine = new T.Mesh(parts.magazine, parts.finish);
     this.root.add(this.receiver);
-    if (pistol && parts.slide) {
+    if ((pistol || this.pump) && parts.slide) {
       this.slide = new T.Mesh(parts.slide, parts.finish);
       this.root.add(this.slide);
     }
@@ -119,6 +127,13 @@ export class WeaponVisualController {
 
   update(dt: number): void {
     if (!this.slide) return;
+    if (this.pump) {
+      // Recoil first, then the rack: back 7.5 cm and forward again within ~0.55 s.
+      this.slideTravel = Math.max(0, this.slideTravel - dt / .55);
+      const elapsed = 1 - this.slideTravel;
+      this.slide.position.z = this.slideTravel > 0 && elapsed > .3 ? Math.sin(Math.PI * (elapsed - .3) / .7) * .075 : 0;
+      return;
+    }
     this.slideTravel = Math.max(0, this.slideTravel - dt / .07);
     // Slide locks back on an empty magazine during the reload.
     const locked = this.reloadProgress >= 0 && this.reloadProgress < this.timeline.insertionAt ? 1 : 0;
@@ -127,6 +142,8 @@ export class WeaponVisualController {
 
   reload(progress: number): void {
     this.reloadProgress = progress;
+    // The shell only exists in the support hand while a round is being loaded.
+    if (this.pump) this.magazine.visible = progress >= 0;
     const { removalAt, insertionAt } = this.timeline;
     // Out at the server's MAGAZINE_REMOVAL tick, seated exactly at MAGAZINE_INSERTION.
     const removal = smooth(progress, removalAt - .1, removalAt + .06) * (1 - smooth(progress, insertionAt - .16, insertionAt));

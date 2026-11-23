@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
-  "release": "7.9B",
-  "description": "Schaben-Nahkampf mit längerem Windup und längeres Mindestfenster für die Ankunft gestaffelter Wellen im PEAK."
+  "schemaVersion": 3,
+  "release": "8.1A",
+  "description": "VX-13 Cerberus (Kaliber 13, Einzelpatronen-Nachladen), Schrot-Schüsse und frei wählbares Loadout im Carrier."
 }

@@ -1,6 +1,7 @@
 import { bindings } from '../input/Bindings.ts';
 import { emptyWeaponHint } from '../game/DryFire.ts';
-import { BASE_LOADOUT, FRAG, NET, PLAYER, STIM, allowsPostureAction } from '@freefall/shared';
+import { FRAG, NET, PLAYER, STIM, allowsPostureAction } from '@freefall/shared';
+import { playerWeapon, reserveLabel } from '../game/Loadouts.ts';
 import type { PlayerState } from '@freefall/shared';
 import { KitIcon, Pips } from './HudIcons.tsx';
 
@@ -12,6 +13,7 @@ function ActionProgress({ label, remaining, ticks }: { label: string; remaining:
 const RELOAD_LABEL = {
   RELOAD_START: 'Nachladen', MAGAZINE_REMOVAL: 'Magazinwechsel', MAGAZINE_INSERTION: 'Magazin eingesetzt',
   RELOAD_COMPLETE: 'Durchladen', RELOAD_INTERRUPTED: 'Nachladen abgebrochen', READY: '',
+  SHELL_LOADING: 'Patrone laden', SHELL_INSERTION: 'Patrone geladen',
 } as const;
 
 /**
@@ -23,8 +25,9 @@ export function CombatLoadout({ player, tick, dryFireTick, resupply = false }:
   const gear = player.equipment;
   const slot = gear?.slot ?? 'primary';
   const other = slot === 'primary' ? 'secondary' : 'primary';
-  const weapon = BASE_LOADOUT.weapons[slot];
-  const spare = BASE_LOADOUT.weapons[other];
+  const weapon = playerWeapon(player, slot);
+  const spare = playerWeapon(player, other);
+  const single = weapon.feed.type === 'single';
   const switching = gear?.action === 'primary' || gear?.action === 'secondary';
   const reload = player.reload?.slot === slot ? player.reload : undefined;
   const reloading = reload && reload.phase !== 'READY' && reload.phase !== 'RELOAD_INTERRUPTED';
@@ -32,8 +35,8 @@ export function CombatLoadout({ player, tick, dryFireTick, resupply = false }:
   const mags = gear?.magazines[slot] ?? 0;
   const ammo = player.ammo ?? 0;
   const empty = reloading ? undefined : emptyWeaponHint(player, (action) => bindings.label(action), resupply);
-  const dry = !empty && !reloading && !mags && ammo <= weapon.magazineSize * .25;
-  const low = ammo > 0 && ammo <= weapon.magazineSize * .25;
+  const dry = !empty && !reloading && !mags && ammo <= weapon.capacity * .25;
+  const low = ammo > 0 && ammo <= weapon.capacity * .25;
   const clicked = dryFireTick !== undefined && tick - dryFireTick >= 0 && tick - dryFireTick < NET.tickHz * 1.5;
   const grounded = player.posture?.current === 'PRONE' || player.posture?.current === 'SUPINE';
   const canGrenade = !player.posture || allowsPostureAction(player.posture, 'grenade');
@@ -66,23 +69,24 @@ export function CombatLoadout({ player, tick, dryFireTick, resupply = false }:
         <KitIcon id={weapon.id} slot={slot} className="large"/>
         <div className="weapon-meta">
           <span className="kit-name"><kbd>{bindings.label(slot === 'primary' ? 'SWITCH_PRIMARY' : 'SWITCH_SECONDARY')}</kbd> {weapon.displayName}</span>
-          <strong className={`ammo ${ammo === 0 ? 'empty' : low ? 'low' : ''}`} aria-label={`${ammo} von ${weapon.magazineSize} Schuss, ${mags} Reservemagazine`}>
-            {player.ammo ?? '–'}<small> / {weapon.magazineSize}</small><em>{mags} MAG</em>
+          <strong className={`ammo ${ammo === 0 ? 'empty' : low ? 'low' : ''}`} aria-label={`${ammo} von ${weapon.capacity} Schuss, ${mags} ${single ? 'Reservepatronen' : 'Reservemagazine'}`}>
+            {player.ammo ?? '–'}<small> / {weapon.capacity}</small><em>{reserveLabel(weapon, mags)}</em>
           </strong>
         </div>
       </div>
-      <div className="mag-bar" aria-hidden="true"><i style={{ width: `${Math.min(1, ammo / weapon.magazineSize) * 100}%` }}/></div>
+      <div className="mag-bar" aria-hidden="true"><i style={{ width: `${Math.min(1, ammo / weapon.capacity) * 100}%` }}/></div>
       {reloading && <ActionProgress label={RELOAD_LABEL[reload.phase]} remaining={reload.until - tick} ticks={reload.until - reload.started}/>}
-      {reloading && tick < reload.insertAt && ammo > 0 && <small className="kit-note">Beim Magazinwechsel gehen {ammo} Schuss verloren.</small>}
+      {reloading && !single && tick < reload.insertAt && ammo > weapon.feed.chamberRounds && <small className="kit-note">Beim Magazinwechsel gehen {ammo - weapon.feed.chamberRounds} Schuss verloren.</small>}
+      {reloading && single && ammo > 0 && <small className="kit-note"><kbd>{bindings.label('FIRE')}</kbd> beendet das Nachladen</small>}
       {interrupted && <small className="kit-note" role="status">{RELOAD_LABEL.RELOAD_INTERRUPTED}</small>}
-      {dry && <small className="kit-note warn" role="status">Keine Reservemagazine</small>}
+      {dry && <small className="kit-note warn" role="status">{single ? 'Keine Reservepatronen' : 'Keine Reservemagazine'}</small>}
       {empty && <small key={clicked ? dryFireTick : 'idle'} className={`kit-note warn${clicked ? ' flash' : ''}`} role="status">
         Keine Munition · {empty.key && <><kbd>{empty.key}</kbd> </>}{empty.text}</small>}
       {gear && <>
         <div className="kit-row holstered">
           <KitIcon id={spare.id} slot={other}/>
           <span className="kit-name"><kbd>{bindings.label(other === 'primary' ? 'SWITCH_PRIMARY' : 'SWITCH_SECONDARY')}</kbd> {spare.displayName}</span>
-          <b>{gear.inactiveAmmo}/{spare.magazineSize} · {gear.magazines[other]} MAG</b>
+          <b>{gear.inactiveAmmo}/{spare.capacity} · {reserveLabel(spare, gear.magazines[other])}</b>
         </div>
         <div className={`kit-row grenade ${canGrenade ? '' : 'locked'}`}>
           <KitIcon id="grenade"/>

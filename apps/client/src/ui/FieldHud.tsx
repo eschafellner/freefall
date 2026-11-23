@@ -1,16 +1,17 @@
 import type { CSSProperties } from 'react';
-import { BALLOON, BASE_LOADOUT, DIFFICULTY_REGISTRY, FRAG, MAX_PLAYERS, MISSION_REGISTRY, NET, PLANET_REGISTRY, PLAYER, STIM, TEAM_COLORS,
+import { BALLOON, DIFFICULTY_REGISTRY, FRAG, MAX_PLAYERS, MISSION_REGISTRY, NET, PLANET_REGISTRY, PLAYER, STIM, TEAM_COLORS,
   TIME_OF_DAY, distanceSquared, isOptionalObjective, missionObjectives } from '@freefall/shared';
 import type { MissionSnapshot, PlayerState } from '@freefall/shared';
 import type { GameStatus } from '../game/Game.ts';
 import { bindings } from '../input/Bindings.ts';
 import { KitIcon, Pips } from './HudIcons.tsx';
+import { playerWeapon, reserveLabel } from '../game/Loadouts.ts';
 
 export function seconds(until: number, status: GameStatus): number {
   return Math.max(0, Math.ceil((until - Math.max(status.mission?.tick ?? 0, status.serverTick)) / NET.tickHz));
 }
 
-/** Placeholder until progression exists: every operator shows level 1 and the base rank. */
+/** Fallback ohne Account (Gastmodus). Der Rang bleibt ein Platzhalter, das Level kommt aus dem Roster. */
 export const OPERATOR_RANK = { level: 1, rank: 'Operator' } as const;
 
 const clock = (ticks: number) => {
@@ -24,11 +25,11 @@ function MemberKit({ player }: { player: PlayerState }) {
   const slot = gear?.slot ?? 'primary';
   return <ul className="member-kit">
     {(['primary', 'secondary'] as const).map((weaponSlot) => {
-      const weapon = BASE_LOADOUT.weapons[weaponSlot];
+      const weapon = playerWeapon(player, weaponSlot);
       const loaded = weaponSlot === slot ? player.ammo : gear?.inactiveAmmo;
       return <li key={weaponSlot} className={weaponSlot === slot ? 'drawn' : ''}>
         <KitIcon id={weapon.id} slot={weaponSlot}/><span>{weapon.displayName}</span>
-        <b>{loaded ?? '–'}/{weapon.magazineSize}{gear && ` · ${gear.magazines[weaponSlot]} MAG`}</b>
+        <b>{loaded ?? '–'}/{weapon.capacity}{gear && ` · ${reserveLabel(weapon, gear.magazines[weaponSlot])}`}</b>
       </li>;
     })}
     {gear && <li><KitIcon id="grenade"/><span>{FRAG.displayName}</span><Pips value={gear.grenades} max={FRAG.capacity}/></li>}
@@ -49,13 +50,14 @@ export function TeamPanel({ status, mission, expanded }: { status: GameStatus; m
       const state = offline ? 'Offline' : down ? 'Gefallen' : mission?.extraction ? secured ? 'Gesichert' : 'Ungesichert' : '';
       const health = Math.max(0, Math.min(1, player.hp / PLAYER.health));
       const own = player.id === status.ownId;
+      const account = status.roster.find(({ id }) => id === player.id);
       return <article key={player.id} className={`member ${own ? 'own' : ''} ${down ? 'down' : ''} ${offline ? 'offline' : ''}`}
         style={{ '--slot-color': `#${TEAM_COLORS[player.slot].toString(16).padStart(6, '0')}` } as CSSProperties}>
         <div className="member-head">
           <span className="member-slot">{player.slot + 1}</span>
           <div className="member-name">
-            <strong>{own ? 'Du' : `OP ${String(player.slot + 1).padStart(2, '0')}`}</strong>
-            <small>Level {OPERATOR_RANK.level} · {OPERATOR_RANK.rank}</small>
+            <strong title={account && `${account.name}#${account.tag}`}>{account?.name ?? (own ? 'Du' : `OP ${String(player.slot + 1).padStart(2, '0')}`)}</strong>
+            <small>Level {account?.level ?? OPERATOR_RANK.level} · {OPERATOR_RANK.rank}</small>
           </div>
           {state && <em className="member-state">{state}</em>}
           <b className="hp">{player.hp}</b>

@@ -34,6 +34,8 @@ export interface SimPlayer extends PlayerState {
   reloadUntil: number;
   reload: ReloadState;
   reloadRequested: boolean;
+  /** Fire was held when the reload started. Single-round reloads end on a new fire press, not on a held trigger. */
+  reloadFireLatch: boolean;
   /** Server-authoritative recoil and bloom of the active weapon. */
   recoil: RecoilState;
   pitch: number;
@@ -62,8 +64,8 @@ export function clearMoves(player: SimPlayer): void {
 export function freshEquipment(loadout: EffectiveLoadout = BASE_LOADOUT): EquipmentState {
   const { primary, secondary } = loadout.weapons;
   return {
-    slot: 'primary', inactiveAmmo: secondary.magazineSize,
-    magazines: { primary: primary.reserveMagazines, secondary: secondary.reserveMagazines },
+    slot: 'primary', inactiveAmmo: secondary.capacity,
+    magazines: { primary: primary.reserve, secondary: secondary.reserve },
     grenades: loadout.grenade.capacity, stims: loadout.medical.maxCharges, started: 0, until: 0, stimResultAt: 0, meleeReadyAt: 0,
   };
 }
@@ -71,7 +73,7 @@ export function freshEquipment(loadout: EffectiveLoadout = BASE_LOADOUT): Equipm
 /** Restores the full mission-start loadout, including the loaded magazine of the primary weapon. */
 export function refillPlayer(player: SimPlayer): void {
   player.equipment = freshEquipment(player.loadout);
-  player.ammo = player.loadout.weapons.primary.magazineSize;
+  player.ammo = player.loadout.weapons.primary.capacity;
   player.reload = readyReload(player.reload.at);
   player.reloadUntil = 0;
   player.reloadRequested = false;
@@ -112,7 +114,7 @@ export function createPlayer(id: string, slot: number, tick: number, loadout: Ef
   const player: SimPlayer = {
     id, slot, x: 0, y: 0, z: 0, posture: newPosture(), yaw: 0, hp: 0, ack: 0, life: 0, respawnTick: 0, kills: 0, loadout,
     equipment: freshEquipment(loadout), lastInputSeq: 0, input: idleInput(), moves: [], moveCredit: 0, moveCushion: 0, moveWaiting: true, moveStarvedAt: -1, moveCushionAt: 0, inputTick: -Infinity, fireAt: 0, protectedUntil: 0, activeInput: false,
-    ammo: 0, reloadUntil: 0, reload: readyReload(tick), reloadRequested: false, recoil: createRecoilState(), pitch: 0,
+    ammo: 0, reloadUntil: 0, reload: readyReload(tick), reloadRequested: false, reloadFireLatch: false, recoil: createRecoilState(), pitch: 0,
   };
   respawnPlayer(player, tick);
   return player;

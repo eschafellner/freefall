@@ -19,7 +19,8 @@ npm run typecheck && npm run build
 
 | Thema | Datei |
 | --- | --- |
-| Schaden, Feuerrate, Magazin, Reserve, Nachladen, Reichweite | `weapons.json` |
+| Feuerrate, Magazin, Reserve, Nachladen, Reichweite, Kaliber und Lauf-Faktoren | `weapons.json` |
+| Kaliber (Schaden, Durchschlag, Abfall), Munitionssorten, Panzerklassen, Restschaden | `ammunition.json` ([AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md)) |
 | Granaten, Heilstims, Loadout, Waffenwechsel, Nachschub | `equipment.json` |
 | Operator-HP, Lauf- und Sprinttempo, Respawn | `operators.json` |
 | Schabe und weitere Archetypen, Fraktionen | `enemies.json` |
@@ -37,39 +38,39 @@ Unbekannte Felder werden abgewiesen. Ein Tippfehler wie `"dammage"` fällt also 
 
 ```text
 Ungültige Balance-Konfiguration (1 Fehler):
-  - weapons.json › weapons[0].reserveMagazines: Startreserve 9 übersteigt die Tragekapazität maxReserveMagazines 8
+  - weapons.json › weapons[0].reserve: Startreserve 9 übersteigt die Tragekapazität maxReserve 8
 ```
 
 Dieselbe Validierung läuft beim Serverstart, im Client-Build und in `npm test`.
 
 ## Beispiel: eine Waffe tunen
 
-Ziel: Die Kestrel soll 26 statt 24 Schaden machen und 32 Schuss pro Magazin haben.
+Ziel: Die Kestrel soll 10 % mehr Schaden machen (26,4 statt 24) und 32 Schuss pro Magazin haben.
 
-1. `weapons.json`, Eintrag `kestrel-ar-01`:
+1. `weapons.json`, Eintrag `kestrel-ar-01` (der Schaden kommt seit 8.0A aus dem Kaliber; eine einzelne Waffe ändert ihn über den Lauf-Faktor, alle 5,55-Waffen über `ammunition.json › calibers`):
 
    ```json
-   "damage": 26,
+   "ballistics": { "damageMultiplier": 1.1, "velocityMultiplier": 1 },
    "magazineSize": 32,
    ```
 
-2. `manifest.json`: `"release": "7.2B-kestrel-1"`.
-3. `npm run balance:check -- --explain` zeigt den neuen Hash und `weapon.kestrel-ar-01.damage: 26 → 26`.
+2. `manifest.json`: `"release": "8.0A-kestrel-1"`.
+3. `npm run balance:check -- --explain` zeigt den neuen Hash und `weapon.kestrel-ar-01.damage: 26.400000000000002 → 26.400000000000002` (Basis = Kaliber × `damageMultiplier`).
 4. `npm test` schlägt an zwei Stellen absichtlich fehl:
    - `balance.test.ts` › *weapon … values equal the 7.1 constants except the documented 7.2B changes*. Der Test hält den Stand vor der Migration fest. Für eine gewollte Änderung wird der Erwartungswert angepasst oder der Eintrag aus dem Altwertevergleich genommen.
    - `balance.test.ts` › *combat, spawn and damage results match the recorded 7.2B golden traces*. Der Simulations-Fingerabdruck ändert sich, weil Schaden andere Kills erzeugt. Neue Werte mit `npm run balance:trace` erzeugen, in `GOLDEN_TRACES` übernehmen und die Änderung im Commit begründen.
 5. Die Schabe-Tests müssen grün bleiben. Schlagen sie fehl, wurde der geschützte Gegner verändert.
 
-Ein Schaden von `-5`, eine Magazingröße von `0` oder `12.5`, eine Feuerrate über 30/s, mehr Startmagazine als `maxReserveMagazines` oder eine Reload-Timeline mit `removalAt ≥ insertionAt` werden abgewiesen.
+Ein Schaden von `-5`, eine Magazingröße von `0` oder `12.5`, eine Feuerrate über 30/s, mehr Startmagazine als `maxReserve` oder eine Reload-Timeline mit `removalAt ≥ insertionAt` werden abgewiesen.
 
 ## Neue Waffe registrieren
 
-1. Eintrag in `weapons.json` mit neuer, stabiler ID (Kleinbuchstaben, Ziffern, `.`, `_`, `-`), `slot`, `category`, allen Pflichtfeldern, `assets.visual` und `sounds.fire` (`rifle` oder `pistol`).
+1. Eintrag in `weapons.json` mit neuer, stabiler ID (Kleinbuchstaben, Ziffern, `.`, `_`, `-`), `slot`, `category`, `caliberId`, `defaultAmmoId` (Munition desselben Kalibers), `ballistics`, allen Pflichtfeldern, `assets.visual` und `sounds.fire` (`rifle` oder `pistol`). Schrotkaliber werden noch abgewiesen.
 2. Im Loadout `loadout.operator_standard` (`equipment.json`) `primaryWeaponId` oder `secondaryWeaponId` darauf zeigen lassen oder ein zweites Loadout anlegen. Eine Auswahl im Carrier gibt es noch nicht.
 3. Für die Darstellung braucht der Client ein Modell zur Asset-ID (`apps/client/src/rendering/AssetRegistry.ts`, `rendering/weapons/`).
 4. `npm run balance:check && npm test`.
 
-Seit 7.2B haben alle Waffen eine Reserve aus ganzen Magazinen (`reserveMagazines`, Tragekapazität `maxReserveMagazines`), übertragen als `equipment.magazines.primary|secondary`. `sounds.fire` braucht ein Profil in `combat.json › audio.weapons`.
+Seit 7.2B haben alle Waffen eine Reserve aus ganzen Magazinen (`reserve`, Tragekapazität `maxReserve`), übertragen als `equipment.magazines.primary|secondary`. `sounds.fire` braucht ein Profil in `combat.json › audio.weapons`.
 
 ## Neuen Gegner registrieren
 
@@ -77,7 +78,7 @@ Seit 7.2B haben alle Waffen eine Reserve aus ganzen Magazinen (`reserveMagazines
 2. Archetyp in `enemies.json › archetypes` mit neuer ID, `factionId`, dem **nächsten freien** `wireType` (lückenlos ab 0, bestehende Typen nie umnummerieren), `gameplay`, `ai.detectionRange` und `visualAssetId`. `protected` auf `false`, bis das Design freigegeben ist.
 3. Einsetzen: als `spawnArchetypeId` eines neuen Nests (`structures.json`, gleiche Fraktion) oder als `swarm.json › arena.archetypeId`. Der Encounter Director spawnt den Archetyp des Haupt-Nests.
 4. Der Hordenrenderer im Client zeichnet bisher nur die Schabe. Ein neuer Wire-Typ braucht eine eigene Darstellung. Die Dateien der Schabe sind geschützt und dürfen dafür nicht verändert werden.
-5. Gegnerpanzerung und Resistenzen sind reserviert (neutral), bis die Schadensberechnung sie unterstützt.
+5. `armorClass` (1 … 7) und `resistances.kinetic|explosive` festlegen. Treffer mit geringerem Durchschlag als die Panzerklasse machen nur 10 % Schaden ([AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md)).
 
 ## Schwierigkeitsmodifikatoren
 
@@ -140,9 +141,9 @@ Die Fehlerbehebungen des Code-Reviews ändern Simulationsergebnisse bewusst. Die
 
 Weiter offen:
 
-1. Reichweitenabhängiger Schadensabfall. `effectiveRange` ist weiterhin eine harte Grenze.
+1. ~~Reichweitenabhängiger Schadensabfall~~: seit 8.0A je Kaliber vorhanden, für die bestehenden Waffen noch neutral. `effectiveRange` bleibt die harte Grenze.
 2. ~~Waffenabhängige Laufgeschwindigkeit~~: entfällt (Entscheidung 2026-11). Waffen beeinflussen die Bewegung nicht; die Bewegungsbalance kommt später über Rüstungen ([Audit](TACTICAL_MOVEMENT_AUDIT.md#34-rüstungen-statt-waffen-als-bewegungsbalance)).
-3. Gegnerpanzerung beziehungsweise Resistenzen (`resistances` bleibt reserviert).
+3. ~~Gegnerpanzerung beziehungsweise Resistenzen~~: seit 8.0A Panzerklassen 1 … 7 und Resistenzen je Schadensart.
 4. Aufgenommene Audio-Assets (Pipeline vorhanden, siehe [WEAPON_AUDIO](WEAPON_AUDIO.md)).
 5. Time-to-Kill-Auswertung je Stufe aus den Playtest-Telemetriedaten.
 

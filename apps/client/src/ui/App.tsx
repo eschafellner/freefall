@@ -12,7 +12,15 @@ import { CombatLoadout } from './EquipmentHud.tsx';
 import { TeamPanel } from './FieldHud.tsx';
 import { MissionHud, seconds } from './MissionHud.tsx';
 import { CarrierConsole, OperatorManifest } from './CarrierConsole.tsx';
+import { LoadoutPanel } from './LoadoutPanel.tsx';
 import type { GameMode, JoinMode } from '../networking/Match.ts';
+import type { AccountSession } from '@freefall/shared';
+import { AccountError, forgetSession, logout, restoreSession } from '../account/AccountClient.ts';
+import { LoginPanel, TitleScreen } from './TitleScreen.tsx';
+import { LevelMeter, ServiceRecord } from './ServiceRecord.tsx';
+import { AccountSettings, Arsenal, PrivacyNotice } from './AccountPanels.tsx';
+import { FullscreenSettings, enterFullscreenIfWanted } from './Fullscreen.tsx';
+import { UNLOCKS } from '@freefall/shared';
 
 import { ControlSettings } from './ControlSettings.tsx';
 import { bindings } from '../input/Bindings.ts';
@@ -258,6 +266,17 @@ export function App() {
   const [, refreshBindings] = useState(0);
   const [telemetry, setTelemetry] = useState(false);
   const [mode, setMode] = useState<GameMode>('mission');
+  const [session, setSession] = useState<AccountSession>();
+  const [accountChecked, setAccountChecked] = useState(false);
+  const [accountNotice, setAccountNotice] = useState('');
+  const [soundOn, setSoundOn] = useState(true);
+  const [lobbyView, setLobbyView] = useState<'lobby' | 'record' | 'arsenal' | 'account'>('lobby');
+  const [privacy, setPrivacy] = useState(false);
+  /** Nach dem Raumbeitritt direkt einsteigen; das Raummenü (Raumcode, Einladung) erscheint erst mit Esc. */
+  const [entering, setEntering] = useState(false);
+  const [audioLive, setAudioLive] = useState(false);
+  const enterAttempt = useRef(false);
+  const wasActive = useRef(false);
   useEffect(() => { game.current?.setTelemetry(telemetry); }, [telemetry]);
   const [copied, setCopied] = useState(false);
   const active = Boolean(status.roomId);
@@ -320,15 +339,94 @@ export function App() {
     };
   }, []);
 
+  // Gespeicherte Sitzung beim Start prüfen.
+  useEffect(() => {
+    let cancelled = false;
+    restoreSession().then((restored) => { if (!cancelled) setSession(restored); }, (error: unknown) => {
+      if (!cancelled) setAccountNotice(error instanceof AccountError ? error.message : 'Anmeldung konnte nicht geprüft werden.');
+    }).finally(() => { if (!cancelled) setAccountChecked(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Titelmusik, solange kein Raum offen ist. Der Start wird sofort versucht; blockiert der Browser Ton ohne
+  // Nutzergeste, startet die Musik mit dem ersten Klick oder Tastendruck.
+  useEffect(() => {
+    game.current?.setTitleMusic(!active);
+    if (active) return;
+    const wake = () => game.current?.wakeAudio();
+    wake();
+    window.addEventListener('pointerdown', wake);
+    window.addEventListener('keydown', wake);
+    const poll = window.setInterval(() => setAudioLive(game.current?.audioLive ?? false), 300);
+    return () => {
+      window.removeEventListener('pointerdown', wake);
+      window.removeEventListener('keydown', wake);
+      window.clearInterval(poll);
+    };
+  }, [active]);
+
+  // Direkter Einstieg, sobald der Raum synchron ist. Gelingt die Mauserfassung nicht (Nutzergeste abgelaufen),
+  // bleibt das Raummenü mit „Carrier betreten“ sichtbar.
+  useEffect(() => {
+    if (!entering) { enterAttempt.current = false; return; }
+    if (!active || status.locked) { setEntering(false); return; }
+    if (enterAttempt.current || !status.ready || (status.missionRoom && !mission)) return;
+    // Genau ein Versuch; die Antwort des Browsers kommt über pointerlockchange oder pointerlockerror.
+    enterAttempt.current = true;
+    if (!game.current?.lock(true)) { setEntering(false); return; }
+    window.setTimeout(() => setEntering(false), 1500);
+  }, [entering, active, status.ready, status.locked, status.missionRoom, mission]);
+  useEffect(() => {
+    if (!entering) return;
+    const timeout = window.setTimeout(() => setEntering(false), 10_000);
+    return () => window.clearTimeout(timeout);
+  }, [entering]);
+  useEffect(() => { setSoundOn(!(game.current?.audio.settings.muted ?? false)); }, []);
+
+  // Nach dem Verlassen eines Raums Level und EP neu laden (Gutschriften aus dem Einsatz).
+  useEffect(() => {
+    if (active) { wasActive.current = true; return; }
+    if (!wasActive.current) return;
+    wasActive.current = false;
+    restoreSession().then((restored) => { if (restored) setSession(restored); }, () => { /* Anzeige bleibt beim letzten Stand. */ });
+  }, [active]);
+
+  function toggleSound() {
+    game.current?.wakeAudio();
+    // Blockiert der Browser noch, aktiviert der erste Klick den Ton, statt stummzuschalten.
+    const next = !soundOn || !audioLive;
+    game.current?.setAudioOption('muted', !next);
+    setSoundOn(next);
+  }
+
+  async function signOut() {
+    if (!session) return;
+    await logout(session.token);
+    setSession(undefined);
+    setLobbyView('lobby');
+  }
+
   async function connect(joinMode: JoinMode) {
-    if (!game.current || busy) return;
+    if (!game.current || busy || !session) return;
+    // Mauserfassung und Vollbild noch im Klick anfordern, vor dem asynchronen Raumbeitritt (Reihenfolge wichtig:
+    // die Vollbild-Anforderung verbraucht die Nutzergeste).
+    game.current.preLock();
+    enterFullscreenIfWanted();
     setFault('');
     setCopied(false);
     setBusy(true);
     try {
-      await game.current.connect(joinMode, code.trim(), mode);
+      await game.current.connect(joinMode, code.trim(), mode, session.token);
+      setEntering(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      game.current?.releaseLock();
+      if ((error as { code?: number }).code === 401) {
+        forgetSession();
+        setSession(undefined);
+        setAccountNotice(message);
+        return;
+      }
       setFault(`Beitritt fehlgeschlagen. ${message}`);
     } finally {
       setBusy(false);
@@ -362,22 +460,67 @@ export function App() {
   return <main data-reduced-motion={cameraPreferences.reducedMotion} className={`freefall ${status.locked ? 'in-game' : 'in-menu'} ${(own?.motion ?? 0) & PLAYER_MOTION.aim ? 'aiming' : ''}`}>
     <div ref={surface} className="surface"/>
     <div className={`vignette ${status.hurt && status.locked && !cinematic && !result ? 'hurt' : ''}`}/>
-    <header className="topbar">
-      <Brand />
-      <div className="mission-label"><span>{inCarrier ? 'CARRIER' : status.missionRoom ? 'OPERATION' : active ? 'TESTARENA' : 'KOOP'}</span>
-        <strong>{inCarrier ? 'Skyfall Carrier' : status.missionRoom ? missionName : active ? 'Boreal Relay' : 'Einsatzleitstelle'}</strong></div>
-      <div className={`connection ${active ? 'is-online' : ''}`}><i />{active ? 'Verbunden' : 'Bereit zum Beitritt'}</div>
-    </header>
 
     {telemetry && <Metrics status={status}/>}
     {status.locked && mission && <MissionHud mission={mission} status={status} intel={showIntel}/>}
     {status.locked && !result && status.notice && <div className="combat-notice" role="status"><div>{status.notice}</div></div>}
-    {!status.locked && <section className={result ? 'operations results' : 'operations'}
-      aria-label={result ? 'Einsatzergebnis' : active ? 'Einsatzsteuerung' : 'Koop-Lobby'}>
+    {!active && <TitleScreen brand={<Brand />} sound={{ on: soundOn, live: audioLive, toggle: toggleSound }} onPrivacy={() => setPrivacy((open) => !open)}
+      compact={privacy || (!!session && lobbyView !== 'lobby')}
+      account={session && <div className="title-account">
+        <span>{session.account.handle}</span>
+        <LevelMeter experience={session.account.experience} compact/>
+        <nav className="title-account-nav" aria-label="Konto">
+          {([['record', 'Dienstakte'], ['arsenal', 'Arsenal'], ['account', 'Konto']] as const).map(([view, label]) =>
+            <button key={view} className="title-link" type="button" aria-pressed={lobbyView === view}
+              onClick={() => { setPrivacy(false); setLobbyView((current) => current === view ? 'lobby' : view); }}>{label}</button>)}
+          <button className="title-link" type="button" onClick={() => void signOut()}>Abmelden</button>
+        </nav>
+      </div>}>
+      {privacy ? <PrivacyNotice onBack={() => setPrivacy(false)}/>
+        : !accountChecked ? <div className="title-card" role="status"><p>Verbindung zur Einsatzleitstelle …</p></div>
+        : !session ? <LoginPanel notice={accountNotice} onSession={(next) => { setAccountNotice(''); setSession(next); }}/>
+        : lobbyView === 'record' ? <ServiceRecord token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}/>
+        : lobbyView === 'arsenal' ? <Arsenal token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}/>
+        : lobbyView === 'account' ? <AccountSettings token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}
+          onDeleted={() => { setSession(undefined); setLobbyView('lobby'); setAccountNotice('Konto gelöscht.'); }}/>
+        : <div className="title-card title-lobby">
+          <div className="title-card-head"><span>Einsatzleitstelle</span></div>
+          <div className="mode-picker" aria-label="Spielmodus">
+            <button type="button" aria-pressed={mode === 'mission'} onClick={() => setMode('mission')}>Planeteneinsätze</button>
+            <button type="button" aria-pressed={mode === 'arena'} onClick={() => setMode('arena')}>Boreal Relay</button>
+          </div>
+          <p>{mode === 'mission' ? 'Plant euren Einsatz auf dem Skyfall Carrier und stellt die Verbindung nach Dev’ Ault wieder her.' : 'Testarena mit einstellbarer Hordengröße für Kampftraining und Benchmarks.'}</p>
+          <button className="primary" type="button" onClick={() => void connect('create')} disabled={busy || fatal}>Raum erstellen<span aria-hidden="true">↗</span></button>
+          <form className="join" onSubmit={join}>
+            <input maxLength={64} aria-label="Raumcode" placeholder="Raumcode" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" spellCheck={false}/>
+            <button className="secondary" type="submit" disabled={!code.trim() || busy || fatal}>Beitreten</button>
+          </form>
+          <button className="title-link quick" type="button" disabled={busy || fatal} onClick={() => void connect('quick')}>Schnellbeitritt</button>
+          {busy && <small className="joining" role="status">Verbindung wird aufgebaut …</small>}
+          <details className="title-settings">
+            <summary>Einstellungen</summary>
+            <label className="graphics-choice">Grafikqualität
+              <select value={quality} onChange={(event) => changeQuality(event.target.value as QualityName)} disabled={fatal}>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+            <FullscreenSettings/>
+            <ControlSettings onChange={() => refreshBindings((n) => n + 1)}/>
+            <AudioSettings game={game.current}/>
+          </details>
+          {fault && <div className="fault" role="alert">{fault}</div>}
+        </div>}
+    </TitleScreen>}
+
+    {active && entering && !status.locked && <div className="entering" role="status">Verbinde mit dem {mode === 'mission' ? 'Skyfall Carrier' : 'Boreal Relay'} …</div>}
+    {!status.locked && active && !entering && <section className={result ? 'operations results' : status.atLocker && mission ? 'operations loadout-open' : 'operations'}
+      aria-label={result ? 'Einsatzergebnis' : 'Einsatzsteuerung'}>
       <div className="eyebrow"><span />{active ? inCarrier ? 'Skyfall Carrier · Deck 03' : status.missionRoom ? missionName : 'Boreal Relay · Testarena' : 'KOOP · 1–4 SPIELER'}</div>
       {active ? <>
         <h1 className="room-heading">{result ? result.extractionSucceeded ? 'Einsatz erfolgreich' : 'Einsatz gescheitert'
-          : status.atConsole ? 'Einsatzplanung' : inCarrier ? 'Mannschaftsdeck' : 'Einsatz bereit'}</h1>
+          : status.atConsole ? 'Einsatzplanung' : status.atLocker && mission ? 'Ausrüstung' : inCarrier ? 'Mannschaftsdeck' : 'Einsatz bereit'}</h1>
         {result && <div key={result.id} className="mission-result">
           <p>{result.extractionSucceeded ? `Extraktion bestätigt · ${result.extractedOperatorIds.length} Operator · ${result.extractionMethod === 'balloon' ? 'Rettungsballon' : 'Albatross 02'}`
             : result.outcome === 'objective-unavailable' ? 'Missionsziel nicht verfügbar · Einsatz abgebrochen'
@@ -388,6 +531,13 @@ export function App() {
             Albatross {result.albatrossSurvived ? 'erhalten' : 'zerstört'}.</p>
           {reward && <div className="result-reward">{reward.baseExperience} Basis-EP + {reward.extractionBonusExperience} Extraktions-EP
             <strong>{reward.totalExperience} EP</strong></div>}
+          {status.progress?.resultId === result.id && <div className="result-progress" role="status">
+            {status.progress.level > status.progress.previousLevel && <strong className="level-up">Level {status.progress.level} erreicht</strong>}
+            <LevelMeter experience={status.progress.experience} compact/>
+            <small>Deinem Account gutgeschrieben: {status.progress.gained} EP</small>
+            {!!status.progress.unlocked?.length && <small>Neu freigeschaltet: {status.progress.unlocked
+              .map((id) => UNLOCKS.byId.get(id)?.displayName ?? id).join(', ')}</small>}
+          </div>}
           <button className="primary" type="button" onClick={() => game.current?.action('return-vote')}
             aria-pressed={mission.operators.some(({ id, endVote }) => id === status.ownId && endVote)}>
             Rückkehr bestätigen <span>{seconds(mission.resultUntil, status)} s</span>
@@ -399,6 +549,7 @@ export function App() {
         </div>}
         {mission && status.atConsole && !result && <CarrierConsole mission={mission} status={status}
           select={(selection) => game.current?.select(selection)} start={() => game.current?.startMission()}/>}
+        {mission && status.atLocker && !result && <LoadoutPanel status={status} apply={(selection) => game.current?.setLoadout(selection)}/>}
         {mission?.state === 'BOARDING' && <>
           {mission.plan && <p>{mission.plan.briefing}</p>}
           {mission.fallback && <p>Ersatzauftrag · Operation Bodenbruch</p>}
@@ -406,7 +557,7 @@ export function App() {
         </>}
         {mission?.state === 'BOARDING' && status.host && <button className="secondary" type="button"
           onClick={() => game.current?.cancelBoarding()}>Boarding abbrechen · zurück zur Missionskonsole</button>}
-        {!result && <button className="primary" type="button" onClick={() => { setFault(''); game.current?.lock(); }}
+        {!result && <button className="primary" type="button" onClick={() => { setFault(''); enterFullscreenIfWanted(); game.current?.lock(); }}
           disabled={!status.ready || (status.missionRoom && !mission)}>
           {status.ready && (!status.missionRoom || mission) ? inCarrier ? 'Carrier betreten' : status.missionRoom ? 'Einsatz betreten' : 'Arena betreten' : 'Synchronisiere …'}
           <span aria-hidden="true">↗</span>
@@ -445,21 +596,7 @@ export function App() {
             {mission.convicts.length > 0 && <ul className="debug-convicts">{mission.convicts.map((convict) =>
               <li key={convict.id}>Convict {convict.slot + 1} · {convict.state} · {convict.hp}/{convict.maxHp} · {convict.equipmentId} · {convict.weaponId}</li>)}</ul>}
           </div>}
-      </> : <>
-        <h1>FREEFALL<span>.</span></h1>
-        <div className="mode-picker" aria-label="Spielmodus">
-          <button type="button" aria-pressed={mode === 'mission'} onClick={() => setMode('mission')}>Planeteneinsätze</button>
-          <button type="button" aria-pressed={mode === 'arena'} onClick={() => setMode('arena')}>Boreal Relay</button>
-        </div>
-        <p>{mode === 'mission' ? 'Plant euren Einsatz auf dem Skyfall Carrier und stellt die Verbindung nach Dev’ Ault wieder her.' : 'Testarena mit einstellbarer Hordengröße für Kampftraining und Benchmarks.'}</p>
-        <button className="primary" type="button" onClick={() => void connect('create')} disabled={busy || fatal}>Raum erstellen<span aria-hidden="true">↗</span></button>
-        <form className="join" onSubmit={join}>
-          <input maxLength={64} aria-label="Raumcode" placeholder="Raumcode" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" spellCheck={false}/>
-          <button className="secondary" type="submit" disabled={!code.trim() || busy || fatal}>Beitreten</button>
-        </form>
-        <button className="text-button quick" type="button" disabled={busy || fatal} onClick={() => void connect('quick')}>Schnellbeitritt</button>
-        {busy && <small className="joining" role="status">Verbindung wird aufgebaut …</small>}
-      </>}
+      </> : null}
       <label className="graphics-choice">Grafikqualität
         <select value={quality} onChange={(event) => changeQuality(event.target.value as QualityName)} disabled={fatal}>
           <option value="low">Low</option>
@@ -467,6 +604,7 @@ export function App() {
           <option value="high">High</option>
         </select>
       </label>
+      <FullscreenSettings/>
       <ControlSettings onChange={() => refreshBindings((n) => n + 1)}/>
       <AudioSettings game={game.current}/>
       {fault && <div className="fault" role="alert">{fault}</div>}
@@ -487,7 +625,7 @@ export function App() {
 
     {!result && <footer className="bottom">
       {active && own && (!status.locked || !cinematic) && <TeamPanel status={status} mission={mission} expanded={showIntel}/>}
-      {!status.locked && !cinematic && <div className="controls">
+      {active && !status.locked && !cinematic && <div className="controls">
         <span><kbd>{(['MOVE_FORWARD', 'MOVE_LEFT', 'MOVE_BACKWARD', 'MOVE_RIGHT'] as const).map((action) => bindings.label(action)).join(' ')}</kbd> Bewegen</span>
         <span><kbd>{bindings.label('CROUCH')}</kbd> Ducken</span><span><kbd>{bindings.label('DIVE')}</kbd> Hechtsprung</span>
         <span><kbd>{bindings.label('STAND_UP')}</kbd> Aufstehen</span><span><kbd>{bindings.label('AIM')}</kbd> Zielen</span>

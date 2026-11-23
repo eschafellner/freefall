@@ -1,8 +1,10 @@
 import { randomInt } from 'node:crypto';
 import { Room, ServerError } from '@colyseus/core';
-import type { Client } from '@colyseus/core';
-import { BALANCE_VERSION_MESSAGE, BODENBRUCH, MAX_PLAYERS, NET, RECONNECT_SECONDS, WIDE_POSITION_SCALE } from '@freefall/shared';
-import type { AtmosphereState, ServerMetrics } from '@freefall/shared';
+import type { AuthContext, Client } from '@colyseus/core';
+import { ACCOUNT_PROGRESS_MESSAGE, BALANCE_VERSION_MESSAGE, BODENBRUCH, LOADOUT_MESSAGE, validateLoadoutSelection, MAX_PLAYERS, NET, RECONNECT_SECONDS, ROSTER_MESSAGE, WIDE_POSITION_SCALE } from '@freefall/shared';
+import type { AccountProfile, AccountProgress, LoadoutReply, AtmosphereState, MissionResult, RosterEntry, ServerMetrics } from '@freefall/shared';
+import type { AccountService } from '../accounts/AccountService.ts';
+import { missionRecord } from '../accounts/MissionSettlement.ts';
 import { MissionInstance } from '../mission/MissionInstance.ts';
 import { Arena } from '../simulation/Arena.ts';
 import { FixedLoop, timingStats } from '../simulation/FixedLoop.ts';
@@ -14,6 +16,10 @@ export class FreefallRoom extends Room {
 
   protected createSimulation(seed: number): Arena | MissionInstance { return new Arena(seed); }
   protected get debug(): boolean { return false; }
+  /** Gesetzt über `withAccounts`. Ohne Dienst treten Clients als Gast bei. */
+  get accountService(): AccountService | undefined { return undefined; }
+  /** Debug-Räume schreiben keine EP gut (Debugbefehle können Ziele und Extraktion erzwingen). */
+  protected get settlesExperience(): boolean { return !this.debug; }
 
   private readonly arena = this.createSimulation(randomInt(0x100000000));
   private missionClock = 0;
@@ -25,6 +31,13 @@ export class FreefallRoom extends Room {
   private readonly loop = new FixedLoop();
   private readonly times: number[] = [];
   private readonly members = new Set<string>();
+  /** Session-ID → Account des Operators. */
+  private readonly operators = new Map<string, AccountProfile>();
+  /** Session-ID → Account-ID für die gesamte Raumlaufzeit, auch nach dem Verlassen (Abrechnung verriegelter Teilnehmer). */
+  private readonly identities = new Map<string, string>();
+  /** Letzte Gutschrift je Session, für Reconnect und `sync-state`. */
+  private readonly progress = new Map<string, AccountProgress>();
+  private readonly reconnections = new Map<string, ReturnType<Room['allowReconnection']>>();
   private host = '';
   private playerClock = 0;
   private hordeClock = 0;
@@ -43,10 +56,26 @@ export class FreefallRoom extends Room {
       this.arena.receiveInput(client.sessionId, payload);
     });
     this.onMessage('sync-state', (client) => {
+      client.send(ROSTER_MESSAGE, this.roster());
+      const progress = this.progress.get(client.sessionId);
+      if (progress) client.send(ACCOUNT_PROGRESS_MESSAGE, progress);
       if (simulation instanceof MissionInstance) {
         client.send('mission-state', simulation.snapshot(this.debug));
       }
       client.send('players', playerSnapshot(simulation, this.host));
+      const own = simulation.players.find((player) => player?.id === client.sessionId);
+      if (own) client.send(LOADOUT_MESSAGE, { selection: own.loadout.selection } satisfies LoadoutReply);
+    });
+    // Carrier › Ausrüstung: shape and IDs, then account unlocks, then the simulation (Carrier only, resolvable).
+    this.onMessage(LOADOUT_MESSAGE, (client, payload: unknown) => {
+      const reply = (message: LoadoutReply) => client.send(LOADOUT_MESSAGE, message);
+      const checked = validateLoadoutSelection(simulation.registry, payload);
+      if ('error' in checked) return reply({ error: checked.error });
+      const account = this.operators.get(client.sessionId);
+      const missing = account ? this.accountService?.missingForLoadout(account, checked.selection) ?? [] : [];
+      if (missing.length) return reply({ error: `Nicht freigeschaltet: ${missing.join(', ')}` });
+      const error = simulation.setLoadout(client.sessionId, checked.selection);
+      reply(error ? { error } : { selection: checked.selection });
     });
     this.onMessage('horde-size', (client, payload: unknown) => {
       if (client.sessionId === this.host && simulation instanceof Arena) simulation.setHordeSize(payload);
@@ -83,40 +112,95 @@ export class FreefallRoom extends Room {
     this.patchRate = null;
   }
 
-  onAuth(): boolean {
+  private get acceptsJoin(): boolean {
     return !(this.arena instanceof MissionInstance) || this.arena.acceptsNewOperators;
   }
 
   onJoin(client: Client): void {
-    if (!this.onAuth()) throw new ServerError(400, 'Der Einsatz läuft. Beitritt wieder auf dem Carrier möglich.');
+    if (!this.acceptsJoin) throw new ServerError(400, 'Der Einsatz läuft. Beitritt wieder auf dem Carrier möglich.');
+    const account = this.accountService ? client.auth as AccountProfile | undefined : undefined;
+    if (account) {
+      const sessionId = client.sessionId;
+      const claimed = this.accountService!.claim(account.id, { roomId: this.roomId, sessionId, connected: true,
+        evict: () => this.reconnections.get(sessionId)?.reject(new Error('Operator in neuer Sitzung angemeldet')) });
+      if (!claimed) throw new ServerError(409, `${account.handle} ist bereits in einem anderen Fenster verbunden.`);
+      // Serverseitige Loadout-Prüfung: Heute setzen alle mit der Standardausrüstung ein, die jeder Account besitzt.
+      const missing = this.accountService!.missingForLoadout(account);
+      if (missing.length) {
+        this.accountService!.release(account.id, sessionId);
+        throw new ServerError(403, `Ausrüstung nicht freigeschaltet: ${missing.join(', ')}`);
+      }
+      this.operators.set(sessionId, account);
+      this.identities.set(sessionId, account.id);
+    }
     this.arena.addPlayer(client.sessionId);
     this.members.add(client.sessionId);
     if (!this.host) this.host = client.sessionId;
+    if (account) this.broadcast(ROSTER_MESSAGE, this.roster());
   }
 
   onDrop(client: Client): void {
     if (!(this.arena instanceof MissionInstance)) return;
     this.arena.disconnect(client.sessionId);
     this.removeConnection(client.sessionId);
-    void this.allowReconnection(client, RECONNECT_SECONDS).catch(() => {
+    const account = this.operators.get(client.sessionId);
+    if (account) this.accountService?.setConnected(account.id, client.sessionId, false);
+    const reconnection = this.allowReconnection(client, RECONNECT_SECONDS);
+    this.reconnections.set(client.sessionId, reconnection);
+    void reconnection.catch(() => {
       // A dropped handshake or expired seat is finalized by Colyseus through onLeave.
     });
   }
 
   onReconnect(client: Client): void {
+    this.reconnections.delete(client.sessionId);
     if (!(this.arena instanceof MissionInstance)) return;
     this.arena.reconnect(client.sessionId);
     this.members.add(client.sessionId);
     if (!this.host) this.host = client.sessionId;
+    const account = this.operators.get(client.sessionId);
+    if (account) this.accountService?.setConnected(account.id, client.sessionId, true);
   }
 
   onLeave(client: Client): void {
+    this.reconnections.delete(client.sessionId);
+    const account = this.operators.get(client.sessionId);
+    if (account) {
+      this.operators.delete(client.sessionId);
+      this.progress.delete(client.sessionId);
+      this.accountService?.release(account.id, client.sessionId);
+      this.broadcast(ROSTER_MESSAGE, this.roster());
+    }
     this.arena.removePlayer(client.sessionId);
     this.removeConnection(client.sessionId);
     if (this.heldFull && !this.flightLocked) {
       this.heldFull = false;
       void this.unlock();
     }
+  }
+
+  /** Schreibt das Einsatzergebnis den Accounts gut und meldet jedem Operator seine Gutschrift. */
+  private settle(result: MissionResult): void {
+    const accounts = this.accountService;
+    if (!accounts || !this.settlesExperience) return;
+    const credited = accounts.settlement.settle(missionRecord(result, this.identities));
+    if (!credited) return;
+    for (const [sessionId, accountId] of this.identities) {
+      const credit = credited.get(accountId);
+      if (!credit) continue;
+      const unlocked = accounts.syncUnlocks({ id: accountId, level: credit.level });
+      const progress = unlocked.length ? { ...credit, unlocked } : credit;
+      credited.set(accountId, progress);
+      this.progress.set(sessionId, progress);
+      const account = this.operators.get(sessionId);
+      if (account) this.operators.set(sessionId, { ...account, experience: progress.experience, level: progress.level });
+      this.clients.getById(sessionId)?.send(ACCOUNT_PROGRESS_MESSAGE, progress);
+    }
+    this.broadcast(ROSTER_MESSAGE, this.roster());
+  }
+
+  private roster(): RosterEntry[] {
+    return [...this.operators].map(([id, { name, tag, level }]) => ({ id, name, tag, level }));
   }
 
   private removeConnection(id: string): void {
@@ -155,6 +239,7 @@ export class FreefallRoom extends Room {
       }
       const events = this.arena.drainEvents();
       if (events.length) this.broadcast('mission-events', events);
+      for (const event of events) if (event.type === 'MissionCompleted') this.settle(event.result);
       if (this.arena.captureMissionTelemetry) {
         const completed = events.find((event) => event.type === 'MissionCompleted');
         if (completed) console.info('[mission-telemetry] %s', JSON.stringify({
@@ -225,4 +310,24 @@ export class BodenbruchRoom extends FreefallRoom {
 
 export class LocalMissionDebugRoom extends BodenbruchRoom {
   protected get debug(): boolean { return true; }
+}
+
+/**
+ * Raumklasse mit Accountdienst. Ohne Dienst bleibt die Klasse unverändert (Gastmodus).
+ * Das statische `onAuth` läuft schon beim HTTP-Matchmaking: Ohne gültiges Token gibt es weder Raum noch Platzreservierung.
+ * Das Ergebnis steht danach in `client.auth`.
+ */
+export function withAccounts<T extends typeof FreefallRoom>(Base: T, accounts: AccountService | undefined): T {
+  if (!accounts) return Base;
+  // @ts-expect-error Mixin über eine konkrete Raumklasse; der Konstruktor bleibt unverändert.
+  return class extends Base {
+    get accountService(): AccountService { return accounts; }
+
+    static async onAuth(token: string, _options: unknown, _context: AuthContext): Promise<AccountProfile> {
+      if (!token) throw new ServerError(401, 'Bitte zuerst anmelden.');
+      const account = accounts.authenticate(token);
+      if (!account) throw new ServerError(401, 'Anmeldung abgelaufen. Bitte erneut anmelden.');
+      return account;
+    }
+  };
 }

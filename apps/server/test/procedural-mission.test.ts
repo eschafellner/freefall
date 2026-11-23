@@ -305,7 +305,7 @@ for (const [seed, type, count, method, planetId = 'dev-ault', worldSeed, difficu
     if (type === 'nest-purge') {
       assert.ok(mission.receiveInput(lead.id, { ...lead.input, seq: lead.lastInputSeq + 1, life: lead.life, fire: false, reload: true }));
       advance(mission, lead.loadout.weapons.primary.reloadTicks + 2);
-      const reserve = lead.loadout.weapons.primary.reserveMagazines;
+      const reserve = lead.loadout.weapons.primary.reserve;
       assert.equal(lead.equipment.magazines.primary, reserve - 1);
       travel({ x: ship.x - 4.1, z: ship.z }, .5, [lead]);
       const charges = ship.supply!.find(({ side }) => side === 'left')!.charges;

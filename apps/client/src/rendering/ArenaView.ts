@@ -5,6 +5,8 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+import type { EffectiveWeapon } from '@freefall/shared';
+import { shotRays } from '@freefall/shared';
 import type { AtmosphereState, Circle, ExplosionEvent, HordeFrame, MeleeEvent, MissionDefinition, MissionSnapshot, OperatorPosition, PlanetAtmosphereProfile, PlayerState, PlayersSnapshot, PositionXZ, PostureState, ShotEvent, WeaponSlot, WorldDefinition } from '@freefall/shared';
 import { MissionEnvironment } from './mission/MissionEnvironment.ts';
 import { disposeMissionMeshes } from './mission/disposeMissionMeshes.ts';
@@ -59,6 +61,8 @@ function dropCamera(phase: string, e: number): [number, number, number, number, 
 }
 
 export class ArenaView {
+  /** Own weapons for camera kick and reticle range (the server-accepted loadout). */
+  ownWeapons: Readonly<Record<WeaponSlot, EffectiveWeapon>> = WEAPONS;
   readonly canvas: HTMLCanvasElement;
   readonly renderer: T.WebGLRenderer;
   readonly horde: EnemyVisualLOD;
@@ -315,7 +319,7 @@ export class ArenaView {
   stagger(id: number, until: number): void { if (id) this.staggered.set(id, until); }
 
   private firingCamera(slot: WeaponSlot): void {
-    if (!cameraPreferences.reducedMotion) this.cameraRig.fire(WEAPONS[slot].recoil.cameraKick / .63);
+    if (!cameraPreferences.reducedMotion) this.cameraRig.fire(this.ownWeapons[slot].recoil.cameraKick / .63);
   }
 
   predictFire(shooter: PlayerState, slot: WeaponSlot, now: number): void {
@@ -329,8 +333,11 @@ export class ArenaView {
     const slot = event.slot ?? 'primary';
     const present: PresentShot = (weapon, at) => {
       if (weapon) this.effects.fire(weapon, slot, at, local, this.camera);
-      const fallen = event.impact?.kind === 'enemy' && event.eliminated ? this.horde.hit(event.enemy, at, true) : undefined;
-      this.effects.add(event, at, this.camera, local, fallen);
+      // A shot shell presents every pellet: its own tracer, impact and, on a kill, the fall of that enemy.
+      for (const ray of shotRays(event)) {
+        const fallen = ray.impact?.kind === 'enemy' && ray.eliminated ? this.horde.hit(ray.enemy, at, true) : undefined;
+        this.effects.add(ray, at, this.camera, local, fallen);
+      }
       audio();
     };
     if (!predicted) {
@@ -549,7 +556,7 @@ export class ArenaView {
     const aimYaw = tactical ? tacticalAimYaw(posture, yaw) : yaw;
     const ray = this.reticleRay, muzzle = this.reticleMuzzle;
     aimRay(ray, position, aimYaw, tactical ? tacticalAimPitch(posture, pitch) : pitch, tactical ? shape?.lookHeight : undefined, position.y, !!world?.terrain);
-    const range = WEAPONS[slot].effectiveRange;
+    const range = this.ownWeapons[slot].effectiveRange;
     const aimDistance = shotWorldLimit(ray, CAMERA_BACK, range + CAMERA_BACK, world);
     let end = aimDistance;
     if (shape && posture && (tactical || world?.terrain)) {

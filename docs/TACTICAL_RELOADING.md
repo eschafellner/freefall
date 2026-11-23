@@ -7,8 +7,10 @@ Munition wird in **ganzen Magazinen** verwaltet. Beim Nachladen wird das eingese
 | | Kestrel AR-01 | P-01 |
 | --- | ---: | ---: |
 | `magazineSize` | 45 | 12 |
-| `reserveMagazines` (Missionsstart) | 8 | 4 |
-| `maxReserveMagazines` (Tragekapazität) | 8 | 4 |
+| `reserve` (Missionsstart) | 8 | 4 |
+
+Einzelpatronen-Nachladen (VX-13, `feed.type: single`): [LOADOUT_SYSTEM](LOADOUT_SYSTEM.md#einzelpatronen-nachladen-server-systemscombatts).
+| `maxReserve` (Tragekapazität) | 8 | 4 |
 | Munition bei Missionsstart | 45 + 8 × 45 = 405 | 12 + 4 × 12 = 60 |
 | `reloadSeconds` | 2,1 s = 63 Ticks | 1,45 s = 44 Ticks |
 | `reloadTimeline.removalAt` | 0,20 → Tick 13 | 0,18 → Tick 8 |

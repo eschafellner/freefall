@@ -16,7 +16,8 @@
     "limiterThresholdDb": -6,
     "weapons": {
       "rifle": { "gain": 1, "transientHz": 2600, "bodyHz": 105, "bodyGain": 0.9, "mechanicalGain": 0.35, "tailGain": 0.55, "variation": 0.07 },
-      "pistol": { "gain": 0.85, "transientHz": 3600, "bodyHz": 150, "bodyGain": 0.55, "mechanicalGain": 0.5, "tailGain": 0.4, "variation": 0.06 }
+      "pistol": { "gain": 0.85, "transientHz": 3600, "bodyHz": 150, "bodyGain": 0.55, "mechanicalGain": 0.5, "tailGain": 0.4, "variation": 0.06 },
+      "shotgun": { "gain": 1.25, "transientHz": 1900, "bodyHz": 72, "bodyGain": 1.2, "mechanicalGain": 0.6, "tailGain": 0.75, "variation": 0.05 }
     },
     "explosion": { "gain": 1.5, "bodyHz": 52, "tailGain": 0.8 },
     "environments": {

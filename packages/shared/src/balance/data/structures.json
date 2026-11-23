@@ -5,6 +5,7 @@
       "factionId": "swarm",
       "spawnArchetypeId": "swarm.schabe",
       "maxHealth": 360,
+      "armorClass": 1,
       "spawnIntervalSeconds": 5.6,
       "breachEmergeSeconds": 6.4,
       "minSpawnIntervalTicks": 7,

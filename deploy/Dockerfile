@@ -24,6 +24,8 @@ COPY apps/client/package.json apps/client/
 RUN npm ci --omit=dev -w @freefall/server && npm cache clean --force
 COPY --from=build /app/packages/shared/dist packages/shared/dist
 COPY --from=build /app/apps/server/dist apps/server/dist
+RUN mkdir -p /data && chown node:node /data
+VOLUME /data
 USER node
 EXPOSE 2567
 CMD ["node", "apps/server/dist/index.js"]

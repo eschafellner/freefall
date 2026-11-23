@@ -2,14 +2,20 @@
  * Central damage resolver for every player-caused and enemy-caused hit.
  *
  * Order of operations (each step at most once per damage event):
- *   1. Base damage: weapon damage, melee damage or grenade damage after distance falloff.
- *   2. Target-type multiplier: structure multiplier for explosions against structures (`structureDamageMultipliers`).
- *   3. Relation multiplier from `combat.json › damagePolicy`: hostile 1, operator → operator, operator → convict or
+ *   1. Base damage: weapon damage (caliber × weapon × ammunition), melee damage or grenade damage after blast falloff.
+ *   2. Range falloff of bullets (`falloffMultiplier`, caliber falloff scaled by muzzle velocity).
+ *   3. Target-type multiplier: structure multiplier for explosions against structures (`structureDamageMultipliers`).
+ *   4. Armor: penetration ≥ armor class deals full damage, otherwise `nonPenetratingFraction` (`ammunition.json`).
+ *   5. Resistance of the target against the damage type (`enemies.json › resistances`).
+ *   6. Relation multiplier from `combat.json › damagePolicy`: hostile 1, operator → operator, operator → convict or
  *      self damage. Applied exactly once here; callers never scale by the policy themselves.
- *   4. Rounding: operators, convicts and structures take whole hit points (at least 1 if the result is positive).
+ *   7. Rounding: operators, convicts and structures take whole hit points (at least 1 if the result is positive).
  *      Enemies keep fractional damage (ECS health is a float).
- *   5. Target side: convict armor, respawn and landing protection are applied by the target afterwards.
+ *   8. Target side: convict armor, respawn and landing protection are applied by the target afterwards.
+ *
+ * Steps 2, 4 and 5 apply only when the caller passes them. Operators and convicts have no armor class yet.
  */
+import { armorMultiplier } from '@freefall/shared';
 import type { DamagePolicy, DamageSource } from '@freefall/shared';
 
 export type Combatant = 'operator' | 'enemy' | 'convict';
@@ -25,6 +31,12 @@ export interface DamageRequest {
   readonly base: number;
   /** Explosion against a structure: the grenade's structure multiplier. */
   readonly structureMultiplier?: number;
+  /** Bullets: range falloff multiplier in [0, 1]. */
+  readonly falloffMultiplier?: number;
+  /** Target armor and the hit's penetration. */
+  readonly armor?: { readonly armorClass: number; readonly penetration: number; readonly nonPenetratingFraction: number };
+  /** Target resistance against the damage type. */
+  readonly resistanceMultiplier?: number;
 }
 
 export interface ResolvedDamage {
@@ -32,6 +44,8 @@ export interface ResolvedDamage {
   readonly relation: DamageRelation;
   /** Relation multiplier that was applied (1 for hostile damage). */
   readonly multiplier: number;
+  /** False when the hit did not penetrate the target's armor class (only residual damage). */
+  readonly penetrated: boolean;
 }
 
 export function damageRelation(attacker: Combatant, target: DamageTarget, self = false): DamageRelation {
@@ -55,8 +69,13 @@ export function resolveDamage(policy: DamagePolicy, request: DamageRequest): Res
   const relation = damageRelation(request.attacker, request.target, request.self);
   const multiplier = relationMultiplier(policy, request, relation);
   let amount = Math.max(0, request.base);
+  amount *= request.falloffMultiplier ?? 1;
   if (request.target === 'structure' && request.source === 'explosion') amount *= request.structureMultiplier ?? 1;
+  const armor = request.armor;
+  const armorFactor = armor ? armorMultiplier(armor.penetration, armor.armorClass, armor.nonPenetratingFraction) : 1;
+  amount *= armorFactor;
+  amount *= request.resistanceMultiplier ?? 1;
   amount *= multiplier;
   if (request.target !== 'enemy' && amount > 0) amount = Math.max(1, Math.round(amount));
-  return { amount, relation, multiplier };
+  return { amount, relation, multiplier, penetrated: !armor || armorFactor === 1 };
 }

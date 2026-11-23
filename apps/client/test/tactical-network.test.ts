@@ -111,7 +111,7 @@ for (const profile of profiles) {
       assert.deepEqual(prediction.position, { x: operator.x, y: 0, z: operator.z });
       assert.equal(operator.equipment.stims, operator.loadout.medical.maxCharges - 1);
       assert.equal(operator.hp, operator.slot === 0 ? 0 : operator.loadout.maxHealth);
-      assert.equal(operator.equipment.magazines.primary, operator.loadout.weapons.primary.reserveMagazines - 1);
+      assert.equal(operator.equipment.magazines.primary, operator.loadout.weapons.primary.reserve - 1);
       assert.equal(operator.ammo, operator.loadout.weapons.primary.magazineSize);
     }
     assert.equal(field.stats.data.magazinesUsed.primary, 4);

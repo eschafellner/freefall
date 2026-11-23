@@ -52,6 +52,7 @@ export function playerSnapshot(arena: Battlefield, host: string): PlayersSnapsho
       (stance.slideCooldownUntil !== undefined && arena.tick < stance.slideCooldownUntil) ||
       (stance.standBlockedAt !== undefined && arena.tick - stance.standBlockedAt < NET.tickHz);
     players.push({ id, slot, x, z, yaw, hp, ack, life, respawnTick, kills, pitch, motion, ammo, reloadUntil,
+      weapons: { primary: p.loadout.weapons.primary.id, secondary: p.loadout.weapons.secondary.id },
       ...(p.y !== 0 && { y: p.y }),
       ...(sendPosture ? { posture: copyPosture(stance) } : stance.yaw !== yaw ? { bodyYaw: stance.yaw } : {}),
       ...(recent && { reload: { ...reload } }), equipment: { ...p.equipment, magazines: { ...p.equipment.magazines },

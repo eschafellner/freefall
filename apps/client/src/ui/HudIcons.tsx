@@ -7,6 +7,17 @@ const PATHS: Record<string, ReactNode> = {
     <path d="M1 8.5h9l2.5-2H36l1.5-2.2h6.5v2.2H54v1.6h9v2.2h-9v1.4H38.5l-1.2 1.6h-4.6l-2.4 7.2h-4.9l1.6-6.7h-4.2l-2.6 4.3h-4.6l1.9-4.3H10.6L7 16.6H1z"/>
     <path d="M19 3.4h11v1.8H19z" opacity=".75"/>
   </>,
+  // VX-13 Cerberus: stock, receiver, long barrel over the tube magazine, pump forend and pistol grip.
+  'vx-13': <>
+    <path d="M1 9h10l2.5-1.8H27v3.8H13.2l-3 5.2H1z"/>
+    <path d="M27 7.2h36v1.9H27z M27 10.6h26v2.4H27z"/>
+    <path d="M33 10.2h11v3.8H33z" opacity=".8"/>
+    <path d="M17 11h4.6l-2.2 7.6h-4.4z"/>
+  </>,
+  // Silhouettes for the Carrier loadout cards.
+  'melee.weapon_strike': <path d="M6 14l26-6 2 3-26 6z M34 8.5l9-2.5 1.5 4-9 2.5z"/>,
+  'backpack.standard_frame': <path d="M22 3h20l3 4v14l-3 2H22l-3-2V7z M25 8h14v5H25z" fillRule="evenodd"/>,
+  'armor.standard_carrier': <path d="M20 3l6 2h12l6-2 4 6-3 14H19L16 9z M27 9h10v5H27z" fillRule="evenodd"/>,
   // P-01 service pistol.
   'p-01': <path d="M14 6h33.5v2.4H50v2.8H30.2l-1.8 1.4h-3.2l-2.4 8.6h-7.4l2.6-9.2-4-.8z"/>,
   grenade: <>

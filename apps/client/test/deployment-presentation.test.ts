@@ -66,7 +66,8 @@ test('the score files are the documented, project-owned masters', () => {
     }
   }
   assert.deepEqual(readdirSync(dir).sort(), expected.sort());
-  assert.deepEqual(Object.values(MUSIC_TRACKS).map(({ file }) => file).sort(), manifest.map(({ id }) => id).sort());
+  // Cues may share a master (title and briefing both use Briefing Silence); every file must be documented and used.
+  assert.deepEqual([...new Set(Object.values(MUSIC_TRACKS).map(({ file }) => file))].sort(), manifest.map(({ id }) => id).sort());
 });
 
 test('the lander brakes from altitude, slams onto its gear and settles', () => {

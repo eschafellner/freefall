@@ -8,10 +8,19 @@
       "releaseSeconds": 0.22,
       "fuseSeconds": 1.65,
       "baseDamage": 165,
+      "penetration": 4,
       "blastRadius": 10.5,
       "falloff": "linear",
-      "structureDamageMultipliers": { "structure.swarm_nest": 2 },
-      "throw": { "speed": 13, "pitchOffset": 0.34, "minPitch": -0.35, "gravity": 13, "releaseHeight": 1.35 }
+      "structureDamageMultipliers": {
+        "structure.swarm_nest": 2
+      },
+      "throw": {
+        "speed": 13,
+        "pitchOffset": 0.34,
+        "minPitch": -0.35,
+        "gravity": 13,
+        "releaseHeight": 1.35
+      }
     }
   ],
   "medical": [
@@ -22,7 +31,13 @@
       "applicationSeconds": 1.2,
       "healFractionOfMaxHealth": 0.4,
       "cooldownSeconds": 0,
-      "interruptedBy": { "fire": true, "sprint": true, "reload": true, "weaponSwitch": true, "melee": true }
+      "interruptedBy": {
+        "fire": true,
+        "sprint": true,
+        "reload": true,
+        "weaponSwitch": true,
+        "melee": true
+      }
     }
   ],
   "melee": [
@@ -30,6 +45,7 @@
       "id": "melee.weapon_strike",
       "displayName": "Kolbenstoß",
       "damage": 50,
+      "penetration": 1,
       "range": 2,
       "arcDegrees": 80,
       "windupSeconds": 0.14,
@@ -40,6 +56,22 @@
       "knockbackDistance": 1.1
     }
   ],
+  "backpacks": [
+    {
+      "id": "backpack.standard_frame",
+      "displayName": "Standard-Tragegestell",
+      "description": "Leichtes Gestell für Magazintaschen und Heilstims. Keine Zusatzwirkung.",
+      "modifiers": []
+    }
+  ],
+  "armors": [
+    {
+      "id": "armor.standard_carrier",
+      "displayName": "Standard-Plattenträger",
+      "description": "Plattenträger der Operator. Grundwerte für Bewegung und Rutschen.",
+      "modifiers": []
+    }
+  ],
   "loadouts": [
     {
       "id": "loadout.operator_standard",
@@ -48,6 +80,8 @@
       "grenadeId": "equipment.frag_grenade",
       "medicalId": "equipment.medical_stim",
       "meleeId": "melee.weapon_strike",
+      "backpackId": "backpack.standard_frame",
+      "armorId": "armor.standard_carrier",
       "weaponSwitchSeconds": 0.48
     }
   ],
@@ -57,7 +91,16 @@
     "supplyCrates": "albatross",
     "interactionSeconds": 1,
     "interactionRange": 2.2,
-    "perUse": { "primaryMagazines": 2, "secondaryMagazines": 1, "grenades": 1, "stims": 2 },
-    "availableWhen": { "vehicleDamaged": true, "vehicleDisabled": true, "vehicleDestroyed": false }
+    "perUse": {
+      "primaryMagazines": 2,
+      "secondaryMagazines": 1,
+      "grenades": 1,
+      "stims": 2
+    },
+    "availableWhen": {
+      "vehicleDamaged": true,
+      "vehicleDisabled": true,
+      "vehicleDestroyed": false
+    }
   }
 }

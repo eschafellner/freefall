@@ -17,11 +17,14 @@ Trefferkörper für Hitscan und Nahkampf gegen Verbündete: `operatorHitbox` (Zy
 
 Alle spielerverursachten Treffer laufen durch `resolveDamage`. Reihenfolge, jeder Schritt höchstens einmal:
 
-1. Basisschaden: Waffenschaden, Nahkampfschaden oder Granatenschaden nach Distanzabfall.
-2. Zieltyp: Strukturmultiplikator nur für Explosionen gegen Strukturen.
-3. Relationsmultiplikator aus `damagePolicy` (feindlich 1, verbündet, selbst). Aufrufer skalieren nie selbst.
-4. Rundung: Operator, Convicts und Strukturen erhalten ganze Trefferpunkte (mindestens 1, wenn > 0). Gegner behalten Bruchwerte.
-5. Zielseite: Convict-Panzerung, Respawn- und Landeschutz.
+1. Basisschaden: Waffenschaden (Kaliber × Waffe × Munition), Nahkampfschaden oder Granatenschaden nach Explosionsabfall.
+2. Distanzabfall von Kugeln je Kaliber (seit 8.0A, [AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md)).
+3. Zieltyp: Strukturmultiplikator nur für Explosionen gegen Strukturen.
+4. Panzerung: Durchschlag ≥ Panzerklasse voll, sonst 10 % (Gegner und Nester; Operatoren und Convicts haben keine Panzerklasse).
+5. Resistenz gegen die Schadensart (Gegner).
+6. Relationsmultiplikator aus `damagePolicy` (feindlich 1, verbündet, selbst). Aufrufer skalieren nie selbst.
+7. Rundung: Operator, Convicts und Strukturen erhalten ganze Trefferpunkte (mindestens 1, wenn > 0). Gegner behalten Bruchwerte.
+8. Zielseite: Convict-Panzerung, Respawn- und Landeschutz.
 
 | Angreifer → Ziel | Relation | Faktor |
 | --- | --- | ---: |

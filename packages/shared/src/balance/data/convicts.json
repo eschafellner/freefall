@@ -4,7 +4,8 @@
     "moveSpeed": 5.1,
     "engageRange": 37,
     "idleRescanTicks": 5,
-    "reloadWeaponId": "kestrel-ar-01"
+    "reloadWeaponId": "kestrel-ar-01",
+    "penetration": 3
   },
   "kits": [
     { "id": "security-surplus", "weaponVariantId": "kestrel-service", "maxHealth": 150, "armor": 5, "damage": 24, "roundsPerSecond": 7, "magazineSize": 28 },

@@ -1,6 +1,7 @@
 import { Client } from '@colyseus/sdk';
 import type { Room } from '@colyseus/sdk';
-import { ARENA_ROOM, BALANCE, BALANCE_VERSION_MESSAGE, BODENBRUCH_ROOM, WEATHER_VERSION, WIDE_POSITION_SCALE, compareBalanceVersion, validAtmosphereState } from '@freefall/shared';
+import { ACCOUNT_PROGRESS_MESSAGE, ARENA_ROOM, BALANCE, BALANCE_VERSION_MESSAGE, BODENBRUCH_ROOM, LOADOUT_MESSAGE, ROSTER_MESSAGE, WEATHER_VERSION, WIDE_POSITION_SCALE, compareBalanceVersion, validAtmosphereState } from '@freefall/shared';
+import type { AccountProgress, LoadoutReply, LoadoutSelection, RosterEntry } from '@freefall/shared';
 import type { AtmosphereState, CombatEvent, HordeSize, MissionAction, MissionDebugAction, MissionEvent, MissionGenerationSelection, MissionPlan, MissionSnapshot, PlayerInput, PlayersSnapshot, ServerMetrics, ShotEvent } from '@freefall/shared';
 
 export type JoinMode = 'create' | 'quick' | 'code';
@@ -14,6 +15,9 @@ interface MatchHandlers {
   metrics: (packet: ServerMetrics) => void;
   shot: (packet: ShotEvent) => void;
   combat: (packet: CombatEvent[]) => void;
+  roster: (packet: RosterEntry[]) => void;
+  progress: (packet: AccountProgress) => void;
+  loadout: (packet: LoadoutReply) => void;
   dropped: () => void;
   disconnected: (code: number) => void;
   notice: (message: string) => void;
@@ -35,7 +39,7 @@ const FEEDBACK: Readonly<Record<string, string>> = {
   'resupply-posture': 'Nachschub in dieser Haltung nicht möglich',
 };
 
-function endpoint(): string {
+export function endpoint(): string {
   if (import.meta.env.VITE_FREEFALL_SERVER) return import.meta.env.VITE_FREEFALL_SERVER;
   return `${location.protocol}//${location.hostname}:2567`;
 }
@@ -51,8 +55,10 @@ export class Match {
   private plan?: MissionPlan;
   private pendingMission?: MissionSnapshot;
 
-  static async connect(mode: JoinMode, code: string, gamemode: GameMode, handlers: MatchHandlers): Promise<Match> {
+  static async connect(mode: JoinMode, code: string, gamemode: GameMode, handlers: MatchHandlers, token?: string): Promise<Match> {
     const client = new Client(endpoint());
+    // Sitzungstoken des Accounts. Der Server prüft es in `onAuth`.
+    if (token) client.http.authToken = token;
     const roomType = gamemode === 'mission' ? BODENBRUCH_ROOM : ARENA_ROOM;
     const room = mode === 'code' ? await client.joinById(code)
       : mode === 'create' ? await client.create(roomType)
@@ -119,6 +125,15 @@ export class Match {
       if (this.measureTraffic) this.transfer += 8 + JSON.stringify(packet).length;
       handlers.shot(packet);
     });
+    room.onMessage<RosterEntry[]>(ROSTER_MESSAGE, (packet) => {
+      if (Array.isArray(packet)) handlers.roster(packet);
+    });
+    room.onMessage<LoadoutReply>(LOADOUT_MESSAGE, (packet) => {
+      if (packet && typeof packet === 'object' && ('selection' in packet || 'error' in packet)) handlers.loadout(packet);
+    });
+    room.onMessage<AccountProgress>(ACCOUNT_PROGRESS_MESSAGE, (packet) => {
+      if (packet && typeof packet.resultId === 'string') handlers.progress(packet);
+    });
     room.onMessage<CombatEvent[]>('combat', (packet) => {
       if (this.measureTraffic) this.transfer += 16 + JSON.stringify(packet).length;
       if (Array.isArray(packet)) handlers.combat(packet);
@@ -166,6 +181,7 @@ export class Match {
   }
 
   select(selection: MissionGenerationSelection): void { this.room.send('mission-selection', selection); }
+  setLoadout(selection: LoadoutSelection): void { this.room.send(LOADOUT_MESSAGE, selection); }
   action(action: MissionAction): void { this.room.send('mission-action', action); }
   startMission(planId?: string): void { this.room.send('mission-start', planId); }
   cancelBoarding(): void { this.room.send('mission-cancel'); }

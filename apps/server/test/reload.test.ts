@@ -34,11 +34,11 @@ test('reload uses server ticks, publishes the timeline and latches a tap between
   // The magazine transaction happens on the insertion tick; the weapon is ready on the last tick.
   while (arena.tick < p.reload.insertAt - 1) arena.step();
   assert.equal(p.ammo, TEST_RIFLE.magazineSize - 1);
-  assert.equal(p.equipment.magazines.primary, TEST_RIFLE.reserveMagazines);
+  assert.equal(p.equipment.magazines.primary, TEST_RIFLE.reserve);
   arena.step();
   assert.equal(p.reload.phase, 'MAGAZINE_INSERTION');
   assert.equal(p.ammo, TEST_RIFLE.magazineSize);
-  assert.equal(p.equipment.magazines.primary, TEST_RIFLE.reserveMagazines - 1);
+  assert.equal(p.equipment.magazines.primary, TEST_RIFLE.reserve - 1);
   while (arena.tick < until - 1) arena.step();
   s = playerSnapshot(arena, p.id).players[0];
   assert.equal(s.motion, 0);

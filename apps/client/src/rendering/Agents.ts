@@ -13,11 +13,13 @@ import { createSoldierParts } from './characters/SoldierRig.ts';
 import type { SoldierPart } from './characters/SoldierRig.ts';
 import type { ContactShadows } from './ContactShadows.ts';
 import { createKestrel } from './weapons/Kestrel.ts';
+import { createCerberus } from './weapons/Cerberus.ts';
 
 export class PlayerView {
   private readonly parts = createSoldierParts();
   private readonly rifle = createKestrel();
-  private readonly models = TEAM_COLORS.map((color) => new PlayerVisualController(this.parts, this.rifle, color));
+  private readonly shotgun = createCerberus(this.rifle.finish);
+  private readonly models = TEAM_COLORS.map((color) => new PlayerVisualController(this.parts, this.rifle, color, true, this.shotgun));
   private readonly batches: PlayerRigBatches;
   private disposed = false;
   private latest?: PlayersSnapshot;
@@ -74,6 +76,7 @@ export class PlayerView {
     const me = this.latest?.players.find((p) => p.id === own);
     if (me) {
       const model = this.models[me.slot];
+      model.setWeapons(me.weapons);
       const actionTick = a && b ? T.MathUtils.lerp(a.tick, b.tick, Math.min(1, alpha)) : localTick;
       const earlier = a?.players.find((p) => p.id === own && p.life === me.life)?.equipment;
       const later = b?.players.find((p) => p.id === own && p.life === me.life)?.equipment;
@@ -101,6 +104,7 @@ export class PlayerView {
         tick >= currentGear.until && nextGear?.slot === currentGear.action;
       const gear = nextGear && (switched || nextGear.action && nextGear.started <= tick) ? nextGear : currentGear;
       const reload = later?.reload && later.reload.started <= tick && tick < later.reload.until && later.reloadUntil ? later : frame;
+      this.models[player.slot].setWeapons(frame.weapons);
       this.models[player.slot].draw(frame.id, frame.life, frame.hp, x, z, heading, playerPitch,
         Boolean(motion & PLAYER_MOTION.aim), Boolean(motion & PLAYER_MOTION.sprint), reload.reloadUntil ?? 0, tick, now, dt,
         false, gear, posture, y, bodyYaw, reload.reload, tick, world);
@@ -145,6 +149,7 @@ export class PlayerView {
     }
     for (const part of [this.rifle.body, this.rifle.optic, this.rifle.magazine, this.rifle.pistol.body, this.rifle.pistol.optic, this.rifle.pistol.magazine]) part.dispose();
     this.rifle.pistol.slide?.dispose();
+    for (const part of [this.shotgun.body, this.shotgun.optic, this.shotgun.magazine, this.shotgun.slide]) part?.dispose();
     for (const material of materials) material.dispose();
   }
 }

@@ -93,8 +93,8 @@ const GOLDEN_TRACES = {
 // Registry
 
 test('registry loads the published files, freezes them and exposes a stable version', () => {
-  assert.equal(BALANCE.version.schemaVersion, 2);
-  assert.equal(BALANCE.version.release, '7.9B');
+  assert.equal(BALANCE.version.schemaVersion, 3);
+  assert.equal(BALANCE.version.release, '8.1A');
   assert.match(BALANCE.version.hash, /^[0-9a-f]{16}$/);
   deepFrozen(BALANCE.weapon('kestrel-ar-01'));
   deepFrozen(BALANCE.swarm);
@@ -103,7 +103,8 @@ test('registry loads the published files, freezes them and exposes a stable vers
   assert.throws(() => (BALANCE.weapons as Map<string, unknown>).set('x', {}), /unveränderlich/);
   assert.throws(() => BALANCE.weapon('missing'), /Unbekannte Waffen-ID "missing"/);
   // Aliases point at registry objects and hold no own copies.
-  assert.equal(TEST_RIFLE, BALANCE.weapon('kestrel-ar-01'));
+  assert.equal(TEST_RIFLE, BASE_LOADOUT.weapons.primary);
+  assert.equal(TEST_RIFLE.caliber, BALANCE.caliber('caliber.5-55x39'));
   assert.equal(WEAPONS.secondary, SERVICE_PISTOL);
   assert.equal(FRAG, BALANCE.grenade('equipment.frag_grenade'));
   assert.equal(STIM, BALANCE.medical('equipment.medical_stim'));
@@ -135,15 +136,15 @@ test('IDs are unique across all definitions and every cross reference resolves',
 test('invalid definitions are rejected with readable, located messages', () => {
   rejects((d) => { (d.weapons.weapons[0] as { magazineSize: number }).magazineSize = -30; },
     /weapons\.json › weapons\[0\]\.magazineSize: muss ≥ 1 sein, erhalten -30/);
-  rejects((d) => { (d.weapons.weapons[0] as { damage: unknown }).damage = Infinity; }, /weapons\[0\]\.damage: endliche Zahl erwartet/);
+  rejects((d) => { (d.ammunition.calibers[0] as { damage: unknown }).damage = Infinity; }, /ammunition\.json › calibers\[0\]\.damage: endliche Zahl erwartet/);
   rejects((d) => { (d.weapons.weapons[1] as { magazineSize: number }).magazineSize = 12.5; }, /weapons\[1\]\.magazineSize: ganze Zahl erwartet/);
   rejects((d) => { (d.weapons.weapons[0] as { roundsPerSecond: number }).roundsPerSecond = 45; }, /roundsPerSecond: muss ≤ 30 sein/);
   rejects((d) => { delete (d.weapons.weapons[0] as { reloadSeconds?: number }).reloadSeconds; }, /reloadSeconds: endliche Zahl erwartet, fehlt/);
   rejects((d) => { (d.weapons.weapons[0] as Record<string, unknown>).dmg = 5; }, /weapons\[0\]\.dmg: unbekanntes Feld/);
   rejects((d) => { (d.weapons.weapons[0].recoil as { pitchPerShot: number }).pitchPerShot = -.4; }, /recoil\.pitchPerShot: muss ≥ 0 sein/);
   rejects((d) => { (d.weapons.weapons[0].movement as { walkSpeedMultiplier: number }).walkSpeedMultiplier = .9; }, /walkSpeedMultiplier: noch nicht unterstützt/);
-  rejects((d) => { (d.weapons.weapons[0] as { reserveMagazines: unknown }).reserveMagazines = 9; }, /übersteigt die Tragekapazität maxReserveMagazines 8/);
-  rejects((d) => { (d.weapons.weapons[1] as { reserveMagazines: unknown }).reserveMagazines = 'unlimited'; }, /reserveMagazines: endliche Zahl erwartet/);
+  rejects((d) => { (d.weapons.weapons[0] as { reserve: unknown }).reserve = 9; }, /übersteigt die Tragekapazität maxReserve 8/);
+  rejects((d) => { (d.weapons.weapons[1] as { reserve: unknown }).reserve = 'unlimited'; }, /reserve: endliche Zahl erwartet/);
   rejects((d) => { (d.weapons.weapons[0].reloadTimeline as { removalAt: number }).removalAt = .9; }, /reloadTimeline\.removalAt: muss kleiner als insertionAt sein/);
   rejects((d) => { (d.equipment.melee[0] as { windupSeconds: number }).windupSeconds = 1; }, /melee\[0\]\.windupSeconds: muss kleiner als actionSeconds sein/);
   rejects((d) => { (d.combat.damagePolicy as { operatorToOperator: number }).operatorToOperator = 1.5; }, /combat\.json › damagePolicy\.operatorToOperator: muss ≤ 1 sein/);
@@ -164,9 +165,9 @@ test('invalid definitions are rejected with readable, located messages', () => {
   rejects((d) => { (d.weapons.weapons[0] as { id: string }).id = 'Kestrel AR'; }, /ID aus Kleinbuchstaben/);
   // Several problems are reported together.
   rejects((d) => {
-    (d.weapons.weapons[0] as { damage: number }).damage = -1;
+    (d.ammunition.calibers[0] as { damage: number }).damage = -1;
     (d.structures.vehicles[0] as { hullHealth: number }).hullHealth = -1;
-  }, /2 Fehler/, /weapons\[0\]\.damage/, /vehicles\[0\]\.hullHealth/);
+  }, /2 Fehler/, /calibers\[0\]\.damage/, /vehicles\[0\]\.hullHealth/);
 });
 
 test('duplicate IDs, wire types and broken cross references are rejected', () => {
@@ -196,14 +197,14 @@ test('seven difficulty levels exist in order and FREEFALL is level 7', () => {
 test('magazines, reserves, healing and spawn budgets are valid', () => {
   for (const weapon of Object.values(BASE_LOADOUT.weapons)) {
     assert.ok(Number.isInteger(weapon.magazineSize) && weapon.magazineSize > 0);
-    assert.ok(Number.isInteger(weapon.reserveMagazines) && weapon.reserveMagazines >= 0);
-    assert.ok(weapon.reserveMagazines <= weapon.maxReserveMagazines);
+    assert.ok(Number.isInteger(weapon.reserve) && weapon.reserve >= 0);
+    assert.ok(weapon.reserve <= weapon.maxReserve);
     assert.ok(weapon.reloadRemovalTicks < weapon.reloadInsertionTicks && weapon.reloadInsertionTicks <= weapon.reloadTicks);
     assert.ok(Number.isFinite(weapon.damage) && weapon.damage > 0);
     assert.ok(weapon.fireIntervalTicks >= 1 && weapon.reloadTicks >= 1);
   }
-  assert.equal(BASE_LOADOUT.weapons.primary.reserveMagazines, 8);
-  assert.equal(BASE_LOADOUT.weapons.secondary.reserveMagazines, 4);
+  assert.equal(BASE_LOADOUT.weapons.primary.reserve, 8);
+  assert.equal(BASE_LOADOUT.weapons.secondary.reserve, 4);
   assert.equal(BASE_LOADOUT.medical.maxCharges, 5);
   assert.equal(BASE_LOADOUT.medical.healAmount, 40);
   assert.ok(BASE_LOADOUT.medical.healAmount <= BASE_LOADOUT.maxHealth);
@@ -272,7 +273,7 @@ test('balance versions are reproducible and react to every value change', () => 
       ? Object.fromEntries(Object.entries(v).reverse()) : v))]));
   assert.equal(createBalanceRegistry(reordered).version.hash, BALANCE.version.hash);
   const tuned = sources();
-  (tuned.weapons.weapons[0] as { damage: number }).damage = 25;
+  (tuned.ammunition.calibers[2] as { damage: number }).damage = 25;
   assert.notEqual(createBalanceRegistry(tuned).version.hash, BALANCE.version.hash);
   assert.notEqual(balanceHash({ a: 1 }), balanceHash({ a: 1.0000001 }));
   assert.equal(balanceHash({ a: 1, b: [1, 2] }), balanceHash({ b: [1, 2], a: 1 }));
@@ -361,7 +362,7 @@ test('weapon, equipment, operator and vehicle values equal the 7.1 constants exc
     assert.equal(effective.reloadTicks, Math.ceil(legacy.reloadSeconds * NET.tickHz));
   }
   // 7.1 stored 48 loose pistol rounds (4 × 12); 7.2B keeps the same four magazines, now as whole magazines.
-  assert.equal(SERVICE_PISTOL.reserveMagazines * SERVICE_PISTOL.magazineSize, LEGACY.sidearmReserve);
+  assert.equal(SERVICE_PISTOL.reserve * SERVICE_PISTOL.magazineSize, LEGACY.sidearmReserve);
   assert.equal(SWITCH_SECONDS, LEGACY.switchSeconds);
   assert.equal(BASE_LOADOUT.switchTicks, Math.ceil(LEGACY.switchSeconds * NET.tickHz));
   assert.deepEqual({

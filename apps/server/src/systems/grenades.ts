@@ -1,4 +1,4 @@
-import { ARENA_HALF, BALANCE, BASE_LOADOUT, MUZZLE_HEIGHT, NET, clearGroundLine, groundHeight, impactNormal,
+import { ARENA_HALF, BALANCE, BASE_LOADOUT, ENEMY_PROTECTION, MUZZLE_HEIGHT, armorMultiplier, resistanceMultiplier, NET, clearGroundLine, groundHeight, impactNormal,
   impactSurface, obstacleIntersection, postureCollider, terrainIntersection } from '@freefall/shared';
 import type { DamagePolicy, EffectiveGrenade, ExplosionEvent, GrenadeState, Obstacle, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
@@ -36,8 +36,10 @@ export function structureBlastDamage(g: GrenadeState, structureId: string, x: nu
   const damage = blastDamage(g, x, groundHeight(world, x, z) + .5, z, world, grenade);
   if (!damage) return;
   const structureMultiplier = grenade.structureDamageMultipliers[structureId] ?? 1;
-  if (!policy) return Math.round(damage * structureMultiplier);
-  return resolveDamage(policy, { source: 'explosion', attacker: 'operator', target: 'structure', base: damage, structureMultiplier }).amount;
+  const armor = { armorClass: BALANCE.nests.get(structureId)?.armorClass ?? 1, penetration: grenade.penetration,
+    nonPenetratingFraction: BALANCE.armor.nonPenetratingDamageFraction };
+  if (!policy) return Math.round(damage * structureMultiplier * armorMultiplier(armor.penetration, armor.armorClass, armor.nonPenetratingFraction));
+  return resolveDamage(policy, { source: 'explosion', attacker: 'operator', target: 'structure', base: damage, structureMultiplier, armor }).amount;
 }
 
 export class Grenades {
@@ -116,7 +118,15 @@ export class Grenades {
           for (let x = grid.cell(g.x - radius); x <= endX; x++) {
             for (let i = grid.head[z * grid.width + x]; i !== -1; i = grid.next[i]) {
               if (!horde.hp[i]) continue;
-              const damage = blastDamage(g, horde.x[i], groundHeight(world, horde.x[i], horde.z[i]) + .5, horde.z[i], world, g.definition);
+              const base = blastDamage(g, horde.x[i], groundHeight(world, horde.x[i], horde.z[i]) + .5, horde.z[i], world, g.definition);
+              if (!base) continue;
+              const protection = (context.protection ?? ENEMY_PROTECTION)[horde.type[i]];
+              const { amount: damage } = resolveDamage(owner?.loadout.damagePolicy ?? context.policy ?? BASE_LOADOUT.damagePolicy, {
+                source: 'explosion', attacker: 'operator', target: 'enemy', base,
+                armor: { armorClass: protection.armorClass, penetration: g.definition.penetration,
+                  nonPenetratingFraction: (owner?.loadout ?? BASE_LOADOUT).armorRules.nonPenetratingDamageFraction },
+                resistanceMultiplier: resistanceMultiplier(protection, 'explosive'),
+              });
               if (!damage) continue;
               const before = horde.hp[i];
               const killed = damageEnemy(horde, i, damage);

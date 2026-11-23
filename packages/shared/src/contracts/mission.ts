@@ -142,7 +142,10 @@ export interface MissionResult {
   albatrossSurvived: boolean;
   baseExperience: number;
   extractionBonusExperience: number;
-  rewards: { operatorId: string; baseExperience: number; extractionBonusExperience: number; totalExperience: number }[];
+  rewards: { operatorId: string; baseExperience: number; extractionBonusExperience: number; totalExperience: number; kills?: number }[];
+  /** Anzeigename des Auftrags (generierter Plan oder feste Mission). */
+  missionName?: string;
+  planetId?: string;
   /** Generated contract that this result settles. */
   procedural?: { planId: string; planetId: string; seed: number; templateId: string; generatorVersion: number; world?: MissionPlan['world'] };
   fallback?: MissionFallback;

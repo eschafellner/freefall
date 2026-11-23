@@ -4,6 +4,7 @@
  */
 import { BALANCE } from '../balance/defaults.ts';
 import type { EnemyArchetype, EnemyGameplay, FactionDefinition } from '../balance/definitions.ts';
+import type { EnemyProtection } from '../combat/ballistics.ts';
 
 export type { EnemyArchetype, EnemyGameplay } from '../balance/definitions.ts';
 
@@ -16,5 +17,11 @@ export const ENEMY_ARCHETYPES: Readonly<Record<string, EnemyArchetype>> = Object
 export const ENEMY_ARCHETYPES_BY_TYPE = BALANCE.enemiesByWireType;
 /** Dense base gameplay lookup by wire type for the ECS. Missions use the difficulty-resolved copy in MissionBalance. */
 export const ENEMY_TYPES: readonly EnemyGameplay[] = Object.freeze(BALANCE.enemiesByWireType.map((archetype) => archetype!.gameplay));
+/** Armor class and damage-type resistances by wire type. Not affected by difficulty. */
+export function enemyProtection(registry: typeof BALANCE): readonly EnemyProtection[] {
+  return Object.freeze(registry.enemiesByWireType.map((archetype) =>
+    Object.freeze({ armorClass: archetype!.armorClass, resistances: archetype!.resistances })));
+}
+export const ENEMY_PROTECTION = enemyProtection(BALANCE);
 export const RUNNER_TYPE = SCHABE_TYPE;
 export type EnemyDefinition = EnemyGameplay;

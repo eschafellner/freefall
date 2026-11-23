@@ -6,8 +6,10 @@ import {
 } from '@freefall/shared';
 import type {
   CombatEvent, GrenadeReleaseEvent, HordeSize, MeleeEvent, MissionAction, MissionDebugAction, MissionGenerationSelection, MissionSnapshot, PlayerInput, PlayerState,
-  ServerMetrics, ShotEvent, SupplyContainerSnapshot, WeaponSlot,
+  AccountProgress, EffectiveLoadout, LoadoutReply, LoadoutSelection, RosterEntry, ServerMetrics, ShotEvent, SupplyContainerSnapshot, WeaponSlot,
 } from '@freefall/shared';
+import { shotRays } from '@freefall/shared';
+import { playerWeapon, resolveOwnLoadout, sameSelection, storeSelection, storedSelection } from './Loadouts.ts';
 import { AudioEngine } from '../audio/AudioEngine.ts';
 import type { AudioPosition, VolumeChannel } from '../audio/AudioEngine.ts';
 import { HordeAudio } from '../audio/HordeAudio.ts';
@@ -80,6 +82,10 @@ export interface GameStatus {
   locked: boolean;
   host: boolean;
   players: PlayerState[];
+  /** Name, Tag und Level der angemeldeten Operator im Raum (leer im Gastmodus). */
+  roster: RosterEntry[];
+  /** Letzte EP-Gutschrift für den eigenen Account (gehört zu `progress.resultId`). */
+  progress?: AccountProgress;
   metrics?: ServerMetrics;
   weather?: ReturnType<ArenaView['metrics']>['weather'];
   weaponVfx?: ReturnType<ArenaView['metrics']>['weaponVfx'];
@@ -93,6 +99,12 @@ export interface GameStatus {
   duplicateShots?: number;
   missionRoom: boolean;
   atConsole: boolean;
+  /** At the Carrier station "Ausrüstung" (loadout menu). */
+  atLocker: boolean;
+  /** Own effective loadout as accepted by the server. */
+  loadout: EffectiveLoadout;
+  /** Last refusal of a loadout change. */
+  loadoutError?: string;
   mission?: MissionSnapshot;
   serverTick: number;
   interaction: string;
@@ -133,8 +145,8 @@ export interface GameStatus {
 const STEP = 1000 / NET.tickHz;
 
 export const INITIAL_STATUS: GameStatus = {
-  roomId: '', ownId: '', ready: false, locked: false, host: false, players: [],
-  missionRoom: false, atConsole: false, serverTick: 0, interaction: '', notice: '',
+  roomId: '', ownId: '', ready: false, locked: false, host: false, players: [], roster: [],
+  missionRoom: false, atConsole: false, atLocker: false, loadout: BASE_LOADOUT, serverTick: 0, interaction: '', notice: '',
   fps: 0, frameMs: 0, cpuMs: 0, gpuMs: null, drawCalls: 0, triangles: 0, meshes: 0, instances: 0,
   geometries: 0, textures: 0, visibleEnemies: 0, activeEnemies: 0, ping: null,
   bytesPerSecond: 0, hit: false, eliminated: false, hurt: false, allyHit: false, friendlyNotice: '', respawn: 0,
@@ -159,6 +171,10 @@ export class Game {
   private match: Match | undefined;
   private connecting = false;
   private disposed = false;
+  /** Titelmusik, solange der Start- und Loginbildschirm sichtbar ist. */
+  private titleMusic = false;
+  /** Automatischer Einstieg nach dem Raumbeitritt: Ein Fehlschlag (keine Nutzergeste mehr) bleibt ohne Fehlermeldung. */
+  private quietLock = false;
   private seq = 0;
   private frame = 0;
   private last = performance.now();
@@ -232,16 +248,41 @@ export class Game {
     this.damageHud = damageHud;
     this.view = new ArenaView(container, quality);
     this.input = new DesktopInput(this.view.canvas, (locked) => {
+      if (locked) this.quietLock = false;
       this.status.locked = locked;
       this.emit();
-    }, () => this.error('Maus konnte nicht erfasst werden. Klicke erneut auf „Einsatz betreten“.'),
+    }, () => {
+      if (this.quietLock) { this.quietLock = false; return; }
+      this.error('Maus konnte nicht erfasst werden. Klicke erneut auf „Einsatz betreten“.');
+    },
     () => {
       if (this.match) this.match.input(this.input.sample(++this.seq, true));
     }, () => this.interact(), () => this.action('balloon'));
     this.frame = requestAnimationFrame(this.draw);
   }
 
-  async connect(mode: JoinMode, code: string, gamemode: GameMode): Promise<void> {
+  /** Startet den Audiokontext nach einer Nutzergeste (Browser blockieren Ton ohne Interaktion). */
+  wakeAudio(): void { this.audio.resume(); }
+
+  /**
+   * Mauserfassung schon im Klick auf „Raum erstellen“/„Beitreten“ anfordern, bevor der Raum verbunden ist. Die
+   * Vollbild-Anforderung verbraucht die Nutzergeste; eine spätere Mauserfassung würde der Browser dann ablehnen.
+   */
+  preLock(): void {
+    if (this.match || typeof this.view.canvas.requestPointerLock !== 'function') return;
+    this.quietLock = true;
+    this.audio.resume();
+    this.input.lock();
+  }
+
+  releaseLock(): void { if (this.input.locked) document.exitPointerLock(); }
+
+  /** Ton läuft tatsächlich (Audiokontext vom Browser freigegeben, Audio aktiv). */
+  get audioLive(): boolean { return this.audio.running; }
+
+  setTitleMusic(enabled: boolean): void { this.titleMusic = enabled; }
+
+  async connect(mode: JoinMode, code: string, gamemode: GameMode, token?: string): Promise<void> {
     if (this.match || this.connecting || this.disposed) return;
     this.connecting = true;
     try {
@@ -390,17 +431,24 @@ export class Game {
           if (own && !lateLocalEcho) this.echoedShots++;
           this.view.shot(shot.slot === undefined ? { ...shot, slot } : shot, shooter, own, predicted, now, () => {
             if (!audible && this.status.ready && shotTick > this.impactFloor && !this.status.mission?.result) {
-              this.weaponAudio.shot(slot, shot.shooter, { x: shot.fromX, y: shot.fromY, z: shot.fromZ },
-                this.listener, own, own && slot === 'primary' && this.hardCasingFloor());
+              const weapon = playerWeapon(shooter, slot);
+              this.weaponAudio.shot(weapon.sounds.fire, shot.shooter, { x: shot.fromX, y: shot.fromY, z: shot.fromZ },
+                this.listener, own, own && weapon.feed.type === 'magazine' && slot === 'primary' && this.hardCasingFloor());
             }
-            this.impactAudio.play(shot, this.audioListener, own || shot.ally === this.status.ownId, performance.now());
+            // Shot shells: at most three pellet impacts are audible, the rest only show.
+            let impacts = 0;
+            for (const ray of shotRays(shot)) {
+              if (ray.impact && impacts++ >= 3) continue;
+              this.impactAudio.play(ray, this.audioListener, own || ray.ally === this.status.ownId, performance.now());
+            }
           });
           if (this.telemetry) {
             (this.status.eventTiming ??= {}).shot = this.eventAge(shot.tick, now);
             if (shot.impact) this.status.lastImpact = shot;
             console.debug('[shot]', shotIdentity(shot), shot.impact ?? (shot.ally ? 'blocked' : 'miss'), shot.ally || shot.enemy || shot.nest);
           }
-          const marker = shotMarker(shot, this.status.ownId);
+          const markers = shotRays(shot).map((ray) => shotMarker(ray, this.status.ownId));
+          const marker = markers.includes('ally') ? 'ally' : markers.includes('kill') ? 'kill' : markers.includes('hit') ? 'hit' : undefined;
           if (marker === 'ally') this.allyUntil = now + 200;
           else if (marker) {
             this.hitUntil = now + 135;
@@ -408,6 +456,15 @@ export class Game {
           }
         },
         combat: (events) => this.combatEvents(events),
+        roster: (entries) => {
+          this.status.roster = entries;
+          this.emit();
+        },
+        progress: (progress) => {
+          this.status.progress = progress;
+          this.emit();
+        },
+        loadout: (reply) => this.loadoutReply(reply),
         dropped: () => {
           this.status.ready = false;
           this.audioFloor = Math.max(this.tick, this.status.mission?.tick ?? -1, this.timeline.horde.latest?.tick ?? -1);
@@ -432,7 +489,7 @@ export class Game {
           this.resetMatch();
           if (code !== 4000) this.error('Verbindung zum Spielserver getrennt. Du kannst dem Raum erneut beitreten.');
         },
-      });
+      }, token);
       if (this.disposed) {
         void match.room.leave();
         return;
@@ -483,7 +540,8 @@ export class Game {
 
   private label(id: string): string {
     const slot = this.status.players.find((player) => player.id === id)?.slot;
-    return slot === undefined ? 'Convict' : `OP ${String(slot + 1).padStart(2, '0')}`;
+    if (slot === undefined) return 'Convict';
+    return this.status.roster.find((entry) => entry.id === id)?.name ?? `OP ${String(slot + 1).padStart(2, '0')}`;
   }
 
   private resetCombatActions(tick: number): void {
@@ -585,7 +643,7 @@ export class Game {
   private predictShot(input: PlayerInput, now: number): void {
     const own = this.timeline.players.latest?.players.find((player) => player.id === this.status.ownId);
     const slot = own?.equipment?.slot ?? 'primary';
-    const weapon = BASE_LOADOUT.weapons[slot];
+    const weapon = this.status.loadout.weapons[slot];
     const { recoil, spread } = weapon.handling;
     this.recoilTick++;
     recoverRecoil(this.recoil, recoil, spread, this.recoilTick);
@@ -606,8 +664,8 @@ export class Game {
     applyShotRecoil(this.recoil, recoil, spread, this.recoilTick);
     this.recoilFireAt = nextShotAt(this.recoilFireAt, this.recoilTick, weapon.fireInterval);
     const listener = this.listener;
-    const audible = this.weaponAudio.shot(slot, this.status.ownId, listener, listener, true,
-      slot === 'primary' && this.hardCasingFloor());
+    const audible = this.weaponAudio.shot(weapon.sounds.fire, this.status.ownId, listener, listener, true,
+      weapon.feed.type === 'magazine' && slot === 'primary' && this.hardCasingFloor());
     this.predictedShots.push({ seq: input.seq, life: own.life, slot, audible });
     if (this.predictedShots.length > 64) this.predictedShots.shift();
     this.view.predictFire(own, slot, now);
@@ -619,16 +677,19 @@ export class Game {
     return surface === 'metal' || surface === 'concrete' || surface === 'rock' || surface === 'frozen-rock' || surface === 'ice';
   }
 
-  lock(): void {
+  /** Maus erfassen und Raum betreten. `quiet`: automatischer Versuch, Fehlschlag ohne Meldung. Liefert, ob versucht wurde. */
+  lock(quiet = false): boolean {
     if (!this.match || !this.status.ready || this.incompatibleWorld || (this.status.missionRoom &&
-        (!this.status.mission || this.status.mission.result))) return;
+        (!this.status.mission || this.status.mission.result))) return false;
+    this.quietLock = quiet;
     this.audio.resume();
     this.weaponAudio.warm();
     if (typeof this.view.canvas.requestPointerLock !== 'function') {
-      this.error('Dieser Browser unterstützt keine Mauserfassung. Verwende einen Desktop-Browser mit Pointer Lock.');
-      return;
+      if (!quiet) this.error('Dieser Browser unterstützt keine Mauserfassung. Verwende einen Desktop-Browser mit Pointer Lock.');
+      return false;
     }
     this.input.lock();
+    return true;
   }
 
   /** Enables movement diagnostics and the authoritative-position overlay (F2). */
@@ -655,6 +716,33 @@ export class Game {
   }
 
   select(selection: MissionGenerationSelection): void { if (this.status.host) this.match?.select(selection); }
+
+  /** Carrier › Ausrüstung: requests a loadout. The server validates it and answers with `loadoutReply`. */
+  setLoadout(selection: LoadoutSelection): void {
+    this.status.loadoutError = undefined;
+    this.match?.setLoadout(selection);
+    this.emit();
+  }
+
+  private loadoutRestored = false;
+
+  private loadoutReply(reply: LoadoutReply): void {
+    if ('error' in reply) {
+      this.status.loadoutError = reply.error;
+      this.notices.offer(reply.error, 'information', performance.now(), 3200);
+    } else {
+      this.status.loadout = resolveOwnLoadout(reply.selection);
+      this.status.loadoutError = undefined;
+      this.view.ownWeapons = this.status.loadout.weapons;
+      // The first reply after joining is the server's current loadout. Restore the last accepted one once.
+      const wanted = storedSelection();
+      const restore = !this.loadoutRestored && wanted && !sameSelection(wanted, reply.selection);
+      this.loadoutRestored = true;
+      if (restore) this.match?.setLoadout(wanted);
+      else storeSelection(reply.selection);
+    }
+    this.emit();
+  }
   action(action: MissionAction): void { this.match?.action(action); }
 
   private interact(): void {
@@ -669,7 +757,12 @@ export class Game {
         this.emit();
       } else {
         const room = CARRIER_ROOMS.find((entry) => distanceSquared(this.prediction.position, entry) < 5 ** 2);
-        if (room) {
+        if (room?.label === 'AUSRÜSTUNG') {
+          this.status.atLocker = true;
+          this.missionAudio.alert('confirm');
+          if (this.input.locked) document.exitPointerLock();
+          this.emit();
+        } else if (room) {
           this.notices.offer('System noch nicht verfügbar', 'information', performance.now(), 2200);
           this.emit();
         }
@@ -691,6 +784,9 @@ export class Game {
 
   private resetMatch(): void {
     this.match = undefined;
+    this.loadoutRestored = false;
+    this.status.loadout = BASE_LOADOUT;
+    this.view.ownWeapons = BASE_LOADOUT.weapons;
     this.missionPresentation.reset();
     this.damage.clear();
     this.resetAudio();
@@ -795,7 +891,8 @@ export class Game {
     const position = this.prediction.position;
     if (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION') {
       if (distanceSquared(position, CARRIER_CONSOLE) <= CARRIER_CONSOLE.radius ** 2) return 'Missionskonsole öffnen';
-      return CARRIER_ROOMS.some((entry) => distanceSquared(position, entry) < 5 ** 2) ? 'Station prüfen' : '';
+      const room = CARRIER_ROOMS.find((entry) => distanceSquared(position, entry) < 5 ** 2);
+      return room?.label === 'AUSRÜSTUNG' ? 'Ausrüstung öffnen' : room ? 'Station prüfen' : '';
     }
     if (mission.state === 'BOARDING' && inAlbatross(position, CARRIER_SHIP)) {
       return mission.operators.some(({ id, ready }) => id === this.status.ownId && ready)
@@ -888,6 +985,9 @@ export class Game {
     this.damage.draw(this.damageHud?.current, this.input.yaw + this.recoil.yaw, now);
     if (this.telemetry) this.damageHudTotal += performance.now() - damageStart;
     if (online && (!mission || mission.tick > this.audioFloor)) this.updateAudio(now, dt, missionTick, mission);
+    // Titelmusik ohne Raum; im Raum übernimmt die Missionsmusik (ohne Mission bleibt es still).
+    if (!this.match) this.missionAudio.music.update(this.titleMusic ? { track: 'title', offset: 0 } : undefined, 'title');
+    else if (!mission) this.missionAudio.music.update(undefined, 'title');
     this.cpuTotal += performance.now() - cpuStart;
     this.frames++;
     const hit = now < this.hitUntil;
@@ -937,6 +1037,9 @@ export class Game {
       this.status.serverTick = missionTick;
       this.status.atConsole = Boolean(mission && (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION') &&
         distanceSquared(this.prediction.position, CARRIER_CONSOLE) <= CARRIER_CONSOLE.radius ** 2);
+      const locker = CARRIER_ROOMS.find(({ label }) => label === 'AUSRÜSTUNG')!;
+      this.status.atLocker = Boolean(mission && (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION') &&
+        distanceSquared(this.prediction.position, locker) < 5 ** 2);
       this.status.interaction = this.interaction();
       this.status.respawn = own && !own.hp ? Math.max(0, (own.respawnTick - this.tick) / NET.tickHz) : 0;
       if (this.telemetry) this.collectMotion(now - this.sampleAt, own);

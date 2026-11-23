@@ -46,7 +46,7 @@ Das Boarding hat keinen Timeout. Solange nicht alle verbundenen Operator bereit 
 
 Mit `FREEFALL_MISSION_DEBUG=1 npm run dev` sind auf Loopback und außerhalb von Produktion die Host-Debugbefehle im Pausenmenü verfügbar. **F2** öffnet die Telemetrie, **F3** zeigt im Debug-Modus Routen. Die zusätzlichen automatisierten Fälle decken den Einsatzzyklus, Disconnects, Reconnects, Ausrüstung, zwei Extraktionsmethoden und EP-Grenzfälle ab.
 
-Die Hauptrisiken sind szenenübergreifende Positionssprünge, unvollständige Room-Teilnahme und doppelte Finalisierung. Sie werden über gepaarte Phasen-/Spielersnapshots, serverseitige Teilnehmerprüfung und eine Finalisierung je Einsatz-ID kontrolliert. Produktionsbalancing, Persistenz, Authentifizierung, Session-Rückkehr über Browser-Neuladen, WAN-/Paketverlusttests und Hardware-Benchmarks auf Zielgeräten stehen aus. [Messungen](PERFORMANCE.md)
+Die Hauptrisiken sind szenenübergreifende Positionssprünge, unvollständige Room-Teilnahme und doppelte Finalisierung. Sie werden über gepaarte Phasen-/Spielersnapshots, serverseitige Teilnehmerprüfung und eine Finalisierung je Einsatz-ID kontrolliert. Accounts mit Anmeldung sind vorhanden ([Accounts](ACCOUNTS.md)). Produktionsbalancing, persistenter Fortschritt, Rückkehr in einen laufenden Einsatz nach Browser-Neuladen, WAN-/Paketverlusttests und Hardware-Benchmarks auf Zielgeräten stehen aus. [Messungen](PERFORMANCE.md)
 
 ## Systemdokumente
 

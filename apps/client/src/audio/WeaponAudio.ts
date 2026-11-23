@@ -3,6 +3,8 @@ import type { AudioEnvironmentId, PlayerState, PlayersSnapshot, WeaponSlot } fro
 import type { AudioEngine } from './AudioEngine.ts';
 import { PRIORITY } from './VoiceBudget.ts';
 import { PLANET_WEAPON_MIX, WEAPON_ASSET_IDS, WEAPON_RECORDINGS, WEAPON_SWITCH_ASSET } from './WeaponAudioCatalog.ts';
+import type { WeaponSound } from './WeaponAudioCatalog.ts';
+import { playerWeapon } from '../game/Loadouts.ts';
 
 export interface Listener { x: number; y?: number; z: number; yaw: number }
 export interface SoundSource { x: number; z: number; y?: number }
@@ -36,7 +38,7 @@ export function weaponHandlingCue(player: PlayerState, previous: PlayerState | u
   if (action || (player.posture && !allowsPostureAction(player.posture, 'reload'))) return;
   if (reload) {
     const { phase, slot, removalAt, insertAt } = reload;
-    if ((phase === 'MAGAZINE_INSERTION' || phase === 'RELOAD_COMPLETE') && crossed(insertAt)) return { action: 'insert', slot };
+    if ((phase === 'MAGAZINE_INSERTION' || phase === 'RELOAD_COMPLETE' || phase === 'SHELL_INSERTION') && crossed(insertAt)) return { action: 'insert', slot };
     if (phase === 'MAGAZINE_REMOVAL' && crossed(removalAt)) return { action: 'remove', slot };
   }
   const before = previous.reload;
@@ -211,18 +213,18 @@ export class WeaponAudio {
     node.start(voice.at + offset);
   }
 
-  shot(slot: WeaponSlot, shooter: string, source: SoundSource, listener: Listener, own: boolean, hardFloor = false): boolean {
+  shot(sound: WeaponSound, shooter: string, source: SoundSource, listener: Listener, own: boolean, hardFloor = false): boolean {
     if (!this.engine.running) return false;
     const { audibleDistance, distantBlendStart, distantBlendEnd } = COMBAT.audio;
     const distance = own ? 0 : Math.hypot(source.x - listener.x, source.z - listener.z, (source.y ?? listener.y ?? 0) - (listener.y ?? 0));
     if (distance > audibleDistance) return false;
     const mix = smooth(distantBlendStart, distantBlendEnd, distance);
-    const profile = WEAPON_RECORDINGS[slot];
+    const profile = WEAPON_RECORDINGS[sound];
     const variation = this.rand() < .5 ? 0 : 1;
     const near = mix < 1 ? this.recording(profile.near[variation]) ?? this.recording(profile.near[1 - variation]) : undefined;
     const distant = mix > 0 ? this.recording(profile.distant) : undefined;
     if (!near && !distant) { this.counts.unavailable++; return false; }
-    const pitch = .98 + this.rand() * .04;
+    const pitch = (profile.pitch ?? 1) * (.98 + this.rand() * .04);
     const casing = hardFloor && own && profile.casing && this.rand() < .28 ? this.recording(profile.casing) : undefined;
     const casingOffset = .15;
     const length = Math.max((near?.duration ?? 0) / pitch, (distant?.duration ?? 0) / pitch,
@@ -237,6 +239,7 @@ export class WeaponAudio {
       this.counts.casing++;
     }
     this.counts[own ? 'own' : 'remote']++;
+    if (profile.pump) this.mechanics(`${shooter}-pump`, source, listener, own, [[.3, 640, 2.4, .5], [.36, 2300, 6, .26], [.44, 1350, 3.5, .46]]);
     return true;
   }
 
@@ -289,7 +292,7 @@ export class WeaponAudio {
       const before = previous.players.find(({ id }) => id === player.id);
       const cue = weaponHandlingCue(player, before, previous.tick, packet.tick);
       if (!cue) continue;
-      const id = cue.action === 'switch' ? WEAPON_SWITCH_ASSET : WEAPON_RECORDINGS[cue.slot][cue.action];
+      const id = cue.action === 'switch' ? WEAPON_SWITCH_ASSET : WEAPON_RECORDINGS[playerWeapon(player, cue.slot).sounds.fire][cue.action];
       if (!id) continue;
       const buffer = this.recording(id);
       if (!buffer) { this.counts.unavailable++; continue; }

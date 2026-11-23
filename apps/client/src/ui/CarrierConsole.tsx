@@ -9,7 +9,7 @@ export function OperatorManifest({ mission, status }: { mission: MissionSnapshot
     {mission.operators.map((operator) => {
       const player = status.players.find(({ id }) => id === operator.id);
       return <li key={operator.id}>
-        <span>{operator.id === status.ownId ? 'Du' : `Operator ${(player?.slot ?? 0) + 1}`}</span>
+        <span>{status.roster.find(({ id }) => id === operator.id)?.name ?? (operator.id === status.ownId ? 'Du' : `Operator ${(player?.slot ?? 0) + 1}`)}</span>
         <strong>{!operator.connected ? 'Verbindung unterbrochen' : operator.ready ? 'Bereit' : operator.boarded ? 'An Bord' : 'Auf dem Carrier'}</strong>
       </li>;
     })}

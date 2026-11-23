@@ -67,7 +67,7 @@ function benchmarkArena(): void {
       const triggerPhase = i % (NET.tickHz * 4);
       for (const p of players) {
         // 7.2B: magazines are limited. Keep the reserve topped up so the trigger load stays comparable to 7.1.
-        p.equipment.magazines.primary = p.loadout.weapons.primary.maxReserveMagazines;
+        p.equipment.magazines.primary = p.loadout.weapons.primary.maxReserve;
         if (firePattern === 'ground') {
           const phase = i % (6 * NET.tickHz);
           const equipment = phase === 130 ? 'stim' as const : undefined;

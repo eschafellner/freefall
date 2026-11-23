@@ -1,4 +1,4 @@
-import { NET, clearGroundLine, distanceSquared, groundHeight, moveOnGround } from '@freefall/shared';
+import { NET, armorMultiplier, clearGroundLine, distanceSquared, groundHeight, moveOnGround, resistanceMultiplier } from '@freefall/shared';
 import type { ConvictSnapshot, MissionBalance, PositionXZ, ShotEvent, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import { damageEnemy } from '../systems/combat.ts';
@@ -96,9 +96,13 @@ export class Convicts {
       member.fireAt = (member.fireAt > tick - 1 ? member.fireAt : tick) + NET.tickHz / rate;
       member.ammo--;
       const toX = horde.x[closest], toZ = horde.z[closest], enemy = horde.id[closest];
+      // Hostile hit: relation multiplier 1, so only armor and resistance apply (same rules as operator shots).
+      const protection = this.config.protection[horde.type[closest]];
+      const dealt = damage * armorMultiplier(this.config.squad.penetration, protection.armorClass, this.config.armor.nonPenetratingDamageFraction) *
+        resistanceMultiplier(protection, 'kinetic');
       member.yaw = Math.atan2(toX - member.x, member.z - toZ);
       shots.push({ shooter: member.id, fromX: member.x, fromY: groundHeight(world, member.x, member.z) + 1.24, fromZ: member.z,
-        toX, toY: groundHeight(world, toX, toZ) + .6, toZ, enemy, impact: { kind: 'enemy' }, eliminated: damageEnemy(horde, closest, damage) });
+        toX, toY: groundHeight(world, toX, toZ) + .6, toZ, enemy, impact: { kind: 'enemy' }, eliminated: damageEnemy(horde, closest, dealt) });
     }
   }
 

@@ -1,10 +1,10 @@
 import {
-  BALANCE, BASE_LOADOUT, CAMERA_BACK, ENEMY_TYPES, MAX_PITCH, MUZZLE_HEIGHT, NET, aimRay, nextShotAt, applyShotRecoil, clearGroundLine,
+  BALANCE, BASE_LOADOUT, CAMERA_BACK, ENEMY_PROTECTION, ENEMY_TYPES, falloffMultiplier, resistanceMultiplier, MAX_PITCH, MUZZLE_HEIGHT, NET, aimRay, nextShotAt, applyShotRecoil, clearGroundLine,
   diveElevation, groundHeight, impactNormal, impactSurface, obstacleIntersection, recoverRecoil, resetRecoil, spreadCone, allowsPostureAction, groundedBodyHit, isGroundPosture,
   newPosture, postureCollider, postureRayHit, postureYaw, shotWorldLimit, tacticalAimPitch, tacticalAimYaw,
   tacticalMuzzle, tacticalShotLimit,
 } from '@freefall/shared';
-import type { AimRay, CombatEvent, DamagePolicy, PostureCollider, ShotEvent, ShotImpact, ShotWorldContact, WorldDefinition } from '@freefall/shared';
+import type { AimRay, CombatEvent, DamagePolicy, EffectiveLoadout, EnemyProtection, EffectiveWeapon, PostureCollider, ShotEvent, ShotImpact, ShotWorldContact, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import type { StaggerComponent } from '../ecs/StaggerComponent.ts';
 import type { UniformGrid } from '../ecs/UniformGrid.ts';
@@ -70,6 +70,8 @@ export interface CombatContext {
   stagger?: StaggerComponent;
   /** Fallback policy when the attacker left the battlefield (e.g. a grenade of a disconnected operator). */
   policy?: DamagePolicy;
+  /** Enemy armor class and resistances by wire type. Default: the published registry (`ENEMY_PROTECTION`). */
+  protection?: readonly EnemyProtection[];
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -77,13 +79,14 @@ export interface CombatContext {
 
 /**
  * Ends a running reload without a second transaction. Before `MAGAZINE_INSERTION` the ammunition stays untouched
- * (`RELOAD_INTERRUPTED`); after it the new magazine is already seated and the weapon is simply ready.
+ * (`RELOAD_INTERRUPTED`); after it the new magazine is already seated and the weapon is simply ready. Single-round
+ * reloads keep every round inserted so far; only the round in hand (`SHELL_LOADING`) is not loaded.
  */
 export function interruptReload(player: SimPlayer, tick: number, context?: CombatContext): void {
   const reload = player.reload;
   player.reloadUntil = 0;
   if (!reloading(player)) return;
-  if (reload.phase === 'MAGAZINE_INSERTION' || reload.phase === 'RELOAD_COMPLETE') {
+  if (reload.phase === 'MAGAZINE_INSERTION' || reload.phase === 'RELOAD_COMPLETE' || reload.phase === 'SHELL_INSERTION') {
     player.reload = { ...readyReload(tick), slot: reload.slot };
     return;
   }
@@ -96,8 +99,58 @@ export function interruptReload(player: SimPlayer, tick: number, context?: Comba
 /** Why a reload cannot start, or undefined if it can. */
 export function reloadBlocker(player: SimPlayer): 'full' | 'empty' | undefined {
   const weapon = player.loadout.weapons[player.equipment.slot];
-  if (player.ammo >= weapon.magazineSize) return 'full';
+  if (player.ammo >= weapon.capacity) return 'full';
   if (player.equipment.magazines[player.equipment.slot] <= 0) return 'empty';
+}
+
+/** Next round cycle of a single-feed reload. An empty weapon chambers its first round (`chamberTicks`). */
+function beginRoundCycle(player: SimPlayer, weapon: EffectiveWeapon, tick: number): void {
+  const feed = weapon.feed;
+  const duration = feed.type === 'single' && player.ammo === 0 && feed.chamberRounds ? feed.chamberTicks : weapon.reloadTicks;
+  const scale = duration / weapon.reloadTicks;
+  const insertAt = tick + Math.min(duration, Math.max(1, Math.round(weapon.reloadInsertionTicks * scale)));
+  player.reload = {
+    phase: 'SHELL_LOADING', slot: player.reload.slot, started: tick, at: tick,
+    removalAt: Math.min(insertAt - 1, tick + Math.round(weapon.reloadRemovalTicks * scale)), insertAt, until: tick + duration,
+  };
+  player.reloadUntil = player.reload.until;
+}
+
+function finishReload(player: SimPlayer, tick: number): void {
+  player.reload = { ...readyReload(tick), slot: player.reload.slot };
+  player.reloadUntil = 0;
+}
+
+/** Single feed: one round per cycle until full, out of reserve or a new fire press. */
+function updateRoundReload(player: SimPlayer, weapon: EffectiveWeapon, tick: number, context?: CombatContext): void {
+  const reload = player.reload;
+  const gear = player.equipment;
+  if (!player.input.fire) player.reloadFireLatch = false;
+  if (player.activeInput && player.input.fire && !player.reloadFireLatch && player.ammo > 0) {
+    finishReload(player, tick);
+    return;
+  }
+  if (reload.phase === 'RELOAD_START' && tick >= reload.until) {
+    beginRoundCycle(player, weapon, tick);
+    return;
+  }
+  if (reload.phase === 'SHELL_LOADING' && tick >= reload.insertAt) {
+    if (gear.slot !== reload.slot || gear.magazines[reload.slot] <= 0) {
+      interruptReload(player, tick, context);
+      return;
+    }
+    // The single ammunition transaction of this cycle. The phase change makes it impossible to repeat.
+    gear.magazines[reload.slot]--;
+    player.ammo++;
+    reload.phase = 'SHELL_INSERTION';
+    reload.at = tick;
+    if (context?.stats) context.stats.data.magazinesUsed[reload.slot]++;
+    context?.events?.push({ type: 'reload', tick, operator: player.id, slot: reload.slot, phase: 'SHELL_INSERTION', discarded: 0 });
+  }
+  if (player.reload.phase === 'SHELL_INSERTION' && tick >= player.reload.until) {
+    if (player.ammo < weapon.capacity && gear.magazines[reload.slot] > 0) beginRoundCycle(player, weapon, tick);
+    else finishReload(player, tick);
+  }
 }
 
 export function updateReload(player: SimPlayer, tick: number, context?: CombatContext, balance = BALANCE.movement): void {
@@ -111,6 +164,10 @@ export function updateReload(player: SimPlayer, tick: number, context?: CombatCo
   const gear = player.equipment;
   if (reloading(player)) {
     const weapon = player.loadout.weapons[reload.slot];
+    if (weapon.feed.type === 'single') {
+      updateRoundReload(player, weapon, tick, context);
+      return;
+    }
     if (reload.phase === 'RELOAD_START' && tick >= reload.removalAt) {
       reload.phase = 'MAGAZINE_REMOVAL';
       reload.at = tick;
@@ -121,9 +178,11 @@ export function updateReload(player: SimPlayer, tick: number, context?: CombatCo
         interruptReload(player, tick, context);
         return;
       }
-      const discarded = player.ammo;
+      // A chambered round stays in the weapon on a tactical reload (`feed.chamberRounds`).
+      const chambered = weapon.feed.chamberRounds && player.ammo > 0 ? 1 : 0;
+      const discarded = player.ammo - chambered;
       gear.magazines[reload.slot]--;
-      player.ammo = weapon.magazineSize;
+      player.ammo = weapon.magazineSize + chambered;
       reload.phase = 'MAGAZINE_INSERTION';
       reload.at = tick;
       if (context?.stats) {
@@ -144,6 +203,15 @@ export function updateReload(player: SimPlayer, tick: number, context?: CombatCo
   if (gear.action || !player.activeInput || reloadBlocker(player)) return;
   if (!requested && !(player.ammo === 0 && player.input.fire)) return;
   const weapon = player.loadout.weapons[gear.slot];
+  if (weapon.feed.type === 'single') {
+    const until = tick + weapon.feed.startTicks;
+    player.reload = { phase: 'RELOAD_START', slot: gear.slot, started: tick, at: tick, removalAt: until, insertAt: until, until };
+    player.reloadUntil = until;
+    player.reloadFireLatch = !!player.input.fire;
+    context?.events?.push({ type: 'reload', tick, operator: player.id, slot: gear.slot, phase: 'RELOAD_START', discarded: 0 });
+    if (!weapon.feed.startTicks) beginRoundCycle(player, weapon, tick);
+    return;
+  }
   player.reload = {
     phase: 'RELOAD_START', slot: gear.slot, started: tick, at: tick,
     removalAt: tick + weapon.reloadRemovalTicks, insertAt: tick + weapon.reloadInsertionTicks, until: tick + weapon.reloadTicks,
@@ -156,6 +224,8 @@ export function updateReload(player: SimPlayer, tick: number, context?: CombatCo
 // Hitscan
 
 export interface CombatTargets {
+  /** Armor class of the targets (swarm nests). Default 1, unarmored. */
+  readonly armorClass?: number;
   intersect(ray: AimRay, max: number, min?: number): { nestId: number; distance: number } | undefined;
   /** Returns the health actually removed. */
   hit(nestId: number, amount: number, tick: number, shooter: string): number;
@@ -209,6 +279,20 @@ function operatorHit(ray: AimRay, player: SimPlayer, min: number, max: number, t
 
 const noRandom = () => 0;
 
+/** Armor input of the damage resolver for a weapon hit against an armor class. */
+export function armorOf(loadout: EffectiveLoadout, penetration: number, armorClass: number) {
+  return { armorClass, penetration, nonPenetratingFraction: loadout.armorRules.nonPenetratingDamageFraction };
+}
+
+/** Bullet hit against an enemy: falloff, armor and resistance against the ammunition's damage type. */
+function enemyBullet(player: SimPlayer, weapon: EffectiveWeapon, protection: EnemyProtection, falloff: number) {
+  return {
+    source: 'bullet', attacker: 'operator', target: 'enemy', base: weapon.damage, falloffMultiplier: falloff,
+    armor: armorOf(player.loadout, weapon.projectile.penetration, protection.armorClass),
+    resistanceMultiplier: resistanceMultiplier(protection, weapon.projectile.damageType),
+  } as const;
+}
+
 export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick: number,
   world?: WorldDefinition, targets?: CombatTargets, context: CombatContext = {}, balance = BALANCE.movement): ShotEvent | undefined {
   const slot = player.equipment.slot;
@@ -229,10 +313,40 @@ export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick
   const yaw = tacticalAimYaw(player.posture, input.yaw + player.recoil.yaw + Math.cos(angle) * deviation, balance);
   const tactical = player.posture.current !== 'STANDING';
   applyShotRecoil(player.recoil, recoil, spread, tick);
+  const stats = context.stats?.data;
+  if (stats) stats.shots[slot]++;
+  // A shot counts as a hit once, however many pellets connect.
+  let hitCounted = false;
+  const countHit = () => {
+    if (stats && !hitCounted) stats.hits[slot]++;
+    hitCounted = true;
+  };
+  const { projectilesPerShot: pellets, pelletSpread } = weapon.projectile;
+  if (pellets <= 1) return tracePellet(h, player, ray, yaw, pitch, tactical, tick, world, targets, context, balance, countHit);
+  // Shot: every pellet is its own ray in a cone around the spread aim direction, with its own damage and falloff.
+  const traces: ShotEvent[] = [];
+  for (let i = 0; i < pellets; i++) {
+    const turn = random() * Math.PI * 2;
+    const offset = pelletSpread * Math.sqrt(random());
+    const pelletPitch = tacticalAimPitch(player.posture, Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch + Math.sin(turn) * offset)), balance);
+    const pelletYaw = tacticalAimYaw(player.posture, yaw + Math.cos(turn) * offset, balance);
+    traces.push(tracePellet(h, player, ray, pelletYaw, pelletPitch, tactical, tick, world, targets, context, balance, countHit));
+  }
+  const [first, ...rest] = traces;
+  return { ...first, pellets: rest.map(({ toX, toY, toZ, enemy, eliminated, nest, ally, impact, traceFrom }) =>
+    ({ toX, toY, toZ, enemy, eliminated, ...(nest !== undefined && { nest }), ...(ally && { ally }), ...(impact && { impact }),
+      ...(traceFrom && { traceFrom }) })) };
+}
+
+/** One hitscan ray (a bullet or one pellet) from the operator's muzzle, with damage, kills and impact. */
+function tracePellet(h: HordeManager, player: SimPlayer, ray: AimRay, yaw: number, pitch: number, tactical: boolean, tick: number,
+  world: WorldDefinition | undefined, targets: CombatTargets | undefined, context: CombatContext, balance: typeof BALANCE.movement,
+  countHit: () => void): ShotEvent {
+  const slot = player.equipment.slot;
+  const weapon = player.loadout.weapons[slot];
   const shape = postureCollider(player.posture, tick, balance);
   aimRay(ray, player, yaw, pitch, tactical ? shape.lookHeight : undefined, player.y, !!world?.terrain);
   const stats = context.stats?.data;
-  if (stats) stats.shots[slot]++;
 
   const muzzleYaw = tactical ? yaw : player.yaw;
   const muzzle = {
@@ -295,19 +409,23 @@ export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick
   }
   const nest = targets?.intersect(ray, end, min);
   const policy = player.loadout.damagePolicy;
+  // Range falloff over the distance from the muzzle to the impact point.
+  const falloffAt = (t: number) => falloffMultiplier(Math.hypot(ray.x + ray.dx * t - fromX, ray.y + ray.dy * t - fromY,
+    ray.z + ray.dz * t - fromZ), weapon.projectile.falloff);
   let ally: string | undefined;
   let impact: ShotImpact | undefined;
   if (nest && nest.distance < end) {
     closest = -1;
     allyOperator = allyConvict = undefined;
     end = nest.distance;
-    const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'structure', base: weapon.damage });
+    const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'structure', base: weapon.damage,
+      falloffMultiplier: falloffAt(end), armor: armorOf(player.loadout, weapon.projectile.penetration, targets?.armorClass ?? 1) });
     const dealt = targets?.hit(nest.nestId, amount, tick, player.id) ?? 0;
     if (dealt > 0) impact = { kind: 'nest' };
-    if (stats) { stats.hits[slot]++; stats.damage[slot] += dealt; }
+    if (stats) { countHit(); stats.damage[slot] += dealt; }
   } else if (allyOperator) {
     ally = allyOperator.id;
-    const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'operator', base: weapon.damage });
+    const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'operator', base: weapon.damage, falloffMultiplier: falloffAt(end) });
     const dealt = damagePlayer(allyOperator, amount, tick, context.respawns ?? true, context);
     if (dealt) {
       impact = { kind: 'operator', life: allyOperator.life };
@@ -317,7 +435,7 @@ export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick
     }
   } else if (allyConvict) {
     ally = allyConvict.id;
-    const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'convict', base: weapon.damage });
+    const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'convict', base: weapon.damage, falloffMultiplier: falloffAt(end) });
     const before = allyConvict.hp;
     allyConvict.damage(amount, tick);
     if (allyConvict.hp < before) impact = { kind: 'convict' };
@@ -327,8 +445,8 @@ export function fireWeapon(h: HordeManager, player: SimPlayer, ray: AimRay, tick
   const enemy = closest === -1 ? 0 : h.id[closest];
   let eliminated = false;
   if (closest !== -1) {
-    const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'enemy', base: weapon.damage });
-    if (stats) { stats.hits[slot]++; stats.damage[slot] += Math.min(h.hp[closest], amount); }
+    const { amount } = resolveDamage(policy, enemyBullet(player, weapon, (context.protection ?? ENEMY_PROTECTION)[h.type[closest]], falloffAt(end)));
+    if (stats) { countHit(); stats.damage[slot] += Math.min(h.hp[closest], amount); }
     const x = h.x[closest], z = h.z[closest];
     const nx = toX - x, ny = toY - groundHeight(world, x, z) - ENEMY_TYPES[h.type[closest]].hitHeight, nz = toZ - z;
     const length = Math.hypot(nx, ny, nz);
@@ -442,7 +560,9 @@ export function meleeStrike(h: HordeManager, player: SimPlayer, tick: number, wo
     const radius = Math.min(Math.hypot(dx, dz), ENEMY_TYPES[h.type[enemy]].hitRadius * .72);
     const contact = { x: h.x[enemy] - dx / length * radius, y: groundHeight(world, h.x[enemy], h.z[enemy]) + .5,
       z: h.z[enemy] - dz / length * radius };
-    const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'operator', target: 'enemy', base: melee.damage });
+    const protection = (context.protection ?? ENEMY_PROTECTION)[h.type[enemy]];
+    const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'operator', target: 'enemy', base: melee.damage,
+      armor: armorOf(player.loadout, melee.penetration, protection.armorClass), resistanceMultiplier: resistanceMultiplier(protection, 'kinetic') });
     if (stats) stats.meleeHits++;
     const eliminated = damageEnemy(h, enemy, amount);
     let staggered = false;

@@ -2,17 +2,18 @@
 
 Bestandsaufnahme der Gameplay-Werte nach Milestone 7.2A, fortgeschrieben für 7.2B (geänderte Werte sind markiert, Details in [COMBAT_BALANCE_7_2B](COMBAT_BALANCE_7_2B.md)). Alle Pfade beziehen sich auf `packages/shared/src/balance/data/`. Die Spalte „Vorher“ nennt die Stelle, an der der Wert bis 7.1 fest codiert war. Alle Werte wurden 1:1 übernommen. [Architektur](BALANCE_ARCHITECTURE.md) · [Workflow](BALANCE_WORKFLOW.md)
 
-Aktuelle Version: Release `7.2B`, Schema 2. Den Hash zeigt `npm run balance:check`.
+Aktuelle Version: Release `8.1A`, Schema 3. Den Hash zeigt `npm run balance:check`. Kaliber, Munition und Panzerklassen: [AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md). VX-13 Cerberus, Zuführung (`feed`) und frei wählbares Loadout: [LOADOUT_SYSTEM](LOADOUT_SYSTEM.md). Die Tabelle unten beschreibt das Standard-Loadout.
 
 ## Waffen (`weapons.json`)
 
 | Wert | Kestrel AR-01 (`kestrel-ar-01`) | P-01 Dienstpistole (`p-01`) | Vorher |
 | --- | ---: | ---: | --- |
 | Slot / Kategorie | primary / assault-rifle | secondary / pistol | `definitions/combat.ts` |
-| `damage` | 24 | **21,6** (7.2A: 18, × 1,2) | `combat.ts` (`TEST_RIFLE`, `SERVICE_PISTOL`) |
+| Schaden (seit 8.0A aus `caliberId` × `ballistics.damageMultiplier`) | 24 (5,55 × 39 mm, × 1) | **21,6** (10 mm, × 1; 7.2A: 18, × 1,2) | `combat.ts` (`TEST_RIFLE`, `SERVICE_PISTOL`) |
+| `defaultAmmoId` / Durchschlag | `ammo.5-55x39.fmj` / 3 Mittel | `ammo.10mm.fmj` / 2 Niedrig | neu in 8.0A |
 | `roundsPerSecond` (Feuerintervall) | 10 (3 Ticks) | 4 (7,5 Ticks: abwechselnd 8 und 7) | `combat.ts`. Gebrochenes Intervall (`fireInterval`, `nextShotAt`), Dauerfeuer erreicht im Mittel genau `roundsPerSecond`. Server und Client-Recoil-Vorhersage nutzen dieselbe Funktion |
 | `magazineSize` | **45** (7.2A: 30) | 12 | `combat.ts` |
-| `reserveMagazines` / `maxReserveMagazines` | **8 / 8** (7.2A: unbegrenzt) | **4 / 4 ganze Magazine** (7.2A: 48 lose Patronen) | taktisches Nachladen, [TACTICAL_RELOADING](TACTICAL_RELOADING.md) |
+| `reserve` / `maxReserve` | **8 / 8** (7.2A: unbegrenzt) | **4 / 4 ganze Magazine** (7.2A: 48 lose Patronen) | taktisches Nachladen, [TACTICAL_RELOADING](TACTICAL_RELOADING.md) |
 | `reloadTimeline.removalAt` / `insertionAt` | 0,2 / 0,72 (Tick 13 / 45 von 63) | 0,18 / 0,68 (Tick 8 / 30 von 44) | neu in 7.2B |
 | `reloadSeconds` (Ticks) | 2,1 (63) | 1,45 (44) | `combat.ts` |
 | `effectiveRange` (harte Grenze) | 72 m | 44 m | `combat.ts` (`range`) |
@@ -79,7 +80,8 @@ Albatross-Nachschubcontainer stehen in `structures.json › vehicles[0].supplyCo
 | `hitRadius` / `hitHeight` | 0,68 / 0,72 m | `enemies.ts` |
 | `meleeRange` / `meleeDamage` / `meleeCooldown` | 1,45 m / 8 / 1,3 s (≈ 0,77 Angriffe/s) | `enemies.ts` |
 | `ai.detectionRange` (Patrouillen-Sicht, Basis) | 31 m | `BASE_SIGHT_RANGE` in `PatrolManager.ts` |
-| `resistances.*` | neutral (reserviert) | nicht vorhanden |
+| `armorClass` | 1 (ungepanzert) | neu in 8.0A |
+| `resistances.kinetic` / `explosive` | 1 / 1 | neu in 8.0A (vorher reserviert) |
 | `visualAssetId` | `enemy.swarm.schabe.procedural` | `enemies.ts` |
 
 ## Strukturen (`structures.json`)
@@ -161,7 +163,7 @@ Effektive Werte je Stufe (aus `npm run balance:check`):
 | Convicts nutzten `TEST_RIFLE.reloadSeconds`, obwohl sie eigene Kits haben | expliziter, validierter Verweis `squad.reloadWeaponId` |
 | `SwarmNest.difficultyModifier` speicherte den Intervall-Faktor ein zweites Mal (ungenutzt) | entfernt. Der Snapshot liefert das effektive Intervall. |
 | Difficulty-Multiplikatoren in `SwarmNestManager`, `PatrolManager` und `EncounterDirector` je eigenständig angewendet | einmalige Auflösung in `resolveMissionBalance()` |
-| Reserve-Logik an `slot === 'secondary'` gekoppelt, Anzeige `∞` an `slot === 'primary'` | aus `reserveMagazines` abgeleitet |
+| Reserve-Logik an `slot === 'secondary'` gekoppelt, Anzeige `∞` an `slot === 'primary'` | aus `reserve` abgeleitet |
 | Pistolen-Kick 1,35 und Audio-Cue im Client über den Slot fest verdrahtet | `recoil.visualKick` und `sounds.fire` der Waffe |
 | HUD-Texte „Heilstim“ und „Sprenggranate“ doppelt zu den Definitionen | `displayName` der Definition |
 | Convict-Kit über den Index `level − 1` | `convictKitId` je Stufe |

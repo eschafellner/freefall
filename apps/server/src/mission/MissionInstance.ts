@@ -134,6 +134,8 @@ export class MissionInstance extends Battlefield {
   /** Effective balance of the current run. Immutable for the whole mission, even if the registry is replaced. */
   get balance(): MissionBalance { return this.missionBalance ?? this.lobbyBalance; }
   protected override get groundNavigation() { return this.director.patrols.navigation; }
+  protected get loadoutChangeAllowed(): boolean { return this.state === 'CARRIER_HUB' || this.state === 'MISSION_SELECTION'; }
+
   get acceptsNewOperators(): boolean {
     return this.state === 'CARRIER_HUB' || this.state === 'MISSION_SELECTION' || this.state === 'BOARDING';
   }
@@ -524,8 +526,11 @@ export class MissionInstance extends Battlefield {
       baseExperience, extractionBonusExperience,
       rewards: [...this.roster].map((operatorId) => {
         const bonus = extracted.includes(operatorId) ? extractionBonusExperience : 0;
-        return { operatorId, baseExperience, extractionBonusExperience: bonus, totalExperience: baseExperience + bonus };
+        const kills = this.players.find((player) => player?.id === operatorId)?.kills ?? 0;
+        return { operatorId, baseExperience, extractionBonusExperience: bonus, totalExperience: baseExperience + bonus, kills };
       }),
+      missionName: plan?.displayName ?? this.definition.displayName,
+      planetId: plan?.planetId ?? this.selection?.planetId,
       combat: this.stats.snapshot(),
       procedural: plan && { planId: plan.id, planetId: plan.planetId, seed: plan.seed, templateId: plan.templateId, generatorVersion: plan.generatorVersion, ...(plan.world && { world: plan.world }) },
       fallback: this.fallback,

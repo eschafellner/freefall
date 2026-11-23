@@ -24,9 +24,9 @@ test('each registered operator weapon has an auditable sample bank within the su
     }
   }
   for (const weapon of BALANCE.weapons.values()) {
-    const bank = WEAPON_RECORDINGS[weapon.slot];
+    const bank = WEAPON_RECORDINGS[weapon.sounds.fire];
     const maxDuration = Math.max(...[...bank.near, bank.distant].map((id) => masters.find((asset) => asset.id === id)!.seconds));
-    assert.ok(maxDuration / .98 + .115 + .025 < 4 / weapon.roundsPerSecond, weapon.id);
+    assert.ok(maxDuration / (.98 * (bank.pitch ?? 1)) + .115 + .025 < 4 / weapon.roundsPerSecond, weapon.id);
     assert.notEqual(bank.near[0], bank.near[1]);
   }
 });
@@ -63,7 +63,7 @@ test('four rifles submit 80 one-shots to bounded audio voices, with near variati
   for (let i = 0; i < 20; i++) {
     context.currentTime = i / 10;
     for (const [shooter, x] of [[0, 0], [1, 8], [2, 45], [3, 100]] as const) {
-      assert.equal(weapons.shot('primary', String(shooter), { ...listener, x }, listener, shooter === 0), true);
+      assert.equal(weapons.shot('rifle', String(shooter), { ...listener, x }, listener, shooter === 0), true);
     }
   }
   assert.equal(weapons.metrics().own, 20);
@@ -71,9 +71,9 @@ test('four rifles submit 80 one-shots to bounded audio voices, with near variati
   assert.equal(engine.droppedVoices, 0);
   assert.ok(engine.peakVoices <= 16);
   assert.ok(created.some(({ file, at }) => file === 'kestrel-shot-distant' && Math.abs(at - .120) < .0001));
-  assert.ok(WEAPON_RECORDINGS.primary.near.every((id) => created.some(({ file }) => file === id)));
-  assert.equal(weapons.shot('secondary', 'pistol', { ...listener, x: 200 }, listener, false), false);
-  assert.equal(weapons.shot('secondary', 'pistol', listener, listener, true), true);
+  assert.ok(WEAPON_RECORDINGS.rifle.near.every((id) => created.some(({ file }) => file === id)));
+  assert.equal(weapons.shot('pistol', 'pistol', { ...listener, x: 200 }, listener, false), false);
+  assert.equal(weapons.shot('pistol', 'pistol', listener, listener, true), true);
   assert.ok(created.at(-1)?.file.startsWith('p01-shot-'));
   weapons.clearTransient();
   assert.equal(engine.activeVoices, 0);
@@ -83,10 +83,10 @@ test('four rifles submit 80 one-shots to bounded audio voices, with near variati
 test('missing or suspended samples never schedule a fallback or a deferred ghost shot', () => {
   const { context, weapons, created } = makeAudioProbe(false);
   const listener = { x: 0, z: 0, yaw: 0 };
-  assert.equal(weapons.shot('secondary', 'owner', listener, listener, true), false);
+  assert.equal(weapons.shot('pistol', 'owner', listener, listener, true), false);
   assert.equal(weapons.metrics().unavailable, 1);
   context.state = 'suspended';
-  assert.equal(weapons.shot('primary', 'owner', listener, listener, true), false);
+  assert.equal(weapons.shot('rifle', 'owner', listener, listener, true), false);
   assert.equal(weapons.metrics().unavailable, 1);
   assert.deepEqual(created, []);
 });

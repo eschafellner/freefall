@@ -64,10 +64,10 @@ function place(player: SimPlayer, x: number, z: number): void {
 test('rifle has 45 rounds and 8 spare magazines, pistol 4 spare magazines and +20 % damage', () => {
   const { primary, secondary } = BASE_LOADOUT.weapons;
   assert.equal(primary.magazineSize, 45);
-  assert.equal(primary.reserveMagazines, 8);
-  assert.equal(primary.maxReserveMagazines, 8);
-  assert.equal(primary.magazineSize * (1 + primary.reserveMagazines), 405);
-  assert.equal(secondary.reserveMagazines, 4);
+  assert.equal(primary.reserve, 8);
+  assert.equal(primary.maxReserve, 8);
+  assert.equal(primary.magazineSize * (1 + primary.reserve), 405);
+  assert.equal(secondary.reserve, 4);
   assert.equal(secondary.magazineSize, 12);
   assert.equal(secondary.damage, 21.6);
   assert.equal(Math.round(secondary.damage / 18 * 1000) / 1000, 1.2);
@@ -445,7 +445,7 @@ test('the damage resolver applies the friendly-fire multiplier exactly once and 
   assert.equal(policy.operatorToOperator, .3);
   assert.equal(policy.selfDamage, .3);
   assert.deepEqual(resolveDamage(policy, { source: 'explosion', attacker: 'operator', target: 'operator', base: 100 }),
-    { amount: 30, relation: 'friendly', multiplier: .3 });
+    { amount: 30, relation: 'friendly', multiplier: .3, penetrated: true });
   assert.equal(resolveDamage(policy, { source: 'explosion', attacker: 'operator', target: 'operator', self: true, base: 100 }).amount, 30);
   assert.equal(resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'enemy', base: 24 }).amount, 24);
   assert.equal(resolveDamage(policy, { source: 'explosion', attacker: 'operator', target: 'structure', base: 100, structureMultiplier: 2 }).amount, 200);

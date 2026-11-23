@@ -7,13 +7,14 @@ import { MAX_ENEMIES } from '../config/limits.ts';
 import {
   SOURCE_FILES, SOURCE_SCHEMAS,
 } from './definitions.ts';
+import { ARMOR_CLASS_COUNT } from './definitions.ts';
 import type {
-  BalanceManifest, BalanceSources, CombatDefinition, ConvictKitDefinition, ConvictSquadDefinition, DifficultyDefinition, EnemyArchetype,
+  AmmoDefinition, ArmorRules, BackpackDefinition, BalanceManifest, BodyArmorDefinition, BalanceSources, CaliberDefinition, CombatDefinition, ConvictKitDefinition, ConvictSquadDefinition, DifficultyDefinition, EnemyArchetype,
   FactionDefinition, GrenadeDefinition, LoadoutDefinition, MedicalDefinition, MeleeDefinition, MovementDefinition, NestDefinition, OperatorDefinition,
   ResupplyRules, SwarmDefinition, VehicleDefinition, WeaponDefinition,
 } from './definitions.ts';
 import { balanceHash } from './hash.ts';
-import { resolveLoadout, resolveMissionBalance } from './resolver.ts';
+import { presetSelection, resolveLoadout, resolveMissionBalance, resolveSelection, resolveWeapon } from './resolver.ts';
 import { BalanceValidationError, Issues, deepFreeze } from './schema.ts';
 
 /** FREEFALL ships exactly seven difficulty levels. Level 7 is FREEFALL. */
@@ -30,10 +31,16 @@ export interface BalanceRegistry {
   readonly version: BalanceVersion;
   readonly manifest: BalanceManifest;
   readonly weapons: ReadonlyMap<string, WeaponDefinition>;
+  readonly calibers: ReadonlyMap<string, CaliberDefinition>;
+  readonly ammunition: ReadonlyMap<string, AmmoDefinition>;
+  /** Armor classes 1 … 7 and the residual damage of non-penetrating hits (`ammunition.json › armor`). */
+  readonly armor: ArmorRules;
   readonly grenades: ReadonlyMap<string, GrenadeDefinition>;
   readonly medicalItems: ReadonlyMap<string, MedicalDefinition>;
   readonly meleeAttacks: ReadonlyMap<string, MeleeDefinition>;
   readonly loadouts: ReadonlyMap<string, LoadoutDefinition>;
+  readonly backpacks: ReadonlyMap<string, BackpackDefinition>;
+  readonly bodyArmors: ReadonlyMap<string, BodyArmorDefinition>;
   readonly resupply: ResupplyRules;
   readonly operator: OperatorDefinition;
   readonly factions: ReadonlyMap<string, FactionDefinition>;
@@ -52,10 +59,16 @@ export interface BalanceRegistry {
   readonly movement: MovementDefinition;
 
   weapon(id: string): WeaponDefinition;
+  caliber(id: string): CaliberDefinition;
+  ammo(id: string): AmmoDefinition;
+  /** Ammunition types of a caliber, in file order. */
+  ammoForCaliber(caliberId: string): readonly AmmoDefinition[];
   grenade(id: string): GrenadeDefinition;
   medical(id: string): MedicalDefinition;
   melee(id: string): MeleeDefinition;
   loadout(id: string): LoadoutDefinition;
+  backpack(id: string): BackpackDefinition;
+  bodyArmor(id: string): BodyArmorDefinition;
   enemy(id: string): EnemyArchetype;
   nest(id: string): NestDefinition;
   vehicle(id: string): VehicleDefinition;
@@ -107,9 +120,13 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   // Unique IDs, globally across all definition collections.
   const ids = new IdIndex(issues);
   const weapons = ids.collect(data.weapons.weapons, 'weapons.json › weapons');
+  const calibers = ids.collect(data.ammunition.calibers, 'ammunition.json › calibers');
+  const ammunition = ids.collect(data.ammunition.ammunition, 'ammunition.json › ammunition');
   const grenades = ids.collect(data.equipment.grenades, 'equipment.json › grenades');
   const medical = ids.collect(data.equipment.medical, 'equipment.json › medical');
   const melee = ids.collect(data.equipment.melee, 'equipment.json › melee');
+  const backpacks = ids.collect(data.equipment.backpacks, 'equipment.json › backpacks');
+  const bodyArmors = ids.collect(data.equipment.armors, 'equipment.json › armors');
   const loadouts = ids.collect(data.equipment.loadouts, 'equipment.json › loadouts');
   const factions = ids.collect(data.enemies.factions, 'enemies.json › factions');
   const enemies = ids.collect(data.enemies.archetypes, 'enemies.json › archetypes');
@@ -123,11 +140,42 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
     if (!map.has(value)) issues.add(path, `verweist auf unbekannte ${kind}-ID "${value}". Registriert: ${[...map.keys()].join(', ') || 'keine'}`);
   };
 
+  // Armor classes, calibers and ammunition.
+  const levels = data.ammunition.armor.classes.map((entry) => entry.level);
+  if (levels.join() !== Array.from({ length: ARMOR_CLASS_COUNT }, (_, i) => i + 1).join()) {
+    issues.add('ammunition.json › armor.classes', `genau ${ARMOR_CLASS_COUNT} Panzerklassen mit level 1 … ${ARMOR_CLASS_COUNT} in aufsteigender Reihenfolge erwartet, erhalten ${levels.join(', ')}`);
+  }
+  data.ammunition.calibers.forEach((caliber, i) => {
+    const path = `ammunition.json › calibers[${i}]`;
+    if (caliber.falloff.startMeters >= caliber.falloff.endMeters) issues.add(`${path}.falloff.startMeters`, 'muss kleiner als endMeters sein');
+    if (!data.ammunition.ammunition.some((ammo) => ammo.caliberId === caliber.id)) issues.add(path, `Kaliber "${caliber.id}" hat keine Munitionssorte`);
+  });
+  data.ammunition.ammunition.forEach((ammo, i) => {
+    const path = `ammunition.json › ammunition[${i}]`;
+    ref(calibers, ammo.caliberId, `${path}.caliberId`, 'Kaliber');
+    const stats = ammo.modifiers.map((modifier) => modifier.stat);
+    stats.forEach((stat, n) => {
+      if (stats.indexOf(stat) !== n) issues.add(`${path}.modifiers[${n}].stat`, `"${stat}" ist bereits modifiziert. Je Wert ein Modifikator`);
+    });
+    ammo.modifiers.forEach((modifier, n) => {
+      if (modifier.stat === 'penetration' && (modifier.operation !== 'add' || !Number.isInteger(modifier.value))) {
+        issues.add(`${path}.modifiers[${n}]`, 'Durchschlag wird in ganzen Stufen verschoben (operation "add", ganze Zahl)');
+      }
+    });
+  });
+
   // Weapons and loadouts.
   data.weapons.weapons.forEach((weapon, i) => {
     const path = `weapons.json › weapons[${i}]`;
-    if (weapon.reserveMagazines > weapon.maxReserveMagazines) {
-      issues.add(`${path}.reserveMagazines`, `Startreserve ${weapon.reserveMagazines} übersteigt die Tragekapazität maxReserveMagazines ${weapon.maxReserveMagazines}`);
+    ref(calibers, weapon.caliberId, `${path}.caliberId`, 'Kaliber');
+    ref(ammunition, weapon.defaultAmmoId, `${path}.defaultAmmoId`, 'Munitions');
+    const ammo = ammunition.get(weapon.defaultAmmoId);
+    if (ammo && ammo.caliberId !== weapon.caliberId) {
+      issues.add(`${path}.defaultAmmoId`, `"${ammo.id}" ist Munition für ${ammo.caliberId}, die Waffe verschießt ${weapon.caliberId}`);
+    }
+    if (weapon.feed.type === 'single' && weapon.reserve > 500) issues.add(`${path}.reserve`, 'zu groß');
+    if (weapon.reserve > weapon.maxReserve) {
+      issues.add(`${path}.reserve`, `Startreserve ${weapon.reserve} übersteigt die Tragekapazität maxReserve ${weapon.maxReserve}`);
     }
     if (weapon.reloadTimeline.removalAt >= weapon.reloadTimeline.insertionAt) {
       issues.add(`${path}.reloadTimeline.removalAt`, 'muss kleiner als insertionAt sein');
@@ -144,6 +192,8 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
     ref(grenades, loadout.grenadeId, `${path}.grenadeId`, 'Granaten');
     ref(medical, loadout.medicalId, `${path}.medicalId`, 'Heil');
     ref(melee, loadout.meleeId, `${path}.meleeId`, 'Nahkampf');
+    ref(backpacks, loadout.backpackId, `${path}.backpackId`, 'Rucksack');
+    ref(bodyArmors, loadout.armorId, `${path}.armorId`, 'Rüstungs');
     if (weapons.get(loadout.primaryWeaponId) && weapons.get(loadout.primaryWeaponId)!.slot !== 'primary') {
       issues.add(`${path}.primaryWeaponId`, `"${loadout.primaryWeaponId}" ist keine Primärwaffe`);
     }
@@ -225,10 +275,10 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   }
 
   // Difficulty.
-  const levels = data.difficulty.difficulties.map((difficulty) => difficulty.level);
+  const difficultyLevels = data.difficulty.difficulties.map((difficulty) => difficulty.level);
   const expected = Array.from({ length: DIFFICULTY_LEVEL_COUNT }, (_, i) => i + 1);
-  if (levels.join() !== expected.join()) {
-    issues.add('difficulty.json › difficulties', `genau ${DIFFICULTY_LEVEL_COUNT} Stufen mit level ${expected.join(', ')} in aufsteigender Reihenfolge erwartet, erhalten ${levels.join(', ')}`);
+  if (difficultyLevels.join() !== expected.join()) {
+    issues.add('difficulty.json › difficulties', `genau ${DIFFICULTY_LEVEL_COUNT} Stufen mit level ${expected.join(', ')} in aufsteigender Reihenfolge erwartet, erhalten ${difficultyLevels.join(', ')}`);
   }
   data.difficulty.difficulties.forEach((difficulty, i) => {
     const path = `difficulty.json › difficulties[${i}]`;
@@ -258,21 +308,29 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   }
   issues.throwIfAny();
 
+  const ammoByCaliber = new Map<string, AmmoDefinition[]>();
+  for (const ammo of data.ammunition.ammunition) ammoByCaliber.set(ammo.caliberId, [...(ammoByCaliber.get(ammo.caliberId) ?? []), ammo]);
   const hash = balanceHash(data);
   const registry: BalanceRegistry = {
     version: { schemaVersion: data.manifest.schemaVersion, release: data.manifest.release, hash },
     manifest: data.manifest,
-    weapons, grenades, medicalItems: medical, meleeAttacks: melee, loadouts, resupply: data.equipment.resupply, operator: data.operators.operator,
+    weapons, calibers, ammunition, armor: data.ammunition.armor, grenades, medicalItems: medical, meleeAttacks: melee, loadouts,
+    backpacks, bodyArmors, resupply: data.equipment.resupply, operator: data.operators.operator,
     factions, enemies, enemiesByWireType, nests, primaryNest: nests.get(PRIMARY_NEST_ID)!, vehicles,
     swarm: data.swarm,
     convicts: { squad: data.convicts.squad, kits },
     difficulties: data.difficulty.difficulties, difficultyById,
     combat: data.combat, movement,
     weapon: lookup(weapons, 'Waffen'),
+    caliber: lookup(calibers, 'Kaliber'),
+    ammo: lookup(ammunition, 'Munitions'),
+    ammoForCaliber: (caliberId) => ammoByCaliber.get(caliberId) ?? [],
     grenade: lookup(grenades, 'Granaten'),
     medical: lookup(medical, 'Heil'),
     melee: lookup(melee, 'Nahkampf'),
     loadout: lookup(loadouts, 'Loadout'),
+    backpack: lookup(backpacks, 'Rucksack'),
+    bodyArmor: lookup(bodyArmors, 'Rüstungs'),
     enemy: lookup(enemies, 'Gegner'),
     nest: lookup(nests, 'Struktur'),
     vehicle: lookup(vehicles, 'Fahrzeug'),
@@ -281,11 +339,22 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   };
   deepFreeze(data);
   Object.freeze(registry);
-  for (const map of [weapons, grenades, medical, melee, loadouts, factions, enemies, nests, vehicles, kits, difficultyById] as Map<string, unknown>[]) freezeMap(map);
+  for (const map of [weapons, calibers, ammunition, backpacks, bodyArmors, grenades, medical, melee, loadouts, factions, enemies, nests, vehicles, kits, difficultyById] as Map<string, unknown>[]) freezeMap(map);
   Object.freeze(enemiesByWireType);
 
   // Resolve every configuration once, so invalid effective values fail at startup instead of at mission start.
   for (const loadout of loadouts.keys()) resolveLoadout(registry, loadout);
+  // Every weapon with every ammunition of its caliber, so an unused ammunition type cannot hide invalid values.
+  for (const weapon of weapons.values()) {
+    for (const ammo of registry.ammoForCaliber(weapon.caliberId)) resolveWeapon(registry, weapon.id, ammo.id);
+  }
+  // Every selectable item once in the standard loadout, so broken item modifiers fail at startup.
+  const standard = presetSelection(registry);
+  for (const weapon of weapons.values()) {
+    resolveSelection(registry, { ...standard, [weapon.slot === 'primary' ? 'primaryWeaponId' : 'secondaryWeaponId']: weapon.id });
+  }
+  for (const backpack of backpacks.keys()) resolveSelection(registry, { ...standard, backpackId: backpack });
+  for (const armor of bodyArmors.keys()) resolveSelection(registry, { ...standard, armorId: armor });
   for (const difficulty of registry.difficulties) resolveMissionBalance(registry, difficulty.id);
   return registry;
 }

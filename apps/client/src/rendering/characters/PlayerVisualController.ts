@@ -5,6 +5,8 @@ import * as T from 'three';
 import { EQUIPMENT_SLOTS } from '../AssetRegistry.ts';
 import type { EquipmentSlot, SoldierAsset } from '../AssetRegistry.ts';
 import type { createKestrel } from '../weapons/Kestrel.ts';
+import type { createCerberus } from '../weapons/Cerberus.ts';
+import { weaponById } from '../../game/Loadouts.ts';
 import { WeaponVisualController } from '../weapons/WeaponVisualController.ts';
 import { CharacterAnimation } from './CharacterAnimation.ts';
 import { CharacterClipPlayer } from './CharacterClipPlayer.ts';
@@ -13,7 +15,7 @@ import { SoldierRig } from './SoldierRig.ts';
 import type { createSoldierParts } from './SoldierRig.ts';
 import { CLIP_REQUIREMENT } from './animation/ClipLibrary.ts';
 
-import type { EquipmentState, PostureState, ReloadState, ShotEvent, WorldDefinition } from '@freefall/shared';
+import type { EffectiveWeapon, EquipmentState, PostureState, ReloadState, ShotEvent, WeaponSlot, WorldDefinition } from '@freefall/shared';
 
 export type WeaponCue = Pick<ShotEvent, 'shooter' | 'tick' | 'life' | 'slot'>;
 export type PresentShot = (weapon: WeaponVisualController | undefined, now: number) => void;
@@ -32,6 +34,10 @@ export class PlayerVisualController {
   readonly animation = new CharacterAnimation();
   readonly weapon: WeaponVisualController;
   readonly sidearm: WeaponVisualController;
+  /** VX-13 Cerberus, shown instead of the rifle when it is the operator's primary weapon. */
+  readonly shotgun?: WeaponVisualController;
+  private primary: EffectiveWeapon = WEAPONS.primary;
+  private secondary: EffectiveWeapon = WEAPONS.secondary;
   private readonly holstered: T.Mesh;
   private readonly rig: SoldierRig;
   private readonly importedStage = new T.Group();
@@ -57,9 +63,15 @@ export class PlayerVisualController {
   private readonly shotCues = new EventHistory();
   private lastQueuedShot?: { shooter: string; tick: number };
 
-  constructor(parts: ReturnType<typeof createSoldierParts>, rifle: ReturnType<typeof createKestrel>, team: number, operator = true) {
+  constructor(parts: ReturnType<typeof createSoldierParts>, rifle: ReturnType<typeof createKestrel>, team: number, operator = true,
+    shotgun?: ReturnType<typeof createCerberus>) {
     this.weapon = new WeaponVisualController(rifle);
     this.rig = new SoldierRig(parts, team, this.weapon, operator);
+    if (shotgun) {
+      this.shotgun = new WeaponVisualController(shotgun, 'shotgun');
+      this.shotgun.root.visible = false;
+      this.weapon.root.parent?.add(this.shotgun.root);
+    }
     this.sidearm = new WeaponVisualController(rifle.pistol, true);
     this.sidearm.root.visible = false;
     this.holstered = new T.Mesh(rifle.pistol.body, rifle.finish);
@@ -94,8 +106,10 @@ export class PlayerVisualController {
     this.importedStage.add(model);
     this.importedStage.visible = true;
     this.rig.root.visible = false;
-    mount.add(this.weapon.root, this.sidearm.root);
+    mount.add(this.weapon.root, this.sidearm.root, ...(this.shotgun ? [this.shotgun.root] : []));
     this.weapon.root.position.set(0, 0, 0);
+    this.shotgun?.root.position.set(0, 0, 0);
+    this.shotgun?.root.quaternion.identity();
     this.weapon.root.quaternion.identity();
     for (const name of EQUIPMENT_SLOTS) {
       this.importedAnchors[name] = model.getObjectByName(asset.equipmentNodes?.[name] ?? name);
@@ -155,7 +169,10 @@ export class PlayerVisualController {
     const progress = gear && action ? T.MathUtils.clamp((gearTick - gear.started) / Math.max(1, gear.until - gear.started), 0, 1) : 0;
     const switching = action === 'primary' || action === 'secondary';
     const slot = switching && progress >= .5 ? action : gear?.slot ?? 'primary';
-    this.holstered.visible = this.weapon.root.visible = slot === 'primary';
+    const shotgun = !!this.shotgun && this.primary.category === 'shotgun';
+    this.holstered.visible = slot === 'primary';
+    this.weapon.root.visible = slot === 'primary' && !shotgun;
+    if (this.shotgun) this.shotgun.root.visible = slot === 'primary' && shotgun;
     this.sidearm.root.visible = slot === 'secondary';
     this.expireShots(now);
     while (this.pendingShots.length && (this.pendingShots[0].cue.tick ?? tick) <= tick) {
@@ -188,7 +205,7 @@ export class PlayerVisualController {
     this.animation.weaponSlot = slot;
     const reloadEnd = (!reload || tick >= reload.started) && (!posture || allowsPostureAction(posture, 'reload')) ? reloadUntil : 0;
     this.animation.update(dt, dx * sin - dz * cos, dx * cos + dz * sin, sprint, aim && !action, hp > 0,
-      reloadEnd, tick, rotation / Math.max(.001, dt), WEAPONS[slot].reloadSeconds, reload?.started);
+      reloadEnd, tick, rotation / Math.max(.001, dt), this.weaponIn(slot).reloadSeconds, reload?.started);
     this.animation.tactical.update(hp > 0 ? posture : undefined, tick, dt, this.animation, fresh);
     const tactical = hp > 0 && posture && (posture.current === 'PRONE' || posture.current === 'SUPINE' ||
       posture.current === 'CROUCHING' || posture.current === 'SLIDING');
@@ -214,7 +231,7 @@ export class PlayerVisualController {
     const { clip, fallback } = this.animation.tactical;
     const imported = this.imported && (hp <= 0 && !fresh ? this.importedStage.visible : !clip || this.imported.tacticalClip(clip, fallback));
     const mount = imported ? this.importedMount! : this.rig.torso;
-    if (this.weapon.root.parent !== mount) mount.add(this.weapon.root, this.sidearm.root);
+    if (this.weapon.root.parent !== mount) mount.add(this.weapon.root, this.sidearm.root, ...(this.shotgun ? [this.shotgun.root] : []));
     if (Boolean(imported) !== this.importedStage.visible) {
       this.imported!.reset();
       this.mountEquipment(Boolean(imported));
@@ -233,6 +250,7 @@ export class PlayerVisualController {
     }
     else this.rig.pose(this.animation, this.activeWeapon, this.target, pitch, now, tactical ? this.muzzleWorld : undefined);
     this.sidearm.update(dt);
+    this.shotgun?.update(dt);
     for (const present of this.posedShots) present(this.activeWeapon, now);
     this.posedShots.length = 0;
   }
@@ -249,7 +267,17 @@ export class PlayerVisualController {
       normalized: true, overlay: tactical.overlay, weight: undefined };
   }
 
-  private get activeWeapon() { return this.sidearm.root.visible ? this.sidearm : this.weapon; }
+  private get activeWeapon() {
+    return this.sidearm.root.visible ? this.sidearm : this.shotgun?.root.visible ? this.shotgun : this.weapon;
+  }
+
+  /** Weapons of this operator's loadout (`PlayerState.weapons`); picks the matching model and handling. */
+  setWeapons(weapons?: Readonly<Record<WeaponSlot, string>>): void {
+    this.primary = weaponById(weapons?.primary, 'primary');
+    this.secondary = weaponById(weapons?.secondary, 'secondary');
+  }
+
+  private weaponIn(slot: WeaponSlot): EffectiveWeapon { return slot === 'primary' ? this.primary : this.secondary; }
 
   private poseImported(dt: number): void {
     const clips = this.imported!;
@@ -311,8 +339,11 @@ export class PlayerVisualController {
     this.animation.fire();
     this.imported?.fire();
     if (this.sidearm.root.visible) {
-      this.animation.kick *= WEAPONS.secondary.recoil.visualKick;
+      this.animation.kick *= this.secondary.recoil.visualKick;
       this.sidearm.cycle();
+    } else if (this.shotgun?.root.visible) {
+      this.animation.kick *= this.primary.recoil.visualKick;
+      this.shotgun.cycle();
     }
   }
 

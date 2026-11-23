@@ -10,6 +10,13 @@ services:
     container_name: freefall-game
     restart: unless-stopped
     init: true
+    environment:
+      FREEFALL_DATA_DIR: /data
+      # Client-IP für die Login-Ratenbegrenzung kommt von nginx (CF-Connecting-IP).
+      FREEFALL_TRUST_PROXY: "1"
+    volumes:
+      # Accounts (SQLite). Überlebt Rebuilds und Neustarts; Sicherung siehe docs/ACCOUNTS.md.
+      - freefall-data:/data
 
   web:
     build:
@@ -31,3 +38,7 @@ services:
     environment:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env}
     depends_on: [web]
+
+volumes:
+  freefall-data:
+    name: freefall-data

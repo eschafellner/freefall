@@ -14,9 +14,12 @@ export type EquipmentAction = EquipmentCommand | 'resupply';
 
 export interface EquipmentState {
   slot: WeaponSlot;
-  /** Rounds in the loaded magazine of the holstered weapon. */
+  /** Rounds in the holstered weapon. */
   inactiveAmmo: number;
-  /** Full spare magazines per weapon slot. Partial magazines are never stored. */
+  /**
+   * Reserve per weapon slot: full spare magazines (magazine feed, partial magazines are never stored) or loose
+   * rounds (single feed, e.g. VX-13).
+   */
   magazines: Record<WeaponSlot, number>;
   grenades: number;
   stims: number;
@@ -34,10 +37,14 @@ export interface EquipmentState {
 }
 
 /**
- * Authoritative reload state machine. The ammunition transaction (one spare magazine → full magazine, leftover
- * rounds discarded) happens exactly once, on the `insertAt` tick (`MAGAZINE_INSERTION`).
+ * Authoritative reload state machine. Magazine feed: the ammunition transaction (one spare magazine → full magazine,
+ * leftover rounds discarded) happens exactly once, on the `insertAt` tick (`MAGAZINE_INSERTION`).
+ * Single feed (shotgun): `RELOAD_START` raises the weapon, then one cycle per round: `SHELL_LOADING` until
+ * `insertAt`, where exactly one round moves from the reserve into the weapon (`SHELL_INSERTION`), until `until`.
+ * `started`/`until` describe the current cycle. A new fire press ends the reload between rounds.
  */
-export type ReloadPhase = 'READY' | 'RELOAD_START' | 'MAGAZINE_REMOVAL' | 'MAGAZINE_INSERTION' | 'RELOAD_COMPLETE' | 'RELOAD_INTERRUPTED';
+export type ReloadPhase = 'READY' | 'RELOAD_START' | 'MAGAZINE_REMOVAL' | 'MAGAZINE_INSERTION' | 'RELOAD_COMPLETE' | 'RELOAD_INTERRUPTED'
+  | 'SHELL_LOADING' | 'SHELL_INSERTION';
 
 export interface ReloadState {
   phase: ReloadPhase;
@@ -107,7 +114,15 @@ export interface PlayerState {
   reloadUntil?: number;
   reload?: ReloadState;
   equipment?: EquipmentState;
+  /** Weapon IDs of the operator's loadout (presentation: model, sound, handling). Absent: standard loadout. */
+  weapons?: Record<WeaponSlot, string>;
 }
+
+/** Client → server: requested `LoadoutSelection`. Server → client: the accepted selection or a refusal. */
+export const LOADOUT_MESSAGE = 'loadout';
+export type LoadoutReply =
+  | { readonly selection: import('../balance/definitions.ts').LoadoutSelection }
+  | { readonly error: string };
 
 export const PLAYER_MOTION = { sprint: 1, aim: 2 } as const;
 
@@ -148,6 +163,20 @@ export interface ShotEvent {
   impact?: ShotImpact;
   /** Allied operator or convict intersected by this shot (may be protected). */
   ally?: string;
+  /**
+   * Further pellets of a shot shell (VX-13). The event itself is the first pellet and carries muzzle, slot and sound;
+   * each entry is one more validated ray from the same muzzle.
+   */
+  pellets?: PelletTrace[];
+}
+
+export type PelletTrace = Pick<ShotEvent, 'toX' | 'toY' | 'toZ' | 'enemy' | 'eliminated' | 'nest' | 'ally' | 'impact' | 'traceFrom'>;
+
+/** The shot and its pellets as separate rays (presentation helper). */
+export function shotRays(shot: ShotEvent): ShotEvent[] {
+  if (!shot.pellets?.length) return [shot];
+  const { pellets, ...first } = shot;
+  return [first, ...pellets.map((pellet) => ({ ...first, nest: undefined, ally: undefined, impact: undefined, traceFrom: undefined, ...pellet }))];
 }
 
 export type DamageSource = 'bullet' | 'explosion' | 'melee';
@@ -201,7 +230,7 @@ export type CombatEvent =
   | MeleeEvent
   | { type: 'friendly-fire'; tick: number; attacker: string; target: string; amount: number; source: DamageSource; self: boolean;
       life?: number; direction?: PositionXZ }
-  | { type: 'reload'; tick: number; operator: string; slot: WeaponSlot; phase: 'RELOAD_START' | 'MAGAZINE_INSERTION' | 'RELOAD_INTERRUPTED';
+  | { type: 'reload'; tick: number; operator: string; slot: WeaponSlot; phase: 'RELOAD_START' | 'MAGAZINE_INSERTION' | 'RELOAD_INTERRUPTED' | 'SHELL_INSERTION';
       discarded: number }
   | { type: 'resupply'; tick: number; operator: string; container: string; charges: number; granted: ResupplyGrant }
   | ExplosionEvent

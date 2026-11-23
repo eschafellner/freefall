@@ -2,6 +2,7 @@
  * The published balance configuration: the JSON files in `./data`, validated once at module load.
  * A broken file stops the server (and the client build) with a readable error list.
  */
+import ammunition from './data/ammunition.json' with { type: 'json' };
 import combat from './data/combat.json' with { type: 'json' };
 import convicts from './data/convicts.json' with { type: 'json' };
 import difficulty from './data/difficulty.json' with { type: 'json' };
@@ -17,7 +18,7 @@ import { createBalanceRegistry } from './registry.ts';
 import { resolveLoadout } from './resolver.ts';
 
 /** Raw data as loaded from disk. Use for tests that need a modified copy. */
-export const BALANCE_SOURCES = { manifest, weapons, equipment, operators, enemies, structures, swarm, convicts, difficulty, combat, movement };
+export const BALANCE_SOURCES = { manifest, weapons, ammunition, equipment, operators, enemies, structures, swarm, convicts, difficulty, combat, movement };
 
 export const BALANCE = createBalanceRegistry(BALANCE_SOURCES);
 

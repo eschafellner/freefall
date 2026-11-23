@@ -85,9 +85,11 @@ export class ResupplySystem implements ResupplyHooks {
     const { perUse } = this.config;
     const gear = player.equipment;
     const { primary, secondary } = player.loadout.weapons;
+    // Single-feed weapons (shotguns) count loose rounds: one granted magazine is `magazineSize` rounds.
+    const units = (weapon: typeof primary, magazines: number) => weapon.feed.type === 'single' ? magazines * weapon.magazineSize : magazines;
     return {
-      primaryMagazines: Math.max(0, Math.min(perUse.primaryMagazines, primary.maxReserveMagazines - gear.magazines.primary)),
-      secondaryMagazines: Math.max(0, Math.min(perUse.secondaryMagazines, secondary.maxReserveMagazines - gear.magazines.secondary)),
+      primaryMagazines: Math.max(0, Math.min(units(primary, perUse.primaryMagazines), primary.maxReserve - gear.magazines.primary)),
+      secondaryMagazines: Math.max(0, Math.min(units(secondary, perUse.secondaryMagazines), secondary.maxReserve - gear.magazines.secondary)),
       grenades: Math.max(0, Math.min(perUse.grenades, player.loadout.grenade.capacity - gear.grenades)),
       stims: Math.max(0, Math.min(perUse.stims, player.loadout.medical.maxCharges - gear.stims)),
     };

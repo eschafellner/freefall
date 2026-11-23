@@ -1,7 +1,7 @@
 import { ARENA_HALF, BALANCE, ENEMY_TYPES, MAX_PLAYERS, MOVEMENT_INPUT, NET, advancePosture, allowsPostureAction,
-  applyPostureInput, resolveLoadout } from '@freefall/shared';
+  applyPostureInput, enemyProtection, resolveLoadout, resolveSelection } from '@freefall/shared';
 import type {
-  BalanceRegistry, CombatEvent, EffectiveGrenade, EffectiveLoadout, EnemyGameplay, EnemyAIMetrics, EnemyAISample, GrenadeState, MovementDefinition, MovementBoundary, ShotEvent,
+  BalanceRegistry, CombatEvent, LoadoutSelection, EffectiveGrenade, EffectiveLoadout, EnemyGameplay, EnemyAIMetrics, EnemyAISample, GrenadeState, MovementDefinition, MovementBoundary, ShotEvent,
   WorldDefinition,
 } from '@freefall/shared';
 import { EnemyApproach } from '../ecs/EnemyApproach.ts';
@@ -17,7 +17,7 @@ import { GroundNavigation } from '../mission/GroundNavigation.ts';
 import { ArenaTargeting, validOperator } from '../systems/enemyTargeting.ts';
 import { fireWeapon, interruptReload, meleeStrike, switchWeaponState, updateReload } from '../systems/combat.ts';
 import type { AllyTarget, CombatContext, CombatTargets, SecondaryTarget } from '../systems/combat.ts';
-import { createPlayer, respawnPlayer } from './Player.ts';
+import { cancelEquipment, createPlayer, refillPlayer, respawnPlayer } from './Player.ts';
 import type { SimPlayer } from './Player.ts';
 
 import { updateEquipment } from '../systems/equipment.ts';
@@ -88,6 +88,7 @@ export class Battlefield {
     this.combat = {
       players: this.players, allies: () => this.allies(), random: this.random, stats: this.stats, events: this.combatEvents,
       respawns: true, grid: this.grid, stagger: this.stagger, policy: this.loadout.damagePolicy,
+      protection: enemyProtection(registry),
     };
     this.hooks = {
       launch: (p) => this.grenades.launch(p, this.tick, this.combat, this.movementBalance),
@@ -122,6 +123,29 @@ export class Battlefield {
     const player = createPlayer(id, slot, this.tick, this.loadout);
     this.players[slot] = player;
     return player;
+  }
+
+  /** Loadout changes need a re-equip point. Missions allow them only on the Carrier. */
+  protected get loadoutChangeAllowed(): boolean { return true; }
+
+  /**
+   * Equips an operator with a validated selection (Carrier › Ausrüstung). The operator is fully resupplied with the new
+   * weapons. Returns a refusal reason, or undefined on success. Unlock checks happen before, in the room.
+   */
+  setLoadout(id: string, selection: LoadoutSelection): string | undefined {
+    const player = this.players.find((entry) => entry?.id === id);
+    if (!player) return 'Operator nicht gefunden';
+    if (!this.loadoutChangeAllowed) return 'Ausrüstung kann nur auf dem Carrier gewechselt werden';
+    let loadout: EffectiveLoadout;
+    try {
+      loadout = resolveSelection(this.registry, selection);
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+    player.loadout = loadout;
+    cancelEquipment(player, this.tick);
+    refillPlayer(player);
+    return undefined;
   }
 
   removePlayer(id: string): void {

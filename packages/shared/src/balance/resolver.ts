@@ -10,16 +10,17 @@
  * only once per resolver. Both rules make double application of a difficulty multiplier an error, not a bug.
  */
 import { SIMULATION_HZ } from '../config/limits.ts';
-import { OPERATOR_SLIDE_LIMITS } from './definitions.ts';
+import { LOADOUT_SELECTION_KEYS, OPERATOR_SLIDE_LIMITS } from './definitions.ts';
 import { deepFreeze } from './schema.ts';
 import type {
-  CombatDefinition, ConvictKitDefinition, ConvictSquadDefinition, DamagePolicy, DifficultyDefinition, EnemyGameplay,
+  AmmoDefinition, ArmorRules, BackpackDefinition, BodyArmorDefinition, CaliberDefinition, LoadoutSelection, CombatDefinition, ConvictKitDefinition, DamageType, EnemyArchetype, ConvictSquadDefinition, DamagePolicy, DifficultyDefinition, EnemyGameplay,
   GrenadeDefinition, MedicalDefinition, MeleeDefinition, NestDefinition, OperatorSlideDefinition, ResupplyRules, SupplyContainerDefinition,
   SwarmDefinition, WeaponDefinition, WeaponSlot,
 } from './definitions.ts';
 import type { BalanceRegistry } from './registry.ts';
 
-export const MODIFIER_LAYERS = ['equipment', 'difficulty', 'mission'] as const;
+/** `ammunition`: the loaded ammunition type (`ammunition.json › ammunition[].modifiers`), applied before equipment. */
+export const MODIFIER_LAYERS = ['ammunition', 'equipment', 'difficulty', 'mission'] as const;
 export type ModifierLayer = (typeof MODIFIER_LAYERS)[number];
 export type ModifierOperation = 'add' | 'multiply' | 'divide';
 
@@ -114,6 +115,8 @@ export class StatResolver {
 }
 
 const EQUIPMENT: StatRule['layers'] = ['equipment'];
+/** Weapon stats that the loaded ammunition may change (see `AMMO_MODIFIABLE_STATS`). */
+const WEAPON: StatRule['layers'] = ['ammunition', 'equipment'];
 const MISSION: StatRule['layers'] = ['difficulty', 'mission'];
 const NONE: StatRule['layers'] = [];
 const ticks = (seconds: number): number => seconds * SIMULATION_HZ;
@@ -145,15 +148,46 @@ export interface EffectiveSpread {
   readonly bloomRecoveryPerTick: number;
 }
 
-export interface EffectiveWeapon extends WeaponDefinition {
+/** Resolved caliber × weapon × ammunition values that the damage resolver needs per hit. */
+export interface EffectiveBallistics {
+  /** Damage per projectile, identical to `EffectiveWeapon.damage`. */
+  readonly damage: number;
+  /** Pellets per shot (shot shells), each its own ray. */
+  readonly projectilesPerShot: number;
+  /** Pellet cone half-angle in radians around the spread aim direction. */
+  readonly pelletSpread: number;
+  /** Penetration level 1 … 7 against armor classes. */
+  readonly penetration: number;
+  readonly muzzleVelocity: number;
+  readonly damageType: DamageType;
+  /** Falloff distances scaled by muzzleVelocity / caliber reference velocity. */
+  readonly falloff: CaliberDefinition['falloff'];
+}
+
+/** Resolved feed. Single feed: `reloadTicks` and the removal/insertion ticks describe one round cycle. */
+export type EffectiveFeed =
+  | { readonly type: 'magazine'; readonly chamberRounds: number }
+  | { readonly type: 'single'; readonly chamberRounds: number; readonly startTicks: number; readonly chamberTicks: number };
+
+export interface EffectiveWeapon extends Omit<WeaponDefinition, 'feed'> {
+  /** Damage per projectile: caliber × weapon ballistics, then ammunition and equipment modifiers. */
+  readonly damage: number;
+  readonly caliber: CaliberDefinition;
+  /** Loaded ammunition type. */
+  readonly ammo: AmmoDefinition;
+  /** Effective projectile: caliber × weapon `ballistics` × ammunition. */
+  readonly projectile: EffectiveBallistics;
+  readonly feed: EffectiveFeed;
+  /** Rounds the weapon holds when full: magazineSize + chamberRounds. */
+  readonly capacity: number;
   /** Ticks between two shots. */
   readonly fireIntervalTicks: number;
   /** Exact shot interval in ticks (fractional). Sustained fire averages exactly `roundsPerSecond`. */
   readonly fireInterval: number;
   readonly reloadTicks: number;
-  /** Ticks after reload start at which the old magazine leaves the weapon. */
+  /** Ticks after reload (or round cycle) start at which the old magazine leaves the weapon. */
   readonly reloadRemovalTicks: number;
-  /** Ticks after reload start at which the magazine transaction happens (exactly once). */
+  /** Ticks after reload (or round cycle) start at which the ammunition transaction happens (exactly once). */
   readonly reloadInsertionTicks: number;
   readonly handling: { readonly recoil: EffectiveRecoil; readonly spread: EffectiveSpread };
 }
@@ -181,12 +215,19 @@ export interface EffectiveMelee extends MeleeDefinition {
 }
 
 export interface EffectiveLoadout {
+  /** Preset ID (`equipment.json › loadouts`) or `custom` for a selection from the Carrier. */
   readonly id: string;
   readonly configHash: string;
+  /** The IDs this loadout was resolved from. */
+  readonly selection: LoadoutSelection;
   readonly weapons: Readonly<Record<WeaponSlot, EffectiveWeapon>>;
   readonly grenade: EffectiveGrenade;
   readonly medical: EffectiveMedical;
   readonly melee: EffectiveMelee;
+  readonly backpack: BackpackDefinition;
+  readonly bodyArmor: BodyArmorDefinition;
+  /** Armor classes and residual damage of non-penetrating hits. */
+  readonly armorRules: ArmorRules;
   readonly slide: OperatorSlideDefinition;
   readonly switchTicks: number;
   readonly maxHealth: number;
@@ -199,25 +240,69 @@ export interface EffectiveLoadout {
   readonly trace: Readonly<Record<string, ResolvedStat>>;
 }
 
-function effectiveWeapon(resolver: StatResolver, weapon: WeaponDefinition): EffectiveWeapon {
+/** The ammunition's modifiers as `ammunition`-layer modifiers on `weapon.<id>.<stat>`. */
+export function ammoModifiers(weapon: WeaponDefinition, ammo: AmmoDefinition): StatModifier[] {
+  return ammo.modifiers.map((modifier) => ({
+    source: `ammo:${ammo.id}`, layer: 'ammunition', stat: `weapon.${weapon.id}.${modifier.stat}`,
+    operation: modifier.operation, value: modifier.value,
+  }));
+}
+
+/** Equipment item modifiers; `primary.` / `secondary.` address the weapon in that slot. */
+function itemModifiers(source: string, modifiers: readonly { stat: string; operation: ModifierOperation; value: number }[],
+  weapons: Readonly<Record<WeaponSlot, string>>): StatModifier[] {
+  return modifiers.map(({ stat, operation, value }) => {
+    const slot = stat.split('.', 1)[0];
+    const target = slot === 'primary' || slot === 'secondary' ? `weapon.${weapons[slot]}${stat.slice(slot.length)}` : stat;
+    return { source, layer: 'equipment', stat: target, operation, value };
+  });
+}
+
+function loadedAmmo(registry: BalanceRegistry, weapon: WeaponDefinition, ammoId = weapon.defaultAmmoId): AmmoDefinition {
+  const ammo = registry.ammo(ammoId);
+  if (ammo.caliberId !== weapon.caliberId) {
+    throw new BalanceResolutionError(`${weapon.id} verschießt ${weapon.caliberId}, "${ammo.id}" ist Munition für ${ammo.caliberId}`);
+  }
+  return ammo;
+}
+
+function effectiveWeapon(resolver: StatResolver, registry: BalanceRegistry, weapon: WeaponDefinition, ammo: AmmoDefinition): EffectiveWeapon {
   const key = `weapon.${weapon.id}`;
-  const damage = resolver.resolve(`${key}.damage`, weapon.damage, { layers: EQUIPMENT, min: 0 });
-  const roundsPerSecond = resolver.resolve(`${key}.roundsPerSecond`, weapon.roundsPerSecond, { layers: EQUIPMENT, min: 1e-6, max: SIMULATION_HZ });
+  const caliber = registry.caliber(weapon.caliberId);
+  const damage = resolver.resolve(`${key}.damage`, caliber.damage * weapon.ballistics.damageMultiplier, { layers: WEAPON, min: 0 });
+  const penetration = resolver.resolve(`${key}.penetration`, caliber.penetration, { layers: WEAPON, round: 'round', min: 1, max: registry.armor.classes.length });
+  const muzzleVelocity = resolver.resolve(`${key}.muzzleVelocity`, caliber.muzzleVelocity * weapon.ballistics.velocityMultiplier, { layers: WEAPON, min: 1 });
+  const pelletSpread = resolver.resolve(`${key}.pelletSpread`, caliber.pelletSpreadDegrees, { layers: WEAPON, min: 0, max: 20 });
+  const energy = muzzleVelocity / caliber.muzzleVelocity;
+  const roundsPerSecond = resolver.resolve(`${key}.roundsPerSecond`, weapon.roundsPerSecond, { layers: WEAPON, min: 1e-6, max: SIMULATION_HZ });
   const magazineSize = resolver.resolve(`${key}.magazineSize`, weapon.magazineSize, { layers: EQUIPMENT, round: 'round', min: 1 });
-  const reserveMagazines = resolver.resolve(`${key}.reserveMagazines`, weapon.reserveMagazines, { layers: EQUIPMENT, round: 'round', min: 0 });
-  const maxReserveMagazines = resolver.resolve(`${key}.maxReserveMagazines`, weapon.maxReserveMagazines, { layers: EQUIPMENT, round: 'round', min: reserveMagazines });
+  const reserve = resolver.resolve(`${key}.reserve`, weapon.reserve, { layers: EQUIPMENT, round: 'round', min: 0 });
+  const maxReserve = resolver.resolve(`${key}.maxReserve`, weapon.maxReserve, { layers: EQUIPMENT, round: 'round', min: reserve });
   const reloadSeconds = resolver.resolve(`${key}.reloadSeconds`, weapon.reloadSeconds, { layers: EQUIPMENT, min: 1 / SIMULATION_HZ });
   const effectiveRange = resolver.resolve(`${key}.effectiveRange`, weapon.effectiveRange, { layers: EQUIPMENT, min: 0 });
   const reloadTicks = resolver.resolve(`${key}.reloadTicks`, reloadSeconds * SIMULATION_HZ, { layers: NONE, round: 'ceil', min: 2 });
   const reloadInsertionTicks = Math.min(reloadTicks, Math.max(1, Math.round(weapon.reloadTimeline.insertionAt * reloadTicks)));
   const reloadRemovalTicks = Math.min(reloadInsertionTicks - 1, Math.round(weapon.reloadTimeline.removalAt * reloadTicks));
+  const source = weapon.feed;
+  const feed: EffectiveFeed = source.type === 'single'
+    ? { type: 'single', chamberRounds: source.chamberRounds, startTicks: Math.round(source.startSeconds * SIMULATION_HZ),
+      chamberTicks: Math.max(2, Math.ceil(source.chamberSeconds * SIMULATION_HZ)) }
+    : { type: 'magazine', chamberRounds: source.chamberRounds };
   const { recoil, spread } = weapon;
-  const pitch = resolver.resolve(`${key}.recoilPitch`, recoil.pitchPerShot * recoil.verticalMultiplier, { layers: EQUIPMENT, min: 0 });
-  const yaw = resolver.resolve(`${key}.recoilYaw`, recoil.yawPerShot * recoil.horizontalMultiplier, { layers: EQUIPMENT, min: 0 });
-  const hip = resolver.resolve(`${key}.spreadHip`, spread.hipDegrees, { layers: EQUIPMENT, min: 0 });
-  const aim = resolver.resolve(`${key}.spreadAim`, spread.aimDegrees, { layers: EQUIPMENT, min: 0 });
+  const pitch = resolver.resolve(`${key}.recoilPitch`, recoil.pitchPerShot * recoil.verticalMultiplier, { layers: WEAPON, min: 0 });
+  const yaw = resolver.resolve(`${key}.recoilYaw`, recoil.yawPerShot * recoil.horizontalMultiplier, { layers: WEAPON, min: 0 });
+  const hip = resolver.resolve(`${key}.spreadHip`, spread.hipDegrees, { layers: WEAPON, min: 0 });
+  const aim = resolver.resolve(`${key}.spreadAim`, spread.aimDegrees, { layers: WEAPON, min: 0 });
   return {
-    ...weapon, damage, roundsPerSecond, magazineSize, reserveMagazines, maxReserveMagazines, reloadSeconds, effectiveRange,
+    ...weapon, damage, caliber, ammo, feed, capacity: magazineSize + feed.chamberRounds,
+    projectile: {
+      damage, projectilesPerShot: caliber.projectilesPerShot, pelletSpread: pelletSpread * DEG, penetration, muzzleVelocity,
+      damageType: ammo.damageType,
+      falloff: {
+        startMeters: caliber.falloff.startMeters * energy, endMeters: caliber.falloff.endMeters * energy,
+        minMultiplier: caliber.falloff.minMultiplier,
+      },
+    }, roundsPerSecond, magazineSize, reserve, maxReserve, reloadSeconds, effectiveRange,
     fireIntervalTicks: resolver.resolve(`${key}.fireIntervalTicks`, SIMULATION_HZ / roundsPerSecond, { layers: NONE, round: 'ceil', min: 1 }),
     fireInterval: Math.max(1, SIMULATION_HZ / roundsPerSecond),
     reloadTicks, reloadRemovalTicks: Math.max(0, reloadRemovalTicks), reloadInsertionTicks,
@@ -253,12 +338,78 @@ function effectiveMelee(resolver: StatResolver, melee: MeleeDefinition): Effecti
   };
 }
 
-/** Armor resolves operator stats separately from weapon and other equipment modifiers. */
+/** One weapon with a given ammunition (default: `defaultAmmoId`), e.g. for catalogs and validation. */
+export function resolveWeapon(registry: BalanceRegistry, weaponId: string, ammoId?: string,
+  modifiers: readonly StatModifier[] = []): EffectiveWeapon {
+  const weapon = registry.weapon(weaponId);
+  const ammo = loadedAmmo(registry, weapon, ammoId);
+  const resolver = new StatResolver([...ammoModifiers(weapon, ammo), ...modifiers]);
+  const result = effectiveWeapon(resolver, registry, weapon, ammo);
+  resolver.assertAllUsed();
+  return deepFreeze(result);
+}
+
+/** The IDs of a preset loadout (`equipment.json › loadouts`). */
+export function presetSelection(registry: BalanceRegistry, loadoutId = registry.operator.loadoutId): LoadoutSelection {
+  const { primaryWeaponId, secondaryWeaponId, meleeId, grenadeId, medicalId, backpackId, armorId } = registry.loadout(loadoutId);
+  return { primaryWeaponId, secondaryWeaponId, meleeId, grenadeId, medicalId, backpackId, armorId };
+}
+
+/**
+ * Checks a client-supplied loadout selection: object shape, known IDs and the slot of each weapon. Returns the
+ * normalized selection or a readable reason. Ownership (unlocks) is checked separately on the server.
+ */
+export function validateLoadoutSelection(registry: BalanceRegistry, value: unknown):
+  { readonly selection: LoadoutSelection } | { readonly error: string } {
+  if (typeof value !== 'object' || value === null) return { error: 'Loadout: Objekt erwartet' };
+  const input = value as Record<string, unknown>;
+  const ids: Record<string, string> = {};
+  for (const key of LOADOUT_SELECTION_KEYS) {
+    const id = input[key];
+    if (typeof id !== 'string' || id.length > 80) return { error: `Loadout: ${key} fehlt` };
+    ids[key] = id;
+  }
+  const selection = ids as unknown as LoadoutSelection;
+  const known: [ReadonlyMap<string, unknown>, string, string][] = [
+    [registry.weapons, selection.primaryWeaponId, 'Primärwaffe'], [registry.weapons, selection.secondaryWeaponId, 'Sekundärwaffe'],
+    [registry.meleeAttacks, selection.meleeId, 'Nahkampfwaffe'], [registry.grenades, selection.grenadeId, 'Taktische Ausrüstung'],
+    [registry.medicalItems, selection.medicalId, 'Medizin'], [registry.backpacks, selection.backpackId, 'Rucksack'],
+    [registry.bodyArmors, selection.armorId, 'Rüstung'],
+  ];
+  for (const [map, id, label] of known) if (!map.has(id)) return { error: `${label} "${id}" ist unbekannt` };
+  if (registry.weapon(selection.primaryWeaponId).slot !== 'primary') return { error: `"${selection.primaryWeaponId}" ist keine Primärwaffe` };
+  if (registry.weapon(selection.secondaryWeaponId).slot !== 'secondary') return { error: `"${selection.secondaryWeaponId}" ist keine Sekundärwaffe` };
+  return { selection: Object.freeze({ ...selection }) };
+}
+
+/**
+ * Armor resolves operator stats separately from weapon and other equipment modifiers. `ammo` selects the loaded
+ * ammunition per slot; without an entry the weapon's `defaultAmmoId` is loaded.
+ */
 export function resolveLoadout(registry: BalanceRegistry, loadoutId = registry.operator.loadoutId,
-  modifiers: readonly StatModifier[] = [], armorModifiers: readonly StatModifier[] = []): EffectiveLoadout {
-  const loadout = registry.loadout(loadoutId);
-  const resolver = new StatResolver(modifiers);
-  const armor = new StatResolver(armorModifiers);
+  modifiers: readonly StatModifier[] = [], armorModifiers: readonly StatModifier[] = [],
+  ammo: Partial<Readonly<Record<WeaponSlot, string>>> = {}): EffectiveLoadout {
+  return resolveSelection(registry, presetSelection(registry, loadoutId), modifiers, armorModifiers, ammo, loadoutId);
+}
+
+/** Effective loadout of a selection (Carrier › Ausrüstung). Backpack and body armor add their own modifiers. */
+export function resolveSelection(registry: BalanceRegistry, selection: LoadoutSelection,
+  modifiers: readonly StatModifier[] = [], armorModifiers: readonly StatModifier[] = [],
+  ammo: Partial<Readonly<Record<WeaponSlot, string>>> = {}, id = 'custom'): EffectiveLoadout {
+  const preset = registry.loadout(registry.operator.loadoutId);
+  const primary = registry.weapon(selection.primaryWeaponId);
+  const secondary = registry.weapon(selection.secondaryWeaponId);
+  if (primary.slot !== 'primary' || secondary.slot !== 'secondary') {
+    throw new BalanceResolutionError(`Loadout ${id}: ${primary.id} / ${secondary.id} passen nicht zu Primär- und Sekundärslot`);
+  }
+  const backpack = registry.backpack(selection.backpackId);
+  const bodyArmor = registry.bodyArmor(selection.armorId);
+  const slots = { primary: primary.id, secondary: secondary.id };
+  const primaryAmmo = loadedAmmo(registry, primary, ammo.primary);
+  const secondaryAmmo = loadedAmmo(registry, secondary, ammo.secondary);
+  const resolver = new StatResolver([...ammoModifiers(primary, primaryAmmo), ...ammoModifiers(secondary, secondaryAmmo),
+    ...itemModifiers(`backpack:${backpack.id}`, backpack.modifiers, slots), ...modifiers]);
+  const armor = new StatResolver([...itemModifiers(`armor:${bodyArmor.id}`, bodyArmor.modifiers, slots), ...armorModifiers]);
   const slideStat = (key: keyof OperatorSlideDefinition) =>
     armor.resolve(`operator.slide.${key}`, registry.movement.slide[key], { layers: EQUIPMENT, ...OPERATOR_SLIDE_LIMITS[key] });
   const slide = {
@@ -266,16 +417,17 @@ export function resolveLoadout(registry: BalanceRegistry, loadoutId = registry.o
     cooldownSeconds: slideStat('cooldownSeconds'), minSpeed: slideStat('minSpeed'),
   };
   armor.assertAllUsed();
-  const grenade = registry.grenade(loadout.grenadeId);
-  const medical = registry.medical(loadout.medicalId);
-  const melee = registry.melee(loadout.meleeId);
+  const grenade = registry.grenade(selection.grenadeId);
+  const medical = registry.medical(selection.medicalId);
+  const melee = registry.melee(selection.meleeId);
   const maxHealth = registry.operator.maxHealth;
   const result: EffectiveLoadout = {
-    id: loadout.id,
+    id,
     configHash: registry.version.hash,
+    selection: { ...selection },
     weapons: {
-      primary: effectiveWeapon(resolver, registry.weapon(loadout.primaryWeaponId)),
-      secondary: effectiveWeapon(resolver, registry.weapon(loadout.secondaryWeaponId)),
+      primary: effectiveWeapon(resolver, registry, primary, primaryAmmo),
+      secondary: effectiveWeapon(resolver, registry, secondary, secondaryAmmo),
     },
     grenade: {
       ...grenade,
@@ -290,8 +442,10 @@ export function resolveLoadout(registry: BalanceRegistry, loadoutId = registry.o
       healAmount: maxHealth * medical.healFractionOfMaxHealth,
     },
     melee: effectiveMelee(resolver, melee),
+    backpack, bodyArmor,
+    armorRules: registry.armor,
     slide,
-    switchTicks: Math.ceil(loadout.weaponSwitchSeconds * SIMULATION_HZ),
+    switchTicks: Math.ceil((registry.loadouts.get(id) ?? preset).weaponSwitchSeconds * SIMULATION_HZ),
     maxHealth,
     respawnTicks: Math.ceil(registry.operator.respawnSeconds * SIMULATION_HZ),
     respawnProtectionTicks: Math.ceil(registry.operator.respawnProtectionSeconds * SIMULATION_HZ),
@@ -364,7 +518,13 @@ export interface MissionBalance {
     readonly extractionNestRate: number;
   };
   readonly extraction: { readonly initialPressureTicks: number; readonly pressureIntervalTicks: number };
-  readonly convicts: { readonly squad: ConvictSquadDefinition; readonly kit: ConvictKitDefinition; readonly reloadTicks: number };
+  readonly convicts: {
+    readonly squad: ConvictSquadDefinition; readonly kit: ConvictKitDefinition; readonly reloadTicks: number;
+    /** Armor rules for convict shots against enemies. */
+    readonly armor: ArmorRules;
+    /** Enemy armor class and resistances by wire type. */
+    readonly protection: readonly { readonly armorClass: number; readonly resistances: EnemyArchetype['resistances'] }[];
+  };
   /** Albatross resupply of this run. Charges and amounts accept mission modifiers (future ship upgrades). */
   readonly resupply: EffectiveResupply;
   readonly trace: Readonly<Record<string, ResolvedStat>>;
@@ -476,7 +636,8 @@ export function resolveMissionBalance(registry: BalanceRegistry, difficultyId: s
       pressureIntervalTicks: r('extraction.pressureIntervalTicks', ticks(swarm.extraction.pressureIntervalSeconds), { round: 'ceil', min: 1 }),
     },
     convicts: {
-      squad: registry.convicts.squad, kit,
+      squad: registry.convicts.squad, kit, armor: registry.armor,
+      protection: registry.enemiesByWireType.map((enemy) => ({ armorClass: enemy!.armorClass, resistances: enemy!.resistances })),
       reloadTicks: Math.ceil(SIMULATION_HZ * registry.weapon(registry.convicts.squad.reloadWeaponId).reloadSeconds),
     },
     resupply: resolveResupply(registry, r),

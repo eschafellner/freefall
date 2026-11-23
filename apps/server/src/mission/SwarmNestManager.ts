@@ -23,12 +23,15 @@ export class SwarmNestManager implements CombatTargets {
   private readonly config: MissionBalance['nest'];
 
   private readonly world?: WorldDefinition;
+  /** Armor class of the nest definition (`structures.json`). */
+  readonly armorClass: number;
 
   constructor(emit: (event: MissionEvent) => void, random: () => number, balance: MissionBalance, world?: WorldDefinition) {
     this.world = world;
     this.emit = emit;
     this.random = random;
     this.config = balance.nest;
+    this.armorClass = balance.nest.armorClass;
   }
 
   /** Static values come from the mission's balance snapshot. Only the live state belongs to the nest. */
