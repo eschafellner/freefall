@@ -132,8 +132,9 @@ export const UNLOCKS: UnlockRegistry = createUnlockRegistry([
     acquisition: 'starter', level: 1, requires: [], equipmentId: standard.grenadeId },
   { id: 'upgrade.medical-stim', kind: 'upgrade', displayName: 'Heilstim', description: 'Persönlicher Heilstim mit fünf Ladungen.',
     acquisition: 'starter', level: 1, requires: [], equipmentId: standard.medicalId },
+  // Schrotflinte: ab Level 2 im Arsenal für 3.000 SKR (seit Migration 5 nicht mehr Grundausstattung).
   { id: 'weapon.vx-13', kind: 'weapon', displayName: 'VX-13 Cerberus', description: 'Vorderschaftrepetierflinte, Kaliber 13, Einzelpatronen-Nachladen.',
-    acquisition: 'starter', level: 1, requires: [], weaponId: 'vx-13' },
+    acquisition: 'choice', level: 2, requires: [], weaponId: 'vx-13', cost: { credits: 3000 } },
   { id: 'upgrade.weapon-strike', kind: 'upgrade', displayName: 'Kolbenstoß', description: 'Nahkampfangriff mit der Waffe.',
     acquisition: 'starter', level: 1, requires: [], equipmentId: standard.meleeId },
   { id: 'upgrade.standard-frame', kind: 'upgrade', displayName: 'Standard-Tragegestell', description: 'Rucksack der Grundausstattung.',

@@ -432,6 +432,31 @@ test('Ressourcenbuch: Obergrenze, Kauf ohne Rückerstattung, Abgleich', async ()
   }
 });
 
+test('VX-13 Cerberus: ab Level 2 für 3.000 SKR, Migration 5 entzieht sie allen Accounts', async () => {
+  const entry = UNLOCKS.byId.get('weapon.vx-13')!;
+  assert.deepEqual([entry.acquisition, entry.level, entry.cost], ['choice', 2, { credits: 3000 }]);
+  const path = join(mkdtempSync(join(tmpdir(), 'freefall-vx13-')), 'freefall.db');
+  const legacy = new DatabaseSync(path);
+  for (const migration of MIGRATIONS.slice(0, 3)) legacy.exec(migration);
+  legacy.prepare('INSERT INTO accounts (id, name, name_key, tag, created_at) VALUES (?, ?, ?, ?, ?)').run('alt', 'Veteran', 'veteran', 7, 1);
+  legacy.prepare("INSERT INTO account_unlocks VALUES ('alt', 'weapon.vx-13', 'weapon', 'starter', 1), ('alt', 'weapon.p-01', 'weapon', 'starter', 1)").run();
+  legacy.exec(MIGRATIONS[3]);
+  legacy.exec('PRAGMA user_version = 4');
+  legacy.close();
+  const service = new AccountService(new AccountStore(path));
+  try {
+    assert.deepEqual(service.store.unlocks('alt').map(({ id }) => id), ['weapon.p-01']);
+    const cerberus = { ...STANDARD_LOADOUT, primaryWeaponId: 'vx-13' };
+    assert.deepEqual(service.missingForLoadout({ id: 'alt', level: 1 }, cerberus), ['weapon.vx-13']);
+    assert.equal(service.unlock({ id: 'alt', level: 1 }, 'weapon.vx-13').ok, false, 'erst ab Level 2');
+    assert.deepEqual(service.unlock({ id: 'alt', level: 2 }, 'weapon.vx-13'), { ok: true });
+    assert.equal(service.store.resources('alt').credits, 2000);
+    assert.deepEqual(service.missingForLoadout({ id: 'alt', level: 2 }, cerberus), []);
+  } finally {
+    service.store.close();
+  }
+});
+
 const unlock = (id: string, extra: Partial<UnlockDefinition> = {}): UnlockDefinition => ({
   id, kind: id.split('.')[0] as UnlockDefinition['kind'], displayName: id, description: '', acquisition: 'level', level: 1, requires: [], ...extra,
 });

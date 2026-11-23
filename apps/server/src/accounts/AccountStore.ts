@@ -127,6 +127,8 @@ export const MIGRATIONS: readonly string[] = [
    INSERT INTO resource_ledger (account_id, resource, amount, reason, source_id, created_at)
      SELECT id, 'credits', 5000, 'start', 'start', CAST(strftime('%s', 'now') AS INTEGER) * 1000 FROM accounts;
    INSERT INTO account_resources (account_id, resource, amount) SELECT id, 'credits', 5000 FROM accounts;`,
+  // 5: Die VX-13 Cerberus ist keine Grundausstattung mehr, sondern wird im Arsenal gekauft. Alle Accounts verlieren sie.
+  `DELETE FROM account_unlocks WHERE unlock_id = 'weapon.vx-13';`,
 ];
 
 /** Ergebnis eines Kaufs. */

@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
 import { Room, ServerError } from '@colyseus/core';
 import type { AuthContext, Client } from '@colyseus/core';
-import { ACCOUNT_PROGRESS_MESSAGE, BALANCE_VERSION_MESSAGE, BODENBRUCH, LOADOUT_MESSAGE, validateLoadoutSelection, MAX_PLAYERS, NET, RECONNECT_SECONDS, ROSTER_MESSAGE, WIDE_POSITION_SCALE } from '@freefall/shared';
+import { ACCOUNT_PROGRESS_MESSAGE, BALANCE_VERSION_MESSAGE, BODENBRUCH, LOADOUT_MESSAGE, validateLoadoutSelection, MAX_PLAYERS, NET, RECONNECT_SECONDS, ROSTER_MESSAGE, UNLOCKS, WIDE_POSITION_SCALE } from '@freefall/shared';
 import type { AccountProfile, AccountProgress, LoadoutReply, AtmosphereState, MissionResult, RosterEntry, ServerMetrics } from '@freefall/shared';
 import type { AccountService } from '../accounts/AccountService.ts';
 import { missionRecord } from '../accounts/MissionSettlement.ts';
@@ -73,7 +73,7 @@ export class FreefallRoom extends Room {
       if ('error' in checked) return reply({ error: checked.error });
       const account = this.operators.get(client.sessionId);
       const missing = account ? this.accountService?.missingForLoadout(account, checked.selection) ?? [] : [];
-      if (missing.length) return reply({ error: `Nicht freigeschaltet: ${missing.join(', ')}` });
+      if (missing.length) return reply({ error: `Nicht freigeschaltet: ${missing.map((id) => UNLOCKS.byId.get(id)?.displayName ?? id).join(', ')}. Freischalten im Arsenal.` });
       const error = simulation.setLoadout(client.sessionId, checked.selection);
       reply(error ? { error } : { selection: checked.selection });
     });

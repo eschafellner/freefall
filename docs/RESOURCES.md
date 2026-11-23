@@ -39,7 +39,13 @@ Was über dem Maximum liegt, verfällt. Ergebnisbildschirm und Dienstakte zeigen
 
 Eine Freischaltung mit `acquisition: 'choice'` kann einen Preis haben: `cost: { credits: 2500 }` oder `cost: { marks: 20, tissue: 5 }`. Level und Voraussetzungen gelten weiter. Eine Waffe ab Level 5 lässt sich also erst ab Level 5 kaufen. `createUnlockRegistry` prüft: Preise gibt es nur bei `choice`, nur für bekannte Ressourcen, als ganze Zahl von 1 bis zum Maximum der Ressource.
 
-Der Kauf läuft in einer Transaktion: Besitz prüfen, Guthaben prüfen, Preis abbuchen, Freischaltung schreiben. Es gibt keine Rückerstattung. Das Arsenal zeigt das Guthaben, den Preis jedes Eintrags und bei zu wenig Guthaben, was fehlt. Konkrete Preise vergibt erst der Eintrag neuer Inhalte. Die heutige Grundausstattung bleibt kostenlos.
+Der Kauf läuft in einer Transaktion: Besitz prüfen, Guthaben prüfen, Preis abbuchen, Freischaltung schreiben. Es gibt keine Rückerstattung. Das Arsenal zeigt das Guthaben, den Preis jedes Eintrags und bei zu wenig Guthaben, was fehlt. Preise:
+
+| Freischaltung | Level | Preis |
+| --- | ---: | ---: |
+| VX-13 Cerberus (Schrotflinte) | 2 | 3.000 SKR |
+
+Die übrige Grundausstattung bleibt kostenlos. Migration 5 hat die VX-13 allen Accounts entzogen, die sie als Grundausstattung besaßen. Wer sie im Loadout wählt, ohne sie zu besitzen, erhält „Nicht freigeschaltet: VX-13 Cerberus. Freischalten im Arsenal.“
 
 Vorgesehene Zuordnung: Waffen und Waffenaufsätze kosten SKR. Ausrüstung kostet Einsatzmarken und eventuell Proben. Forschung kostet Proben und Artefakte.
 
