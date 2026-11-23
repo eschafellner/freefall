@@ -8,11 +8,11 @@ const MUSIC_PATH = (import.meta.env?.BASE_URL ?? '/') + 'music/';
  * Score cues. Levels sit the -14.5 LUFS masters under the -23 LUFS effect mix; the music bus adds the player volume.
  * `tail`: seconds after the Albatross touchdown at which the drop score starts to fade. `loop`: repeats until its
  * state ends. The briefing bed plays at 30 % of the master's level, well under the voices and the deck ambience. The title
- * screen uses the same piece at 40 %.
+ * screen plays "Silent Watch" at 40 %.
  */
 export const MUSIC_TRACKS = {
-  /** Titel- und Loginbildschirm: dasselbe Stück wie das Briefing, bei 40 % der Originallautstärke. */
-  title: { file: 'briefing-silence', level: .4, fadeIn: 3, fadeOut: 2.5, tail: 0, loop: true },
+  /** Titel- und Loginbildschirm: „Silent Watch“ bei 40 % der Originallautstärke. */
+  title: { file: 'title-silent-watch', level: .4, fadeIn: 3, fadeOut: 2.5, tail: 0, loop: true },
   briefing: { file: 'briefing-silence', level: .3, fadeIn: 4, fadeOut: 3, tail: 0, loop: true },
   drop: { file: 'drop-larree-triomphale', level: .85, fadeIn: 1.2, fadeOut: 6, tail: 15, loop: false },
   balloon: { file: 'extraction-last-stand', level: .7, fadeIn: 2.5, fadeOut: 5, tail: 0, loop: false },

@@ -61,5 +61,26 @@
       "ogg": "f7826ebcded6f868591dd52bcd17eddf45152ae1583773d3f9e45c343e0af86c",
       "mp3": "8304bea7596762aa3376e4c0db59aed3240ee411a34d8b0655ca422db986d8d9"
     }
+  },
+  {
+    "id": "title-silent-watch",
+    "title": "Silent Watch",
+    "role": "title",
+    "rights": "Vom Projektinhaber bereitgestellt (eigene Werke), keine Drittlizenz",
+    "sourceFile": "Silent Watch.mp3",
+    "sourceSha256": "9b489fd9fa579a9da84a4c92c88688cb37cb916bd72965550aca6ad30bf4e86f",
+    "seconds": 217.3,
+    "sampleRate": 48000,
+    "channels": 2,
+    "lufs": -13.9,
+    "peakDbtp": -0.7,
+    "encoding": {
+      "ogg": "Vorbis q5, Metadaten und Cover entfernt",
+      "mp3": "Audiostrom unverändert kopiert, Metadaten und Cover entfernt"
+    },
+    "sha256": {
+      "ogg": "abcbd26e43e45cd69fcbcd1bf49f0523da24de8559f920ec8f8112df3dce97b2",
+      "mp3": "f34a55ad09e4569a050c55d7338a3b66a0819cd1355a3f883408264a40280e8a"
+    }
   }
 ]

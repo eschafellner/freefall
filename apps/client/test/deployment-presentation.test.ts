@@ -66,7 +66,7 @@ test('the score files are the documented, project-owned masters', () => {
     }
   }
   assert.deepEqual(readdirSync(dir).sort(), expected.sort());
-  // Cues may share a master (title and briefing both use Briefing Silence); every file must be documented and used.
+  // Cues may share a master; every file must be documented and used.
   assert.deepEqual([...new Set(Object.values(MUSIC_TRACKS).map(({ file }) => file))].sort(), manifest.map(({ id }) => id).sort());
 });
 
