@@ -16,6 +16,7 @@
     "benchmark": "node --conditions=development apps/server/src/benchmark.ts",
     "balance:check": "node --conditions=development scripts/balance-check.ts",
     "balance:trace": "node --conditions=development apps/server/test/support/balance-trace.ts",
+    "balance:edit": "node --conditions=development scripts/balance-editor/server.ts",
     "assets:check": "node --conditions=development scripts/check-character-asset.ts"
   },
   "devDependencies": {

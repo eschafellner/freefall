@@ -15,6 +15,32 @@ npm run typecheck && npm run build
 
 Änderungen wirken nur nach einem Neustart. Laufende Missionen behalten ihren Snapshot, bis sie zum Carrier zurückkehren. Der Client wird mit denselben Daten gebaut. Ist er veraltet, meldet er die abweichende Version im HUD.
 
+## Balance-Editor
+
+```bash
+npm run balance:edit   # dann http://localhost:5180 öffnen, beenden mit Strg+C
+```
+
+Ein lokales Werkzeug, mit dem man Waffen, Kaliber, Munition, Panzerklassen und Gegner zentral ansehen und bearbeiten kann. Es läuft nur auf `127.0.0.1` und gehört nicht zum Spiel-Build oder Deployment. Code: `scripts/balance-editor/`.
+
+- **Tabs:**
+  - **Waffen**, **Kaliber & Munition** und **Gegner** zeigen die wichtigsten Werte als Tabelle. ▸ klappt einen Eintrag auf und zeigt alle Felder (Rückstoß, Streuung, Trefferzonen, Angriffe …).
+  - **Analyse** zeigt Schüsse und Zeit bis zum Kill für jede Waffe gegen jede Panzerklasse jedes Gegners, Gegner-HP je Schwierigkeitsgrad sowie DPS und Magazinschaden je Munition.
+- **Abgeleitete Werte** (blaue Spalten) kommen aus dem Resolver und den gemeinsamen Schadensregeln (`combat/ballistics.ts`). Sie gelten für die Schwierigkeit und Distanz oben rechts. Gelbe Zahlen zeigen die Abweichung vom gespeicherten Stand.
+- **Prüfung:** Jede Änderung läuft durch dieselbe Validierung wie `balance:check`. Fehler erscheinen unten rechts und am betroffenen Feld. Ungültige Stände lassen sich nicht speichern.
+- **Speichern** (oder Strg+S) zeigt alle Änderungen als „alt → neu“ und schlägt ein neues Release-Label für `manifest.json` vor. Geschrieben wird nur der Text der geänderten Werte. Formatierung und Feldreihenfolge bleiben erhalten, der Git-Diff enthält also nur echte Wertänderungen.
+- **Schreibschutz:**
+  - `id`, `wireType` und `protected` lassen sich nur direkt in der Datei ändern, ebenso neue Einträge oder Felder.
+  - Gegner mit `protected: true` (die Schabe) sind nur lesbar.
+- **Externe Änderungen:** Ändert jemand die Dateien, während der Editor offen ist, erscheint ein Hinweis. „Neu laden“ übernimmt den neuen Stand und behält die eigenen, noch nicht gespeicherten Änderungen.
+- **Näherungen der Kill-Zeiten:**
+  - Alle Projektile treffen, der erste Schuss fällt bei 0 s.
+  - Nachladen dauert die volle Zeit (Einzelpatronen: Kammer plus ein Zyklus je Patrone).
+  - Bei Gegnern mit Trefferzonen gibt es eine Spalte je Panzerklasse der Zonen.
+  - ⛨ bedeutet: kein Durchschlag, nur Restschaden.
+
+Nach dem Speichern gilt der übliche Ablauf: `npm test`, bei gewollten Änderungen die Golden Traces mit `npm run balance:trace` erneuern, Server neu starten. Mit `BALANCE_EDITOR_DATA=<Ordner>` arbeitet der Editor auf einer Kopie des Datenordners, `BALANCE_EDITOR_PORT` ändert den Port.
+
 ## Wo Werte geändert werden
 
 | Thema | Datei |

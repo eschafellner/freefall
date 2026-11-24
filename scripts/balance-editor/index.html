@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Balance-Editor</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f5f6f8; --panel: #ffffff; --panel-2: #eef0f4; --line: #d9dde5; --text: #1b1f27; --muted: #667085;
+  --accent: #2f6fde; --accent-soft: #2f6fde1f; --ok: #1f8a4c; --bad: #c4372f; --bad-soft: #c4372f1a;
+  --warn: #a86400; --changed: #d18a00; --changed-soft: #f0a5001f; --heat: #e0533a; --lock: #8a8f99;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12151b; --panel: #191d25; --panel-2: #20252f; --line: #2d3340; --text: #e3e6ec; --muted: #8b93a4;
+    --accent: #6a9cff; --accent-soft: #6a9cff26; --ok: #4cc27f; --bad: #ff6b60; --bad-soft: #ff6b6022;
+    --warn: #f0b04a; --changed: #f0b04a; --changed-soft: #f0b04a1f; --heat: #ff7a5c; --lock: #6c7382;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+header { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); }
+.bar { display: flex; align-items: center; gap: 12px; padding: 8px 16px; flex-wrap: wrap; }
+.bar h1 { font-size: 15px; margin: 0 8px 0 0; }
+.version { color: var(--muted); font-variant-numeric: tabular-nums; }
+.version b { color: var(--text); font-weight: 600; }
+.spacer { flex: 1; }
+.pill { padding: 2px 10px; border-radius: 999px; font-weight: 600; font-size: 12px; background: var(--panel-2); color: var(--muted); }
+.pill.ok { background: color-mix(in oklab, var(--ok) 16%, transparent); color: var(--ok); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); cursor: pointer; }
+.btn { border: 1px solid var(--line); background: var(--panel-2); border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+nav { display: flex; gap: 2px; padding: 0 16px; align-items: flex-end; flex-wrap: wrap; }
+nav .tab { border: 0; background: none; padding: 8px 14px; border-bottom: 2px solid transparent; cursor: pointer; color: var(--muted); }
+nav .tab.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.controls { display: flex; gap: 14px; align-items: center; margin-left: auto; padding: 4px 0; color: var(--muted); flex-wrap: wrap; }
+.controls label { display: flex; gap: 6px; align-items: center; }
+.controls select, .controls input[type=number] { background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; }
+.controls input[type=number] { width: 64px; }
+main { padding: 16px; display: grid; gap: 20px; }
+main > *, .obj > * { min-width: 0; }
+.banner { padding: 8px 12px; border-radius: 6px; background: var(--bad-soft); color: var(--bad); display: flex; gap: 12px; align-items: center; }
+.banner.warn { background: color-mix(in oklab, var(--warn) 14%, transparent); color: var(--warn); }
+section > h2 { font-size: 14px; margin: 0 0 6px; }
+section > p.note { margin: 0 0 8px; color: var(--muted); }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: max-content; min-width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 3px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; vertical-align: middle; }
+thead th { position: sticky; top: 0; background: var(--panel-2); font-weight: 600; font-size: 12px; color: var(--muted); }
+th.derived, td.derived { background: color-mix(in oklab, var(--accent) 6%, transparent); text-align: right; }
+th.derived { color: var(--accent); }
+td.num { text-align: right; }
+tr.detail > td { background: var(--panel-2); padding: 10px 14px 14px 36px; white-space: normal; }
+tr.detail > td > .obj { position: sticky; left: 36px; width: min(1400px, calc(100vw - 100px)); }
+tr.locked td { color: var(--lock); }
+.expand { border: 0; background: none; cursor: pointer; color: var(--muted); width: 20px; padding: 0; }
+.lock { margin-left: 4px; color: var(--lock); }
+.field { background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 1px 4px; max-width: 260px; }
+.field:hover:not(:disabled) { border-color: var(--line); }
+.field:focus { outline: none; border-color: var(--accent); background: var(--panel); }
+.field.num { text-align: right; font-variant-numeric: tabular-nums; }
+.field:disabled { color: var(--lock); }
+select.field { padding: 1px 2px; }
+.field.changed { background: var(--changed-soft); border-color: color-mix(in oklab, var(--changed) 55%, transparent); }
+.field.invalid, .field.bad { background: var(--bad-soft); border-color: var(--bad); }
+.delta { font-size: 11px; margin-left: 4px; color: var(--changed); }
+.muted { color: var(--muted); }
+.stale { opacity: .5; }
+.obj { display: grid; gap: 10px; }
+.kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 2px 18px; }
+.kv label { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px dashed var(--line); padding: 1px 0; }
+.kv .k { color: var(--muted); }
+.vec { display: inline-flex; gap: 2px; }
+.vec .field { width: 52px; }
+fieldset { border: 1px solid var(--line); border-radius: 6px; margin: 0; padding: 6px 10px 8px; }
+legend { color: var(--muted); font-weight: 600; padding: 0 4px; font-size: 12px; }
+fieldset.items { display: grid; gap: 8px; }
+.kill { text-align: center; min-width: 78px; background: color-mix(in oklab, var(--heat) calc(var(--h, 0) * 38%), transparent); }
+.kill .shots { font-weight: 700; font-size: 14px; }
+.kill .time { font-size: 11px; color: var(--muted); }
+.kill.np .shots::after { content: " ⛨"; color: var(--warn); font-weight: 400; }
+.kill.noammo .time { color: var(--bad); }
+th.group { text-align: center; color: var(--text); border-left: 2px solid var(--line); }
+td.first, th.first { border-left: 2px solid var(--line); }
+.legend { color: var(--muted); margin-top: 6px; }
+#issues { position: fixed; right: 16px; bottom: 16px; width: min(560px, calc(100vw - 32px)); max-height: 40vh; overflow: auto; background: var(--panel);
+  border: 1px solid var(--bad); border-radius: 8px; box-shadow: 0 6px 24px #0004; z-index: 6; }
+#issues h3 { margin: 0; padding: 8px 12px; font-size: 13px; color: var(--bad); display: flex; justify-content: space-between; position: sticky; top: 0; background: var(--panel); }
+#issues ul { margin: 0; padding: 0 12px 10px 28px; }
+#issues li { margin: 3px 0; cursor: pointer; }
+#issues li:hover { text-decoration: underline; }
+dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); width: min(760px, calc(100vw - 32px)); padding: 0; }
+dialog::backdrop { background: #0007; }
+dialog .body { padding: 16px; display: grid; gap: 12px; max-height: 70vh; overflow: auto; }
+dialog h2 { margin: 0; font-size: 15px; }
+dialog .actions { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+dialog input[type=text] { background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 4px 8px; width: 220px; }
+.arrow { color: var(--muted); padding: 0 4px; }
+#toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 6px; opacity: 0;
+  transition: opacity .2s; pointer-events: none; z-index: 10; max-width: calc(100vw - 32px); }
+#toast.show { opacity: .95; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Balance-Editor</h1>
+    <span class="version" id="version">lädt …</span>
+    <span class="pill" id="status">prüfe …</span>
+    <span class="spacer"></span>
+    <button class="btn" id="discard" disabled>Verwerfen</button>
+    <button class="btn primary" id="save" disabled>Speichern</button>
+  </div>
+  <nav>
+    <button class="tab" data-tab="weapons">Waffen</button>
+    <button class="tab" data-tab="ammo">Kaliber &amp; Munition</button>
+    <button class="tab" data-tab="enemies">Gegner</button>
+    <button class="tab" data-tab="analysis">Analyse</button>
+    <div class="controls">
+      <label>Schwierigkeit <select id="difficulty"></select></label>
+      <label>Distanz <input type="number" id="distance" min="0" max="1000" step="5" value="0"> m</label>
+    </div>
+  </nav>
+</header>
+<main id="main"></main>
+<div id="issues" hidden></div>
+<div id="lists" hidden></div>
+<dialog id="saveDialog"></dialog>
+<div id="toast"></div>
+<script>
+'use strict';
+const S = {
+  files: null, fileNames: {}, revision: null, draft: null, edits: new Map(), changes: [], editErrors: [],
+  baseline: null, current: null, lastValid: null, stale: false, open: new Set(), derived: [],
+  tab: 'weapons', difficultyId: 'normal', distance: 0, allAmmo: false,
+};
+const READ_ONLY = new Set(['id', 'wireType', 'protected']);
+const ENUM_KEYS = new Set(['slot', 'category', 'family', 'damageType', 'type', 'tactics', 'operation', 'vehicleTargets', 'fire', 'stat']);
+const REFS = { weapons: { caliberId: 'calibers', defaultAmmoId: 'ammoOfCaliber' }, ammunition: { caliberId: 'calibers' }, enemies: { factionId: 'factions' } };
+const TAB_OF_FILE = { weapons: 'weapons', ammunition: 'ammo', enemies: 'enemies' };
+
+// ---------- helpers ----------
+const $ = (selector) => document.querySelector(selector);
+function h(tag, attrs = {}, ...children) {
+  const el = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (value === undefined || value === null || value === false) continue;
+    if (key === 'class') el.className = value;
+    else if (key.startsWith('on')) el.addEventListener(key.slice(2), value);
+    else el.setAttribute(key, value === true ? '' : value);
+  }
+  for (const child of children.flat(Infinity)) if (child !== null && child !== undefined && child !== false) el.append(child instanceof Node ? child : String(child));
+  return el;
+}
+const clone = (value) => structuredClone(value);
+const isScalar = (v) => v === null || ['string', 'number', 'boolean'].includes(typeof v);
+function getAt(root, path) { let node = root; for (const key of path) { if (node == null || typeof node !== 'object') return undefined; node = node[key]; } return node; }
+function setAt(root, path, value) { getAt(root, path.slice(0, -1))[path[path.length - 1]] = value; }
+const keyOf = (file, path) => `${file}:${JSON.stringify(path)}`;
+const fmt = (v, digits = 2) => v === null || v === undefined || !Number.isFinite(v) ? '—' : v.toLocaleString('de-DE', { maximumFractionDigits: digits });
+const sign = (v, digits = 2) => (v > 0 ? '+' : '−') + fmt(Math.abs(v), digits);
+const store = { get(k, d) { try { const v = localStorage.getItem('balance-editor.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('balance-editor.' + k, JSON.stringify(v)); } catch { /* optional */ } } };
+function toast(text, ms = 3500) { const t = $('#toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show'), ms); }
+
+async function api(url, body) {
+  const response = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const data = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+  if (!response.ok) { const error = new Error(data.error || `HTTP ${response.status}`); error.data = data; error.status = response.status; throw error; }
+  return data;
+}
+const analysisOptions = () => ({ difficultyId: S.difficultyId, distance: S.distance });
+
+// ---------- names ----------
+const enemyName = (id) => S.draft.enemies.archetypes.find((e) => e.id === id)?.displayName ?? id;
+const weaponName = (id) => S.draft.weapons.weapons.find((w) => w.id === id)?.displayName ?? id;
+function entryLabel(file, path) {
+  for (let n = path.length - 1; n > 0; n--) {
+    const node = getAt(S.files[file], path.slice(0, n));
+    if (node && typeof node === 'object' && !Array.isArray(node) && (node.displayName || node.id)) {
+      return { name: node.displayName ?? node.id, rest: path.slice(n).join('.') };
+    }
+  }
+  return { name: '', rest: path.join('.') };
+}
+
+// ---------- fields ----------
+function isReadOnly(file, path) {
+  if (READ_ONLY.has(String(path[path.length - 1]))) return true;
+  if (file === 'manifest') return true;
+  if (file === 'enemies' && path[0] === 'archetypes') return getAt(S.files.enemies, path.slice(0, 2))?.protected === true;
+  return getAt(S.files[file], path) === null;
+}
+function refOptions(ref, file, path) {
+  if (ref === 'calibers') return S.draft.ammunition.calibers.map((c) => [c.id, c.displayName]);
+  if (ref === 'factions') return S.draft.enemies.factions.map((f) => [f.id, f.displayName]);
+  const caliber = getAt(S.draft[file], path.slice(0, -1)).caliberId;
+  return S.draft.ammunition.ammunition.filter((a) => a.caliberId === caliber).map((a) => [a.id, `${a.displayName} (${a.shortName})`]);
+}
+function datalistFor(file, key) {
+  const id = `dl-${file}-${key}`;
+  if (!document.getElementById(id)) {
+    const values = new Set();
+    (function walk(node) {
+      if (Array.isArray(node)) node.forEach(walk);
+      else if (node && typeof node === 'object') for (const [k, v] of Object.entries(node)) { if (k === key && typeof v === 'string') values.add(v); walk(v); }
+    })(S.files[file]);
+    $('#lists').append(h('datalist', { id }, [...values].sort().map((v) => h('option', { value: v }))));
+  }
+  return id;
+}
+function field(file, path) {
+  const original = getAt(S.files[file], path);
+  const value = getAt(S.draft[file], path);
+  const last = String(path[path.length - 1]);
+  const readOnly = isReadOnly(file, path);
+  const ref = REFS[file]?.[last];
+  let el;
+  if (typeof original === 'boolean') {
+    el = h('input', { type: 'checkbox', class: 'field', disabled: readOnly });
+    el.checked = value;
+    el.addEventListener('change', () => commit(file, path, el.checked, el));
+  } else if (ref) {
+    const options = refOptions(ref, file, path);
+    el = h('select', { class: 'field', disabled: readOnly }, options.map(([id, label]) => h('option', { value: id }, label)));
+    if (!options.some(([id]) => id === value)) el.prepend(h('option', { value }, `${value} (passt nicht)`));
+    el.value = value;
+    el.addEventListener('change', () => { commit(file, path, el.value, el); renderTab(); });
+  } else {
+    const numeric = typeof original === 'number';
+    el = h('input', { type: 'text', class: `field ${numeric ? 'num' : 'txt'}`, spellcheck: 'false', autocomplete: 'off', disabled: readOnly,
+      inputmode: numeric ? 'decimal' : undefined, list: !numeric && ENUM_KEYS.has(last) ? datalistFor(file, last) : undefined });
+    el.value = value === null ? '' : String(value);
+    el.size = Math.max(numeric ? 4 : 6, Math.min(30, el.value.length + 1));
+    el.addEventListener('input', () => {
+      let next = el.value;
+      if (numeric) {
+        const text = next.trim().replace(',', '.');
+        const number = text === '' ? NaN : Number(text);
+        if (!Number.isFinite(number)) { el.classList.add('bad'); el.title = 'Zahl erwartet'; return; }
+        el.classList.remove('bad');
+        markField(el);
+        next = number;
+      }
+      commit(file, path, next, el);
+    });
+  }
+  if (readOnly) el.dataset.hint = READ_ONLY.has(last) ? 'Schreibgeschützt: nur direkt in der Datei ändern' : 'Geschützter Eintrag (protected: true)';
+  el.dataset.key = keyOf(file, path);
+  markField(el);
+  return el;
+}
+function setFieldValue(el, value) {
+  if (el.type === 'checkbox') el.checked = value;
+  else if (document.activeElement !== el) el.value = String(value);
+}
+function markField(el) {
+  const key = el.dataset.key;
+  el.classList.toggle('changed', S.edits.has(key));
+  const issue = issueForKey(key);
+  el.classList.toggle('invalid', Boolean(issue));
+  if (!el.classList.contains('bad')) el.title = issue ?? el.dataset.hint ?? '';
+}
+function commit(file, path, value, source) {
+  setAt(S.draft[file], path, value);
+  const key = keyOf(file, path);
+  if (value === getAt(S.files[file], path)) S.edits.delete(key); else S.edits.set(key, { file, path, value });
+  for (const el of document.querySelectorAll(`[data-key="${CSS.escape(key)}"]`)) { if (el !== source) setFieldValue(el, value); markField(el); }
+  updateHeader();
+  scheduleEvaluate();
+}
+
+// ---------- issues ----------
+let issueIndex = [];
+function parseIssue(text) {
+  const match = /^(\S+\.json) › (.+?): ([\s\S]*)$/.exec(text);
+  if (!match) return { text };
+  const file = Object.keys(S.fileNames).find((k) => S.fileNames[k] === match[1]);
+  const path = [...match[2].matchAll(/([^.[\]]+)|\[(\d+)\]/g)].map((m) => m[2] !== undefined ? Number(m[2]) : m[1]);
+  return { text, file, path, message: match[3], prefix: file ? keyOf(file, path).slice(0, -1) : null };
+}
+function issueForKey(key) {
+  for (const issue of issueIndex) {
+    if (!issue.prefix || !key.startsWith(issue.prefix)) continue;
+    const next = key[issue.prefix.length];
+    if (next === ']' || next === ',') return issue.message;
+  }
+  return null;
+}
+function renderIssues() {
+  const list = [...S.editErrors, ...(S.current?.issues ?? [])];
+  issueIndex = list.map(parseIssue);
+  const box = $('#issues');
+  box.hidden = !list.length || box.dataset.closed === 'true';
+  box.replaceChildren();
+  if (!list.length) return;
+  box.append(h('h3', {}, `${list.length} ${list.length === 1 ? 'Problem' : 'Probleme'} – nicht speicherbar`,
+    h('button', { class: 'expand', title: 'Ausblenden', onclick: () => { box.dataset.closed = 'true'; box.hidden = true; } }, '✕')));
+  box.append(h('ul', {}, issueIndex.map((issue) => h('li', { onclick: () => revealIssue(issue) }, issue.text))));
+  for (const el of document.querySelectorAll('[data-key]')) markField(el);
+}
+function revealIssue(issue) {
+  const tab = TAB_OF_FILE[issue.file];
+  if (!tab) { toast(`${S.fileNames[issue.file] ?? 'Diese Datei'} wird im Editor nicht angezeigt – bitte direkt in der Datei prüfen.`); return; }
+  if (Array.isArray(issue.path) && typeof issue.path[1] === 'number') S.open.add(`${issue.file}:${issue.path[0]}:${issue.path[1]}`);
+  setTab(tab);
+  const target = [...document.querySelectorAll('[data-key]')].find((el) => issueForKey(el.dataset.key) === issue.message);
+  if (target) { target.scrollIntoView({ block: 'center' }); target.focus(); }
+}
+
+// ---------- evaluation ----------
+let timer = 0, sequence = 0;
+function scheduleEvaluate() { clearTimeout(timer); setStatus('busy'); timer = setTimeout(runEvaluate, 200); }
+async function runEvaluate() {
+  const id = ++sequence;
+  try {
+    const result = await api('/api/evaluate', { edits: [...S.edits.values()], revision: S.revision, ...analysisOptions() });
+    if (id !== sequence) return;
+    applyEvaluation(result);
+  } catch (error) { if (id === sequence) { setStatus('offline'); toast(`Server nicht erreichbar: ${error.message}`); } }
+}
+function applyEvaluation(result) {
+  S.current = result.evaluation;
+  S.changes = result.changes;
+  S.editErrors = result.editErrors;
+  S.stale = result.stale;
+  if (S.current.ok) S.lastValid = S.current;
+  refresh();
+}
+async function refreshBaseline() {
+  const [base, current] = await Promise.all([
+    api('/api/evaluate', { edits: [], revision: S.revision, ...analysisOptions() }),
+    api('/api/evaluate', { edits: [...S.edits.values()], revision: S.revision, ...analysisOptions() }),
+  ]);
+  S.baseline = base.evaluation;
+  applyEvaluation(current);
+}
+function refresh() { updateHeader(); renderIssues(); renderStale(); updateDerived(); if (S.tab === 'analysis') renderTab(); }
+
+function setStatus(mode) {
+  const pill = $('#status');
+  pill.className = 'pill';
+  pill.onclick = null;
+  if (mode === 'busy') { pill.textContent = 'prüfe …'; return; }
+  if (mode === 'offline') { pill.textContent = 'Server getrennt'; pill.classList.add('bad'); return; }
+  const count = (S.current?.issues.length ?? 0) + S.editErrors.length;
+  if (!count) { pill.textContent = 'gültig'; pill.classList.add('ok'); return; }
+  pill.textContent = `${count} ${count === 1 ? 'Fehler' : 'Fehler'}`;
+  pill.classList.add('bad');
+  pill.onclick = () => { $('#issues').dataset.closed = 'false'; renderIssues(); };
+}
+function updateHeader() {
+  const base = S.baseline?.version;
+  const now = S.current?.version;
+  $('#version').replaceChildren(
+    'Release ', h('b', {}, S.files?.manifest.release ?? '?'),
+    ' · Hash ', h('b', {}, base?.hash ?? '?'),
+    ...(S.edits.size && now && now.hash !== base?.hash ? [h('span', { class: 'arrow' }, '→'), h('b', {}, now.hash)] : []),
+  );
+  const count = S.edits.size;
+  $('#save').disabled = !count;
+  $('#save').textContent = count ? `Speichern (${count})` : 'Speichern';
+  $('#discard').disabled = !count;
+  setStatus('done');
+}
+function renderStale() {
+  document.getElementById('staleBanner')?.remove();
+  if (!S.stale) return;
+  $('#main').prepend(h('div', { class: 'banner warn', id: 'staleBanner' },
+    'Die Dateien wurden außerhalb des Editors geändert.', h('button', { class: 'btn', onclick: reload }, 'Neu laden (Änderungen bleiben erhalten)')));
+}
+
+// ---------- derived cells ----------
+function analysisFor(evaluation) { return evaluation?.analysis ?? null; }
+function derivedCell(compute, digits = 1) {
+  const td = h('td', { class: 'derived' });
+  S.derived.push({ td, compute, digits });
+  return td;
+}
+function updateDerived() {
+  const current = analysisFor(S.current);
+  const shown = current ?? analysisFor(S.lastValid);
+  const base = analysisFor(S.baseline);
+  for (const { td, compute, digits } of S.derived) {
+    const value = shown ? compute(shown) : null;
+    const before = base ? compute(base) : null;
+    td.classList.toggle('stale', !current);
+    td.replaceChildren(fmt(value, digits));
+    if (current && Number.isFinite(value) && Number.isFinite(before) && Math.abs(value - before) > 1e-9) {
+      td.append(h('span', { class: 'delta', title: `gespeichert: ${fmt(before, digits)}` }, sign(value - before, digits)));
+    }
+  }
+}
+const defaultRow = (a, weaponId) => a.weapons.find((w) => w.weaponId === weaponId && w.isDefaultAmmo);
+const difficultyIndex = (a) => Math.max(0, a.difficulties.findIndex((d) => d.id === a.difficultyId));
+
+// ---------- tables ----------
+const TABLES = {
+  weapons: {
+    file: 'weapons', list: ['weapons'], title: 'Waffen',
+    note: () => `Abgeleitete Spalten mit Standardmunition auf ${fmt(S.distance, 0)} m, ohne Panzerung. Aufklappen zeigt alle Werte (Rückstoß, Streuung, Zuführung …).`,
+    columns: [
+      ['displayName', 'Name'], ['slot', 'Slot'], ['caliberId', 'Kaliber'], ['defaultAmmoId', 'Standardmunition'],
+      ['ballistics.damageMultiplier', 'Schaden ×'], ['ballistics.velocityMultiplier', 'V₀ ×'], ['roundsPerSecond', 'Schuss/s'],
+      ['magazineSize', 'Magazin'], ['reserve', 'Reserve'], ['maxReserve', 'Max. Res.'], ['reloadSeconds', 'Nachladen s'], ['effectiveRange', 'Reichweite m'],
+    ],
+    derived: [
+      ['Schaden/Schuss', (a, e) => defaultRow(a, e.id)?.shotDamage, 1],
+      ['Durchschlag', (a, e) => defaultRow(a, e.id)?.penetration, 0],
+      ['DPS', (a, e) => defaultRow(a, e.id)?.dps, 0],
+      ['DPS inkl. Nachladen', (a, e) => defaultRow(a, e.id)?.sustainedDps, 0],
+      ['Magazinschaden', (a, e) => defaultRow(a, e.id)?.magazineDamage, 0],
+    ],
+  },
+  calibers: {
+    file: 'ammunition', list: ['calibers'], title: 'Kaliber',
+    note: () => 'Grundwerte je Kaliber. Waffen skalieren Schaden und Mündungsgeschwindigkeit über ihre Faktoren; die Abfall-Distanzen wachsen mit der Mündungsgeschwindigkeit.',
+    columns: [
+      ['displayName', 'Name'], ['family', 'Familie'], ['damage', 'Schaden'], ['projectilesPerShot', 'Projektile'], ['pelletSpreadDegrees', 'Streukegel °'],
+      ['muzzleVelocity', 'V₀ m/s'], ['penetration', 'Durchschlag'], ['falloff.startMeters', 'Abfall ab m'], ['falloff.endMeters', 'Abfall bis m'], ['falloff.minMultiplier', 'Min. ×'],
+    ],
+    static: [['Waffen', (e) => S.draft.weapons.weapons.filter((w) => w.caliberId === e.id).map((w) => w.displayName).join(', ') || '—']],
+  },
+  ammunition: {
+    file: 'ammunition', list: ['ammunition'], title: 'Munitionssorten',
+    note: () => 'Modifikatoren (z. B. damage × 1,2) im aufgeklappten Eintrag.',
+    columns: [['displayName', 'Name'], ['shortName', 'Kürzel'], ['caliberId', 'Kaliber'], ['damageType', 'Schadensart']],
+    static: [['Modifikatoren', (e) => e.modifiers.map((m) => `${m.stat} ${{ add: '+', multiply: '×', divide: '÷' }[m.operation] ?? m.operation} ${m.value}`).join(', ') || '—']],
+  },
+  enemies: {
+    file: 'enemies', list: ['archetypes'], title: 'Gegner',
+    note: () => `Abgeleitete Spalten auf Stufe „${S.lastValid?.analysis?.difficulties.find((d) => d.id === S.difficultyId)?.displayName ?? S.difficultyId}“. 🔒 = geschützter Gegner, nur lesbar. Trefferzonen, Angriffe und Sprung im aufgeklappten Eintrag.`,
+    columns: [
+      ['displayName', 'Name'], ['gameplay.health', 'HP'], ['gameplay.speed', 'Tempo m/s'], ['gameplay.meleeDamage', 'Nahkampf'], ['gameplay.meleeCooldown', 'Cooldown s'],
+      ['gameplay.meleeRange', 'Reichw. m'], ['armorClass', 'Panzerkl.'], ['resistances.kinetic', 'Res. kin.'], ['resistances.explosive', 'Res. expl.'], ['ai.detectionRange', 'Erkennung m'],
+    ],
+    static: [['Zonen', (e) => zoneSummary(e)]],
+    derived: [
+      ['HP (Stufe)', (a, e) => a.enemies.find((x) => x.enemyId === e.id)?.health[difficultyIndex(a)], 0],
+      ['Nahkampf (Stufe)', (a, e) => a.enemies.find((x) => x.enemyId === e.id)?.meleeDamage[difficultyIndex(a)], 1],
+    ],
+  },
+};
+function zoneSummary(enemy) {
+  if (!enemy.hitZones?.length) return '—';
+  const byClass = new Map();
+  for (const zone of enemy.hitZones) byClass.set(zone.armorClass, (byClass.get(zone.armorClass) ?? 0) + 1);
+  return [...byClass].sort((a, b) => a[0] - b[0]).map(([c, n]) => `${n}× Kl. ${c}`).join(', ') + (enemy.frontArmor ? ` · Front Kl. ${enemy.frontArmor.armorClass}` : '');
+}
+function renderTable(def) {
+  const entries = getAt(S.draft[def.file], def.list);
+  const head = h('tr', {}, h('th', {}), def.columns.map(([, label]) => h('th', {}, label)),
+    (def.static ?? []).map(([label]) => h('th', {}, label)), (def.derived ?? []).map(([label]) => h('th', { class: 'derived' }, label)));
+  const body = h('tbody');
+  const width = 1 + def.columns.length + (def.static?.length ?? 0) + (def.derived?.length ?? 0);
+  entries.forEach((entry, index) => {
+    const base = [...def.list, index];
+    const openKey = `${def.file}:${def.list.join('.')}:${index}`;
+    const isOpen = S.open.has(openKey);
+    const toggle = () => { if (isOpen) S.open.delete(openKey); else S.open.add(openKey); renderTab(); };
+    const row = h('tr', { class: entry.protected ? 'locked' : '' },
+      h('td', {}, h('button', { class: 'expand', title: isOpen ? 'Zuklappen' : 'Alle Werte', onclick: toggle }, isOpen ? '▾' : '▸')));
+    def.columns.forEach(([dotted], column) => {
+      const path = [...base, ...dotted.split('.')];
+      const td = h('td', { class: typeof getAt(S.files[def.file], path) === 'number' ? 'num' : '' });
+      td.append(getAt(S.files[def.file], path) === undefined ? h('span', { class: 'muted' }, '—') : field(def.file, path));
+      if (column === 0) { td.title = entry.id; if (entry.protected) td.append(h('span', { class: 'lock', title: 'Geschützt (protected: true)' }, '🔒')); }
+      row.append(td);
+    });
+    for (const [, compute] of def.static ?? []) row.append(h('td', { class: 'muted' }, compute(entry)));
+    for (const [, compute, digits] of def.derived ?? []) row.append(derivedCell((a) => compute(a, entry), digits));
+    body.append(row);
+    if (isOpen) body.append(h('tr', { class: 'detail' }, h('td', { colspan: width }, objectBody(def.file, base, entry))));
+  });
+  return h('section', {}, h('h2', {}, def.title), h('p', { class: 'note' }, def.note()),
+    h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, head), body)));
+}
+function objectBody(file, path, object) {
+  const grid = h('div', { class: 'kv' });
+  const groups = [];
+  for (const [key, value] of Object.entries(object)) {
+    const p = [...path, key];
+    if (isScalar(value)) grid.append(h('label', {}, h('span', { class: 'k' }, key), field(file, p)));
+    else if (Array.isArray(value) && value.every(isScalar)) {
+      grid.append(h('label', {}, h('span', { class: 'k' }, key), value.length ? h('span', { class: 'vec' }, value.map((_, i) => field(file, [...p, i]))) : h('span', { class: 'muted' }, 'leer')));
+    } else if (Array.isArray(value)) {
+      groups.push(h('fieldset', { class: 'items' }, h('legend', {}, `${key} (${value.length})`),
+        value.map((item, i) => h('fieldset', {}, h('legend', {}, item?.id ?? `#${i + 1}`), objectBody(file, [...p, i], item)))));
+    } else groups.push(h('fieldset', {}, h('legend', {}, key), objectBody(file, p, value)));
+  }
+  return h('div', { class: 'obj' }, grid, groups);
+}
+
+// ---------- analysis tab ----------
+function renderAnalysis() {
+  const current = analysisFor(S.current);
+  const a = current ?? analysisFor(S.lastValid);
+  const base = analysisFor(S.baseline);
+  const root = h('div', { class: 'obj' });
+  if (!a) return h('div', { class: 'banner' }, 'Keine gültige Konfiguration – Fehlerliste unten rechts.');
+  if (!current) root.append(h('div', { class: 'banner' }, 'Die aktuelle Änderung ist ungültig. Angezeigt wird der letzte gültige Stand.'));
+  const difficulty = a.difficulties.find((d) => d.id === a.difficultyId);
+
+  // Time-to-kill matrix
+  const rows = a.weapons.map((w, i) => ({ w, i })).filter(({ w }) => S.allAmmo || w.isDefaultAmmo);
+  const groups = [];
+  a.targets.forEach((t, j) => { const g = groups[groups.length - 1]; if (g?.enemyId === t.enemyId) g.items.push(j); else groups.push({ enemyId: t.enemyId, items: [j] }); });
+  const firstOfGroup = new Set(groups.map((g) => g.items[0]));
+  let maxSeconds = 0;
+  for (const { i } of rows) for (const cell of a.kills[i]) if (cell.seconds !== null) maxSeconds = Math.max(maxSeconds, cell.seconds);
+  const baseKey = (w) => `${w.weaponId}|${w.ammoId}`;
+  const baseIndex = new Map(base?.weapons.map((w, i) => [baseKey(w), i]) ?? []);
+  const baseTarget = new Map(base?.targets.map((t, j) => [t.key, j]) ?? []);
+  const head1 = h('tr', {}, h('th', {}, 'Waffe'), h('th', {}, 'Munition'),
+    groups.map((g) => h('th', { class: 'group', colspan: g.items.length }, enemyName(g.enemyId),
+      h('span', { class: 'muted' }, ` · ${fmt(a.enemies.find((e) => e.enemyId === g.enemyId)?.health[difficultyIndex(a)], 0)} HP`))));
+  const head2 = h('tr', {}, h('th', {}), h('th', {}), a.targets.map((t, j) => h('th', {
+    class: firstOfGroup.has(j) ? 'first' : '', title: t.zones.length ? `Zonen: ${t.zones.join(', ')}` : 'ohne Trefferzonen',
+  }, `Klasse ${t.armorClass}`, t.zones.length ? h('span', { class: 'muted' }, ` (${t.zones.length})`) : null)));
+  const body = h('tbody', {}, rows.map(({ w, i }) => h('tr', {},
+    h('td', {}, weaponName(w.weaponId)), h('td', {}, w.ammoName, w.isDefaultAmmo ? h('span', { class: 'muted' }, ' · Std.') : null),
+    a.kills[i].map((cell, j) => {
+      const td = h('td', { class: `kill${firstOfGroup.has(j) ? ' first' : ''}${cell.penetrates ? '' : ' np'}${cell.enoughAmmo ? '' : ' noammo'}` });
+      if (cell.shots === null) { td.append(h('div', { class: 'muted' }, 'kein Schaden')); return td; }
+      td.style.setProperty('--h', maxSeconds > 0 ? String(Math.sqrt(cell.seconds / maxSeconds)) : '0');
+      const bi = baseIndex.get(baseKey(w)), bj = baseTarget.get(a.targets[j].key);
+      const before = current && bi !== undefined && bj !== undefined ? base.kills[bi][bj] : null;
+      td.append(h('div', { class: 'shots' }, `${cell.shots}×`,
+        before && before.shots !== null && before.shots !== cell.shots ? h('span', { class: 'delta' }, sign(cell.shots - before.shots, 0)) : null));
+      td.append(h('div', { class: 'time' }, `${fmt(cell.seconds, 2)} s`, cell.reloads ? ` · ${cell.reloads}× nachl.` : '', cell.enoughAmmo ? '' : ' · Munition reicht nicht',
+        before && before.seconds !== null && Math.abs(before.seconds - cell.seconds) > 1e-9 ? h('span', { class: 'delta' }, sign(cell.seconds - before.seconds, 2)) : null));
+      td.title = `${fmt(cell.shotDamage, 2)} Schaden pro Schuss${cell.penetrates ? '' : ' (kein Durchschlag)'}`;
+      return td;
+    }))));
+  root.append(h('section', {},
+    h('h2', {}, 'Schüsse und Zeit bis zum Kill'),
+    h('p', { class: 'note' }, `Stufe „${difficulty?.displayName}“, Distanz ${fmt(a.distance, 0)} m. Eine Spalte je Panzerklasse, die Kugeln treffen können (bei Trefferzonen: Zonen dieser Klasse, Liste im Tooltip). `,
+      h('label', {}, h('input', { type: 'checkbox', checked: S.allAmmo || undefined, onchange: (e) => { S.allAmmo = e.target.checked; store.set('allAmmo', S.allAmmo); renderTab(); } }), ' alle Munitionssorten')),
+    h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, head1, head2), body)),
+    h('p', { class: 'legend' }, `⛨ = kein Durchschlag, nur ${fmt((S.draft.ammunition.armor.nonPenetratingDamageFraction) * 100, 0)} % Schaden. `,
+      'Näherung: alle Projektile treffen, erster Schuss bei 0 s, Nachladen mit voller Nachladezeit (Einzelpatronen: Kammer plus ein Zyklus je Patrone). Farbe = Zeit relativ zum langsamsten Wert (Wurzelskala). Gelbe Werte = Abweichung vom gespeicherten Stand.')));
+
+  // Enemies per difficulty
+  const enemyHead = h('tr', {}, h('th', {}, 'Gegner'), a.difficulties.map((d) => h('th', { class: 'derived' }, `${d.level} ${d.displayName}`)));
+  const enemyBody = h('tbody', {}, a.enemies.map((e) => {
+    const before = current ? base?.enemies.find((x) => x.enemyId === e.enemyId) : null;
+    return h('tr', {}, h('td', {}, enemyName(e.enemyId)), e.health.map((hp, k) => h('td', { class: 'derived' }, `${fmt(hp, 0)} HP · ${fmt(e.meleeDamage[k], 1)} Schaden`,
+      before && before.health[k] !== hp ? h('span', { class: 'delta' }, `${sign(hp - before.health[k], 0)} HP`) : null,
+      before && before.meleeDamage[k] !== e.meleeDamage[k] ? h('span', { class: 'delta' }, `${sign(e.meleeDamage[k] - before.meleeDamage[k], 1)} Schaden`) : null)));
+  }));
+  root.append(h('section', {}, h('h2', {}, 'Gegner je Schwierigkeitsgrad'),
+    h('p', { class: 'note' }, 'Lebenspunkte und Nahkampfschaden nach den Multiplikatoren aus difficulty.json.'),
+    h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, enemyHead), enemyBody))));
+
+  // Weapon × ammunition stats
+  const cols = [['Schaden/Proj.', 'damage', 1], ['Projektile', 'projectilesPerShot', 0], ['Schaden/Schuss', 'shotDamage', 1], ['Abfall ×', 'falloffMultiplier', 2],
+    ['Durchschlag', 'penetration', 0], ['Schuss/s', 'roundsPerSecond', 2], ['Kapazität', 'capacity', 0], ['Nachladen leer s', 'fullReloadSeconds', 2],
+    ['DPS', 'dps', 0], ['DPS inkl. Nachladen', 'sustainedDps', 0], ['Magazinschaden', 'magazineDamage', 0]];
+  const statHead = h('tr', {}, h('th', {}, 'Waffe'), h('th', {}, 'Munition'), cols.map(([label]) => h('th', { class: 'derived' }, label)), h('th', {}, 'Abfall'));
+  const statBody = h('tbody', {}, a.weapons.filter((w) => S.allAmmo || w.isDefaultAmmo).map((w) => {
+    const before = current && baseIndex.has(baseKey(w)) ? base.weapons[baseIndex.get(baseKey(w))] : null;
+    return h('tr', {}, h('td', {}, weaponName(w.weaponId)), h('td', {}, w.ammoName),
+      cols.map(([, key, digits]) => h('td', { class: 'derived' }, fmt(w[key], digits),
+        before && Math.abs(before[key] - w[key]) > 1e-9 ? h('span', { class: 'delta' }, sign(w[key] - before[key], digits)) : null)),
+      h('td', { class: 'muted' }, `${fmt(w.falloff.startMeters, 0)}–${fmt(w.falloff.endMeters, 0)} m → ×${fmt(w.falloff.minMultiplier, 2)}`));
+  }));
+  root.append(h('section', {}, h('h2', {}, 'Waffenwerte je Munition'),
+    h('p', { class: 'note' }, `Effektive Werte aus dem Resolver (Kaliber × Waffe × Munition), Schaden auf ${fmt(a.distance, 0)} m. Schuss/s ist auf Simulations-Ticks (30 Hz) gerundet.`),
+    h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, statHead), statBody))));
+  return root;
+}
+
+// ---------- tabs ----------
+function renderTab() {
+  S.derived = [];
+  const main = $('#main');
+  const scroll = window.scrollY;
+  main.replaceChildren();
+  if (!S.files) return;
+  if (S.tab === 'weapons') main.append(renderTable(TABLES.weapons));
+  if (S.tab === 'ammo') {
+    main.append(renderTable(TABLES.calibers), renderTable(TABLES.ammunition));
+    main.append(h('section', {}, h('h2', {}, 'Panzerung'), h('p', { class: 'note' }, 'Ein Treffer schlägt durch, wenn Durchschlag ≥ Panzerklasse. Sonst wirkt nur der Restschaden.'),
+      h('div', { class: 'scroll' }, h('div', { style: 'padding:10px 14px' }, objectBody('ammunition', ['armor'], S.draft.ammunition.armor)))));
+  }
+  if (S.tab === 'enemies') main.append(renderTable(TABLES.enemies));
+  if (S.tab === 'analysis') main.append(renderAnalysis());
+  for (const el of document.querySelectorAll('nav .tab')) el.classList.toggle('active', el.dataset.tab === S.tab);
+  renderStale();
+  updateDerived();
+  window.scrollTo(0, scroll);
+}
+function setTab(tab) { if (S.tab !== tab) { S.tab = tab; store.set('tab', tab); window.scrollTo(0, 0); } renderTab(); }
+
+// ---------- load, save, discard ----------
+function adopt(state, keepEdits) {
+  const previous = keepEdits ? [...S.edits.values()] : [];
+  S.files = state.files;
+  S.fileNames = state.fileNames;
+  S.revision = state.revision;
+  S.draft = clone(state.files);
+  S.edits = new Map();
+  for (const edit of previous) {
+    const original = getAt(S.files[edit.file], edit.path);
+    if (original === undefined || typeof original !== typeof edit.value || original === edit.value) continue;
+    setAt(S.draft[edit.file], edit.path, edit.value);
+    S.edits.set(keyOf(edit.file, edit.path), edit);
+  }
+  S.baseline = state.evaluation;
+  S.current = state.evaluation;
+  if (state.evaluation.ok) S.lastValid = state.evaluation;
+  S.changes = []; S.editErrors = []; S.stale = false;
+  $('#lists').replaceChildren();
+  const select = $('#difficulty');
+  const difficulties = state.evaluation.analysis?.difficulties ?? [];
+  select.replaceChildren(...difficulties.map((d) => h('option', { value: d.id }, `${d.level} · ${d.displayName}`)));
+  select.value = S.difficultyId;
+}
+async function load(keepEdits = false) {
+  try {
+    adopt(await api('/api/state', analysisOptions()), keepEdits);
+    renderTab();
+    if (S.edits.size) await runEvaluate(); else refresh();
+  } catch (error) { setStatus('offline'); toast(`Laden fehlgeschlagen: ${error.message}`, 6000); }
+}
+const reload = () => load(true);
+
+function suggestRelease(release) {
+  const match = /^(.*-)(\d+)$/.exec(release);
+  return match ? `${match[1]}${Number(match[2]) + 1}` : `${release}-1`;
+}
+async function openSave() {
+  if (!S.edits.size) return;
+  clearTimeout(timer);
+  await runEvaluate();
+  const dialog = $('#saveDialog');
+  const valid = S.current?.ok && !S.editErrors.length && !S.stale;
+  const release = h('input', { type: 'text', value: suggestRelease(S.files.manifest.release), spellcheck: 'false' });
+  const rows = S.changes.map((c) => { const label = entryLabel(c.file, c.path);
+    return h('tr', {}, h('td', { class: 'muted' }, c.fileName), h('td', {}, label.name), h('td', {}, label.rest),
+      h('td', { class: 'num' }, String(c.before)), h('td', { class: 'arrow' }, '→'), h('td', { class: 'num' }, h('b', {}, String(c.after)))); });
+  const confirm = h('button', { class: 'btn primary', disabled: !valid }, 'In Dateien schreiben');
+  confirm.addEventListener('click', async () => {
+    confirm.disabled = true;
+    try {
+      const result = await api('/api/save', { edits: [...S.edits.values()], release: release.value, revision: S.revision, ...analysisOptions() });
+      dialog.close();
+      adopt(result, false);
+      renderTab(); refresh();
+      toast(`Gespeichert: ${result.saved.length} Werte · Hash ${result.evaluation.version?.hash}. Als Nächstes: npm test, dann Server neu starten.`, 7000);
+    } catch (error) {
+      confirm.disabled = false;
+      toast(`Nicht gespeichert: ${error.message}${error.data?.issues ? ` (${error.data.issues.length} Probleme)` : ''}`, 7000);
+      if (error.status === 409) { S.stale = true; renderStale(); }
+    }
+  });
+  dialog.replaceChildren(h('div', { class: 'body' },
+    h('h2', {}, `${S.changes.length} ${S.changes.length === 1 ? 'Änderung' : 'Änderungen'} speichern`),
+    !valid ? h('div', { class: 'banner' }, S.stale ? 'Die Dateien wurden extern geändert. Bitte zuerst neu laden.' : 'Die Konfiguration ist ungültig. Bitte zuerst die Fehler beheben.') : null,
+    h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, h('tr', {}, ['Datei', 'Eintrag', 'Feld', 'gespeichert', '', 'neu'].map((t) => h('th', {}, t)))), h('tbody', {}, rows))),
+    h('label', {}, 'Release-Label (manifest.json): ', release, h('span', { class: 'muted' }, ` bisher ${S.files.manifest.release}`)),
+    h('p', { class: 'muted', style: 'margin:0' }, `Neuer Hash: ${S.current?.version?.hash ?? '—'}. Nach dem Speichern: npm test. Schlagen die Golden Traces an, mit npm run balance:trace neu erzeugen und die Änderung im Commit begründen. Server neu starten, damit die Werte wirken.`)),
+    h('div', { class: 'actions' }, h('button', { class: 'btn', onclick: () => dialog.close() }, 'Abbrechen'), confirm));
+  dialog.showModal();
+}
+function discard() {
+  if (!S.edits.size || !window.confirm(`${S.edits.size} ungespeicherte Änderungen verwerfen?`)) return;
+  S.draft = clone(S.files);
+  S.edits.clear();
+  S.current = S.baseline;
+  S.editErrors = []; S.changes = [];
+  renderTab(); refresh();
+}
+
+// ---------- wiring ----------
+for (const el of document.querySelectorAll('nav .tab')) el.addEventListener('click', () => setTab(el.dataset.tab));
+$('#save').addEventListener('click', openSave);
+$('#discard').addEventListener('click', discard);
+$('#difficulty').addEventListener('change', (e) => { S.difficultyId = e.target.value; store.set('difficulty', S.difficultyId); refreshBaseline().then(renderTab); });
+$('#distance').addEventListener('change', (e) => {
+  const value = Math.min(1000, Math.max(0, Number(e.target.value) || 0));
+  e.target.value = value; S.distance = value; store.set('distance', value); refreshBaseline().then(renderTab);
+});
+document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); openSave(); } });
+window.addEventListener('beforeunload', (e) => { if (S.edits.size) e.preventDefault(); });
+window.addEventListener('focus', () => { if (S.files) runEvaluate(); });
+
+S.tab = store.get('tab', 'weapons');
+S.difficultyId = store.get('difficulty', 'normal');
+S.distance = store.get('distance', 0);
+S.allAmmo = store.get('allAmmo', false);
+$('#distance').value = S.distance;
+load();
+</script>
+</body>
+</html>
