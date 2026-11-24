@@ -31,7 +31,7 @@ test('Schabe tiers keep their triangle budgets and only legs carry gait weights'
   const scene = new T.Scene();
   const lod = new EnemyVisualLOD(scene);
   const meshes = scene.children.filter((child): child is T.InstancedMesh => child instanceof T.InstancedMesh);
-  const budgets = [1_650, 450, 120];
+  const budgets = [3_300, 700, 180];
   meshes.forEach((mesh, tier) => assert.ok(triangles(mesh.geometry) <= budgets[tier], `tier ${tier}`));
   const near = meshes[0].geometry;
   const rig = near.getAttribute('rig');

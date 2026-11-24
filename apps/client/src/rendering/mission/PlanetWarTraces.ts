@@ -1,4 +1,5 @@
 import * as T from 'three';
+import { applySurfaceWear } from '../environment/SurfaceWear.ts';
 import { WORLD_PROFILES } from '@freefall/shared';
 import type { Circle, Obstacle, WorldDefinition } from '@freefall/shared';
 import { detailClearances } from '../environment/EnvironmentDetailPlacement.ts';
@@ -39,9 +40,9 @@ export class PlanetWarTraces {
     this.traces = placeWarTraces(world, detailClearances(world, reservations));
     const rock = WORLD_PROFILES.get(world.planetId!)?.surface.rock ?? 0x777777;
     const materials: Record<TraceMaterial, T.Material> = {
-      metal: this.material(new T.MeshStandardMaterial({ roughness: .6, metalness: .22, vertexColors: true })),
-      solid: this.material(new T.MeshStandardMaterial({ roughness: .94, metalness: 0, vertexColors: true })),
-      resin: this.material(new T.MeshStandardMaterial({ roughness: .3, metalness: .08, vertexColors: true })),
+      metal: applySurfaceWear(this.material(new T.MeshStandardMaterial({ roughness: .6, metalness: .22, vertexColors: true })), 'paint'),
+      solid: applySurfaceWear(this.material(new T.MeshStandardMaterial({ roughness: .94, metalness: 0, vertexColors: true })), 'concrete'),
+      resin: applySurfaceWear(this.material(new T.MeshStandardMaterial({ roughness: .3, metalness: .08, vertexColors: true })), 'organic'),
       lamp: this.material(new T.MeshBasicMaterial({ color: 0xff8a3a })),
     };
     this.lamp = materials.lamp;
@@ -82,8 +83,8 @@ export class PlanetWarTraces {
     }
     // Solids replace colliders and must never fade, so they get their own plain materials.
     const solidMaterials = {
-      metal: new T.MeshStandardMaterial({ roughness: .6, metalness: .22, vertexColors: true }),
-      solid: new T.MeshStandardMaterial({ roughness: .94, metalness: 0, vertexColors: true }),
+      metal: applySurfaceWear(new T.MeshStandardMaterial({ roughness: .6, metalness: .22, vertexColors: true }), 'paint'),
+      solid: applySurfaceWear(new T.MeshStandardMaterial({ roughness: .94, metalness: 0, vertexColors: true }), 'concrete'),
     };
     for (const [kind, obstacles] of solids) {
       const id = kind as 'pod-wreck' | 'hull-wreck' | 'ruin';

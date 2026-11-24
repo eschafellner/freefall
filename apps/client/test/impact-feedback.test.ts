@@ -44,7 +44,7 @@ test('pooled particles exit the contact plane, obey quality budgets and expire i
   const scene = new T.Scene();
   const geometry = new T.BoxGeometry();
   const surface = new T.MeshBasicMaterial();
-  const effects = new VisualEffectsManager(scene, geometry, surface);
+  const effects = new VisualEffectsManager(scene, [{ geometry, material: surface }]);
   const camera = new T.PerspectiveCamera();
   camera.position.set(0, 1.4, 0);
   const points = scene.children.find((object) => object instanceof T.Points)!;

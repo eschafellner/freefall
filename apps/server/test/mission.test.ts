@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  ALBATROSS, BALANCE, BALLOON, FRAG, BOARDING_TICKS, BODENBRUCH, CARRIER_ROOM_SIZE, CARRIER_ROOMS, CARRIER_SHIP, DIFFICULTIES, LANDING_STAGE_TICKS, HordeFrame, MAX_ENEMIES, NET, SCHABE_TYPE, WIDE_POSITION_SCALE, decodeHorde,
+  ALBATROSS, BALANCE, BALLOON, FRAG, BOARDING_TICKS, BODENBRUCH, CARRIER_ROOM_SIZE, CARRIER_ROOMS, CARRIER_SHIP, DIFFICULTIES, LANDING_STAGE_TICKS, HordeFrame, MAX_ENEMIES, NET, SCHABE_TYPE, BREACHER_TYPE, WIDE_POSITION_SCALE, decodeHorde,
   distanceSquared, inAlbatross, missionGround, newPosture, openGround, resolveMissionBalance,
 } from '@freefall/shared';
 import type { DifficultyDefinition, MissionDefinition, MissionEvent, PatrolRegion, PositionXZ } from '@freefall/shared';
@@ -243,6 +243,23 @@ test('nearby Schaben damage an individual Albatross nozzle through the shared me
   assert.equal(damaged.hullHealth, ship.hullHealth);
   assert.equal(damaged.thrusters[0].state, 'DAMAGED');
   assert.deepEqual(damaged.thrusters.slice(1), ship.thrusters.slice(1));
+});
+
+test('a breacher ignores the Albatross hull and goes for a nozzle instead', () => {
+  const noPatrols = { ...BODENBRUCH, world: { ...BODENBRUCH.world, initialNests: [], patrolRegions: [] } };
+  const { mission } = deployed('easy', noPatrols);
+  const ship = mission.snapshot().albatross!;
+  // Beside the hull, far from every nozzle: a Schabe here would strike the hull.
+  const enemy = mission.horde.spawn(ship.x - 2.95 - 2.2, ship.z, BREACHER_TYPE);
+  mission.horde.yaw[enemy] = Math.PI / 2;
+  let nozzle = false;
+  for (let i = 0; i < 600 && !nozzle; i++) {
+    mission.step();
+    nozzle = mission.snapshot().albatross!.thrusters.some(({ state }) => state !== 'INTACT');
+  }
+  const after = mission.snapshot().albatross!;
+  assert.equal(after.hullHealth, ship.hullHealth, 'the hull stays untouched');
+  assert.ok(nozzle, 'a nozzle took damage');
 });
 
 test('independent engine and hull damage disable ship extraction but preserve balloon recovery', () => {

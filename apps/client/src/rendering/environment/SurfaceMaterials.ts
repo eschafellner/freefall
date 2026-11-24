@@ -1,5 +1,6 @@
 import * as T from 'three';
 import { noise } from './noise.ts';
+import { applySurfaceWear } from './SurfaceWear.ts';
 
 type Finish = 'soil' | 'concrete' | 'painted';
 
@@ -67,8 +68,8 @@ export function createSurfaceMaterials(renderer: T.WebGLRenderer) {
     painted: new T.MeshStandardMaterial({
       ...paintedMaps, roughness: 0.87, metalness: 0.26, normalScale: new T.Vector2(0.35, 0.35),
     }),
-    hardware: new T.MeshStandardMaterial({ roughness: 0.56, metalness: 0.62 }),
-    canvas: new T.MeshStandardMaterial({ roughness: 0.96 }),
+    hardware: applySurfaceWear(new T.MeshStandardMaterial({ roughness: 0.56, metalness: 0.62 }), 'metal'),
+    canvas: applySurfaceWear(new T.MeshStandardMaterial({ roughness: 0.96 }), 'fabric'),
     lamps: new T.MeshStandardMaterial({
       color: 0xc4b892, emissive: 0xffd39b, emissiveIntensity: 0.75, roughness: 0.38,
     }),

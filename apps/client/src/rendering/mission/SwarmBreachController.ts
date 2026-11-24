@@ -5,36 +5,97 @@ import { NET, NEST_COLLAPSE_TICKS, NEST_EXITS, NEST_EXIT_RADIUS, NEST_RADIUS } f
 import type { NestSnapshot } from '@freefall/shared';
 import { randomSource, smoothstep } from '../environment/noise.ts';
 import type { SurfaceMaterials } from '../environment/SurfaceMaterials.ts';
+import { ORGANIC_GLSL } from '../SchabeModel.ts';
 
 const MAX_NEST_VISUALS = 44;
 const MAX_PARTICLES = 720;
 
 function moundGeometry(): T.BufferGeometry {
-  const terrain = new T.PlaneGeometry(1, 1, 60, 16);
+  const columns = 96, rows = 28;
+  const terrain = new T.PlaneGeometry(1, 1, columns, rows);
   const positions = terrain.getAttribute('position');
   const uv = terrain.getAttribute('uv');
   const colors = new Float32Array(positions.count * 3);
   const tint = new T.Color();
   const soil = new T.Color(0x796044);
   const crust = new T.Color(0x30291f);
-  for (let row = 0; row <= 16; row++) for (let column = 0; column <= 60; column++) {
-    const i = row * 61 + column;
-    const radius = .003 + .997 * row / 16;
-    const angle = column * Math.PI * 2 / 60;
+  const flesh = new T.Color(0x5a2c22);
+  const resin = new T.Color(0x2a1712);
+  for (let row = 0; row <= rows; row++) for (let column = 0; column <= columns; column++) {
+    const i = row * (columns + 1) + column;
+    const radius = .003 + .997 * row / rows;
+    const angle = column * Math.PI * 2 / columns;
     const ridges = 1 + .12 * Math.sin(5 * angle + radius * 4) + .07 * Math.sin(angle * 11 - radius * 6);
-    const distance = radius * NEST_RADIUS * ridges;
+    // Bulbous growths and sinewy folds on the flanks, strongest halfway up.
+    const flank = Math.sin(Math.PI * Math.min(1, radius * 1.15));
+    const bulbs = (Math.max(0, Math.sin(angle * 7 + radius * 9) * Math.sin(radius * 17 - angle * 3)) ** 2 * .45
+      + Math.sin(angle * 23 + radius * 31) * .035) * flank;
+    const distance = radius * NEST_RADIUS * ridges * (1 + bulbs * .12);
     const x = Math.sin(angle) * distance;
     const z = Math.cos(angle) * distance;
-    const h = 3.42 * (1 - radius ** 1.45) ** 1.13 * ridges +
-      Math.sin(radius * 31 + angle * 3) * .15 * Math.sin(Math.PI * radius);
+    const h = 3.42 * (1 - radius ** 1.45) ** 1.13 * ridges + Math.sin(radius * 31 + angle * 3) * .15 * Math.sin(Math.PI * radius)
+      + bulbs * .55;
     positions.setXYZ(i, x, h - .09, z);
+    // Soil at the foot blends into the ground; living tissue and dark resin further up.
+    const living = smoothstep(.95, .45, radius);
     tint.copy(soil).lerp(crust, .32 + .23 * Math.sin(angle * 9 + radius * 15) + radius * .17);
+    tint.lerp(flesh, living * (.55 + .3 * Math.sin(angle * 5 - radius * 7))).lerp(resin, living * bulbs * .9);
     tint.toArray(colors, i * 3);
     uv.setXY(i, x * .24, z * .24 + h * .18);
   }
   terrain.setAttribute('color', new T.BufferAttribute(colors, 3));
   terrain.computeVertexNormals();
   return terrain;
+}
+
+/**
+ * Living nest surface: vertex colours from soil to flesh, ridged veins that pulse with a slow heartbeat, a wet sheen on
+ * the tissue and fine wrinkled relief close up.
+ */
+function nestMaterial(time: { value: number }): T.MeshStandardMaterial {
+  const material = new T.MeshStandardMaterial({ vertexColors: true, roughness: .62, metalness: .04 });
+  material.customProgramCacheKey = () => 'swarm-nest-tissue-v1';
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.nestTime = time;
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', `
+      #include <common>
+      varying vec3 vNestLocal;
+    `).replace('#include <begin_vertex>', `
+      #include <begin_vertex>
+      vNestLocal = position;
+    `);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `
+      #include <common>
+      uniform float nestTime;
+      varying vec3 vNestLocal;
+      ${ORGANIC_GLSL}
+    `).replace('#include <color_fragment>', `
+      #include <color_fragment>
+      vec3 nestP = vNestLocal;
+      float nestLiving = smoothstep(.6, 2.2, nestP.y + .4);
+      // Ridged noise gives branching vein lines.
+      float nestVeinA = 1.0 - abs(schabeNoise(nestP * vec3(.9, 1.6, .9)) * 2.0 - 1.0);
+      float nestVeinB = 1.0 - abs(schabeNoise(nestP * vec3(2.1, 3.3, 2.1) + 7.0) * 2.0 - 1.0);
+      float nestVeins = max(smoothstep(.93, .99, nestVeinA), smoothstep(.95, .992, nestVeinB) * .6) * nestLiving;
+      float nestBeat = pow(.5 + .5 * sin(nestTime * 2.4 - length(nestP.xz) * .8), 6.0);
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.2, .04, .03), nestVeins * .75);
+      diffuseColor.rgb *= .85 + .3 * schabeNoise(nestP * 6.0);
+    `).replace('#include <roughnessmap_fragment>', `
+      #include <roughnessmap_fragment>
+      roughnessFactor = mix(roughnessFactor, .28, nestLiving * (.6 + .4 * schabeNoise(nestP * 3.0)));
+    `).replace('#include <normal_fragment_maps>', `
+      #include <normal_fragment_maps>
+      {
+        float nestRelief = schabeNoise(nestP * vec3(4.0, 9.0, 4.0)) * .7 + schabeNoise(nestP * 13.0) * .3 - nestVeins * .9;
+        float nestNear = 1.0 - smoothstep(18.0, 45.0, length(vViewPosition));
+        if (nestNear > 0.0) normal = schabeBump(-vViewPosition, normal, vec2(dFdx(nestRelief), dFdy(nestRelief)) * 1.4 * nestNear, faceDirection);
+      }
+    `).replace('#include <emissivemap_fragment>', `
+      #include <emissivemap_fragment>
+      totalEmissiveRadiance += vec3(.8, .22, .07) * nestVeins * (.03 + .28 * nestBeat);
+    `);
+  };
+  return material;
 }
 
 function cracksGeometry(): T.BufferGeometry {
@@ -73,9 +134,10 @@ export class SwarmBreachController {
   private readonly matrix = new T.Object3D();
   private readonly offsets = Array.from({ length: 36 }, (_, i) => (i * .61803398875) % 1);
   private count = 0;
+  private readonly nestTime = { value: 0 };
   world?: WorldDefinition;
 
-  constructor(materials: SurfaceMaterials) {
+  constructor(_materials: SurfaceMaterials) {
     const batches = (geometry: T.BufferGeometry, material: T.Material, factor = 1) => {
       const mesh = new T.InstancedMesh(geometry, material, MAX_NEST_VISUALS * factor);
       mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);
@@ -84,13 +146,14 @@ export class SwarmBreachController {
       this.root.add(mesh);
       return mesh;
     };
-    this.body = batches(moundGeometry(), materials.soil);
+    this.body = batches(moundGeometry(), nestMaterial(this.nestTime));
     this.body.receiveShadow = true;
     this.cracks = batches(cracksGeometry(), new T.MeshStandardMaterial({ color: 0x261f18, side: T.DoubleSide, roughness: 1 }));
     this.crater = batches(new T.CircleGeometry(1, 28).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x332821, roughness: 1 }));
-    this.throats = batches(new T.CircleGeometry(1, 18), new T.MeshBasicMaterial({ color: 0x16120f, side: T.DoubleSide }), NEST_EXITS);
-    this.rims = batches(new T.TorusGeometry(1, .16, 5, 20), new T.MeshStandardMaterial({
-      color: 0x453223, roughness: .65, metalness: .13,
+    this.throats = batches(new T.CircleGeometry(1, 18), new T.MeshBasicMaterial({ color: 0x2a0e09, side: T.DoubleSide }), NEST_EXITS);
+    // Fleshy sphincter lips around the exits.
+    this.rims = batches(new T.TorusGeometry(1, .2, 8, 28), new T.MeshStandardMaterial({
+      color: 0x5e2c22, roughness: .36, metalness: .05,
     }), NEST_EXITS);
     this.rubble = batches(new T.IcosahedronGeometry(1, 0), new T.MeshStandardMaterial({
       color: 0x685342, roughness: .98, flatShading: true,
@@ -152,6 +215,7 @@ export class SwarmBreachController {
 
   update(nests: readonly NestSnapshot[], tick: number, camera: T.Camera, low: boolean): void {
     const { body, cracks, crater, rims, throats, rubble } = this;
+    this.nestTime.value = tick / NET.tickHz;
     body.count = cracks.count = crater.count = rims.count = throats.count = rubble.count = this.count = 0;
     let visible = 0;
     for (const nest of nests) {

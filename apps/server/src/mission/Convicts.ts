@@ -1,4 +1,5 @@
-import { NET, armorMultiplier, clearGroundLine, distanceSquared, groundHeight, moveOnGround, resistanceMultiplier } from '@freefall/shared';
+import { ENEMY_TRAITS, NET, armorMultiplier, clearGroundLine, directionalArmorClass, distanceSquared, groundHeight, moveOnGround,
+  resistanceMultiplier } from '@freefall/shared';
 import type { ConvictSnapshot, MissionBalance, PositionXZ, ShotEvent, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import { damageEnemy } from '../systems/combat.ts';
@@ -98,7 +99,9 @@ export class Convicts {
       const toX = horde.x[closest], toZ = horde.z[closest], enemy = horde.id[closest];
       // Hostile hit: relation multiplier 1, so only armor and resistance apply (same rules as operator shots).
       const protection = this.config.protection[horde.type[closest]];
-      const dealt = damage * armorMultiplier(this.config.squad.penetration, protection.armorClass, this.config.armor.nonPenetratingDamageFraction) *
+      const armorClass = directionalArmorClass(ENEMY_TRAITS[horde.type[closest]], protection.armorClass, horde.yaw[closest], toX, toZ,
+        member.x, member.z);
+      const dealt = damage * armorMultiplier(this.config.squad.penetration, armorClass, this.config.armor.nonPenetratingDamageFraction) *
         resistanceMultiplier(protection, 'kinetic');
       member.yaw = Math.atan2(toX - member.x, member.z - toZ);
       shots.push({ shooter: member.id, fromX: member.x, fromY: groundHeight(world, member.x, member.z) + 1.24, fromZ: member.z,

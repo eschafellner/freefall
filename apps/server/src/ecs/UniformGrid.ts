@@ -1,4 +1,5 @@
-import { ARENA_HALF, MAX_ENEMIES } from '@freefall/shared';
+import { ARENA_HALF, ENEMY_TRAITS, MAX_ENEMIES } from '@freefall/shared';
+import type { EnemyTraits } from '@freefall/shared';
 import type { HordeManager } from './HordeManager.ts';
 
 export const CELL_SIZE = 1.9;
@@ -10,6 +11,11 @@ export class UniformGrid {
   readonly next = new Int16Array(MAX_ENEMIES);
   readonly neighbors = new Int16Array(MAX_ENEMIES);
   readonly distances = new Float32Array(MAX_ENEMIES);
+  /** Body size per slot relative to the Schabe (`EnemyTraits.size`), filled on insert. */
+  readonly size = new Float32Array(MAX_ENEMIES).fill(1);
+  /** Largest size in the grid since the last rebuild. */
+  maxSize = 1;
+  traits: readonly EnemyTraits[] = ENEMY_TRAITS;
   contactX = 0;
   contactZ = 0;
 
@@ -25,6 +31,7 @@ export class UniformGrid {
 
   rebuild(horde: HordeManager, tick = 0): void {
     this.head.fill(-1);
+    this.maxSize = 1;
     // Rotate dense-list insertion order so oversubscribed cells expose different contacts over time.
     let index = horde.count > 0 ? ((Math.imul(tick, 31) >>> 0) % horde.count) : 0;
     for (let remaining = horde.count; remaining > 0; remaining--) {
@@ -35,6 +42,9 @@ export class UniformGrid {
 
   insert(horde: HordeManager, slot: number): void {
     const cell = this.cell(horde.x[slot]) + this.width * this.cell(horde.z[slot]);
+    const size = this.traits[horde.type[slot]]?.size ?? 1;
+    this.size[slot] = size;
+    if (size > this.maxSize) this.maxSize = size;
     this.next[slot] = this.head[cell];
     this.head[cell] = slot;
   }
@@ -78,13 +88,18 @@ export class UniformGrid {
     return count;
   }
 
-  /** Fraction of the step before contact. Existing penetrations are allowed to open up. */
+  /**
+   * Fraction of the step before contact. Existing penetrations are allowed to open up. `diameter` is the contact
+   * distance of two Schabe-sized bodies; larger bodies scale it by their mean size.
+   */
   contactFraction(horde: HordeManager, slot: number, dx: number, dz: number, diameter: number, perCell: number): number {
     const x = horde.x[slot], z = horde.z[slot];
-    const step2 = dx * dx + dz * dz, diameter2 = diameter * diameter;
-    const reachX = diameter + Math.abs(dx), reachZ = diameter + Math.abs(dz);
+    const step2 = dx * dx + dz * dz;
+    const own = this.size[slot] ?? 1;
+    const widest = diameter * (own + this.maxSize) / 2;
+    const reachX = widest + Math.abs(dx), reachZ = widest + Math.abs(dz);
     // The grid was built before integration. Include the largest step of a nearby regular agent.
-    const padding = diameter + Math.sqrt(step2) + diameter;
+    const padding = widest + Math.sqrt(step2) + widest;
     const left = this.cell(x - padding), right = this.cell(x + padding), bottom = this.cell(z + padding);
     let fraction = 1;
     for (let row = this.cell(z - padding); row <= bottom; row++) {
@@ -97,7 +112,8 @@ export class UniformGrid {
           if (Math.abs(rx) > reachX || Math.abs(rz) > reachZ) continue;
           const approach = rx * dx + rz * dz;
           if (approach >= 0) continue;
-          const clearance = rx * rx + rz * rz - diameter2;
+          const pair = own === 1 && this.size[other] === 1 ? diameter : diameter * (own + this.size[other]) / 2;
+          const clearance = rx * rx + rz * rz - pair * pair;
           if (clearance <= 0) {
             this.contactX = rx;
             this.contactZ = rz;

@@ -137,7 +137,7 @@ export type ImpactNormal = readonly [x: number, y: number, z: number];
 
 export type ShotImpact =
   | { kind: 'world'; surface: ImpactSurface; normal: ImpactNormal }
-  | { kind: 'enemy' | 'nest' | 'convict'; normal?: ImpactNormal }
+  | { kind: 'enemy' | 'nest' | 'convict'; normal?: ImpactNormal; /** The hit did not penetrate the target's armor. */ armored?: true }
   | { kind: 'operator'; life: number };
 
 export interface ShotEvent {

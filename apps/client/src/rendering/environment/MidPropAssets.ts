@@ -82,13 +82,49 @@ export class Parts {
     const phase = this.random() * 6;
     for (let i = 0; i < position.count; i++) {
       const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
-      const bump = .84 + .16 * Math.sin(x * 4.1 + phase) * Math.cos(z * 3.7 + y * 2.3);
+      const bump = .84 + .13 * Math.sin(x * 4.1 + phase) * Math.cos(z * 3.7 + y * 2.3) + .05 * Math.sin(x * 11.3 - y * 9.1 + z * 7.7 + phase * 2);
       position.setXYZ(i, center[0] + x * size[0] * bump, center[1] + y * size[1] * bump, center[2] + z * size[2] * bump);
     }
     const c = new T.Vector3(...center);
     const top = center[1] + size[1];
-    this.add(geometry, (p, n) => scale(mix(base, light, smooth(-.6, 1, n.y) * .7 + smooth(.1, top, p.y) * .3), .6 + .4 * smooth(0, top, p.y)),
+    this.add(geometry, (p, n) => scale(mix(base, light, smooth(-.6, 1, n.y) * .7 + smooth(.1, top, p.y) * .3),
+      (.6 + .4 * smooth(0, top, p.y)) * (.86 + .14 * Math.sin(p.x * 23 + p.z * 19) * Math.cos(p.y * 21))),
     (p, n) => n.copy(p).sub(c).divide(new T.Vector3(...size)).normalize().lerp(new T.Vector3(0, 1, 0), .25).normalize());
+  }
+
+  /** Leafy lobe plus outward leaf cards that break the silhouette into single leaves. */
+  foliage(center: T.Vector3Tuple, size: T.Vector3Tuple, base: RGB, light: RGB, leaves: number, leafSize: number) {
+    this.lobe(center, size, base, light);
+    const positions: number[] = [];
+    const c = new T.Vector3(...center);
+    const dir = new T.Vector3(), side = new T.Vector3(), up = new T.Vector3(0, 1, 0), along = new T.Vector3();
+    for (let i = 0; i < leaves; i++) {
+      // Spread over the upper and outer surface; few leaves underneath.
+      const angle = i * 2.39996 + this.random() * .6, rise = 1 - 1.55 * (i + .5) / leaves;
+      const ring = Math.sqrt(Math.max(0, 1 - rise * rise));
+      dir.set(Math.cos(angle) * ring, rise, Math.sin(angle) * ring).normalize();
+      const reach = .78 + this.random() * .2;
+      const root = new T.Vector3(c.x + dir.x * size[0] * reach, c.y + dir.y * size[1] * reach, c.z + dir.z * size[2] * reach);
+      side.crossVectors(dir, up);
+      if (side.lengthSq() < 1e-4) side.set(1, 0, 0);
+      side.normalize().applyAxisAngle(dir, (this.random() - .5) * 1.6);
+      // Leaves lie over the lobe like scales: half outward, half along the surface, tips drooping.
+      along.copy(dir).multiplyScalar(.62).addScaledVector(side.clone().cross(dir).normalize(), .55).addScaledVector(up, -.15 - this.random() * .2).normalize();
+      const length = leafSize * (.75 + this.random() * .5), width = length * (.32 + this.random() * .12);
+      const tip = root.clone().addScaledVector(along, length);
+      const mid = root.clone().addScaledVector(along, length * .45);
+      const left = mid.clone().addScaledVector(side, width), right = mid.clone().addScaledVector(side, -width);
+      positions.push(...root.toArray(), ...left.toArray(), ...tip.toArray(), ...root.toArray(), ...tip.toArray(), ...right.toArray());
+    }
+    const geometry = new T.BufferGeometry();
+    geometry.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
+    const top = center[1] + size[1];
+    const tones = Array.from({ length: leaves }, () => .7 + this.random() * .34);
+    let vertex = 0;
+    this.add(geometry, (p) => {
+      const tone = tones[Math.floor(vertex++ / 6) % leaves];
+      return scale(mix(base, light, .45 + .55 * smooth(center[1] - size[1], top, p.y)), tone * (.7 + .3 * smooth(0, top, p.y)));
+    }, (p, n) => n.copy(p).sub(c).divide(new T.Vector3(...size)).normalize().lerp(up, .35).normalize());
   }
 
   /** Faceted stone; `cap` tints upward faces (moss, snow, sand). */
@@ -98,12 +134,17 @@ export class Parts {
     const phase = this.random() * 6;
     for (let i = 0; i < position.count; i++) {
       const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
-      const bump = .8 + .2 * Math.sin(x * 5.3 + phase + z * 2.1) + .08 * Math.cos(y * 7 + phase);
-      position.setXYZ(i, center[0] + x * size[0] * bump, center[1] + Math.max(-.55, y) * size[1] * bump, center[2] + z * size[2] * bump);
+      const bump = .8 + .2 * Math.sin(x * 5.3 + phase + z * 2.1) + .08 * Math.cos(y * 7 + phase)
+        + .035 * Math.sin(x * 13.7 + y * 9.3 - phase) * Math.cos(z * 12.1 + phase);
+      // A flat fracture face on one side keeps stones from reading as blobs.
+      const cut = Math.max(0, x * Math.cos(phase) + z * Math.sin(phase) - .55) * .7;
+      position.setXYZ(i, center[0] + x * size[0] * (bump - cut), center[1] + Math.max(-.55, y) * size[1] * bump, center[2] + z * size[2] * (bump - cut));
     }
     const shade = .82 + this.random() * .3;
     this.add(geometry, (p, n) => {
-      let color = scale(base, shade * (.62 + .38 * smooth(center[1] - size[1] * .5, center[1] + size[1] * .6, p.y)));
+      // Height gradient plus a fine speckle of lighter grains and darker pits.
+      const grain = .93 + .14 * Math.sin(p.x * 41 + p.z * 37) * Math.sin(p.y * 43 - p.x * 17);
+      let color = scale(base, grain * shade * (.62 + .38 * smooth(center[1] - size[1] * .5, center[1] + size[1] * .6, p.y)));
       if (cap) color = mix(color, cap.color, smooth(.95 - cap.amount * .6, 1.05 - cap.amount * .4, n.y + Math.sin(p.x * 9 + p.z * 7) * .08));
       return color;
     });
@@ -195,7 +236,7 @@ export function midPropGeometry(id: MidPropId): T.BufferGeometry {
       around(random, lobes, info.radius * .45, (x, z, i) => {
         const r = info.radius * (.36 + random() * .14) * (i ? .85 : 1.1);
         const h = info.height * (.32 + random() * .14);
-        parts.lobe([x, h * .9 + (i ? 0 : h * .4), z], [r, h, r * (.85 + random() * .3)], base, light);
+        parts.foliage([x, h * .9 + (i ? 0 : h * .4), z], [r, h, r * (.85 + random() * .3)], base, light, forest ? 30 : 38, forest ? .17 : .13);
       });
       around(random, forest ? 10 : 6, info.radius * .8, (x, z) => parts.blade([x * .4, 0, z * .4], [x, info.height * (.3 + random() * .3), z],
         .05, base, light, .4));
@@ -247,7 +288,7 @@ export function midPropGeometry(id: MidPropId): T.BufferGeometry {
         const big = i === 0;
         const r = info.radius * (big ? .48 : .2 + random() * .18);
         const h = info.height * (big ? .9 : .35 + random() * .3) * (flat ? .6 : 1);
-        parts.rock([x, h * .35, z], [r, h * .62, r * (.7 + random() * .3)], flat ? mix(stone, rgb(0xa98463), random() * .5) : stone, cap, big && !flat ? 1 : 0);
+        parts.rock([x, h * .35, z], [r, h * .62, r * (.7 + random() * .3)], flat ? mix(stone, rgb(0xa98463), random() * .5) : stone, cap, big ? 2 : 1);
       });
       break;
     }

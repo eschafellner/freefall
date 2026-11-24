@@ -1,10 +1,10 @@
 import {
-  BALANCE, BASE_LOADOUT, CAMERA_BACK, ENEMY_PROTECTION, ENEMY_TYPES, falloffMultiplier, resistanceMultiplier, MAX_PITCH, MUZZLE_HEIGHT, NET, aimRay, nextShotAt, applyShotRecoil, clearGroundLine,
+  BALANCE, BASE_LOADOUT, CAMERA_BACK, ENEMY_PROTECTION, ENEMY_TRAITS, ENEMY_TYPES, directionalArmorClass, zoneRayHit, falloffMultiplier, resistanceMultiplier, MAX_PITCH, MUZZLE_HEIGHT, NET, aimRay, nextShotAt, applyShotRecoil, clearGroundLine,
   diveElevation, groundHeight, impactNormal, impactSurface, obstacleIntersection, recoverRecoil, resetRecoil, spreadCone, allowsPostureAction, groundedBodyHit, isGroundPosture,
   newPosture, postureCollider, postureRayHit, postureYaw, shotWorldLimit, tacticalAimPitch, tacticalAimYaw,
   tacticalMuzzle, tacticalShotLimit,
 } from '@freefall/shared';
-import type { AimRay, CombatEvent, DamagePolicy, EffectiveLoadout, EnemyProtection, EffectiveWeapon, PostureCollider, ShotEvent, ShotImpact, ShotWorldContact, WorldDefinition } from '@freefall/shared';
+import type { AimRay, CombatEvent, DamagePolicy, EffectiveLoadout, EnemyProtection, EnemyTraits, EffectiveWeapon, PostureCollider, ShotEvent, ShotImpact, ShotWorldContact, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import type { StaggerComponent } from '../ecs/StaggerComponent.ts';
 import type { UniformGrid } from '../ecs/UniformGrid.ts';
@@ -47,6 +47,8 @@ export function damagePlayer(player: SimPlayer, amount: number, tick: number, re
 export interface MeleeObject {
   x: number;
   z: number;
+  /** Index of the Albatross thruster this surface point belongs to. */
+  readonly thruster?: number;
   readonly hp: number;
   damage(amount: number, tick: number): void;
 }
@@ -72,6 +74,10 @@ export interface CombatContext {
   policy?: DamagePolicy;
   /** Enemy armor class and resistances by wire type. Default: the published registry (`ENEMY_PROTECTION`). */
   protection?: readonly EnemyProtection[];
+  /** Enemy hit zones, frontal armor and stagger immunity by wire type. Default: the published registry. */
+  traits?: readonly EnemyTraits[];
+  /** Height of an enemy above the ground (a leaping hunter). */
+  elevation?: (slot: number) => number;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -250,10 +256,28 @@ export function cylinderHit(ray: AimRay, x: number, z: number, radius: number, h
   return Infinity;
 }
 
-function enemyHit(ray: AimRay, h: HordeManager, i: number, min: number, world?: WorldDefinition): number {
+/** Zone index of the last `enemyHit` (-1: the enemy has no zones or was missed). */
+let hitZone = -1;
+
+function enemyHit(ray: AimRay, h: HordeManager, i: number, min: number, world?: WorldDefinition, context?: CombatContext,
+  max = Infinity): number {
   const definition = ENEMY_TYPES[h.type[i]];
+  const base = groundHeight(world, h.x[i], h.z[i]) + (context?.elevation?.(i) ?? 0);
+  const zones = (context?.traits ?? ENEMY_TRAITS)[h.type[i]]?.zones;
+  hitZone = -1;
+  if (zones) {
+    // Broad phase: the hit sphere, grown to cover the zones.
+    const ox = h.x[i] - ray.x, oy = base + definition.hitHeight - ray.y, oz = h.z[i] - ray.z;
+    const projection = ox * ray.dx + oy * ray.dy + oz * ray.dz;
+    const reach = definition.hitRadius + 1;
+    if (ox * ox + oy * oy + oz * oz - projection * projection > reach * reach) return Infinity;
+    const hit = zoneRayHit(zones, h.yaw[i], h.x[i], base, h.z[i], ray, min, max);
+    if (!hit) return Infinity;
+    hitZone = hit.index;
+    return hit.distance;
+  }
   const ox = h.x[i] - ray.x;
-  const oy = groundHeight(world, h.x[i], h.z[i]) + definition.hitHeight - ray.y;
+  const oy = base + definition.hitHeight - ray.y;
   const oz = h.z[i] - ray.z;
   const projection = ox * ray.dx + oy * ray.dy + oz * ray.dz;
   const inside = definition.hitRadius ** 2 - (ox * ox + oy * oy + oz * oz - projection * projection);
@@ -364,7 +388,7 @@ function tracePellet(h: HordeManager, player: SimPlayer, ray: AimRay, yaw: numbe
   if (tactical || world?.terrain) {
     const cover = end;
     // Aim from the shoulder camera and trace the actual shot from the low barrel toward its point of aim.
-    for (let index = 0; index < h.count; index++) end = Math.min(end, enemyHit(ray, h, h.active[index], min, world));
+    for (let index = 0; index < h.count; index++) end = Math.min(end, enemyHit(ray, h, h.active[index], min, world, context, end));
     for (const other of context.players ?? []) {
       if (other && other !== player && other.hp > 0) end = Math.min(end, operatorHit(ray, other, min, end, tick, balance, world));
     }
@@ -380,12 +404,14 @@ function tracePellet(h: HordeManager, player: SimPlayer, ray: AimRay, yaw: numbe
     fromX - player.x, 0, fromZ - player.z, 0, 1) <= 1)) end = min;
 
   let closest = -1;
+  let closestZone = -1;
   for (let index = 0; index < h.count; index++) {
     const i = h.active[index];
-    const near = enemyHit(ray, h, i, min, world);
+    const near = enemyHit(ray, h, i, min, world, context, end);
     if (near >= end) continue;
     end = near;
     closest = i;
+    closestZone = hitZone;
   }
   // Friendly fire: other operators and allied convicts block and take reduced damage.
   let allyOperator: SimPlayer | undefined;
@@ -445,12 +471,16 @@ function tracePellet(h: HordeManager, player: SimPlayer, ray: AimRay, yaw: numbe
   const enemy = closest === -1 ? 0 : h.id[closest];
   let eliminated = false;
   if (closest !== -1) {
-    const { amount } = resolveDamage(policy, enemyBullet(player, weapon, (context.protection ?? ENEMY_PROTECTION)[h.type[closest]], falloffAt(end)));
+    const protection = (context.protection ?? ENEMY_PROTECTION)[h.type[closest]];
+    const zone = closestZone >= 0 ? (context.traits ?? ENEMY_TRAITS)[h.type[closest]]?.zones?.[closestZone] : undefined;
+    const { amount, penetrated } = resolveDamage(policy, enemyBullet(player, weapon,
+      zone ? { ...protection, armorClass: zone.armorClass } : protection, falloffAt(end)));
     if (stats) { countHit(); stats.damage[slot] += Math.min(h.hp[closest], amount); }
     const x = h.x[closest], z = h.z[closest];
-    const nx = toX - x, ny = toY - groundHeight(world, x, z) - ENEMY_TYPES[h.type[closest]].hitHeight, nz = toZ - z;
+    const nx = toX - x, ny = toY - groundHeight(world, x, z) - (context.elevation?.(closest) ?? 0) - ENEMY_TYPES[h.type[closest]].hitHeight, nz = toZ - z;
     const length = Math.hypot(nx, ny, nz);
-    if (amount > 0) impact = { kind: 'enemy', ...(length > 1e-5 && { normal: [nx / length, ny / length, nz / length] }) };
+    if (amount > 0) impact = { kind: 'enemy', ...(length > 1e-5 && { normal: [nx / length, ny / length, nz / length] }),
+      ...(!penetrated && { armored: true as const }) };
     eliminated = damageEnemy(h, closest, amount);
   }
   if (eliminated) player.kills++;
@@ -561,8 +591,10 @@ export function meleeStrike(h: HordeManager, player: SimPlayer, tick: number, wo
     const contact = { x: h.x[enemy] - dx / length * radius, y: groundHeight(world, h.x[enemy], h.z[enemy]) + .5,
       z: h.z[enemy] - dz / length * radius };
     const protection = (context.protection ?? ENEMY_PROTECTION)[h.type[enemy]];
+    const traits = (context.traits ?? ENEMY_TRAITS)[h.type[enemy]];
+    const armorClass = directionalArmorClass(traits, protection.armorClass, h.yaw[enemy], h.x[enemy], h.z[enemy], player.x, player.z);
     const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'operator', target: 'enemy', base: melee.damage,
-      armor: armorOf(player.loadout, melee.penetration, protection.armorClass), resistanceMultiplier: resistanceMultiplier(protection, 'kinetic') });
+      armor: armorOf(player.loadout, melee.penetration, armorClass), resistanceMultiplier: resistanceMultiplier(protection, 'kinetic') });
     if (stats) stats.meleeHits++;
     const eliminated = damageEnemy(h, enemy, amount);
     let staggered = false;
@@ -570,7 +602,7 @@ export function meleeStrike(h: HordeManager, player: SimPlayer, tick: number, wo
       player.kills++;
       if (stats) stats.meleeKills++;
     } else {
-      staggered = !!context.stagger && staggerEnemy(h, context.stagger, enemy, tick, melee.staggerTicks, melee.staggerImmunityTicks, melee.knockbackDistance, dx / length, dz / length);
+      staggered = !!context.stagger && !traits?.staggerImmune && staggerEnemy(h, context.stagger, enemy, tick, melee.staggerTicks, melee.staggerImmunityTicks, melee.knockbackDistance, dx / length, dz / length);
       if (staggered && stats) stats.staggers++;
     }
     return { type: 'melee', ...base, enemy: id, damage: amount, staggered, eliminated, contact: amount > 0 ? contact : undefined };

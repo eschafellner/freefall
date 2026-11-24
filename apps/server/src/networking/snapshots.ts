@@ -1,4 +1,4 @@
-import { ENEMY_BYTES, HORDE_ATTACK_BYTES, HORDE_COMBAT_HEADER, HORDE_HEADER, NET, PLAYER_MOTION, POSITION_SCALE,
+import { ATTACK_LEAP, ENEMY_BYTES, HORDE_ATTACK_BYTES, HORDE_COMBAT_HEADER, HORDE_HEADER, HORDE_LEAP_FLAG, NET, PLAYER_MOTION, POSITION_SCALE,
   allowsPostureAction, copyPosture } from '@freefall/shared';
 import type { PlayersSnapshot } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
@@ -23,7 +23,7 @@ export function encodeHorde(h: HordeManager, tick: number, positionScale: number
     const start = capacity ? combat!.snapshotStart(h, i, tick) : undefined;
     if (start === undefined) continue;
     view.setUint16(tail, index, true);
-    view.setUint16(tail + 2, tick - start, true);
+    view.setUint16(tail + 2, (tick - start) | (combat!.snapshotKind(h, i) === ATTACK_LEAP ? HORDE_LEAP_FLAG : 0), true);
     tail += HORDE_ATTACK_BYTES;
   }
   if (tail === recordsEnd + HORDE_COMBAT_HEADER || !combat) return capacity ? bytes.subarray(0, recordsEnd) : bytes;

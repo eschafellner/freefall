@@ -34,8 +34,34 @@ export function detailGeometry(id: DetailAssetId): T.BufferGeometry {
     }
   };
 
-  if (id === 'grass' || id === 'scrub' || id === 'forb' || id === 'fern') {
-    const fern = id === 'fern', blades = fern ? 6 : id === 'grass' ? 11 : 7;
+  /** Curved, tapering blade in three segments, dark at the root and lit toward the tip. */
+  const curvedBlade = (x: number, z: number, reach: number, height: number, width: number, shade: number) => {
+    const length = Math.hypot(x, z) || 1, ux = x / length, uz = z / length;
+    const sx = -uz * width, sz = ux * width;
+    const at = (t: number): Point => [ux * reach * (.12 + .88 * t * t), height * Math.sin(t * 1.35) / Math.sin(1.35), uz * reach * (.12 + .88 * t * t)];
+    const rows = [0, .4, .75, 1].map((t) => ({ p: at(t), w: 1 - t * .85, light: shade * (.45 + .55 * t) }));
+    for (let i = 0; i < 3; i++) {
+      const a = rows[i], b = rows[i + 1];
+      const al: Point = [a.p[0] - sx * a.w, a.p[1], a.p[2] - sz * a.w], ar: Point = [a.p[0] + sx * a.w, a.p[1], a.p[2] + sz * a.w];
+      if (i === 2) {
+        positions.push(...al, ...ar, ...b.p);
+        colors.push(a.light, a.light, a.light, a.light, a.light, a.light, b.light, b.light, b.light);
+        continue;
+      }
+      const bl: Point = [b.p[0] - sx * b.w, b.p[1], b.p[2] - sz * b.w], br: Point = [b.p[0] + sx * b.w, b.p[1], b.p[2] + sz * b.w];
+      positions.push(...al, ...ar, ...br, ...al, ...br, ...bl);
+      for (const light of [a.light, a.light, b.light, a.light, b.light, b.light]) colors.push(light, light, light);
+    }
+  };
+
+  if (id === 'grass') {
+    for (let i = 0; i < 17; i++) {
+      const angle = i * 2.39996 + random() * .35;
+      const reach = info.radius * (.38 + random() * .55);
+      curvedBlade(Math.cos(angle), Math.sin(angle), reach, info.height * (.5 + random() * .5), .011 + random() * .006, .55 + random() * .45);
+    }
+  } else if (id === 'scrub' || id === 'forb' || id === 'fern') {
+    const fern = id === 'fern', blades = fern ? 6 : 7;
     for (let i = 0; i < blades; i++) {
       const angle = i * 2.39996 + random() * .35, x = Math.cos(angle), z = Math.sin(angle);
       const reach = info.radius * (.43 + random() * .43);
@@ -58,7 +84,7 @@ export function detailGeometry(id: DetailAssetId): T.BufferGeometry {
         const loose = id === 'scrub';
         const root: Point = [x * reach * .18, -.02, z * reach * .18];
         const tip: Point = [x * reach, height, z * reach];
-        leaf(root, tip, id === 'grass' ? .013 : loose ? .012 : .040, shade, id === 'grass');
+        leaf(root, tip, loose ? .012 : .040, shade);
         if (loose || id === 'forb') {
           leaf([tip[0] * .64, tip[1] * .50, tip[2] * .64],
             [tip[0] * .84 + z * .041, tip[1] * .67, tip[2] * .84 - x * .041], loose ? .009 : .025, shade * .87);

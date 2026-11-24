@@ -510,9 +510,11 @@ export class MissionInstance extends Battlefield {
     if (target) range *= .65;
     const takeoff = this.extraction.current;
     if (takeoff?.method === 'albatross' && takeoff.phase === 'LIFT') return target;
+    // Breachers attack only the thrusters of the ship (enemies.json › vehicleTargets).
+    const thrustersOnly = this.traits[this.horde.type[slot]]?.vehicleTargets === 'thrusters';
     for (const candidate of ship.targets) {
       const distance = (candidate.x - x) ** 2 + (candidate.z - z) ** 2;
-      if (!candidate.hp || distance >= range) continue;
+      if (!candidate.hp || distance >= range || (thrustersOnly && candidate.thruster === undefined)) continue;
       range = distance;
       target = candidate;
     }

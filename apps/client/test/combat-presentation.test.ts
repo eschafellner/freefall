@@ -146,7 +146,7 @@ test('pooled core, soil, smoke and lights obey quality, accessibility and cleanu
 });
 
 test('melee shares the impact pool and never emits a tracer or protected-target hit', () => {
-  const effects = new VisualEffectsManager(new T.Scene(), new T.BoxGeometry(), new T.MeshBasicMaterial());
+  const effects = new VisualEffectsManager(new T.Scene(), [{ geometry: new T.BoxGeometry(), material: new T.MeshBasicMaterial() }]);
   const camera = new T.PerspectiveCamera();
   effects.melee({ ...melee, damage: 0 }, 10, camera, true);
   effects.draw(20, camera);

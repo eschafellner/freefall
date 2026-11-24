@@ -124,11 +124,31 @@ export function obj<S extends Shape>(shape: S): Check<ObjectOf<S>> {
     }
     const input = value as Record<string, unknown>;
     const output: Record<string, unknown> = {};
-    for (const key of Object.keys(shape)) output[key] = shape[key](input[key], join(path, key), issues);
+    for (const key of Object.keys(shape)) {
+      const result = shape[key](input[key], join(path, key), issues);
+      // Optional fields that are absent stay absent, so objects without them compare equal to before.
+      if (result !== undefined) output[key] = result;
+    }
     for (const key of Object.keys(input)) {
       if (!(key in shape)) issues.add(join(path, key), `unbekanntes Feld. Erlaubt: ${Object.keys(shape).join(', ')}`);
     }
     return output as ObjectOf<S>;
+  };
+}
+
+/** A field that may be left out. Present values must satisfy `check`. */
+export function optional<T>(check: Check<T>): Check<T | undefined> {
+  return (value, path, issues) => value === undefined ? undefined : check(value, path, issues);
+}
+
+/** Fixed-length list of finite numbers, e.g. a model-space point [x, y, z]. */
+export function tuple(length: number, rule: NumberRule = {}): Check<readonly number[]> {
+  return (value, path, issues) => {
+    if (!Array.isArray(value) || value.length !== length) {
+      issues.add(path, `Liste mit ${length} Zahlen erwartet, ${describe(value)}`);
+      return Array.from({ length }, () => 0);
+    }
+    return value.map((entry, index) => num(rule)(entry, `${path}[${index}]`, issues));
   };
 }
 

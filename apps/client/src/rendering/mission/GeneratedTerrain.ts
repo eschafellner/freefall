@@ -1,4 +1,5 @@
 import * as T from 'three';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
   FOREST_ID, WORLD_PROFILES, groundHeight, terrainVertex, terrainVertexSlope, worldChunkId, worldNoise,
 } from '@freefall/shared';
@@ -15,7 +16,7 @@ import { PlanetGroundDetails } from './PlanetGroundDetails.ts';
 import { PlanetMidProps } from './PlanetMidProps.ts';
 import { PlanetWarTraces } from './PlanetWarTraces.ts';
 import { AmbientLife } from '../environment/AmbientLife.ts';
-import { coniferCrown } from './Conifer.ts';
+import { broadleafCrown, coniferCrown } from './Conifer.ts';
 import { randomSource } from '../environment/noise.ts';
 import { fieldSampler, localRelief, macroTint } from '../environment/TerrainMacro.ts';
 import { createForestBelt, createPlanetHorizon } from './PlanetHorizon.ts';
@@ -88,22 +89,91 @@ function propRegions<T extends Obstacle>(items: readonly T[], half: number, widt
   return [...regions.values()];
 }
 
-function rockGeometry(frozen: boolean, detailed: boolean): T.BufferGeometry {
-  const geometry = new T.IcosahedronGeometry(1, detailed ? frozen ? 1 : 2 : 0);
+/** Smooth 3D value noise for rock relief (deterministic, no allocation). */
+function rockNoise(x: number, y: number, z: number): number {
+  const hash = (i: number, j: number, k: number) => {
+    let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(k, 2147483647);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 0x100000000;
+  };
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+  const fx = x - ix, fy = y - iy, fz = z - iz;
+  const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), w = fz * fz * (3 - 2 * fz);
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  return lerp(
+    lerp(lerp(hash(ix, iy, iz), hash(ix + 1, iy, iz), u), lerp(hash(ix, iy + 1, iz), hash(ix + 1, iy + 1, iz), u), v),
+    lerp(lerp(hash(ix, iy, iz + 1), hash(ix + 1, iy, iz + 1), u), lerp(hash(ix, iy + 1, iz + 1), hash(ix + 1, iy + 1, iz + 1), u), v), w);
+}
+
+/**
+ * Collision rock in the unit box: shouldered base shape, fracture planes that cut flat faces with crisp edges, fractal
+ * relief and, on rock, faint strata. `rockCavity` holds the local curvature (+ hollows, − edges) for baked shading.
+ */
+export function rockGeometry(frozen: boolean, detailed: boolean): T.BufferGeometry {
+  // Three's detail n gives 20·(n+1)² faces: 1280 near rock, 720 near ice, 180 far.
+  const source = new T.IcosahedronGeometry(1, detailed ? frozen ? 5 : 7 : 2);
+  source.deleteAttribute('normal');
+  source.deleteAttribute('uv');
+  const geometry = mergeVertices(source, 1e-5);
+  source.dispose();
   geometry.name = (frozen ? 'planet-ice' : 'planet-rock') + (detailed ? '/near' : '/far');
   const positions = geometry.getAttribute('position');
+  const random = randomSource(frozen ? 4211 : 1877);
+  const cuts = Array.from({ length: frozen ? 9 : 7 }, () => {
+    const normal = new T.Vector3(random() * 2 - 1, (random() * 2 - 1) * .8, random() * 2 - 1).normalize();
+    return { normal, offset: .62 + random() * .26 };
+  });
+  const p = new T.Vector3();
   for (let i = 0; i < positions.count; i++) {
-    const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
-    const bulge = .91 + .08 * Math.sin(x * 8 + y * 5 + z * 7);
+    p.fromBufferAttribute(positions, i);
+    const bulge = .91 + .08 * Math.sin(p.x * 8 + p.y * 5 + p.z * 7);
     // Push out the shoulders so the visible mass approaches the existing box proxy.
     const shoulder = (value: number) => Math.sign(value) * Math.abs(value) ** .64;
-    positions.setXYZ(i, shoulder(x) * bulge, Math.max(-.92, shoulder(y) * bulge), shoulder(z) * bulge);
+    p.set(shoulder(p.x) * bulge, shoulder(p.y) * bulge, shoulder(p.z) * bulge);
+    // Fracture planes: everything beyond a plane is pulled back onto it, leaving a flat face with a sharp edge.
+    for (const { normal, offset } of cuts) {
+      const beyond = p.dot(normal) - offset;
+      if (beyond > 0) p.addScaledVector(normal, -beyond * (frozen ? .96 : .82));
+    }
+    if (detailed) {
+      const length = p.length();
+      let relief = 0, amplitude = frozen ? .035 : .07, frequency = 2.6;
+      for (let octave = 0; octave < 4; octave++) {
+        relief += (rockNoise(p.x * frequency + 11, p.y * frequency, p.z * frequency - 7) - .5) * amplitude;
+        amplitude *= .5;
+        frequency *= 2.15;
+      }
+      if (!frozen) relief += Math.sin(p.y * 23 + rockNoise(p.x * 3, p.y * 3, p.z * 3) * 3) * .012;
+      p.multiplyScalar(1 + relief / Math.max(.2, length));
+    }
+    positions.setXYZ(i, p.x, Math.max(-.92, p.y), p.z);
   }
   geometry.computeBoundingBox();
   const extents = geometry.boundingBox!.getSize(new T.Vector3());
   geometry.translate(...geometry.boundingBox!.getCenter(new T.Vector3()).negate().toArray());
   geometry.scale(2 / extents.x, 2 / extents.y, 2 / extents.z);
   geometry.computeVertexNormals();
+  // Curvature from the one-ring: neighbour mean against the vertex along its normal.
+  const index = geometry.index!;
+  const sum = new Float32Array(positions.count * 3), count = new Uint16Array(positions.count);
+  for (let i = 0; i < index.count; i += 3) {
+    const a = index.getX(i), b = index.getX(i + 1), c = index.getX(i + 2);
+    for (const [from, to] of [[a, b], [b, c], [c, a], [b, a], [c, b], [a, c]]) {
+      sum[from * 3] += positions.getX(to);
+      sum[from * 3 + 1] += positions.getY(to);
+      sum[from * 3 + 2] += positions.getZ(to);
+      count[from]++;
+    }
+  }
+  const normals = geometry.getAttribute('normal');
+  const cavity = new Float32Array(positions.count);
+  for (let i = 0; i < positions.count; i++) {
+    const n = count[i] || 1;
+    const dx = sum[i * 3] / n - positions.getX(i), dy = sum[i * 3 + 1] / n - positions.getY(i), dz = sum[i * 3 + 2] / n - positions.getZ(i);
+    const bend = (dx * normals.getX(i) + dy * normals.getY(i) + dz * normals.getZ(i)) / (detailed ? frozen ? .02 : .012 : .06);
+    cavity[i] = Math.max(-1, Math.min(1, bend));
+  }
+  geometry.setAttribute('rockCavity', new T.BufferAttribute(cavity, 1));
   return geometry;
 }
 
@@ -270,14 +340,14 @@ export class GeneratedTerrain {
     }
     trunkShape.computeVertexNormals();
     const trunkMaterial = materials.prop('bark', 0x665649, .96);
-    const crownShape = forest ? coniferCrown(true) : new T.IcosahedronGeometry(1, 1);
-    const farShape = forest ? coniferCrown(false) : new T.IcosahedronGeometry(1, 0);
+    const crownShape = forest ? coniferCrown(true) : broadleafCrown(true);
+    const farShape = forest ? coniferCrown(false) : broadleafCrown(false);
     const crownId = forest ? 'forest-conifer' : 'plains-crown';
     crownShape.name = crownId + '/near';
     farShape.name = crownId + '/far';
     const crownMaterial = new T.MeshStandardMaterial({
       color: vividHex(forest ? 0x566b50 : 0x445433, 1.35), metalness: 0, roughness: .96,
-      vertexColors: forest, side: forest ? T.DoubleSide : T.FrontSide,
+      vertexColors: true, side: T.DoubleSide,
     });
     const farCrownMaterial = forest && wind ? crownMaterial.clone() : crownMaterial;
     if (forest && wind) {

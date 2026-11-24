@@ -1,10 +1,11 @@
-import { BALANCE, MAX_ENEMIES, NET, openGround } from '@freefall/shared';
-import type { MissionBalance, PositionXZ, WorldDefinition } from '@freefall/shared';
+import { BALANCE, DEFAULT_ENEMY_GROUND_RADIUS, ENEMY_TRAITS, MAX_ENEMIES, NET, openGround } from '@freefall/shared';
+import type { EnemyTraits, MissionBalance, PositionXZ, WorldDefinition } from '@freefall/shared';
 import type { GroundNavigation } from '../mission/GroundNavigation.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
 import type { HordeManager } from './HordeManager.ts';
 
-export const ENEMY_GROUND_RADIUS = .37;
+/** Ground radius of the Schabe; larger archetypes carry their own (`EnemyTraits.groundRadius`). */
+export const ENEMY_GROUND_RADIUS = DEFAULT_ENEMY_GROUND_RADIUS;
 export const ENEMY_EDGE_MARGIN = .5;
 
 export class EnemyNavigation {
@@ -50,9 +51,11 @@ export class EnemyNavigation {
   recoveryFallbacks = 0;
 
   private readonly config: MissionBalance['hordeAi'];
+  private readonly traits: readonly EnemyTraits[];
 
-  constructor(config: MissionBalance['hordeAi'] = BALANCE.swarm.hordeAi) {
+  constructor(config: MissionBalance['hordeAi'] = BALANCE.swarm.hordeAi, traits: readonly EnemyTraits[] = ENEMY_TRAITS) {
     this.config = config;
+    this.traits = traits;
   }
 
   private clearProgress(slot: number): void {
@@ -239,8 +242,9 @@ export class EnemyNavigation {
     this.checkedPosition[slot] = 1;
     this.invalid[slot] = 1;
     const x = horde.x[slot], z = horde.z[slot];
+    const radius = this.traits[horde.type[slot]]?.groundRadius ?? ENEMY_GROUND_RADIUS;
     const limit = world.half - ENEMY_EDGE_MARGIN;
-    if (Math.max(Math.abs(x), Math.abs(z)) <= limit && openGround(world, x, z, ENEMY_GROUND_RADIUS)) {
+    if (Math.max(Math.abs(x), Math.abs(z)) <= limit && openGround(world, x, z, radius)) {
       this.invalid[slot] = 0;
       return true;
     }
@@ -249,15 +253,15 @@ export class EnemyNavigation {
     const bx = Math.max(-limit, Math.min(limit, x));
     const bz = Math.max(-limit, Math.min(limit, z));
     let bestX = bx, bestZ = bz;
-    let best = openGround(world, bx, bz, ENEMY_GROUND_RADIUS) ? 0 : Infinity;
-    const padding = ENEMY_GROUND_RADIUS + this.config.cornerClearance;
+    let best = openGround(world, bx, bz, radius) ? 0 : Infinity;
+    const padding = radius + this.config.cornerClearance;
     for (const obstacle of world.obstacles) {
       if (Math.abs(bx - obstacle.x) > obstacle.halfX + padding || Math.abs(bz - obstacle.z) > obstacle.halfZ + padding) continue;
       for (let side = 0; side < 4; side++) {
         const px = side < 2 ? obstacle.x + (side ? 1 : -1) * (obstacle.halfX + padding) : bx;
         const pz = side >= 2 ? obstacle.z + (side === 3 ? 1 : -1) * (obstacle.halfZ + padding) : bz;
         const distance = (px - bx) ** 2 + (pz - bz) ** 2;
-        if (distance >= best || Math.max(Math.abs(px), Math.abs(pz)) > limit || !openGround(world, px, pz, ENEMY_GROUND_RADIUS)) continue;
+        if (distance >= best || Math.max(Math.abs(px), Math.abs(pz)) > limit || !openGround(world, px, pz, radius)) continue;
         best = distance;
         bestX = px;
         bestZ = pz;

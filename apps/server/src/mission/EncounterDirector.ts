@@ -15,6 +15,20 @@ import type { EncounterHold } from './HordeDirector.ts';
 import { SpawnManager, SPAWN_DEFERRED } from './SpawnManager.ts';
 
 import { nestFits } from './MissionLocations.ts';
+import { seededRandom } from '../simulation/Battlefield.ts';
+
+/** Whole part always, the fraction as a chance (difficulty shares such as 0.35 breachers per call). */
+function rollCount(expected: number, random: () => number): number {
+  const whole = Math.floor(expected);
+  return whole + (random() < expected - whole ? 1 : 0);
+}
+
+/** FNV-1a over a string, used to seed the caste rolls per mission without touching the shared random streams. */
+function seedOf(text: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193) >>> 0;
+  return hash;
+}
 
 export class EncounterDirector {
   readonly patrols: PatrolManager;
@@ -34,6 +48,13 @@ export class EncounterDirector {
   private readonly regionalCalls = new Map<string, number>();
   private readonly garrisons = new Map<number, PatrolGroup>();
   private readonly patrolSeeding = new Map<PatrolGroup, { until: number; retryAt: number }>();
+  /** Patrols that consist of hunters only. */
+  private readonly hunterPatrols = new WeakSet<PatrolGroup>();
+  /** Breachers per nest: guards still to spawn and breachers owed to reinforcement calls. */
+  private readonly breachers = new Map<number, { guards: number; called: number }>();
+  /** Separate stream for caste rolls, so the composition never shifts the established spawn sequences. */
+  private readonly casteRandom: () => number;
+  readonly casteSpawns = { hunters: 0, breachers: 0 };
   private readonly mission: MissionDefinition;
   private readonly players: readonly (SimPlayer | undefined)[];
   private readonly random: () => number;
@@ -54,6 +75,7 @@ export class EncounterDirector {
     this.threatConfig = balance.threat;
     this.level = balance.difficulty.level;
     this.random = random;
+    this.casteRandom = seededRandom(seedOf(mission.id + '/' + mission.world.id) ^ this.level);
     this.patrols = new PatrolManager(mission.world, horde, random, emit, balance);
     this.nests = new SwarmNestManager(emit, random, balance, mission.world);
     this.spawns = new SpawnManager(mission, horde, this.patrols.navigation, players, balance,
@@ -68,7 +90,7 @@ export class EncounterDirector {
     }
     for (const position of this.mission.world.initialNests) {
       if (this.nests.active.size >= this.limits.maxActiveNests) break;
-      if (this.validBreachPosition(position, false)) this.initialNests.set(this.nests.create(position, tick).id, position);
+      if (this.validBreachPosition(position, false)) this.initialNests.set(this.guard(this.nests.create(position, tick)).id, position);
     }
     this.updateThreat(false, false);
   }
@@ -81,7 +103,30 @@ export class EncounterDirector {
     const { patrolMinSize, patrolMaxSize } = this.limits;
     const size = patrolMinSize + Math.floor(this.random() * (patrolMaxSize - patrolMinSize + 1));
     const group = this.patrols.create(region, waypoint, size);
+    if (this.balance.castes.hunterPatrolPureChance > 0 && this.casteRandom() < this.balance.castes.hunterPatrolPureChance) {
+      this.hunterPatrols.add(group);
+    }
     this.patrolSeeding.set(group, { until: tick + this.balance.director.spawn.patrolSeedWindowTicks, retryAt: tick });
+  }
+
+  /** Wire type of the next patrol member: hunters by the difficulty's share, or all of them in a hunter patrol. */
+  private patrolMemberType(group: PatrolGroup): number {
+    const castes = this.balance.castes;
+    if (this.hunterPatrols.has(group)) return castes.hunterWireType;
+    return castes.hunterPatrolShare > 0 && this.casteRandom() < castes.hunterPatrolShare
+      ? castes.hunterWireType : this.balance.nest.spawnWireType;
+  }
+
+  /** Rolls the breacher guards of a new nest (difficulty.json › breacherNestGuards). */
+  private guard(nest: SwarmNest): SwarmNest {
+    this.breachers.set(nest.id, { guards: rollCount(this.balance.castes.breacherNestGuards, this.casteRandom), called: 0 });
+    return nest;
+  }
+
+  /** Breachers answering a reinforcement call emerge from the breach or the boosted nest. */
+  private callBreachers(nestId: number): void {
+    const entry = this.breachers.get(nestId);
+    if (entry) entry.called += rollCount(this.balance.castes.breachersPerReinforcement, this.casteRandom);
   }
 
   validBreachPosition(position: PositionXZ, checkPlayers = true): boolean {
@@ -112,7 +157,7 @@ export class EncounterDirector {
     const placement = this.pickBreach(focus, tick);
     if (!placement) return;
     this.regionalCalls.set(placement.region.id, tick + this.calls.regionCooldownTicks);
-    return this.nests.create(placement.position, tick, immediate ? 0 : ++this.breachCount);
+    return this.guard(this.nests.create(placement.position, tick, immediate ? 0 : ++this.breachCount));
   }
 
   readonly request = (focus: PositionXZ, tick: number): { breachId?: number; boostedNestId?: number } | undefined => {
@@ -121,6 +166,7 @@ export class EncounterDirector {
     let result: { breachId?: number; boostedNestId?: number };
     if (nest) {
       result = { breachId: nest.breachId };
+      this.callBreachers(nest.id);
     } else {
       let closest: SwarmNest | undefined;
       let d2 = this.calls.boostSearchRadius ** 2;
@@ -134,6 +180,7 @@ export class EncounterDirector {
       closest.boostUntil = tick + this.calls.nestBoostTicks;
       closest.spawnCooldown = Math.min(closest.spawnCooldown, tick + NET.tickHz);
       result = { boostedNestId: closest.id };
+      this.callBreachers(closest.id);
     }
     this.reinforcements++;
     const heat = this.threatConfig.alertHeat;
@@ -174,12 +221,14 @@ export class EncounterDirector {
         const x = origin.x + Math.sin(a) * r;
         const z = origin.z + Math.cos(a) * r;
         const position = openGround(this.mission.world, x, z, .5) ? { x, z } : origin;
-        const slot = this.spawns.spawnAuthored('patrol', position, origin, group.region.id);
+        const type = this.patrolMemberType(group);
+        const slot = this.spawns.spawnAuthored('patrol', position, origin, group.region.id, type);
         if (slot < 0) {
           schedule.retryAt = tick + this.balance.patrols.perceptionPeriodTicks;
           break;
         }
         this.patrols.attach(group, slot);
+        if (type === this.balance.castes.hunterWireType) this.casteSpawns.hunters++;
         group.pendingMembers--;
       }
       if (!group.pendingMembers) this.patrolSeeding.delete(group);
@@ -188,9 +237,18 @@ export class EncounterDirector {
 
   private readonly spawnGarrison = (nest: SwarmNest, exit: PositionXZ): boolean | undefined => {
     const garrison = this.balance.nest.garrison;
-    const slot = this.spawns.spawnAuthored('nest', exit, nest, 'nest-' + nest.id);
+    // Owed breachers first (reinforcement calls), then the nest's guards, otherwise the nest's regular spawn.
+    const owed = this.breachers.get(nest.id);
+    const breacher = !!owed && (owed.called > 0 || owed.guards > 0);
+    const type = breacher ? this.balance.castes.breacherWireType : this.balance.nest.spawnWireType;
+    const slot = this.spawns.spawnAuthored('nest', exit, nest, 'nest-' + nest.id, type);
     if (slot === SPAWN_DEFERRED) return;
     if (slot < 0) return false;
+    if (breacher) {
+      if (owed.called > 0) owed.called--;
+      else owed.guards--;
+      this.casteSpawns.breachers++;
+    }
     let group = this.garrisons.get(nest.id);
     if (!group || group.state === 'ELIMINATED' || group.members.size >= this.limits.patrolMaxSize ||
         distanceSquared(group.position, nest) > garrison.regroupDistance ** 2) {
@@ -234,6 +292,7 @@ export class EncounterDirector {
     this.nests.update(tick, this.spawnGarrison, pressure);
     this.seedPatrols(tick);
     for (const id of this.garrisons.keys()) if (!this.nests.active.has(id)) this.garrisons.delete(id);
+    for (const id of this.breachers.keys()) if (!this.nests.active.has(id)) this.breachers.delete(id);
 
     let hold: EncounterHold | undefined;
     if (state !== 'ACTIVE_MISSION') hold = 'mission-phase';

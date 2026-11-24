@@ -161,11 +161,12 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
   const angle = seed / 0x100000000 * TAU;
   const facing = new T.Vector2(Math.cos(angle), Math.sin(angle));
   const ground = new T.MeshStandardMaterial({ name: 'Planet terrain PBR', metalness: 0 });
-  ground.customProgramCacheKey = () => 'planet-surface-pbr-v2';
+  ground.customProgramCacheKey = () => 'planet-surface-pbr-v3';
   ground.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, {
       planetTile: { value: atlas }, planetColors: { value: colors }, planetScale: { value: scales },
-      planetFacing: { value: facing }, planetDetailRange: detailRange,
+      planetFacing: { value: facing }, planetDetailRange: detailRange, planetFine: { value: new T.Vector2(14, 34) },
+      planetRelief: { value: 1.25 },
       groundHaze: { value: new T.Vector3(GROUND_HAZE.start, GROUND_HAZE.stretch, GROUND_HAZE.cap) },
     });
     shader.vertexShader = shader.vertexShader.replace('#include <common>', `
@@ -189,6 +190,8 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
       uniform vec4 planetScale;
       uniform vec2 planetFacing;
       uniform vec2 planetDetailRange;
+      uniform vec2 planetFine;
+      uniform float planetRelief;
       varying vec4 vPlanetWeights;
       varying vec3 vPlanetGround;
       varying vec3 vPlanetMacro;
@@ -203,21 +206,54 @@ export function createPlanetMaterials(planet: string, seed: number, anisotropy: 
       vec2 gradX = dFdx(uv);
       vec2 gradY = dFdy(uv);
       float visibility = 1.0 - smoothstep(planetDetailRange.x, planetDetailRange.y, length(vViewPosition));
+      // Close-up octave: the same tile rotated and 3.7× finer, faded in over the first metres.
+      float fineVisibility = visibility * (1.0 - smoothstep(planetFine.x, planetFine.y, length(vViewPosition)));
+      const mat2 fineTurn = mat2(.8, -.6, .6, .8);
+      vec2 fineUv = fineTurn * uv * 3.7;
+      vec2 fineX = fineTurn * gradX * 3.7, fineY = fineTurn * gradY * 3.7;
+      vec4 layerDetail[4];
+      vec4 blendWeights = weights;
+      if (visibility > 0.0) {
+        // Height-aware layer blend: transitions follow the relief (sand settles between stones, snow fills hollows).
+        for (int layer = 0; layer < 4; layer++) {
+          layerDetail[layer] = vec4(.5, .5, .5, .5);
+          if (weights[layer] > .018) {
+            float scale = planetScale[layer];
+            layerDetail[layer] = textureGrad(planetTile, vec3(uv * scale, float(layer)), gradX * scale, gradY * scale);
+          }
+        }
+        vec4 lifted = weights + vec4(layerDetail[0].r, layerDetail[1].r, layerDetail[2].r, layerDetail[3].r) * .42 * visibility;
+        float crest = max(max(lifted.x, lifted.y), max(lifted.z, lifted.w));
+        blendWeights = max(lifted - crest + .26, 0.0) * step(.018, weights);
+        blendWeights /= max(dot(blendWeights, vec4(1.0)), .0001);
+        blendWeights = mix(weights, blendWeights, visibility);
+      }
       vec4 surface = vec4(0.0);
       vec2 microNormal = vec2(0.0);
       for (int layer = 0; layer < 4; layer++) {
         vec4 finish = planetColors[layer];
-        float weight = weights[layer];
+        float weight = blendWeights[layer];
         if (visibility > 0.0 && weight > .018) {
           float scale = planetScale[layer];
-          vec4 detail = textureGrad(planetTile, vec3(uv * scale, float(layer)), gradX * scale, gradY * scale);
+          vec4 detail = layerDetail[layer];
           float mixStrength = visibility * smoothstep(.018, .075, weight);
-          finish.rgb *= mix(1.0, .64 + detail.r * .65, mixStrength);
+          float shade = detail.r;
+          vec2 slope = detail.ba * 2.0 - 1.0;
+          if (fineVisibility > 0.0) {
+            vec4 fine = textureGrad(planetTile, vec3(fineUv * scale + float(layer) * .37, float(layer)), fineX * scale, fineY * scale);
+            shade = mix(shade, shade * .62 + fine.r * .38, fineVisibility);
+            slope += (fineTurn * (fine.ba * 2.0 - 1.0)) * .75 * fineVisibility;
+          }
+          // Cavities stay darker than the plain tile shade would make them.
+          finish.rgb *= mix(1.0, .58 + shade * .74, mixStrength);
           finish.a = mix(finish.a, detail.g, mixStrength * .78);
-          microNormal += (detail.ba * 2.0 - 1.0) * weight * mixStrength;
+          microNormal += slope * weight * mixStrength * planetRelief;
         }
         surface += weight * finish;
       }
+      // Broad mottling that never fades: one coarse look-up breaks up repetition up to the horizon.
+      float broadTone = textureGrad(planetTile, vec3(uv * .019 + .13, 0.0), gradX * .019, gradY * .019).r;
+      surface.rgb *= .9 + .2 * broadTone;
       diffuseColor.rgb *= surface.rgb * vPlanetGround.z * vPlanetMacro;
     `).replace('#include <roughnessmap_fragment>', `
       #include <roughnessmap_fragment>
@@ -298,12 +334,14 @@ export function applyRockSurface(material: T.MeshStandardMaterial, options: Rock
     rockContact: { value: ROCK_CONTACT_HEIGHT },
     rockDusting: controls.dusting,
   };
-  material.customProgramCacheKey = () => 'planet-rock-surface-v1';
+  material.customProgramCacheKey = () => 'planet-rock-surface-v2';
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = shader.vertexShader.replace('#include <common>', `
       #include <common>
       attribute float rockGround;
+      attribute float rockCavity;
+      varying float vRockCavity;
       varying vec3 vRockWorld;
       varying vec3 vRockNormal;
       varying float vRockRise;
@@ -318,6 +356,7 @@ export function applyRockSurface(material: T.MeshStandardMaterial, options: Rock
       // Rocks are scaled non-uniformly: normals need the inverse transpose.
       vRockNormal = normalize(transpose(inverse(mat3(rockModel))) * objectNormal);
       vRockRise = rockWorld.y - rockGround;
+      vRockCavity = rockCavity;
     `);
     shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `
       #include <common>
@@ -327,6 +366,7 @@ export function applyRockSurface(material: T.MeshStandardMaterial, options: Rock
       uniform float rockCoverage;
       uniform float rockContact;
       uniform float rockDusting;
+      varying float vRockCavity;
       varying vec3 vRockWorld;
       varying vec3 vRockNormal;
       varying float vRockRise;
@@ -341,6 +381,12 @@ export function applyRockSurface(material: T.MeshStandardMaterial, options: Rock
       float rockMacro = texture2D(map, vRockWorld.xz * rockScale * .19 + .37).r;
       float rockBreak = texture2D(map, vRockWorld.zy * rockScale * .61 + .11).r;
       diffuseColor.rgb *= clamp(rockAlbedo.rgb * 1.45 - .38, 0.0, 1.2) * (.8 + .32 * rockMacro);
+      // Baked curvature (missing on plain meshes = 0): grime in hollows and cracks, worn light edges.
+      float rockHollow = max(0.0, vRockCavity), rockEdge = max(0.0, -vRockCavity);
+      diffuseColor.rgb *= (1.0 - .42 * rockHollow) * (1.0 + .16 * rockEdge);
+      // Fine dark fissures following the tile relief.
+      float rockFissure = smoothstep(.66, .58, rockAlbedo.r) * .3;
+      diffuseColor.rgb *= 1.0 - rockFissure;
       // Foot: ambient-occlusion substitute and a soft tint toward the surrounding ground.
       float rockFoot = 1.0 - smoothstep(0.0, rockContact, vRockRise);
       rockFoot *= rockFoot;

@@ -3,7 +3,7 @@
  * a reproducible configuration hash. A registry is immutable; changing balance means editing the JSON files and
  * restarting the server.
  */
-import { MAX_ENEMIES } from '../config/limits.ts';
+import { MAX_ENEMIES, SIMULATION_HZ } from '../config/limits.ts';
 import {
   SOURCE_FILES, SOURCE_SCHEMAS,
 } from './definitions.ts';
@@ -237,6 +237,18 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
     const previous = enemiesByWireType[enemy.wireType];
     if (previous) issues.add(`${path}.wireType`, `Wire-Typ ${enemy.wireType} ist bereits an "${previous.id}" vergeben`);
     else enemiesByWireType[enemy.wireType] = enemy;
+    if (enemy.leap && enemy.leap.minRange >= enemy.leap.maxRange) issues.add(`${path}.leap.minRange`, 'muss kleiner als maxRange sein');
+    if (enemy.tactics === 'flank' && !enemy.flank) issues.add(`${path}.flank`, 'tactics "flank" braucht flank-Werte');
+    const timing = enemy.attack ?? data.swarm.meleeAttack;
+    const duration = timing.windupTicks + timing.activeTicks + timing.recoveryTicks;
+    if (enemy.gameplay.meleeCooldown * SIMULATION_HZ < duration) {
+      issues.add(`${path}.gameplay.meleeCooldown`, `kürzer als der Angriff (${duration} Ticks)`);
+    }
+    const zones = new Set<string>();
+    enemy.hitZones?.forEach((zone, n) => {
+      if (zones.has(zone.id)) issues.add(`${path}.hitZones[${n}].id`, `"${zone.id}" ist doppelt`);
+      zones.add(zone.id);
+    });
   });
   for (let type = 0; type < enemiesByWireType.length; type++) {
     if (!enemiesByWireType[type]) issues.add('enemies.json › archetypes', `Wire-Typen müssen lückenlos ab 0 vergeben sein. Typ ${type} fehlt`);
@@ -258,6 +270,8 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   // Swarm and convicts.
   ref(enemies, data.swarm.arena.archetypeId, 'swarm.json › arena.archetypeId', 'Gegner');
   ref(enemies, data.swarm.patrols.archetypeId, 'swarm.json › patrols.archetypeId', 'Gegner');
+  ref(enemies, data.swarm.castes.hunterArchetypeId, 'swarm.json › castes.hunterArchetypeId', 'Gegner');
+  ref(enemies, data.swarm.castes.breacherArchetypeId, 'swarm.json › castes.breacherArchetypeId', 'Gegner');
   ref(weapons, data.convicts.squad.reloadWeaponId, 'convicts.json › squad.reloadWeaponId', 'Waffen');
   const { timing, pressure, wave, spawn } = data.swarm.director;
   if (timing.assaultMinTicks > timing.assaultMaxTicks || timing.peakMinTicks > timing.peakMaxTicks ||

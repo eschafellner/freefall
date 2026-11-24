@@ -1,4 +1,9 @@
 import { MAX_ENEMIES } from '../config/arena.ts';
+import { ATTACK_LEAP, maxAttackTicks } from '../combat/enemyBody.ts';
+
+/** Bit 15 of a replicated attack age marks a leap attack; the lower 15 bits hold the age. */
+export const HORDE_LEAP_FLAG = 0x8000;
+let attackAgeLimit = 0;
 
 export const HORDE_HEADER = 6;
 export const ENEMY_BYTES = 10;
@@ -17,6 +22,8 @@ export class HordeFrame {
   readonly type = new Uint8Array(MAX_ENEMIES);
   /** Age in server ticks plus one. Zero means no attack in this frame. */
   readonly attackAge = new Uint16Array(MAX_ENEMIES);
+  /** Attack kind of the entries with an age (ATTACK_MELEE or ATTACK_LEAP). */
+  readonly attackKind = new Uint8Array(MAX_ENEMIES);
   windupTicks = 0;
   activeTicks = 0;
   recoveryTicks = 0;
@@ -32,6 +39,7 @@ export function decodeHorde(packet: Uint8Array, frame: HordeFrame, positionScale
   const extra = packet.byteLength - recordsEnd;
   if (count > MAX_ENEMIES || extra < 0) return false;
   frame.attackAge.fill(0, 0, count);
+  frame.attackKind.fill(0, 0, count);
   frame.windupTicks = frame.activeTicks = frame.recoveryTicks = 0;
   if (extra) {
     const attacks = (extra - HORDE_COMBAT_HEADER) / HORDE_ATTACK_BYTES;
@@ -40,11 +48,15 @@ export function decodeHorde(packet: Uint8Array, frame: HordeFrame, positionScale
     const active = view.getUint16(recordsEnd + 2, true);
     const recovery = view.getUint16(recordsEnd + 4, true);
     if (!windup || !active || !recovery || windup + active + recovery > 0xffff) return false;
+    // The header carries the default (Schabe) timing; other archetypes use their own timing from the registry.
+    const limit = Math.max(windup + active + recovery, attackAgeLimit ||= maxAttackTicks());
     for (let offset = recordsEnd + HORDE_COMBAT_HEADER; offset < packet.byteLength; offset += HORDE_ATTACK_BYTES) {
       const index = view.getUint16(offset, true);
-      const age = view.getUint16(offset + 2, true);
-      if (index >= count || age > tick || age >= windup + active + recovery || frame.attackAge[index]) return false;
+      const raw = view.getUint16(offset + 2, true);
+      const age = raw & ~HORDE_LEAP_FLAG;
+      if (index >= count || age > tick || age >= limit || frame.attackAge[index]) return false;
       frame.attackAge[index] = age + 1;
+      frame.attackKind[index] = raw & HORDE_LEAP_FLAG ? ATTACK_LEAP : 0;
     }
     frame.windupTicks = windup;
     frame.activeTicks = active;

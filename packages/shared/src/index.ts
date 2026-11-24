@@ -17,6 +17,7 @@ export * from './config/limits.ts';
 export * from './balance/index.ts';
 export * from './combat/handling.ts';
 export * from './combat/ballistics.ts';
+export * from './combat/enemyBody.ts';
 export * from './config/posture.ts';
 export * from './config/postureGeometry.ts';
 export * from './config/dive.ts';

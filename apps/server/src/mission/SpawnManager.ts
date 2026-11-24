@@ -1,5 +1,5 @@
 import {
-  terrainIntersection, ALBATROSS, MAX_ENEMIES, MAX_PITCH, aimRay, distanceSquared, groundHeight, landingShip, obstacleIntersection, openGround, postureCollider,
+  ENEMY_TRAITS, terrainIntersection, ALBATROSS, MAX_ENEMIES, MAX_PITCH, aimRay, distanceSquared, groundHeight, landingShip, obstacleIntersection, openGround, postureCollider,
   postureDistanceSquared, postureYaw,
 } from '@freefall/shared';
 import type { MissionBalance, MissionDefinition, PositionXZ } from '@freefall/shared';
@@ -94,16 +94,17 @@ export class SpawnManager {
       this.checks < this.balance.director.spawn.maxChecksPerTick;
   }
 
-  spawnAuthored(source: 'patrol' | 'nest', position: PositionXZ, goal: PositionXZ, region: string): number {
-    return this.spawn(source, position, region, goal);
+  /** `type` defaults to the nest's spawn archetype (the Schabe). */
+  spawnAuthored(source: 'patrol' | 'nest', position: PositionXZ, goal: PositionXZ, region: string, type = this.balance.nest.spawnWireType): number {
+    return this.spawn(source, position, region, goal, type);
   }
 
-  spawnWave(position: PositionXZ, region: string, groupFocus?: PositionXZ): { slot: number; target: SimPlayer } | number {
-    const slot = this.spawn('wave', position, region, groupFocus);
+  spawnWave(position: PositionXZ, region: string, groupFocus?: PositionXZ, type = this.balance.nest.spawnWireType): { slot: number; target: SimPlayer } | number {
+    const slot = this.spawn('wave', position, region, groupFocus, type);
     return slot < 0 ? slot : { slot, target: this.target! };
   }
 
-  private spawn(source: Source, position: PositionXZ, region: string, goal?: PositionXZ): number {
+  private spawn(source: Source, position: PositionXZ, region: string, goal: PositionXZ | undefined, type: number): number {
     const dynamic = source === 'wave';
     if (this.horde.count >= this.cap || (dynamic && (!this.held ||
         this.horde.count >= this.cap - this.balance.director.spawn.priorityHeadroom))) {
@@ -126,7 +127,7 @@ export class SpawnManager {
     // Match the actual coordinates that will be stored and replicated.
     const candidate = { x: Math.fround(position.x), z: Math.fround(position.z) };
     const before = this.profile ? performance.now() : 0;
-    const rejected = this.validate(source, candidate, goal);
+    const rejected = this.validate(source, candidate, goal, type);
     if (this.profile) this.validationMs += performance.now() - before;
     if (dynamic) {
       this.lastRegion = region;
@@ -139,7 +140,6 @@ export class SpawnManager {
     }
 
     const start = this.profile ? performance.now() : 0;
-    const type = this.balance.nest.spawnWireType;
     const slot = this.horde.spawn(candidate.x, candidate.z, type);
     if (slot < 0) return SPAWN_DEFERRED;
     if (dynamic || this.horde.count + this.held > this.cap) this.held--;
@@ -152,13 +152,14 @@ export class SpawnManager {
     return slot;
   }
 
-  private validate(source: Source, position: PositionXZ, goal?: PositionXZ): Rejection | undefined {
+  private validate(source: Source, position: PositionXZ, goal: PositionXZ | undefined, type: number): Rejection | undefined {
     const { x, z } = position;
+    const radius = ENEMY_TRAITS[type]?.groundRadius ?? ENEMY_GROUND_RADIUS;
     const { world, objectives } = this.mission;
     const calls = this.balance.reinforcements;
-    if (!openGround(world, x, z, ENEMY_EDGE_MARGIN)) return 'ground';
-    if (Math.abs(x - this.ship.x) < ALBATROSS.halfWidth + ENEMY_GROUND_RADIUS &&
-        Math.abs(z - this.ship.z) < ALBATROSS.halfLength + ENEMY_GROUND_RADIUS) return 'structure';
+    if (!openGround(world, x, z, Math.max(ENEMY_EDGE_MARGIN, radius))) return 'ground';
+    if (Math.abs(x - this.ship.x) < ALBATROSS.halfWidth + radius &&
+        Math.abs(z - this.ship.z) < ALBATROSS.halfLength + radius) return 'structure';
     if (this.blocksStructure(position)) return 'structure';
     const minimum = source === 'wave' ? calls.playerClearance :
       source === 'patrol' ? this.balance.patrols.seedPlayerClearance : this.balance.nest.garrison.playerClearance;
@@ -166,8 +167,8 @@ export class SpawnManager {
       if (!player || player.hp <= 0) continue;
       const body = postureCollider(player.posture, this.tick, this.balance.movement);
       const distance = distanceSquared(player, position);
-      if (distance < minimum ** 2 || (distance < (Math.hypot(body.radius, body.halfLength) + ENEMY_GROUND_RADIUS) ** 2 &&
-          postureDistanceSquared(player, body, postureYaw(player.posture, player.yaw), x, z) < ENEMY_GROUND_RADIUS ** 2)) {
+      if (distance < minimum ** 2 || (distance < (Math.hypot(body.radius, body.halfLength) + radius) ** 2 &&
+          postureDistanceSquared(player, body, postureYaw(player.posture, player.yaw), x, z) < radius ** 2)) {
         return 'operator-distance';
       }
     }
@@ -182,8 +183,8 @@ export class SpawnManager {
       this.grid.rebuild(this.horde);
       this.occupancyReady = true;
     }
-    if (this.grid.overlaps(this.horde, x, z, ENEMY_GROUND_RADIUS * 2)) return 'occupied';
-    if (source !== 'nest' && this.visible(position)) return 'visible';
+    if (this.grid.overlaps(this.horde, x, z, radius + ENEMY_GROUND_RADIUS * this.grid.maxSize)) return 'occupied';
+    if (source !== 'nest' && this.visible(position, type)) return 'visible';
     if (goal && !this.navigation.reachable(x, z, goal.x, goal.z)) return 'route';
     if (source !== 'wave') return;
 
@@ -199,7 +200,7 @@ export class SpawnManager {
     return this.target ? undefined : 'route';
   }
 
-  private visible(position: PositionXZ): boolean {
+  private visible(position: PositionXZ, type: number): boolean {
     const { world } = this.mission;
     const { ray } = this;
     if (!this.observersReady) {
@@ -222,7 +223,7 @@ export class SpawnManager {
       }
       this.observersReady = true;
     }
-    const enemy = this.balance.enemies[this.balance.nest.spawnWireType];
+    const enemy = this.balance.enemies[type];
     const height = groundHeight(world, position.x, position.z) + enemy.hitHeight + enemy.hitRadius;
     const dot = this.balance.director.spawn.visibilityDot;
     const substantial = (obstacle: typeof world.obstacles[number]) =>

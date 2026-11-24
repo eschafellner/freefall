@@ -1,5 +1,6 @@
-import { ARENA_HALF, BALANCE, ENEMY_TYPES, NET, clampToArena, moveOnGround } from '@freefall/shared';
-import type { EnemyGameplay, MissionBalance, PositionXZ, WorldDefinition } from '@freefall/shared';
+import { ARENA_HALF, BALANCE, ENEMY_TRAITS, ENEMY_TYPES, NET, clampToArena, moveOnGround } from '@freefall/shared';
+import type { EnemyGameplay, EnemyTraits, MissionBalance, PositionXZ, WorldDefinition } from '@freefall/shared';
+import type { EnemyFlanking } from '../ecs/EnemyFlanking.ts';
 import { ENEMY_EDGE_MARGIN, ENEMY_GROUND_RADIUS } from '../ecs/EnemyNavigation.ts';
 import type { EnemyApproach } from '../ecs/EnemyApproach.ts';
 import type { EnemyCombat } from '../ecs/EnemyCombat.ts';
@@ -43,6 +44,10 @@ export interface HordeSteering {
   edge: number;
   readonly timing: { neighborMs: number };
   stats: readonly EnemyGameplay[];
+  /** Body and tactics traits by wire type. Default: the published registry. */
+  traits?: readonly EnemyTraits[];
+  /** Flanking state of `tactics: 'flank'` archetypes. */
+  flank?: EnemyFlanking;
   planner?: GroundNavigation;
   destination?: EnemyDestination;
   fallback?: EnemyDestination;
@@ -60,6 +65,7 @@ export function steeringSystem(h: HordeManager, grid: UniformGrid, players: read
   const navigation = context?.navigation;
   const planner = context?.planner;
   const stats = context?.stats ?? ENEMY_TYPES;
+  const traits = context?.traits ?? ENEMY_TRAITS;
   const edge = context?.edge ?? ARENA_HALF - ENEMY_EDGE_MARGIN;
   const horizon = config.steeringTicks / NET.tickHz;
   const response = 1 - Math.exp(-config.steeringResponse * horizon);
@@ -98,7 +104,8 @@ export function steeringSystem(h: HordeManager, grid: UniformGrid, players: read
     if (navigation && !navigation.canSteer(h, i, tick)) continue;
 
     const queryStart = context?.profile ? performance.now() : 0;
-    const count = grid.nearby(h, i, config.separationRadius, config.neighborsPerCell, config.maxNeighbors);
+    const ownSize = grid.size[i];
+    const count = grid.nearby(h, i, config.separationRadius * (ownSize + grid.maxSize) / 2, config.neighborsPerCell, config.maxNeighbors);
     if (context?.profile) context.timing.neighborMs += performance.now() - queryStart;
     if (navigation) navigation.neighbors[i] = count;
     const enemy = stats[h.type[i]];
@@ -108,7 +115,9 @@ export function steeringSystem(h: HordeManager, grid: UniformGrid, players: read
       grid.contactFraction(h, i, clearance.x, clearance.z, contactDiameter * navigation.contactScale(i), config.contactCandidatesPerCell) >= 1;
     const recovery = navigation?.recoveryStage(i, tick, forwardClear) ?? 0;
     if (recovery < 0) continue;
-    if (context && pursuing) context.approach.choose(h, i, player, enemy.meleeRange, edge, goal, context.navigation, planner);
+    const kind = traits[h.type[i]];
+    const circling = !!context?.flank && pursuing && kind?.tactics === 'flank' && context.flank.goal(h, i, player, kind, tick, goal);
+    if (context && pursuing && !circling) context.approach.choose(h, i, player, enemy.meleeRange, edge, goal, context.navigation, planner);
 
     if (planner && navigation) {
       let result = navigation.resolve(h, i, goal, tick, planner);
@@ -144,11 +153,12 @@ export function steeringSystem(h: HordeManager, grid: UniformGrid, players: read
         nx = pair[0] * sign;
         nz = pair[1] * sign;
       }
-      const weight = 1 - d / config.separationRadius;
+      const pairScale = ownSize === 1 && grid.size[other] === 1 ? 1 : (ownSize + grid.size[other]) / 2;
+      const weight = Math.max(0, 1 - d / (config.separationRadius * pairScale));
       sx += nx * weight;
       sz += nz * weight;
-      if (d >= diameter) continue;
-      const compression = 1 - d / diameter;
+      if (d >= diameter * pairScale) continue;
+      const compression = 1 - d / (diameter * pairScale);
       contactX += nx * compression;
       contactZ += nz * compression;
     }
@@ -214,7 +224,7 @@ export function steeringSystem(h: HordeManager, grid: UniformGrid, players: read
 /** Collision and stagger run on every tick. Yaw follows achieved movement or faces the contact target when holding. */
 export function movementSystem(h: HordeManager, world?: WorldDefinition, tick = 0, staggers?: StaggerComponent,
   navigation?: EnemyNavigation, grid?: UniformGrid, config = BALANCE.swarm.hordeAi, combat?: EnemyCombat,
-  enemies: readonly EnemyGameplay[] = ENEMY_TYPES): void {
+  enemies: readonly EnemyGameplay[] = ENEMY_TYPES, traits: readonly EnemyTraits[] = ENEMY_TRAITS): void {
   const position = { x: 0, z: 0 };
   const diameter = ENEMY_GROUND_RADIUS * 2 * config.contactDiameterFraction;
   let index = h.count ? ((Math.imul(tick, 31) >>> 0) % h.count) : 0;
@@ -237,8 +247,9 @@ export function movementSystem(h: HordeManager, world?: WorldDefinition, tick = 
     if (dx || dz) {
       position.x = beforeX;
       position.z = beforeZ;
+      const radius = traits[h.type[i]]?.groundRadius ?? ENEMY_GROUND_RADIUS;
       if (world) {
-        moveOnGround(position, Math.fround(beforeX + dx), Math.fround(beforeZ + dz), world, ENEMY_GROUND_RADIUS);
+        moveOnGround(position, Math.fround(beforeX + dx), Math.fround(beforeZ + dz), world, radius);
       } else {
         position.x = clampToArena(beforeX + dx);
         position.z = clampToArena(beforeZ + dz);
@@ -264,7 +275,7 @@ export function movementSystem(h: HordeManager, world?: WorldDefinition, tick = 
           }
           position.x = beforeX;
           position.z = beforeZ;
-          if (world) moveOnGround(position, Math.fround(beforeX + stepX), Math.fround(beforeZ + stepZ), world, ENEMY_GROUND_RADIUS);
+          if (world) moveOnGround(position, Math.fround(beforeX + stepX), Math.fround(beforeZ + stepZ), world, radius);
           else {
             position.x = clampToArena(beforeX + stepX);
             position.z = clampToArena(beforeZ + stepZ);

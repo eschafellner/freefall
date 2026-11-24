@@ -22,7 +22,7 @@ test('rock surface hooks every shader chunk it replaces in the installed three.j
   assert.equal((shader.uniforms.rockContact as { value: number }).value, ROCK_CONTACT_HEIGHT);
   // The quality toggle is shared by reference, so configure() reaches compiled programs.
   assert.equal(shader.uniforms.rockDusting, controls.dusting);
-  assert.equal(material.customProgramCacheKey(), 'planet-rock-surface-v1');
+  assert.equal(material.customProgramCacheKey(), 'planet-rock-surface-v2');
 });
 
 test('every planet gets a rock deposit; ice blocks carry more snow than rock', () => {

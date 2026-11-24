@@ -28,7 +28,7 @@ export class Albatross {
   private part(x: number, z: number, thruster?: number): MeleeObject {
     const ship = this;
     return {
-      x: this.position.x + x, z: this.position.z + z,
+      x: this.position.x + x, z: this.position.z + z, ...(thruster !== undefined && { thruster }),
       get hp() { return ship.hullHealth ? thruster === undefined ? ship.hullHealth : ship.thrusters[thruster].health : 0; },
       damage: (amount, tick) => this.damage(amount, tick, thruster),
     };

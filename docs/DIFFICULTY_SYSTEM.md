@@ -17,3 +17,19 @@ Die Schwierigkeit erhöht Sichtweite, Häufigkeit von Rufen, Nestproduktion, Nes
 Die Werte sind experimentell. Schwierigkeit 7 erlaubt 1.000 aktive Gegner und beginnt im normalen Einsatz mit gestaffelten Patrouillen. Das Erreichen des Caps hängt von Spielzeit, Nestanzahl, Alarmverlauf und Abschüssen ab. [Encounter Director](ENCOUNTER_DIRECTOR.md)
 
 Die Ausrüstung der vier Convicts nimmt mit derselben Stufenskala ab. [Convict-System](CONVICT_SYSTEM.md)
+
+## Kriegerkasten
+
+Ab Normal mischt der Encounter Director die Kriegerkasten des Schwarms dazu. Die Anteile stehen je Stufe in `difficulty.json`, die Archetypen in `swarm.json › castes`.
+
+| Stufe | Jäger in Patrouillen | Reine Jäger-Patrouille | Durchbruchskäfer je Verstärkungsruf | Durchbruchskäfer-Wachen je Nest |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 Leicht | 0 % | 0 % | 0 | 0 |
+| 2 Normal | 10 % | 0 % | 0,35 | 0,5 |
+| 3 Herausfordernd | 20 % | 10 % | 0,5 | 0,75 |
+| 4 Schwer | 30 % | 16 % | 0,75 | 1 |
+| 5 Extrem | 40 % | 22 % | 1 | 1,5 |
+| 6 Albtraum | 50 % | 28 % | 1,25 | 2 |
+| 7 FREEFALL | 60 % | 35 % | 1,5 | 2,5 |
+
+Bei den Durchbruchskäfern gilt der ganzzahlige Teil immer und der Rest als Chance. 0,35 bedeutet also: Bei 35 % der Rufe kommt ein Käfer mit. Die Käfer eines Rufs schlüpfen aus dem neuen Durchbruchsnest oder aus dem verstärkten Nest. Nestwachen entstehen aus den ersten Spawns eines Nests und werden nicht nachproduziert. Wellen des Horden-Direktors und die Arena bleiben vorerst reine Schaben. Die Würfe nutzen einen eigenen Zufallsstrom. Deshalb verschieben sie die übrigen Spawnsequenzen nicht: Mit allen Anteilen auf 0 reproduziert jede Stufe ihre bisherigen Golden Traces exakt. [Jäger](enemies/JAEGER.md) · [Durchbruchskäfer](enemies/DURCHBRUCHSKAEFER.md)

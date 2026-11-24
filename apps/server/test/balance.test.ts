@@ -80,14 +80,18 @@ const GOLDEN_TRACES = {
   // 2026-11-22: the drop sequence takes 606 instead of 249 ticks; mission traces shift in time only
   // (the old phase durations reproduce the previous mission fingerprints exactly), the arena is unchanged.
   // 2026-11-23: Operation Bodenbruch has eight points of interest; their colliders change routes and contacts.
+  // 2026-11-23: hunters in patrols and breachers at nests from Normal upward. With the caste shares in
+  // difficulty.json set to 0, every mission reproduces the previous fingerprints exactly; arena and Leicht are unchanged.
+  // 2026-11-24: taller warrior models with new hit zones (breacher breast plate and frontal weak spot). The previous zones
+  // reproduce the previous fingerprints exactly; arena and Leicht are unchanged.
   arena: 'f52a57b052421856f0b7b5a5e783d5760bb6397e8c54799d1def266cbf03967f',
   'mission.easy': 'ed4a1d2695b90c9a260ff27139dc0c33c48b7a07bdaba6b06c99be16edf12752',
-  'mission.normal': 'ea6978c830cb2da9ca037421ec00b7257abc58b4b51cdd8bfa85e1ff13c10a85',
-  'mission.challenging': '1a36bc008a227ef33f557c4470c38145e4e7ffd68d951a268620baf1233dd3c5',
-  'mission.hard': '15abc2f2f55b54f9de70ceadcdda3fa0355e0925c14478bede1ef2fc392ebc81',
-  'mission.extreme': '27ec066b3399305dfb477545db9a1c7b6e6c162a0805b6c485ba448092663113',
-  'mission.nightmare': 'c6880bde4d1800aff2827ee077a8a1dc9eda9526d1d1565b6b7d757f8e96a05d',
-  'mission.freefall': 'fbd0c3a8ea8872f1a99379e9962a4f62f806e0ecf594cac7abc1b4561065a55a',
+  'mission.normal': '860801443e647607bbf4be95dd452b99980f246ced46f9daa3e499c82d125191',
+  'mission.challenging': '893098ac3650b704f64bab47c063446f9b4c3c20178754b58b639e7a2f228dc2',
+  'mission.hard': '2b7a8d721c982152b47a3414867e020f79e64f256d17c1671bf16bfe53375799',
+  'mission.extreme': 'fd1a2753daf3da546c725a22db6a1292722796ae7f9b19de2b660de30bbbf2a5',
+  'mission.nightmare': 'f675745a7ab4e8f86cab7cd8ac034211b184fd7d6fcb80dd620fd95f9e97925a',
+  'mission.freefall': '2826a07b9ce0ca7db28c6f3735ca548a518c3d60c21897fedfe0c4476cee5bcf',
 };
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -182,8 +186,8 @@ test('duplicate IDs, wire types and broken cross references are rejected', () =>
     d.enemies.archetypes.push({ ...structuredClone(d.enemies.archetypes[0]), id: 'swarm.copy', protected: false });
   }, /Wire-Typ 0 ist bereits an "swarm\.schabe" vergeben/);
   rejects((d) => {
-    d.enemies.archetypes.push({ ...structuredClone(d.enemies.archetypes[0]), id: 'swarm.gap', protected: false, wireType: 2 });
-  }, /Typ 1 fehlt/);
+    d.enemies.archetypes.push({ ...structuredClone(d.enemies.archetypes[0]), id: 'swarm.gap', protected: false, wireType: 4 });
+  }, /Typ 3 fehlt/);
 });
 
 test('seven difficulty levels exist in order and FREEFALL is level 7', () => {

@@ -2,12 +2,13 @@ import * as T from 'three';
 import { groundHeight, shotWorldLimit } from '@freefall/shared';
 import type { CombatPosition, ImpactSurface, MeleeEvent, ShotEvent, ShotImpact, WeaponSlot, WorldDefinition } from '@freefall/shared';
 import type { EnemyPose } from './EnemyVisualLOD.ts';
+import type { FallenVisual } from './SwarmVisuals.ts';
 import { GRAPHICS_QUALITY } from './GraphicsQuality.ts';
 import type { GraphicsQuality } from './GraphicsQuality.ts';
 import { WeaponFireEffects } from './weapons/WeaponFireEffects.ts';
 import type { WeaponVisualController } from './weapons/WeaponVisualController.ts';
 
-type Impact = ImpactSurface | 'carapace' | 'fabric';
+type Impact = ImpactSurface | 'carapace' | 'armor' | 'fabric';
 
 interface EffectSlot {
   shot?: ShotEvent;
@@ -64,6 +65,8 @@ const IMPACTS: Record<Impact, ImpactProfile> = {
   concrete: profile(0xc2beb1, 0xa29f94, 2.55, .083, 255, .34),
   neutral: profile(0xa6a095, 0x89837b, 2.1, .085, 235, .19),
   carapace: profile(0xbb834e, 0x715541, 2.5, .091, 240, .20),
+  // A round that did not penetrate warrior armor: bright chips and a hard spark like on stone.
+  armor: profile(0xffc28a, 0x7d7064, 3.6, .072, 200, .14, 2.6),
   fabric: profile(0xa0917c, 0x79706a, 1.7, .078, 195, .20),
 };
 
@@ -129,7 +132,8 @@ export class VisualEffectsManager {
   private readonly particleTints = dynamic(MAX_PARTICLES, 4);
   private readonly particleSizes = dynamic(MAX_PARTICLES, 1);
   private readonly particleMaterial: T.ShaderMaterial;
-  private readonly fallen: T.InstancedMesh;
+  /** Fallen bodies by wire type. */
+  private readonly fallen: T.InstancedMesh[];
   private readonly transform = new T.Object3D();
   private readonly tint = new T.Color();
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
@@ -141,7 +145,7 @@ export class VisualEffectsManager {
   private dropped = 0;
   private updateMs = 0;
 
-  constructor(scene: T.Scene, fallenGeometry: T.BufferGeometry, fallenMaterial: T.Material) {
+  constructor(scene: T.Scene, fallen: readonly FallenVisual[]) {
     this.weaponFire = new WeaponFireEffects(scene);
     this.lines.setAttribute('position', this.linePositions);
     this.lines.setAttribute('color', this.lineColors);
@@ -158,13 +162,16 @@ export class VisualEffectsManager {
     tracers.frustumCulled = points.frustumCulled = false;
     tracers.renderOrder = 3;
     points.renderOrder = 2;
-    this.fallen = new T.InstancedMesh(fallenGeometry, fallenMaterial, MAX_SLOTS);
-    this.fallen.count = 0;
-    this.fallen.frustumCulled = false;
-    this.fallen.instanceMatrix.setUsage(T.DynamicDrawUsage);
-    this.fallen.setColorAt(0, this.tint);
-    this.fallen.instanceColor!.setUsage(T.DynamicDrawUsage);
-    scene.add(tracers, points, this.fallen);
+    this.fallen = fallen.map(({ geometry, material }) => {
+      const mesh = new T.InstancedMesh(geometry, material, MAX_SLOTS);
+      mesh.count = 0;
+      mesh.frustumCulled = false;
+      mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);
+      mesh.setColorAt(0, this.tint);
+      mesh.instanceColor!.setUsage(T.DynamicDrawUsage);
+      return mesh;
+    });
+    scene.add(tracers, points, ...this.fallen);
     this.clear();
   }
 
@@ -187,7 +194,7 @@ export class VisualEffectsManager {
     this.cursor = this.particleCount = this.activeImpacts = 0;
     this.lines.setDrawRange(0, 0);
     this.particles.setDrawRange(0, 0);
-    this.fallen.count = 0;
+    for (const mesh of this.fallen) mesh.count = 0;
     this.weaponFire.clear();
   }
 
@@ -224,6 +231,7 @@ export class VisualEffectsManager {
     const { x, y, z } = contact;
     if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return;
     const material = impact?.kind === 'world' ? (Object.hasOwn(IMPACTS, impact.surface) ? IMPACTS[impact.surface] : IMPACTS.neutral)
+      : impact?.kind === 'enemy' && impact.armored ? IMPACTS.armor
       : impact?.kind === 'enemy' || impact?.kind === 'nest' ? IMPACTS.carapace
       : impact ? IMPACTS.fabric : undefined;
     const distance = Math.hypot(x - camera.position.x, y - camera.position.y, z - camera.position.z);
@@ -291,7 +299,7 @@ export class VisualEffectsManager {
     const started = performance.now();
     let vertices = 0;
     this.particleCount = this.activeImpacts = 0;
-    this.fallen.count = 0;
+    for (const mesh of this.fallen) mesh.count = 0;
     for (let i = 0; i < this.quality.effectSlots; i++) {
       const slot = this.pool[i];
       const shot = slot.shot;
@@ -359,8 +367,9 @@ export class VisualEffectsManager {
         this.transform.rotation.set(-collapse * 0.48, yaw, collapse * (i % 2 ? 1.29 : -1.29));
         this.transform.scale.setScalar(1 - dissolve * 0.36);
         this.transform.updateMatrix();
-        this.fallen.setMatrixAt(this.fallen.count, this.transform.matrix);
-        this.fallen.setColorAt(this.fallen.count++, this.tint.setScalar(0.8 - dissolve * 0.32));
+        const body = this.fallen[slot.fallen.type ?? 0] ?? this.fallen[0];
+        body.setMatrixAt(body.count, this.transform.matrix);
+        body.setColorAt(body.count++, this.tint.setScalar(0.8 - dissolve * 0.32));
       }
     }
     this.lines.setDrawRange(0, vertices);
@@ -370,8 +379,10 @@ export class VisualEffectsManager {
     upload(this.particlePositions, this.particleCount);
     upload(this.particleTints, this.particleCount);
     upload(this.particleSizes, this.particleCount);
-    upload(this.fallen.instanceMatrix, this.fallen.count);
-    upload(this.fallen.instanceColor!, this.fallen.count);
+    for (const body of this.fallen) {
+      upload(body.instanceMatrix, body.count);
+      upload(body.instanceColor!, body.count);
+    }
     this.updateMs = performance.now() - started;
   }
 }

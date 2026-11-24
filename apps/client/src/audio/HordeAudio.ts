@@ -1,4 +1,4 @@
-import { NET, groundHeight } from '@freefall/shared';
+import { BREACHER_TYPE, JAEGER_TYPE, NET, attackStrikeAt, groundHeight, replicatedAttackTiming } from '@freefall/shared';
 import type { HordeFrame, WorldDefinition } from '@freefall/shared';
 import type { AudioEngine, AudioPosition, SampleVoice } from './AudioEngine.ts';
 import { takeIds, Takes } from './Soundscape.ts';
@@ -10,9 +10,16 @@ const CLUSTER_RANGE = 105;
 const CLUSTER_CELL_METRES = 36;
 const FRAME_TICKS = 2;
 const MAX_ATTACK_CANDIDATES = 4;
+/** Pitch and level of the swarm attack voice per wire type. */
+const CASTE_VOICE: Readonly<Record<number, { pitch: number; level: number }>> = {
+  0: { pitch: 1, level: 1 },
+  [JAEGER_TYPE]: { pitch: 1.28, level: .9 },
+  [BREACHER_TYPE]: { pitch: .6, level: 1.25 },
+};
 
 interface AttackCue {
   id: number;
+  type: number;
   start: number;
   phase: 'windup' | 'active';
   x: number;
@@ -25,9 +32,13 @@ export function attackPhase(frame: HordeFrame, index: number, tick: number) {
   if (!age) return;
   const start = frame.tick - age + 1;
   const elapsed = tick - start;
-  if (elapsed < 0 || elapsed >= frame.windupTicks + frame.activeTicks) return;
-  const phase = elapsed < frame.windupTicks ? 'windup' : 'active';
-  const ageInPhase = elapsed - (phase === 'active' ? frame.windupTicks : 0);
+  // Each archetype has its own timing; a leap strikes after its flight.
+  const timing = replicatedAttackTiming(frame, index);
+  const strike = attackStrikeAt(timing);
+  if (elapsed < 0 || elapsed >= strike + timing.activeTicks) return;
+  if (elapsed >= timing.windupTicks && elapsed < strike) return;
+  const phase = elapsed < timing.windupTicks ? 'windup' : 'active';
+  const ageInPhase = elapsed - (phase === 'active' ? strike : 0);
   return { start, phase, ageInPhase } as const;
 }
 
@@ -107,7 +118,7 @@ export class HordeAudio {
         this.attacks.set(id, { start: attack.start, mask: mask | (previous?.start === attack.start ? previous.mask : 0) });
         if (priming || attack.ageInPhase >= (attack.phase === 'windup' ? 6 : 4)) continue;
         if (this.nearby.length === MAX_ATTACK_CANDIDATES && distance >= this.nearby.at(-1)!.distance) continue;
-        this.nearby.push({ id, start: attack.start, phase: attack.phase,
+        this.nearby.push({ id, type: b.type[next], start: attack.start, phase: attack.phase,
           x: a.x[i] + (b.x[next] - a.x[i]) * alpha,
           z: a.z[i] + (b.z[next] - a.z[i]) * alpha, distance });
         this.nearby.sort((left, right) => left.distance - right.distance);
@@ -123,9 +134,11 @@ export class HordeAudio {
     for (const cue of this.nearby.slice(0, 2)) {
       const windup = cue.phase === 'windup';
       const close = cue.distance < 12 ** 2;
+      // Warriors reuse the swarm voice: the hunter higher and sharper, the breacher deep and loud.
+      const voice = CASTE_VOICE[cue.type] ?? CASTE_VOICE[0];
       const played = this.follow(cue.id, this.takes.pick(cue.phase, windup ? 'schabe-hiss' : 'schabe-impact', windup ? 3 : 2),
-        cue.x, cue.z, windup ? .95 : .66, (close ? PRIORITY.threat + 12 : PRIORITY.combat) - Math.sqrt(cue.distance) / 7,
-        [4, ATTACK_RANGE]);
+        cue.x, cue.z, (windup ? .95 : .66) * voice.level, (close ? PRIORITY.threat + 12 : PRIORITY.combat) - Math.sqrt(cue.distance) / 7,
+        [4, ATTACK_RANGE], voice.pitch);
       if (played) {
         if (windup) this.windups++;
         else this.impacts++;
@@ -163,8 +176,8 @@ export class HordeAudio {
   private position(x: number, z: number): AudioPosition { return { x, y: groundHeight(this.world, x, z) + .7, z }; }
 
   private follow(id: number, sample: string, x: number, z: number, level: number, priority: number,
-    range: readonly [number, number]): SampleVoice | undefined {
-    const voice = this.engine.play(sample, { bus: 'weapons', owner: 'enemy:' + id, pitch: .87 + Math.random() * .22,
+    range: readonly [number, number], pitch = 1): SampleVoice | undefined {
+    const voice = this.engine.play(sample, { bus: 'weapons', owner: 'enemy:' + id, pitch: (.87 + Math.random() * .22) * pitch,
       position: this.position(x, z), range, level, priority });
     if (voice) this.tracked.set(voice, id);
     return voice;

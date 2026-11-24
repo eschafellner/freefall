@@ -1,11 +1,12 @@
 import { ARENA_HALF, BALANCE, ENEMY_TYPES, MAX_PLAYERS, MOVEMENT_INPUT, NET, advancePosture, allowsPostureAction,
-  applyPostureInput, enemyProtection, resolveLoadout, resolveSelection } from '@freefall/shared';
+  applyPostureInput, enemyProtection, enemyTraits, resolveLoadout, resolveSelection } from '@freefall/shared';
 import type {
-  BalanceRegistry, CombatEvent, LoadoutSelection, EffectiveGrenade, EffectiveLoadout, EnemyGameplay, EnemyAIMetrics, EnemyAISample, GrenadeState, MovementDefinition, MovementBoundary, ShotEvent,
+  BalanceRegistry, CombatEvent, LoadoutSelection, EffectiveGrenade, EffectiveLoadout, EnemyGameplay, EnemyAIMetrics, EnemyAISample, EnemyTraits, GrenadeState, MovementDefinition, MovementBoundary, ShotEvent,
   WorldDefinition,
 } from '@freefall/shared';
 import { EnemyApproach } from '../ecs/EnemyApproach.ts';
 import { EnemyCombat } from '../ecs/EnemyCombat.ts';
+import { EnemyFlanking } from '../ecs/EnemyFlanking.ts';
 import { ENEMY_EDGE_MARGIN, EnemyNavigation } from '../ecs/EnemyNavigation.ts';
 import { HordeManager } from '../ecs/HordeManager.ts';
 import { StaggerComponent } from '../ecs/StaggerComponent.ts';
@@ -41,6 +42,10 @@ export class Battlefield {
     steeringMs: 0, neighborMs: 0, collisionMs: 0, fieldMs: 0 };
   /** Melee stagger per horde slot (separate component, the HordeManager is part of the Schabe baseline). */
   readonly stagger = new StaggerComponent();
+  /** Flanking state of hunters and other `tactics: 'flank'` archetypes. */
+  readonly flanking = new EnemyFlanking();
+  /** Body, armor and attack traits by wire type. */
+  protected readonly traits: readonly EnemyTraits[];
   readonly players: (SimPlayer | undefined)[] = Array.from({ length: MAX_PLAYERS });
   readonly grenades = new Grenades();
   readonly shots: ShotEvent[] = [];
@@ -74,21 +79,25 @@ export class Battlefield {
     this.registry = registry;
     this.loadout = resolveLoadout(registry);
     this.random = seededRandom(seed);
+    this.traits = enemyTraits(registry);
     this.grid = new UniformGrid(world?.half);
+    this.grid.traits = this.traits;
     this.enemyStats = registry.enemiesByWireType.map((entry, type) => entry?.gameplay ?? ENEMY_TYPES[type]);
     const config = registry.swarm.hordeAi;
-    this.navigation = new EnemyNavigation(config);
+    this.navigation = new EnemyNavigation(config, this.traits);
     const approach = new EnemyApproach(config, registry.enemy(registry.swarm.patrols.archetypeId).gameplay.meleeRange);
-    this.enemyCombat = new EnemyCombat(registry.swarm.meleeAttack, approach, this.navigation, this.stagger);
+    this.enemyCombat = new EnemyCombat(registry.swarm.meleeAttack, approach, this.navigation, this.stagger, this.traits);
+    this.enemyCombat.flanking = this.flanking;
     this.steering = {
-      config, navigation: this.navigation, stagger: this.stagger,
+      config, navigation: this.navigation, stagger: this.stagger, traits: this.traits, flank: this.flanking,
       approach, combat: this.enemyCombat,
       edge: (world?.half ?? ARENA_HALF) - ENEMY_EDGE_MARGIN, stats: this.enemyStats, timing: this.enemyAITime, profile: false,
     };
     this.combat = {
       players: this.players, allies: () => this.allies(), random: this.random, stats: this.stats, events: this.combatEvents,
       respawns: true, grid: this.grid, stagger: this.stagger, policy: this.loadout.damagePolicy,
-      protection: enemyProtection(registry),
+      protection: enemyProtection(registry), traits: this.traits,
+      elevation: (slot) => this.enemyCombat.elevation(this.horde, slot, this.tick),
     };
     this.hooks = {
       launch: (p) => this.grenades.launch(p, this.tick, this.combat, this.movementBalance),
@@ -104,6 +113,7 @@ export class Battlefield {
   protected setCombatBounds(half: number): void {
     if (this.steering.edge === half - ENEMY_EDGE_MARGIN) return;
     this.grid = this.combat.grid = new UniformGrid(half);
+    this.grid.traits = this.traits;
     this.steering.edge = half - ENEMY_EDGE_MARGIN;
   }
 
@@ -346,7 +356,7 @@ export class Battlefield {
       steeringSystem(this.horde, this.grid, this.targetPlayers, this.tick, steering);
       const beforeCollision = this.profileEnemyAI ? performance.now() : 0;
       movementSystem(this.horde, this.movementWorld, this.tick, this.stagger, this.navigation, this.grid,
-        steering.config, this.enemyCombat, this.enemyStats);
+        steering.config, this.enemyCombat, this.enemyStats, this.traits);
       if (this.profileEnemyAI) {
         const afterCollision = performance.now();
         this.enemyAITime.navigationMs = afterCollision - beforeNavigation;

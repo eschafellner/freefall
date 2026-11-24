@@ -4,7 +4,7 @@
  */
 import { MAX_ENEMIES, SIMULATION_HZ } from '../config/limits.ts';
 import {
-  arr, bool, count, either, id, nonNegative, num, obj, oneOf, positive, record, reserved, str,
+  arr, bool, count, either, id, nonNegative, num, obj, oneOf, optional, positive, record, reserved, str, tuple,
 } from './schema.ts';
 import type { Infer } from './schema.ts';
 
@@ -321,6 +321,55 @@ export const enemySchema = obj({
   /** Damage multiplier per damage type, after armor. */
   resistances: obj({ kinetic: nonNegative({ max: 10 }), explosive: nonNegative({ max: 10 }) }),
   ai: obj({ detectionRange: positive({ max: 500 }) }),
+  /** Collision radius on the ground (enemy contacts, obstacles, spawn clearance). Default 0.37 m (Schabe). */
+  groundRadius: optional(positive({ max: 3 })),
+  /**
+   * Hit zones in model space (+Y up, −Z forward, metres above the ground pivot): capsules from `from` to `to`.
+   * Hitscan uses the nearest zone and its armor class instead of the hit sphere. Without zones the sphere
+   * (`gameplay.hitRadius`, `gameplay.hitHeight`) and `armorClass` apply.
+   */
+  hitZones: optional(arr(obj({
+    id: id(),
+    armorClass: armorClass(),
+    from: tuple(3, { min: -10, max: 10 }),
+    to: tuple(3, { min: -10, max: 10 }),
+    radius: positive({ max: 5 }),
+  }), { min: 1 })),
+  /** Armor against damage without a ray (convict fire, grenades, operator melee) from inside the frontal cone. */
+  frontArmor: optional(obj({ halfAngleDegrees: positive({ max: 180 }), armorClass: armorClass() })),
+  /** `direct` attacks straight away (default). `flank` circles to the side or rear of the operator first. */
+  tactics: optional(oneOf(['direct', 'flank'] as const)),
+  flank: optional(obj({
+    /** Distance to the operator while circling. */
+    radius: positive({ max: 30 }),
+    /** Angle between the operator's facing and the attacker that counts as flanked. */
+    sideAngleDegrees: positive({ max: 180 }),
+    /** Closer than this the attacker strikes immediately. */
+    abortDistance: nonNegative({ max: 30 }),
+    /** Taking damage within this window aborts the flank. */
+    abortAfterHitSeconds: nonNegative({ max: 30 }),
+  })),
+  /** Melee timing of this archetype. Default: `swarm.json › meleeAttack`. */
+  attack: optional(obj({
+    windupTicks: count({ min: 1, max: 300 }),
+    activeTicks: count({ min: 1, max: 300 }),
+    recoveryTicks: count({ min: 1, max: 300 }),
+    halfAngleDegrees: positive({ max: 180 }),
+  })),
+  /** Leap attack: crouch, a ballistic jump onto the target and a strike on landing with `meleeDamage`. */
+  leap: optional(obj({
+    minRange: positive({ max: 30 }),
+    maxRange: positive({ max: 30 }),
+    windupTicks: count({ min: 1, max: 300 }),
+    flightTicks: count({ min: 1, max: 300 }),
+    recoveryTicks: count({ min: 1, max: 300 }),
+    cooldownSeconds: positive({ max: 60 }),
+    arcHeight: nonNegative({ max: 10 }),
+  })),
+  /** Albatross parts this archetype attacks: the whole ship (default) or only its thrusters. */
+  vehicleTargets: optional(oneOf(['all', 'thrusters'] as const)),
+  /** Operator melee does not stagger or knock back this archetype. */
+  staggerImmune: optional(bool()),
 });
 
 export const nestSchema = obj({
@@ -515,6 +564,8 @@ export const swarmSchema = obj({
     maxSpawnsPerTick: (value, path, issues) =>
       count({ min: 1, max: MAX_ENEMIES })(value === undefined ? 100 : value, path, issues),
   }),
+  /** Warrior castes the director mixes into patrols, reinforcements and nest garrisons (shares in difficulty.json). */
+  castes: obj({ hunterArchetypeId: id(), breacherArchetypeId: id() }),
   patrols: obj({
     archetypeId: id(),
     perceptionPeriodTicks: count({ min: 1, max: 300 }),
@@ -623,6 +674,14 @@ export const difficultySchema = obj({
   enemyHealthMultiplier: positive({ max: 10 }),
   enemyDamageMultiplier: positive({ max: 10 }),
   convictKitId: id(),
+  /** Share of patrol members that are hunters (`swarm.json › castes.hunterArchetypeId`). */
+  hunterPatrolShare: num({ min: 0, max: 1 }),
+  /** Chance that a patrol consists of hunters only. */
+  hunterPatrolPureChance: num({ min: 0, max: 1 }),
+  /** Breachers per reinforcement call: the whole part always, the fraction as a chance. */
+  breachersPerReinforcement: nonNegative({ max: 20 }),
+  /** Breachers guarding each nest: the whole part always, the fraction as a chance. */
+  breacherNestGuards: nonNegative({ max: 20 }),
 });
 
 const postureColliderSchema = obj({

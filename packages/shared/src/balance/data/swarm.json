@@ -35,6 +35,7 @@
     "recoveryCooldownTicks": 45, "recoveryContactScale": 0.58, "unreachableRetryTicks": 12
   },
   "arena": { "archetypeId": "swarm.schabe", "outerRadiusInset": 5, "ringWidth": 11, "refillTicks": 9, "maxSpawnsPerTick": 100 },
+  "castes": { "hunterArchetypeId": "swarm.jaeger", "breacherArchetypeId": "swarm.durchbruchskaefer" },
   "patrols": {
     "archetypeId": "swarm.schabe",
     "perceptionPeriodTicks": 6,

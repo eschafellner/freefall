@@ -2,7 +2,7 @@
 
 | Fraktions-ID | Anzeigename | Registrierte Archetypen |
 | --- | --- | --- |
-| `swarm` | Der Schwarm | `swarm.schabe` |
+| `swarm` | Der Schwarm | `swarm.schabe`, `swarm.jaeger`, `swarm.durchbruchskaefer` |
 
 Die **Schabe ist das freigegebene Basisdesign** der Fraktion „Der Schwarm“. Silhouette, Geometrie, Maßstab, Materialien, Farben, Animation, grundlegendes Bewegungsverhalten und Kampfwerte dürfen nur auf explizite Anforderung geändert werden. Globale Beleuchtung und Postprocessing dürfen weiterhin auf die Schabe wirken. Bei solchen Änderungen dienen die Referenzaufnahmen zur Prüfung von Identität und Lesbarkeit. [Schabe-Baseline](enemies/SCHABE.md)
 
@@ -17,4 +17,12 @@ Die **Schabe ist das freigegebene Basisdesign** der Fraktion „Der Schwarm“. 
 
 `RUNNER_TYPE` ist der Kompatibilitätsalias für die Schabe. Netzwerk-ID `0`, Bytebreite, Tickrate und Frameaufbau bleiben erhalten. `ENEMY_ARCHETYPES_BY_TYPE` löst die Wire-ID zur stabilen Identität auf.
 
-Weitere Typen erhalten eigene Archetyp-IDs und freie Wire-IDs im Bereich 0–255. Eine zweite Darstellung braucht eine Zuordnung im Client und typbasierte Instancing-Batches. Die derzeitige Arena wählt beim Start genau den registrierten Schabe-Renderer für ihre homogene Horde. Unterschiedliche Fähigkeiten brauchen ein explizites Gameplay-System, falls sie über die vorhandenen Werte und Nahkampfregeln hinausgehen.
+## Kasten
+
+| Archetyp | Wire-ID | Rolle | Besonderheiten |
+| --- | ---: | --- | --- |
+| `swarm.schabe` · Schabe | 0 | Arbeiterin, Masse | Freigegebenes Basisdesign. [Schabe](enemies/SCHABE.md) |
+| `swarm.jaeger` · Jäger | 1 | Schneller Krieger | Flankiert, Sprungangriff, ungepanzert, 16 Schaden. [Jäger](enemies/JAEGER.md) |
+| `swarm.durchbruchskaefer` · Durchbruchskäfer | 2 | Schwerer Krieger | Frontal mittel gepanzert (Klasse 3) mit kleiner ungepanzerter Schwachstelle (Kehlsack), 300 LP, greift Operator, Convicts und Albatross-Düsen an. [Durchbruchskäfer](enemies/DURCHBRUCHSKAEFER.md) |
+
+Weitere Typen erhalten eigene Archetyp-IDs und die nächste freie Wire-ID im Bereich 0–255. Archetypen können optionale Felder für Körpergröße (`groundRadius`), Trefferzonen (`hitZones`), Frontpanzerung (`frontArmor`), Taktik (`tactics`, `flank`), eigenes Angriffstiming (`attack`), Sprungangriffe (`leap`), Fahrzeugziele (`vehicleTargets`) und Stagger-Immunität setzen. Das gemeinsame Modul `packages/shared/src/combat/enemyBody.ts` leitet daraus die Eigenschaften je Wire-Typ ab, die Server, Netzwerk und Client nutzen. Im Client zeichnet `SwarmVisuals` jede Kaste mit einem eigenen Instancing-Renderer. Die Arena spawnt weiterhin nur Schaben.

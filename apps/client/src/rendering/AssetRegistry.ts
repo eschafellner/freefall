@@ -1,6 +1,7 @@
 import type { Object3D } from 'three';
-import { ENEMY_ARCHETYPES, SCHABE_ARCHETYPE_ID, TEST_RIFLE } from '@freefall/shared';
+import { BREACHER_ARCHETYPE_ID, ENEMY_ARCHETYPES, JAEGER_ARCHETYPE_ID, SCHABE_ARCHETYPE_ID, TEST_RIFLE } from '@freefall/shared';
 import { EnemyVisualLOD } from './EnemyVisualLOD.ts';
+import { BREACHER_VISUAL, JAEGER_VISUAL } from './WarriorVisualLOD.ts';
 import type { CharacterClip } from './characters/CharacterAnimation.ts';
 import type { SkeletonConfig } from './characters/animation/HumanoidSkeleton.ts';
 
@@ -43,5 +44,8 @@ const weapons: Partial<Record<string, WeaponAsset>> = {};
 export const ASSETS: { soldier?: SoldierAsset; weapons: typeof weapons; ktx2Transcoder?: string } = { weapons };
 
 export const SCHABE_VISUAL = ENEMY_ARCHETYPES[SCHABE_ARCHETYPE_ID].visualAssetId;
-export const ENEMY_VISUALS = { [SCHABE_VISUAL]: EnemyVisualLOD } as const;
+export const JAEGER_VISUAL_ID = ENEMY_ARCHETYPES[JAEGER_ARCHETYPE_ID].visualAssetId;
+export const BREACHER_VISUAL_ID = ENEMY_ARCHETYPES[BREACHER_ARCHETYPE_ID].visualAssetId;
+/** Visual asset id → renderer (Schabe) or caste description (warriors, drawn by WarriorVisualLOD). SwarmVisuals combines them. */
+export const ENEMY_VISUALS = { [SCHABE_VISUAL]: EnemyVisualLOD, [JAEGER_VISUAL_ID]: JAEGER_VISUAL, [BREACHER_VISUAL_ID]: BREACHER_VISUAL } as const;
 export const PRIMARY_WEAPON_ASSET = TEST_RIFLE.assets.visual;

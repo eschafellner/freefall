@@ -154,7 +154,7 @@ test('tracers stop at the confirmed endpoint, hide a blocked ray and clip legacy
   const scene = new T.Scene();
   const mesh = new T.BoxGeometry();
   const material = new T.MeshBasicMaterial();
-  const effects = new VisualEffectsManager(scene, mesh, material);
+  const effects = new VisualEffectsManager(scene, [{ geometry: mesh, material }]);
   const camera = new T.Camera();
   camera.position.set(0, 1.7, 3);
   const lines = scene.getObjectByName('Confirmed tracers') as T.LineSegments;

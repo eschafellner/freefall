@@ -2,6 +2,8 @@ import * as T from 'three';
 import { groundHeight, poiToWorld } from '@freefall/shared';
 import type { PickupKind, PickupSnapshot, PointOfInterest, WorldDefinition } from '@freefall/shared';
 import { randomSource } from '../environment/noise.ts';
+import { applySurfaceWear } from '../environment/SurfaceWear.ts';
+import type { WearKind } from '../environment/SurfaceWear.ts';
 
 /**
  * Points of Interest: biomneutrale Bauteile (Wracks, Leichen, Kisten, Sandsäcke, Monolith) und die aufnehmbaren
@@ -10,30 +12,32 @@ import { randomSource } from '../environment/noise.ts';
  */
 const cube = new T.BoxGeometry(1, 1, 1);
 const standard = (color: number, roughness = .82, metalness = .2) => new T.MeshStandardMaterial({ color, roughness, metalness });
+/** Plain material with the procedural wear layer (grime, scratches, pores, weave, grain). */
+const worn = (kind: WearKind, color: number, roughness = .82, metalness = .2) => applySurfaceWear(standard(color, roughness, metalness), kind);
 const glow = (color: number, intensity = 1.6, extra: T.MeshStandardMaterialParameters = {}) =>
   new T.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: intensity, roughness: .4, ...extra });
 
 class Kit {
-  readonly hull = standard(0x667058, .8, .15);
-  readonly hullDark = standard(0x3a413a, .75, .2);
-  readonly scorched = standard(0x1d1b19, .95, .1);
-  readonly steel = standard(0x6a706a, .5, .6);
-  readonly hazard = standard(0x9b7536, .7, .3);
-  readonly concrete = standard(0x8a877c, .95, .02);
-  readonly sandbag = standard(0x8d7b59, 1, 0);
-  readonly canvas = standard(0x5c5f48, .98, 0);
-  readonly wood = standard(0x6b5134, .95, 0);
-  readonly armor = standard(0x4f5a45, .8, .25);
-  readonly fabric = standard(0x3d4436, .95, 0);
-  readonly convict = standard(0xb4592a, .9, .05);
-  readonly skin = standard(0x8a6f5c, .9, 0);
+  readonly hull = worn('paint', 0x667058, .8, .15);
+  readonly hullDark = worn('paint', 0x3a413a, .75, .2);
+  readonly scorched = worn('stone', 0x1d1b19, .95, .1);
+  readonly steel = worn('metal', 0x6a706a, .5, .6);
+  readonly hazard = worn('paint', 0x9b7536, .7, .3);
+  readonly concrete = worn('concrete', 0x8a877c, .95, .02);
+  readonly sandbag = worn('fabric', 0x8d7b59, 1, 0);
+  readonly canvas = worn('fabric', 0x5c5f48, .98, 0);
+  readonly wood = worn('wood', 0x6b5134, .95, 0);
+  readonly armor = worn('paint', 0x4f5a45, .8, .25);
+  readonly fabric = worn('fabric', 0x3d4436, .95, 0);
+  readonly convict = worn('fabric', 0xb4592a, .9, .05);
+  readonly skin = worn('organic', 0x8a6f5c, .9, 0);
   readonly visor = standard(0x1d2a2e, .25, .6);
   readonly resin = glow(0x6a2a5a, .45, { roughness: .3 });
   readonly ember = glow(0xff6a1e, 1.4);
   readonly lamp = glow(0xd9e7c0, 1.3);
-  readonly obsidian = standard(0x15121b, .22, .55);
+  readonly obsidian = worn('stone', 0x15121b, .22, .55);
   readonly rune = glow(0xb48cff, 2.4);
-  readonly chitin = standard(0x2b211c, .55, .15);
+  readonly chitin = worn('organic', 0x2b211c, .55, .15);
 }
 
 type Place = (part: T.Object3D, lx: number, lz: number, lift?: number) => T.Object3D;

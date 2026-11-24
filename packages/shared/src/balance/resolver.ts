@@ -527,6 +527,15 @@ export interface MissionBalance {
   };
   /** Albatross resupply of this run. Charges and amounts accept mission modifiers (future ship upgrades). */
   readonly resupply: EffectiveResupply;
+  /** Warrior castes of this run: wire types and the difficulty's shares (`difficulty.json`). */
+  readonly castes: {
+    readonly hunterWireType: number;
+    readonly breacherWireType: number;
+    readonly hunterPatrolShare: number;
+    readonly hunterPatrolPureChance: number;
+    readonly breachersPerReinforcement: number;
+    readonly breacherNestGuards: number;
+  };
   readonly trace: Readonly<Record<string, ResolvedStat>>;
 }
 
@@ -641,6 +650,14 @@ export function resolveMissionBalance(registry: BalanceRegistry, difficultyId: s
       reloadTicks: Math.ceil(SIMULATION_HZ * registry.weapon(registry.convicts.squad.reloadWeaponId).reloadSeconds),
     },
     resupply: resolveResupply(registry, r),
+    castes: {
+      hunterWireType: registry.enemy(swarm.castes.hunterArchetypeId).wireType,
+      breacherWireType: registry.enemy(swarm.castes.breacherArchetypeId).wireType,
+      hunterPatrolShare: difficulty.hunterPatrolShare,
+      hunterPatrolPureChance: difficulty.hunterPatrolPureChance,
+      breachersPerReinforcement: difficulty.breachersPerReinforcement,
+      breacherNestGuards: difficulty.breacherNestGuards,
+    },
     trace: resolver.trace,
   };
   resolver.assertAllUsed();

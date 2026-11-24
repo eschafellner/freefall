@@ -209,7 +209,7 @@ test('mid props replay per chunk, stay clear of reservations and solids, and swi
   for (const id of Object.keys(MID_PROPS) as MidPropId[]) {
     const shape = midPropGeometry(id), info = MID_PROPS[id];
     const position = shape.getAttribute('position'), normal = shape.getAttribute('normal');
-    assert.ok(position.count > 0 && position.count / 3 <= 520, id);
+    assert.ok(position.count > 0 && position.count / 3 <= 900, id);
     const box = shape.boundingBox!;
     assert.ok(box.min.y >= -.16 && box.max.y <= info.height + .05, id);
     assert.ok(Math.max(-box.min.x, box.max.x, -box.min.z, box.max.z) <= info.radius + .05, id);

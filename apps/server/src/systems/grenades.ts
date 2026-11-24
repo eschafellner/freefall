@@ -1,4 +1,4 @@
-import { ARENA_HALF, BALANCE, BASE_LOADOUT, ENEMY_PROTECTION, MUZZLE_HEIGHT, armorMultiplier, resistanceMultiplier, NET, clearGroundLine, groundHeight, impactNormal,
+import { ARENA_HALF, BALANCE, BASE_LOADOUT, ENEMY_PROTECTION, ENEMY_TRAITS, MUZZLE_HEIGHT, armorMultiplier, directionalArmorClass, resistanceMultiplier, NET, clearGroundLine, groundHeight, impactNormal,
   impactSurface, obstacleIntersection, postureCollider, terrainIntersection } from '@freefall/shared';
 import type { DamagePolicy, EffectiveGrenade, ExplosionEvent, GrenadeState, Obstacle, WorldDefinition } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
@@ -123,7 +123,8 @@ export class Grenades {
               const protection = (context.protection ?? ENEMY_PROTECTION)[horde.type[i]];
               const { amount: damage } = resolveDamage(owner?.loadout.damagePolicy ?? context.policy ?? BASE_LOADOUT.damagePolicy, {
                 source: 'explosion', attacker: 'operator', target: 'enemy', base,
-                armor: { armorClass: protection.armorClass, penetration: g.definition.penetration,
+                armor: { armorClass: directionalArmorClass((context.traits ?? ENEMY_TRAITS)[horde.type[i]], protection.armorClass,
+                  horde.yaw[i], horde.x[i], horde.z[i], g.x, g.z), penetration: g.definition.penetration,
                   nonPenetratingFraction: (owner?.loadout ?? BASE_LOADOUT).armorRules.nonPenetratingDamageFraction },
                 resistanceMultiplier: resistanceMultiplier(protection, 'explosive'),
               });

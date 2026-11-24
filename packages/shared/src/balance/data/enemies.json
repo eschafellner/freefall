@@ -22,6 +22,161 @@
       "armorClass": 1,
       "resistances": { "kinetic": 1, "explosive": 1 },
       "ai": { "detectionRange": 31 }
+    },
+    {
+      "id": "swarm.jaeger",
+      "factionId": "swarm",
+      "displayName": "Jäger",
+      "protected": false,
+      "wireType": 1,
+      "visualAssetId": "enemy.swarm.jaeger.procedural",
+      "gameplay": {
+        "health": 28,
+        "speed": 5.8,
+        "hitRadius": 0.9,
+        "hitHeight": 1,
+        "meleeRange": 2.3,
+        "meleeDamage": 16,
+        "meleeCooldown": 1
+      },
+      "armorClass": 1,
+      "resistances": { "kinetic": 1, "explosive": 1 },
+      "ai": { "detectionRange": 36 },
+      "groundRadius": 0.5,
+      "hitZones": [
+        {
+          "id": "head",
+          "armorClass": 1,
+          "from": [0, 1.3, -1.08],
+          "to": [0, 1.3, -1.48],
+          "radius": 0.26
+        },
+        {
+          "id": "thorax",
+          "armorClass": 1,
+          "from": [0, 1.28, -0.82],
+          "to": [0, 1.14, -0.16],
+          "radius": 0.32
+        },
+        {
+          "id": "abdomen",
+          "armorClass": 1,
+          "from": [0, 1, 0.06],
+          "to": [0, 0.8, 1.05],
+          "radius": 0.27
+        }
+      ],
+      "tactics": "flank",
+      "flank": {
+        "radius": 6.5,
+        "sideAngleDegrees": 80,
+        "abortDistance": 3.2,
+        "abortAfterHitSeconds": 1.5
+      },
+      "attack": {
+        "windupTicks": 9,
+        "activeTicks": 3,
+        "recoveryTicks": 7,
+        "halfAngleDegrees": 55
+      },
+      "leap": {
+        "minRange": 3.5,
+        "maxRange": 8,
+        "windupTicks": 10,
+        "flightTicks": 10,
+        "recoveryTicks": 14,
+        "cooldownSeconds": 4,
+        "arcHeight": 0.9
+      }
+    },
+    {
+      "id": "swarm.durchbruchskaefer",
+      "factionId": "swarm",
+      "displayName": "Durchbruchskäfer",
+      "protected": false,
+      "wireType": 2,
+      "visualAssetId": "enemy.swarm.durchbruchskaefer.procedural",
+      "gameplay": {
+        "health": 300,
+        "speed": 3.2,
+        "hitRadius": 1.35,
+        "hitHeight": 0.85,
+        "meleeRange": 2.5,
+        "meleeDamage": 12,
+        "meleeCooldown": 1.6
+      },
+      "armorClass": 1,
+      "resistances": { "kinetic": 1, "explosive": 1 },
+      "ai": { "detectionRange": 28 },
+      "groundRadius": 0.85,
+      "hitZones": [
+        {
+          "id": "weak-spot",
+          "armorClass": 1,
+          "from": [-0.08, 0.55, -1.47],
+          "to": [0.08, 0.55, -1.47],
+          "radius": 0.1
+        },
+        {
+          "id": "head-shield",
+          "armorClass": 3,
+          "from": [-0.42, 1, -1.3],
+          "to": [0.42, 1, -1.3],
+          "radius": 0.42
+        },
+        {
+          "id": "breast-plate",
+          "armorClass": 3,
+          "from": [-0.48, 0.5, -1.12],
+          "to": [0.48, 0.5, -1.12],
+          "radius": 0.3
+        },
+        {
+          "id": "pronotum",
+          "armorClass": 3,
+          "from": [-0.66, 1.46, -0.66],
+          "to": [0.66, 1.46, -0.66],
+          "radius": 0.5
+        },
+        {
+          "id": "forelimb-left",
+          "armorClass": 3,
+          "from": [-1.12, 1.1, -0.98],
+          "to": [-1.08, 0.32, -1.5],
+          "radius": 0.38
+        },
+        {
+          "id": "forelimb-right",
+          "armorClass": 3,
+          "from": [1.12, 1.1, -0.98],
+          "to": [1.08, 0.32, -1.5],
+          "radius": 0.38
+        },
+        {
+          "id": "body-left",
+          "armorClass": 1,
+          "from": [-0.5, 1.15, -0.1],
+          "to": [-0.5, 1.1, 1.1],
+          "radius": 0.72
+        },
+        {
+          "id": "body-right",
+          "armorClass": 1,
+          "from": [0.5, 1.15, -0.1],
+          "to": [0.5, 1.1, 1.1],
+          "radius": 0.72
+        }
+      ],
+      "frontArmor": { "halfAngleDegrees": 60, "armorClass": 3 },
+      "tactics": "direct",
+      "attack": {
+        "windupTicks": 20,
+        "activeTicks": 4,
+        "recoveryTicks": 14,
+        "halfAngleDegrees": 70
+      },
+      "vehicleTargets": "thrusters",
+      "staggerImmune": true
     }
   ]
 }

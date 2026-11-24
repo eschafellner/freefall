@@ -11,6 +11,10 @@ export type { EnemyArchetype, EnemyGameplay } from '../balance/definitions.ts';
 export const SWARM_FACTION_ID = 'swarm';
 export const SCHABE_ARCHETYPE_ID = 'swarm.schabe';
 export const SCHABE_TYPE = BALANCE.enemy(SCHABE_ARCHETYPE_ID).wireType;
+export const JAEGER_ARCHETYPE_ID = 'swarm.jaeger';
+export const JAEGER_TYPE = BALANCE.enemy(JAEGER_ARCHETYPE_ID).wireType;
+export const BREACHER_ARCHETYPE_ID = 'swarm.durchbruchskaefer';
+export const BREACHER_TYPE = BALANCE.enemy(BREACHER_ARCHETYPE_ID).wireType;
 
 export const FACTIONS: Readonly<Record<string, FactionDefinition>> = Object.freeze(Object.fromEntries(BALANCE.factions));
 export const ENEMY_ARCHETYPES: Readonly<Record<string, EnemyArchetype>> = Object.freeze(Object.fromEntries(BALANCE.enemies));

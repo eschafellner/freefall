@@ -1,8 +1,11 @@
 import {
-  BASE_LOADOUT, MAX_PLAYERS, NET, clearWorldLine, groundHeight, groundedAttackContact, isGroundPosture, postureAttackContact,
-  postureCollider, postureYaw,
+  ATTACK_LEAP, ATTACK_MELEE, BASE_LOADOUT, ENEMY_TRAITS, MAX_ENEMIES, MAX_PLAYERS, NET, attackDuration, attackStrikeAt, clearWorldLine,
+  groundHeight, groundedAttackContact, isGroundPosture, leapElevation, moveOnGround, postureAttackContact, postureCollider, postureYaw,
 } from '@freefall/shared';
-import type { AttackArc, AttackContact, EnemyGameplay, MissionBalance, PostureCollider, WorldDefinition } from '@freefall/shared';
+import type {
+  AttackArc, AttackContact, AttackKind, EnemyAttackTiming, EnemyGameplay, EnemyTraits, MissionBalance, PostureCollider, WorldDefinition,
+} from '@freefall/shared';
+import type { EnemyFlanking } from './EnemyFlanking.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
 import { damagePlayer } from '../systems/combat.ts';
 import type { CombatContext, MeleeObject, SecondaryTarget } from '../systems/combat.ts';
@@ -20,7 +23,14 @@ type Outcome = Contact | 'pending' | 'stagger' | 'target-lost' | 'no-damage';
 interface Attack {
   readonly owner: number;
   readonly start: number;
+  readonly kind: AttackKind;
+  readonly timing: EnemyAttackTiming;
   readonly target: AttackTarget;
+  /** Leap path: take-off and landing point. */
+  readonly fromX: number;
+  readonly fromZ: number;
+  readonly toX: number;
+  readonly toZ: number;
   readonly life: number;
   readonly player?: SimPlayer;
   reservation: number;
@@ -37,25 +47,44 @@ export class EnemyCombat {
   private readonly stagger: StaggerComponent;
   private readonly attacks = new Map<number, Attack>();
   private readonly shapes: (PostureCollider | undefined)[] = Array(MAX_PLAYERS);
-  private readonly arc: AttackArc;
-  private readonly activeEnd: number;
-  private readonly duration: number;
+  private readonly arc: AttackArc = { x: 0, z: 0, cos: 1, sin: 0 };
+  /** Per wire type: body, armor and attack traits. */
+  private readonly traits: readonly EnemyTraits[];
+  /** Leap cooldown per slot, valid while `leapOwner` holds the enemy id. */
+  private readonly leapReady = new Uint32Array(MAX_ENEMIES);
+  private readonly leapOwner = new Uint32Array(MAX_ENEMIES);
+  /** Optional flanking state: flankers leap only once committed. */
+  flanking?: EnemyFlanking;
   readonly totals = { decisions: 0, validations: 0, starts: 0, hits: 0, operatorStarts: 0, operatorHits: 0, operatorDamage: 0,
-    interruptions: 0 };
+    interruptions: 0, leaps: 0 };
   windingUp = 0;
   active = 0;
   recovering = 0;
   validationMs = 0;
 
-  constructor(timing: MissionBalance['meleeAttack'], approach: EnemyApproach, navigation: EnemyNavigation, stagger: StaggerComponent) {
+  constructor(timing: MissionBalance['meleeAttack'], approach: EnemyApproach, navigation: EnemyNavigation, stagger: StaggerComponent,
+    traits: readonly EnemyTraits[] = ENEMY_TRAITS) {
     this.timing = timing;
     this.approach = approach;
     this.navigation = navigation;
     this.stagger = stagger;
-    const angle = timing.halfAngleDegrees * Math.PI / 180;
-    this.arc = { x: 0, z: 0, cos: Math.cos(angle), sin: Math.sin(angle) };
-    this.activeEnd = timing.windupTicks + timing.activeTicks;
-    this.duration = this.activeEnd + timing.recoveryTicks;
+    this.traits = traits;
+  }
+
+  private traitsOf(type: number): EnemyTraits { return this.traits[type] ?? this.traits[0]; }
+
+  /** End of the strike window, relative to the attack start. */
+  private activeEnd(attack: Attack): number { return attackStrikeAt(attack.timing) + attack.timing.activeTicks; }
+
+  /** Replicated attack kind of a slot (only meaningful while `snapshotStart` is defined). */
+  snapshotKind(horde: HordeManager, slot: number): AttackKind { return this.get(horde, slot)?.kind ?? ATTACK_MELEE; }
+
+  /** Height above the ground of a leaping enemy; 0 for everything on the ground. */
+  elevation(horde: HordeManager, slot: number, tick: number): number {
+    const attack = this.get(horde, slot);
+    if (attack?.kind !== ATTACK_LEAP || attack.result === 'stagger' || attack.result === 'target-lost') return 0;
+    const leap = this.traitsOf(horde.type[slot]).leap;
+    return leap ? leapElevation(leap, tick - attack.start) : 0;
   }
 
   get(horde: HordeManager, slot: number): Attack | undefined {
@@ -71,20 +100,23 @@ export class EnemyCombat {
 
   snapshotStart(horde: HordeManager, slot: number, tick: number): number | undefined {
     const attack = this.get(horde, slot);
-    return attack && tick < attack.start + this.duration && attack.result !== 'stagger' && attack.result !== 'target-lost'
+    return attack && tick < attack.start + attackDuration(attack.timing) && attack.result !== 'stagger' && attack.result !== 'target-lost'
       ? attack.start : undefined;
   }
 
   sample(horde: HordeManager, slot: number, tick: number, enemy: EnemyGameplay) {
     const attack = this.get(horde, slot);
     const age = attack ? tick - attack.start : 0;
+    const timing = attack?.timing ?? this.traitsOf(horde.type[slot]).melee;
+    const strike = attackStrikeAt(timing);
     const phase = !attack ? (this.navigation.repositionSector[slot] >= 0 ? 'REPOSITION' :
       this.navigation.attackSector[slot] >= 0 ? 'POSITION_FOR_ATTACK' : 'APPROACH') :
       attack.result === 'stagger' || attack.result === 'target-lost' ? 'INTERRUPTED' :
-      age < this.timing.windupTicks ? 'WINDUP' : age < this.activeEnd ? 'ACTIVE' : 'RECOVERY';
-    const phaseEnd = phase === 'WINDUP' ? this.timing.windupTicks : phase === 'ACTIVE' ? this.activeEnd : this.duration;
+      age < timing.windupTicks ? 'WINDUP' : age < strike ? 'LEAP' : age < strike + timing.activeTicks ? 'ACTIVE' : 'RECOVERY';
+    const phaseEnd = phase === 'WINDUP' ? timing.windupTicks : phase === 'LEAP' ? strike : phase === 'ACTIVE'
+      ? strike + timing.activeTicks : attackDuration(timing);
     return {
-      type: 'melee', phase, range: enemy.meleeRange, angle: 2 * this.timing.halfAngleDegrees,
+      type: attack?.kind === ATTACK_LEAP ? 'leap' : 'melee', phase, range: enemy.meleeRange, angle: 2 * timing.halfAngleDegrees,
       ...(attack && { id: this.eventId(attack), remainingTicks: Math.max(0, phaseEnd - age),
         result: attack.result, damage: attack.damage, reservation: attack.reservation >= 0 ? attack.reservation : undefined }),
     };
@@ -111,7 +143,7 @@ export class EnemyCombat {
   /** Dropping a connection cancels its pending impacts even if it resumes before the next simulation tick. */
   interruptOperator(player: SimPlayer, tick: number): void {
     for (const attack of this.attacks.values()) {
-      if (attack.player === player && !attack.resolved && tick < attack.start + this.activeEnd &&
+      if (attack.player === player && !attack.resolved && tick < attack.start + this.activeEnd(attack) &&
           attack.result !== 'target-lost' && attack.result !== 'stagger') this.interrupt(attack, 'target-lost');
     }
   }
@@ -125,7 +157,7 @@ export class EnemyCombat {
   /** Drop expired or replaced attacks before steering and after damage. */
   prune(horde: HordeManager, tick: number): void {
     for (const [slot, attack] of this.attacks) {
-      if (attack.owner !== horde.id[slot] || horde.hp[slot] <= 0 || tick >= attack.start + this.duration ||
+      if (attack.owner !== horde.id[slot] || horde.hp[slot] <= 0 || tick >= attack.start + attackDuration(attack.timing) ||
           attack.seenAt < tick - 1) this.remove(slot, attack);
     }
   }
@@ -148,7 +180,7 @@ export class EnemyCombat {
       if (attack) {
         attack.seenAt = tick;
         const elapsed = tick - attack.start;
-        if (elapsed >= this.activeEnd || attack.result === 'stagger' || attack.result === 'target-lost') {
+        if (elapsed >= this.activeEnd(attack) || attack.result === 'stagger' || attack.result === 'target-lost') {
           this.release(attack);
           if (!attack.resolved) {
             attack.resolved = true;
@@ -160,19 +192,33 @@ export class EnemyCombat {
         const valid = attack.player
           ? !!currentOperator(players, attack.player, attack.life) && tick >= attack.player.protectedUntil
           : attack.target.hp > 0 && !validOperator(player) && secondary?.(slot) === attack.target;
-        if (staggered || (!valid && !attack.resolved)) {
+        const airborne = attack.kind === ATTACK_LEAP && elapsed >= attack.timing.windupTicks;
+        // A leap in flight lands regardless of stagger or a lost target; the strike then simply misses.
+        if (!airborne && (staggered || (!valid && !attack.resolved))) {
           this.interrupt(attack, staggered ? 'stagger' : 'target-lost');
           this.recovering++;
           continue;
         }
-        if (elapsed < this.timing.windupTicks) {
+        if (elapsed < attack.timing.windupTicks) {
           this.windingUp++;
+          continue;
+        }
+        if (elapsed < attackStrikeAt(attack.timing)) {
+          this.fly(horde, slot, attack, elapsed, world);
+          this.windingUp++;
+          continue;
+        }
+        if (!valid && !attack.resolved) {
+          attack.resolved = true;
+          attack.result = 'target-lost';
+          this.release(attack);
+          this.recovering++;
           continue;
         }
         this.active++;
         if (attack.resolved) continue;
         const enemy = enemies[horde.type[slot]];
-        attack.result = this.validate(horde, slot, attack.target, attack.player, enemy, tick, balance, world, profile);
+        attack.result = this.validate(horde, slot, attack.target, attack.player, enemy, attack.timing, tick, balance, world, profile);
         if (attack.result !== 'hit') continue;
         // Consume the attack before invoking damage. Later ticks or repeat updates cannot apply it again.
         attack.resolved = true;
@@ -203,7 +249,9 @@ export class EnemyCombat {
       const target = operator ?? secondary?.(slot);
       if (!target || target.hp <= 0 || (operator && tick < operator.protectedUntil)) continue;
       const enemy = enemies[horde.type[slot]];
-      const contact = this.validate(horde, slot, target, operator, enemy, tick, balance, world, profile);
+      const traits = this.traitsOf(horde.type[slot]);
+      if (traits.leap && this.tryLeap(horde, slot, target, operator, enemy, traits, tick, world)) continue;
+      const contact = this.validate(horde, slot, target, operator, enemy, traits.melee, tick, balance, world, profile);
       if (contact === 'angle') {
         this.navigation.face(horde, slot, target.x - horde.x[slot], target.z - horde.z[slot]);
       } else if (contact === 'cover' && operator) {
@@ -213,10 +261,11 @@ export class EnemyCombat {
       const owner = horde.id[slot];
       const reservation = operator ? this.approach.reserve(operator, horde.x[slot], horde.z[slot], owner) : -1;
       if (operator && reservation < 0) continue;
-      this.attacks.set(slot, { owner, start: tick, target, player: operator, life: operator?.life ?? 0,
+      this.attacks.set(slot, { owner, start: tick, kind: ATTACK_MELEE, timing: traits.melee, target, player: operator,
+        life: operator?.life ?? 0, fromX: horde.x[slot], fromZ: horde.z[slot], toX: horde.x[slot], toZ: horde.z[slot],
         reservation, seenAt: tick, resolved: false, result: 'pending', damage: 0 });
       horde.vx[slot] = horde.vz[slot] = this.navigation.intentSpeed[slot] = 0;
-      horde.attackAt[slot] = tick + Math.max(this.duration, Math.ceil(enemy.meleeCooldown * NET.tickHz));
+      horde.attackAt[slot] = tick + Math.max(attackDuration(traits.melee), Math.ceil(enemy.meleeCooldown * NET.tickHz));
       this.totals.starts++;
       if (operator) this.totals.operatorStarts++;
       this.windingUp++;
@@ -227,8 +276,58 @@ export class EnemyCombat {
     }
   }
 
+  /**
+   * Starts a leap when the target is inside the leap band, visible and the cooldown has passed. Flankers leap only once
+   * committed. Vehicles are never leapt at.
+   */
+  private tryLeap(horde: HordeManager, slot: number, target: AttackTarget, operator: SimPlayer | undefined, enemy: EnemyGameplay,
+    traits: EnemyTraits, tick: number, world: WorldDefinition | undefined): boolean {
+    const leap = traits.leap!;
+    if (!operator && !('id' in target)) return false;
+    if (this.leapOwner[slot] === horde.id[slot] && tick < this.leapReady[slot]) return false;
+    if (traits.tactics === 'flank' && this.flanking && !this.flanking.committed(horde, slot)) return false;
+    const x = horde.x[slot], z = horde.z[slot];
+    const dx = target.x - x, dz = target.z - z;
+    const distance = Math.hypot(dx, dz);
+    if (distance < leap.minRange || distance > leap.maxRange) return false;
+    const y = groundHeight(world, x, z) + enemy.hitHeight;
+    if (world && !clearWorldLine(world, x, y, z, dx, groundHeight(world, target.x, target.z) + enemy.hitHeight - y, dz)) return false;
+    // Land just inside striking reach in front of the target.
+    const travel = Math.max(0, distance - enemy.meleeRange * .55);
+    const owner = horde.id[slot];
+    this.attacks.set(slot, { owner, start: tick, kind: ATTACK_LEAP, timing: leap, target, player: operator,
+      life: operator?.life ?? 0, fromX: x, fromZ: z, toX: x + dx / distance * travel, toZ: z + dz / distance * travel,
+      reservation: -1, seenAt: tick, resolved: false, result: 'pending', damage: 0 });
+    horde.vx[slot] = horde.vz[slot] = this.navigation.intentSpeed[slot] = 0;
+    horde.yaw[slot] = Math.atan2(dx, -dz);
+    horde.attackAt[slot] = tick + Math.max(attackDuration(leap), Math.ceil(enemy.meleeCooldown * NET.tickHz));
+    this.leapOwner[slot] = owner;
+    this.leapReady[slot] = tick + Math.max(attackDuration(leap), leap.cooldownTicks);
+    this.totals.starts++;
+    this.totals.leaps++;
+    if (operator) this.totals.operatorStarts++;
+    this.windingUp++;
+    return true;
+  }
+
+  /** Moves a leaping enemy along its path; obstacles stop it like any ground movement. */
+  private fly(horde: HordeManager, slot: number, attack: Attack, elapsed: number, world: WorldDefinition | undefined): void {
+    const t = Math.min(1, (elapsed - attack.timing.windupTicks + 1) / attack.timing.flightTicks);
+    const x = attack.fromX + (attack.toX - attack.fromX) * t, z = attack.fromZ + (attack.toZ - attack.fromZ) * t;
+    if (world) {
+      const position = { x: horde.x[slot], z: horde.z[slot] };
+      moveOnGround(position, Math.fround(x), Math.fround(z), world, this.traitsOf(horde.type[slot]).groundRadius);
+      horde.x[slot] = position.x;
+      horde.z[slot] = position.z;
+    } else {
+      horde.x[slot] = Math.fround(x);
+      horde.z[slot] = Math.fround(z);
+    }
+    horde.vx[slot] = horde.vz[slot] = 0;
+  }
+
   private validate(horde: HordeManager, slot: number, target: AttackTarget, player: SimPlayer | undefined, enemy: EnemyGameplay,
-    tick: number, balance: MissionBalance['movement'], world: WorldDefinition | undefined, profile: boolean): Contact {
+    timing: EnemyAttackTiming, tick: number, balance: MissionBalance['movement'], world: WorldDefinition | undefined, profile: boolean): Contact {
     const x = horde.x[slot], z = horde.z[slot], reach = enemy.meleeRange;
     const dx = target.x - x, dz = target.z - z;
     const distanceSquared = dx * dx + dz * dz;
@@ -244,6 +343,9 @@ export class EnemyCombat {
     this.totals.validations++;
     const before = profile ? performance.now() : 0;
     const arc = this.arc;
+    const angle = timing.halfAngleDegrees * Math.PI / 180;
+    arc.cos = Math.cos(angle);
+    arc.sin = Math.sin(angle);
     arc.x = Math.sin(horde.yaw[slot]);
     arc.z = -Math.cos(horde.yaw[slot]);
     let contact: AttackContact;
