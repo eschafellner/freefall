@@ -7,10 +7,10 @@
  * every projectile hits, the first shot fires at t = 0, reloads take the full reload time.
  */
 import {
-  BalanceValidationError, SIMULATION_HZ, armorMultiplier, createBalanceRegistry, falloffMultiplier, resolveLoadout,
-  resolveMissionBalance, resolveWeapon,
+  ALBATROSS_VEHICLE_ID, BalanceValidationError, POI_COUNT, SIMULATION_HZ, armorMultiplier, createBalanceRegistry, falloffMultiplier,
+  magazineModifiers, reserveInRounds, resolveLoadout, resolveMissionBalance, resolveWeapon,
 } from '@freefall/shared';
-import type { BalanceRegistry, BalanceVersion, EffectiveWeapon, MissionBalance } from '@freefall/shared';
+import type { BalanceRegistry, BalanceVersion, EffectiveWeapon, MagazineVariantType, MissionBalance } from '@freefall/shared';
 
 export interface AnalysisOptions {
   /** Difficulty for enemy health in the time-to-kill matrix. Default: the first difficulty. */
@@ -24,7 +24,10 @@ export interface WeaponRow {
   readonly ammoId: string;
   readonly ammoName: string;
   readonly isDefaultAmmo: boolean;
-  readonly feedType: 'magazine' | 'single';
+  /** `standard` or the magazine variant this row was resolved with. */
+  readonly magazine: 'standard' | MagazineVariantType;
+  readonly magazineName: string;
+  readonly feedType: 'magazine' | 'single' | 'break';
   /** Damage per projectile before falloff, armor and resistance. */
   readonly damage: number;
   readonly projectilesPerShot: number;
@@ -35,6 +38,10 @@ export interface WeaponRow {
   /** Effective rounds per second after rounding to simulation ticks. */
   readonly roundsPerSecond: number;
   readonly capacity: number;
+  /** Spare reserve at mission start: magazines (magazine feed) or loose rounds (single feed). */
+  readonly reserve: number;
+  /** Rounds at mission start: loaded plus reserve. */
+  readonly totalRounds: number;
   /** Time to refill an empty weapon in seconds (single feed: chamber plus one cycle per round). */
   readonly fullReloadSeconds: number;
   /** Damage per second while firing, without reloads. */
@@ -75,6 +82,40 @@ export interface EnemyRow {
   readonly meleeDamage: readonly number[];
 }
 
+/** What supply sources give one weapon (standard magazine), capped later by `maxReserve` in the game. */
+export interface SupplyWeaponRow {
+  readonly weaponId: string;
+  readonly slot: 'primary' | 'secondary';
+  /** Unit of reserve and grants: spare magazines or loose rounds (single feed). */
+  readonly unit: 'magazines' | 'rounds';
+  readonly magazineSize: number;
+  readonly reserve: number;
+  readonly maxReserve: number;
+  /** PoI ammo box (primary weapon only); null for secondary weapons. */
+  readonly ammoBox: { readonly units: number; readonly rounds: number } | null;
+  /** One charge of an Albatross supply container. */
+  readonly albatross: { readonly units: number; readonly rounds: number };
+}
+
+export interface SupplySummary {
+  readonly weapons: readonly SupplyWeaponRow[];
+  readonly maxHealth: number;
+  /** Health restored by one stim of the standard loadout. */
+  readonly stimHeal: number;
+  readonly stimCharges: number;
+  readonly grenadeCapacity: number;
+  /** PoI first aid kit and grenade crate. */
+  readonly firstAidKit: { readonly stims: number; readonly heal: number };
+  readonly grenadeCrate: { readonly grenades: number };
+  /** Albatross: container count, charges over all containers and what all charges give together. */
+  readonly albatross: {
+    readonly containers: number; readonly charges: number;
+    readonly perUse: { readonly primaryMagazines: number; readonly secondaryMagazines: number; readonly grenades: number; readonly stims: number };
+  };
+  /** Supply items per map: [min, max] per PoI × PoI count. */
+  readonly suppliesPerMap: readonly [number, number];
+}
+
 export interface Analysis {
   readonly difficultyId: string;
   readonly distance: number;
@@ -84,6 +125,7 @@ export interface Analysis {
   /** `kills[weaponRowIndex][targetIndex]` */
   readonly kills: readonly (readonly KillCell[])[];
   readonly enemies: readonly EnemyRow[];
+  readonly supplies: SupplySummary;
 }
 
 export interface Evaluation {
@@ -126,10 +168,13 @@ function analyze(registry: BalanceRegistry, missions: readonly MissionBalance[],
   const resolved: EffectiveWeapon[] = [];
   const weapons: WeaponRow[] = [];
   for (const weapon of registry.weapons.values()) {
+    const magazines = [{ type: 'standard' as const, displayName: 'Standardmagazin' }, ...weapon.magazineVariants];
     for (const ammo of registry.ammoForCaliber(weapon.caliberId)) {
-      const w = resolveWeapon(registry, weapon.id, ammo.id);
-      resolved.push(w);
-      weapons.push(weaponRow(w, weapon.defaultAmmoId === ammo.id, distance));
+      for (const magazine of magazines) {
+        const w = resolveWeapon(registry, weapon.id, ammo.id, magazine.type === 'standard' ? [] : magazineModifiers(weapon, magazine.type));
+        resolved.push(w);
+        weapons.push(weaponRow(w, weapon.defaultAmmoId === ammo.id, magazine.type, magazine.displayName, distance));
+      }
     }
   }
 
@@ -157,7 +202,7 @@ function analyze(registry: BalanceRegistry, missions: readonly MissionBalance[],
     const shots = Math.max(1, Math.ceil(health / shotDamage - EPSILON));
     const reloads = Math.floor((shots - 1) / w.capacity);
     const seconds = (shots - 1) * w.fireInterval / SIMULATION_HZ + reloads * weapons[row]!.fullReloadSeconds;
-    const available = w.feed.type === 'single' ? w.capacity + w.reserve : w.capacity * (1 + w.reserve);
+    const available = reserveInRounds(w.feed) ? w.capacity + w.reserve : w.capacity * (1 + w.reserve);
     return { shots, seconds, reloads, penetrates, shotDamage, enoughAmmo: shots <= available };
   }));
 
@@ -170,11 +215,36 @@ function analyze(registry: BalanceRegistry, missions: readonly MissionBalance[],
   return {
     difficultyId: difficulty.id, distance,
     difficulties: registry.difficulties.map(({ id, level, displayName }) => ({ id, level, displayName })),
-    weapons, targets, kills, enemies,
+    weapons, targets, kills, enemies, supplies: supplies(registry),
   };
 }
 
-function weaponRow(w: EffectiveWeapon, isDefaultAmmo: boolean, distance: number): WeaponRow {
+/** PoI pickups and Albatross containers, with the same unit rules as the server (`Pickups.ts`, `Resupply.ts`). */
+function supplies(registry: BalanceRegistry): SupplySummary {
+  const { loot, resupply } = registry;
+  const loadout = resolveLoadout(registry);
+  const weapons = [...registry.weapons.values()].map((definition): SupplyWeaponRow => {
+    const w = resolveWeapon(registry, definition.id);
+    const single = reserveInRounds(w.feed);
+    const grant = (magazines: number) => ({ units: single ? magazines * w.magazineSize : magazines, rounds: magazines * w.magazineSize });
+    return {
+      weaponId: w.id, slot: w.slot, unit: single ? 'rounds' : 'magazines', magazineSize: w.magazineSize, reserve: w.reserve, maxReserve: w.maxReserve,
+      ammoBox: w.slot === 'primary' ? grant(loot.grant.primaryMagazines) : null,
+      albatross: grant(w.slot === 'primary' ? resupply.perUse.primaryMagazines : resupply.perUse.secondaryMagazines),
+    };
+  });
+  const containers = registry.vehicle(ALBATROSS_VEHICLE_ID).supplyContainers;
+  return {
+    weapons, maxHealth: loadout.maxHealth, stimHeal: loadout.medical.healAmount, stimCharges: loadout.medical.maxCharges,
+    grenadeCapacity: loadout.grenade.capacity,
+    firstAidKit: { stims: loot.grant.stims, heal: loot.grant.stims * loadout.medical.healAmount },
+    grenadeCrate: { grenades: loot.grant.grenades },
+    albatross: { containers: containers.length, charges: containers.reduce((sum, c) => sum + c.charges, 0), perUse: resupply.perUse },
+    suppliesPerMap: [loot.supplies[0]! * POI_COUNT, loot.supplies[1]! * POI_COUNT],
+  };
+}
+
+function weaponRow(w: EffectiveWeapon, isDefaultAmmo: boolean, magazine: WeaponRow['magazine'], magazineName: string, distance: number): WeaponRow {
   const roundsPerSecond = SIMULATION_HZ / w.fireInterval;
   const falloff = falloffMultiplier(distance, w.projectile.falloff);
   const shotDamage = w.projectile.damage * w.projectile.projectilesPerShot * falloff;
@@ -183,10 +253,11 @@ function weaponRow(w: EffectiveWeapon, isDefaultAmmo: boolean, distance: number)
     : w.reloadTicks / SIMULATION_HZ;
   const magazineDamage = shotDamage * w.capacity;
   return {
-    weaponId: w.id, ammoId: w.ammo.id, ammoName: w.ammo.displayName, isDefaultAmmo, feedType: w.feed.type,
+    weaponId: w.id, ammoId: w.ammo.id, ammoName: w.ammo.displayName, isDefaultAmmo, magazine, magazineName, feedType: w.feed.type,
     damage: w.projectile.damage, projectilesPerShot: w.projectile.projectilesPerShot, shotDamage,
     penetration: w.projectile.penetration, damageType: w.projectile.damageType, roundsPerSecond,
-    capacity: w.capacity, fullReloadSeconds,
+    capacity: w.capacity, reserve: w.reserve,
+    totalRounds: w.capacity + (reserveInRounds(w.feed) ? w.reserve : w.reserve * w.magazineSize), fullReloadSeconds,
     dps: shotDamage * roundsPerSecond,
     sustainedDps: magazineDamage / (w.capacity / roundsPerSecond + fullReloadSeconds),
     magazineDamage, falloffMultiplier: falloff, falloff: w.projectile.falloff,

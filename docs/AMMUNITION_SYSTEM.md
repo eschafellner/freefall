@@ -41,12 +41,12 @@ Operatoren und Convicts haben noch keine Panzerklasse; Friendly Fire läuft unve
 | Kaliber | ID | Familie | Schaden | Projektile | v₀ (m/s) | Durchschlag | Abfall Start → Ende (Minimum) |
 | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
 | 10 mm | `caliber.10mm` | Pistole/SMG | 21,6 | 1 | 360 | 2 Niedrig | 48 → 90 m (60 %) |
-| .55 | `caliber.55` | Pistole/SMG | 32 | 1 | 260 | 2 Niedrig | 30 → 70 m (50 %) |
-| 5,55 × 39 mm | `caliber.5-55x39` | Gewehr | 24 | 1 | 900 | 3 Mittel | 80 → 160 m (65 %) |
-| 7,77 × 50 mm | `caliber.7-77x50` | Gewehr (schwer/DMR) | 38 | 1 | 820 | 4 Hoch | 110 → 220 m (70 %) |
+| .55 | `caliber.55` | Pistole/SMG (Viktor 55) | 32 | 1 | 260 | 2 Niedrig | 30 → 70 m (50 %) |
+| 5,55 × 39 mm | `caliber.5-55x39` | Gewehr | 24 | 1 | 900 | 2 Niedrig (bis 8.2B: 3) | 80 → 160 m (65 %) |
+| 7,77 × 50 mm | `caliber.7-77x50` | Gewehr (schwer/DMR, Kaibal 50) | 58 (bis 8.2B: 38) | 1 | 820 | 4 Hoch | 110 → 220 m (70 %) |
 | 8,88 × 55 mm | `caliber.8-88x55` | Gewehr (Scharfschütze) | 85 | 1 | 950 | 5 Sehr hoch | 250 → 500 m (80 %) |
-| Kaliber 13 | `caliber.13g` | Schrotflinte | 12 je Kugel | 8 | 400 | 2 Niedrig | 12 → 35 m (20 %) |
-| Kaliber 21 | `caliber.21g` | Schrotflinte (taktisch) | 11 je Kugel | 6 | 420 | 1 Minimal | 14 → 38 m (25 %) |
+| Kaliber 13 | `caliber.13g` | Schrotflinte | 18 je Kugel (bis 8.2B: 12) | 12 (bis 8.2B: 8) | 400 | 2 Niedrig | 12 → 35 m (20 %) |
+| Kaliber 21 | `caliber.21g` | Schrotflinte (taktisch) | 16 je Kugel (bis 8.2B: 11) | 10 (bis 8.2B: 6) | 420 | 1 Minimal | 14 → 38 m (25 %) |
 
 Nur 10 mm und 5,55 werden heute verwendet. Die übrigen Werte sind **Startwerte für spätere Waffen** und noch nicht gebalanct. Der Schadensabfall beginnt bei beiden verwendeten Kalibern jenseits der aktuellen `effectiveRange` (44 m / 72 m), ist also in 8.0A neutral. `effectiveRange` der Waffe bleibt die harte Reichweitengrenze.
 

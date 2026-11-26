@@ -84,22 +84,28 @@ const GOLDEN_TRACES = {
   // difficulty.json set to 0, every mission reproduces the previous fingerprints exactly; arena and Leicht are unchanged.
   // 2026-11-24: taller warrior models with new hit zones (breacher breast plate and frontal weak spot). The previous zones
   // reproduce the previous fingerprints exactly; arena and Leicht are unchanged.
+  // 2026-11-24: assault breakers from Schwer upward (nest guards and reinforcement calls, own random stream). With the
+  // assault breaker shares in difficulty.json set to 0, every mission reproduces the previous fingerprints exactly;
+  // Leicht to Herausfordernd and the arena are unchanged, Extrem rolled no assault breaker in this trace.
+  // 2026-11-25: new carrier layout (Deck 03 rework). Only Albtraum changes: that squad is wiped out, returns to the
+  // carrier at tick ~1030 and walks the rest of the trace through the rebuilt mess. With the previous CARRIER_WORLD the
+  // previous fingerprint is reproduced exactly; combat on the surface is untouched.
   arena: 'f52a57b052421856f0b7b5a5e783d5760bb6397e8c54799d1def266cbf03967f',
   'mission.easy': 'ed4a1d2695b90c9a260ff27139dc0c33c48b7a07bdaba6b06c99be16edf12752',
   'mission.normal': '860801443e647607bbf4be95dd452b99980f246ced46f9daa3e499c82d125191',
   'mission.challenging': '893098ac3650b704f64bab47c063446f9b4c3c20178754b58b639e7a2f228dc2',
-  'mission.hard': '2b7a8d721c982152b47a3414867e020f79e64f256d17c1671bf16bfe53375799',
+  'mission.hard': 'a1a119c44e69d23ff1e7333a8d90ef7cefb23752d9a310e16715042f62e96e8f',
   'mission.extreme': 'fd1a2753daf3da546c725a22db6a1292722796ae7f9b19de2b660de30bbbf2a5',
-  'mission.nightmare': 'f675745a7ab4e8f86cab7cd8ac034211b184fd7d6fcb80dd620fd95f9e97925a',
-  'mission.freefall': '2826a07b9ce0ca7db28c6f3735ca548a518c3d60c21897fedfe0c4476cee5bcf',
+  'mission.nightmare': '127675c9a91b60fa75846a1732faacafcb05cc24accfb08e04f287e70637a1ce',
+  'mission.freefall': '386dcffa640ddb07b3c58788e18df07735ddb7926d35a7cadeb91b608b119e86',
 };
 
 // ---------------------------------------------------------------------------------------------------------------
 // Registry
 
 test('registry loads the published files, freezes them and exposes a stable version', () => {
-  assert.equal(BALANCE.version.schemaVersion, 3);
-  assert.equal(BALANCE.version.release, '8.1A');
+  assert.equal(BALANCE.version.schemaVersion, 5);
+  assert.equal(BALANCE.version.release, '8.2C');
   assert.match(BALANCE.version.hash, /^[0-9a-f]{16}$/);
   deepFrozen(BALANCE.weapon('kestrel-ar-01'));
   deepFrozen(BALANCE.swarm);
@@ -186,8 +192,8 @@ test('duplicate IDs, wire types and broken cross references are rejected', () =>
     d.enemies.archetypes.push({ ...structuredClone(d.enemies.archetypes[0]), id: 'swarm.copy', protected: false });
   }, /Wire-Typ 0 ist bereits an "swarm\.schabe" vergeben/);
   rejects((d) => {
-    d.enemies.archetypes.push({ ...structuredClone(d.enemies.archetypes[0]), id: 'swarm.gap', protected: false, wireType: 4 });
-  }, /Typ 3 fehlt/);
+    d.enemies.archetypes.push({ ...structuredClone(d.enemies.archetypes[0]), id: 'swarm.gap', protected: false, wireType: 5 });
+  }, /Typ 4 fehlt/);
 });
 
 test('seven difficulty levels exist in order and FREEFALL is level 7', () => {

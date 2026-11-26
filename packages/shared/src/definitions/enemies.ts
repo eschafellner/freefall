@@ -15,6 +15,8 @@ export const JAEGER_ARCHETYPE_ID = 'swarm.jaeger';
 export const JAEGER_TYPE = BALANCE.enemy(JAEGER_ARCHETYPE_ID).wireType;
 export const BREACHER_ARCHETYPE_ID = 'swarm.durchbruchskaefer';
 export const BREACHER_TYPE = BALANCE.enemy(BREACHER_ARCHETYPE_ID).wireType;
+export const ASSAULT_BREAKER_ARCHETYPE_ID = 'swarm.assaultbreaker';
+export const ASSAULT_BREAKER_TYPE = BALANCE.enemy(ASSAULT_BREAKER_ARCHETYPE_ID).wireType;
 
 export const FACTIONS: Readonly<Record<string, FactionDefinition>> = Object.freeze(Object.fromEntries(BALANCE.factions));
 export const ENEMY_ARCHETYPES: Readonly<Record<string, EnemyArchetype>> = Object.freeze(Object.fromEntries(BALANCE.enemies));

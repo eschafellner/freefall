@@ -41,6 +41,8 @@ Getestet sind 40 Seeds je Planet: Jede Welt hat 8 PoI.
 
 Der Server erzeugt die Beute beim Einsatzstart mit `spawnPoiLoot` (Welt, Plan-Seed, Schwierigkeit). Jede Probe ist ein eigener Gegenstand am Boden, der Platz ist frei von Kollidern.
 
+Alle Mengen stehen seit 8.1B in `packages/shared/src/balance/data/loot.json` und lassen sich im Balance-Editor (`npm run balance:edit`, Tab „Versorgung & Beute“) bearbeiten. Die Tabellen unten zeigen den Stand 8.1B.
+
 | Stufe | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Gewebeproben gespawnt | 8 | 12 | 17 | 22 | 27 | 32 | 37 |

@@ -1,4 +1,5 @@
-// Visual check of the environment and the Schabe: ground, props and enemies on each generated planet (quality High).
+// Visual check of the environment and the swarm: ground, props, Schaben, warrior castes and the assault breaker on each
+// generated planet (quality High).
 // PLAYWRIGHT_MODULE=… node --conditions=development scripts/playtest-visuals.mjs [outputDir] [planets,comma,separated]
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -113,6 +114,18 @@ try {
     await shot('krieger');
     await delay(1600);
     await shot('krieger2');
+    // The assault breaker (type 3) facing the operator, then turned side-on.
+    while (horde.count) horde.despawn(horde.active[horde.count - 1]);
+    {
+      const x = operator.x + f.x * 13, z = operator.z + f.z * 13;
+      const slot = horde.spawn(x, z, 3);
+      horde.yaw[slot] = Math.atan2(operator.x - x, -(operator.z - z));
+      await delay(1200);
+      await shot('assaultbreaker');
+      horde.yaw[slot] += Math.PI / 2;
+      await delay(1200);
+      await shot('assaultbreaker-seite');
+    }
     report.planets[planetId] = { errors: errors.slice(0, 10), enemies: horde.count };
     await context.close();
   }

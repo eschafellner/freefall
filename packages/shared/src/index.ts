@@ -13,6 +13,7 @@ export * from './definitions/unlocks.ts';
 export * from './definitions/resources.ts';
 export * from './config/worldGeometry.ts';
 export * from './definitions/deployment.ts';
+export * from './definitions/carrier.ts';
 export * from './config/limits.ts';
 export * from './balance/index.ts';
 export * from './combat/handling.ts';

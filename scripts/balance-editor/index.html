@@ -103,6 +103,18 @@ dialog input[type=text] { background: var(--panel-2); border: 1px solid var(--li
 #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 6px; opacity: 0;
   transition: opacity .2s; pointer-events: none; z-index: 10; max-width: calc(100vw - 32px); }
 #toast.show { opacity: .95; }
+.btn.small { padding: 1px 8px; font-size: 12px; }
+.btn.link { border-color: transparent; background: none; color: var(--accent); padding: 1px 6px; }
+.btn.danger:hover:not(:disabled) { border-color: var(--bad); color: var(--bad); }
+tr.group > td { background: var(--panel-2); font-weight: 600; }
+tr.add > td { border-bottom: 2px solid var(--line); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px 12px; display: grid; gap: 8px; align-content: start; }
+.card h3 { margin: 0; font-size: 13px; }
+.card .kv { grid-template-columns: 1fr; }
+.kv .derived-value { font-variant-numeric: tabular-nums; color: var(--accent); text-align: right; }
+.mods { display: grid; gap: 4px; justify-items: start; }
+.mods .mod { display: flex; gap: 6px; align-items: center; }
 </style>
 </head>
 <body>
@@ -119,6 +131,7 @@ dialog input[type=text] { background: var(--panel-2); border: 1px solid var(--li
     <button class="tab" data-tab="weapons">Waffen</button>
     <button class="tab" data-tab="ammo">Kaliber &amp; Munition</button>
     <button class="tab" data-tab="enemies">Gegner</button>
+    <button class="tab" data-tab="supply">Versorgung &amp; Beute</button>
     <button class="tab" data-tab="analysis">Analyse</button>
     <div class="controls">
       <label>Schwierigkeit <select id="difficulty"></select></label>
@@ -134,14 +147,19 @@ dialog input[type=text] { background: var(--panel-2); border: 1px solid var(--li
 <script>
 'use strict';
 const S = {
-  files: null, fileNames: {}, revision: null, draft: null, edits: new Map(), changes: [], editErrors: [],
+  files: null, fileNames: {}, revision: null, draft: null, dirty: new Set(), changes: [], editErrors: [],
   baseline: null, current: null, lastValid: null, stale: false, open: new Set(), derived: [],
-  tab: 'weapons', difficultyId: 'normal', distance: 0, allAmmo: false,
+  tab: 'weapons', difficultyId: 'normal', distance: 0, allAmmo: false, allMags: false,
 };
 const READ_ONLY = new Set(['id', 'wireType', 'protected']);
-const ENUM_KEYS = new Set(['slot', 'category', 'family', 'damageType', 'type', 'tactics', 'operation', 'vehicleTargets', 'fire', 'stat']);
-const REFS = { weapons: { caliberId: 'calibers', defaultAmmoId: 'ammoOfCaliber' }, ammunition: { caliberId: 'calibers' }, enemies: { factionId: 'factions' } };
-const TAB_OF_FILE = { weapons: 'weapons', ammunition: 'ammo', enemies: 'enemies' };
+const ENUM_KEYS = new Set(['slot', 'category', 'family', 'damageType', 'type', 'tactics', 'vehicleTargets', 'fire', 'side']);
+const TAB_OF_FILE = { weapons: 'weapons', ammunition: 'ammo', enemies: 'enemies', loot: 'supply', equipment: 'supply', structures: 'supply' };
+const MAG_TYPES = { compact: 'Kleines Magazin', extended: 'Erweitertes Magazin', drum: 'Trommelmagazin' };
+const MAG_ORDER = Object.keys(MAG_TYPES);
+const MAG_STATS = { reloadSeconds: 'Nachladezeit s', reserve: 'Reserve (Magazine)', maxReserve: 'Max. Reserve', roundsPerSecond: 'Feuerrate',
+  recoilPitch: 'Rückstoß vertikal', recoilYaw: 'Rückstoß horizontal', spreadHip: 'Streuung Hüfte', spreadAim: 'Streuung Zielen' };
+const AMMO_STATS = ['damage', 'penetration', 'muzzleVelocity', 'roundsPerSecond', 'recoilPitch', 'recoilYaw', 'spreadHip', 'spreadAim', 'pelletSpread'];
+const OPERATIONS = { multiply: '×', add: '+', divide: '÷' };
 
 // ---------- helpers ----------
 const $ = (selector) => document.querySelector(selector);
@@ -174,13 +192,30 @@ async function api(url, body) {
   return data;
 }
 const analysisOptions = () => ({ difficultyId: S.difficultyId, distance: S.distance });
+const drafts = () => Object.fromEntries([...S.dirty].map((file) => [file, S.draft[file]]));
+
+/** Same rules as jsonEdit.ts › diffJson. */
+function diffJson(before, after, path = [], out = []) {
+  if (isScalar(before) || isScalar(after)) { if (before !== after) out.push({ path, kind: isScalar(before) && isScalar(after) ? 'value' : 'structure', before, after }); }
+  else if (Array.isArray(before) !== Array.isArray(after)) out.push({ path, kind: 'structure', before, after });
+  else if (Array.isArray(before)) {
+    if (before.length !== after.length) out.push({ path, kind: 'list', before, after });
+    else before.forEach((entry, i) => diffJson(entry, after[i], [...path, i], out));
+  } else {
+    const keys = Object.keys(before);
+    if (keys.length !== Object.keys(after).length || keys.some((k) => !(k in after))) out.push({ path, kind: 'structure', before, after });
+    else for (const k of keys) diffJson(before[k], after[k], [...path, k], out);
+  }
+  return out;
+}
+const localChanges = () => [...S.dirty].flatMap((file) => diffJson(S.files[file], S.draft[file]).map((change) => ({ ...change, file })));
 
 // ---------- names ----------
 const enemyName = (id) => S.draft.enemies.archetypes.find((e) => e.id === id)?.displayName ?? id;
 const weaponName = (id) => S.draft.weapons.weapons.find((w) => w.id === id)?.displayName ?? id;
 function entryLabel(file, path) {
-  for (let n = path.length - 1; n > 0; n--) {
-    const node = getAt(S.files[file], path.slice(0, n));
+  for (let n = path.length; n > 0; n--) {
+    const node = getAt(S.files[file], path.slice(0, n)) ?? getAt(S.draft[file], path.slice(0, n));
     if (node && typeof node === 'object' && !Array.isArray(node) && (node.displayName || node.id)) {
       return { name: node.displayName ?? node.id, rest: path.slice(n).join('.') };
     }
@@ -195,11 +230,24 @@ function isReadOnly(file, path) {
   if (file === 'enemies' && path[0] === 'archetypes') return getAt(S.files.enemies, path.slice(0, 2))?.protected === true;
   return getAt(S.files[file], path) === null;
 }
-function refOptions(ref, file, path) {
-  if (ref === 'calibers') return S.draft.ammunition.calibers.map((c) => [c.id, c.displayName]);
-  if (ref === 'factions') return S.draft.enemies.factions.map((f) => [f.id, f.displayName]);
-  const caliber = getAt(S.draft[file], path.slice(0, -1)).caliberId;
-  return S.draft.ammunition.ammunition.filter((a) => a.caliberId === caliber).map((a) => [a.id, `${a.displayName} (${a.shortName})`]);
+function choicesFor(file, path) {
+  const last = String(path[path.length - 1]);
+  if (file === 'weapons' && path.includes('magazineVariants')) {
+    if (last === 'type') return Object.entries(MAG_TYPES);
+    if (last === 'stat') return Object.entries(MAG_STATS);
+    if (last === 'operation') return Object.entries(OPERATIONS);
+  }
+  if (file === 'ammunition' && path[0] === 'ammunition' && path.includes('modifiers')) {
+    if (last === 'stat') return AMMO_STATS.map((stat) => [stat, stat]);
+    if (last === 'operation') return Object.entries(OPERATIONS);
+  }
+  if ((file === 'weapons' || file === 'ammunition') && last === 'caliberId') return S.draft.ammunition.calibers.map((c) => [c.id, c.displayName]);
+  if (file === 'enemies' && last === 'factionId') return S.draft.enemies.factions.map((f) => [f.id, f.displayName]);
+  if (file === 'weapons' && last === 'defaultAmmoId') {
+    const caliber = getAt(S.draft.weapons, path.slice(0, -1)).caliberId;
+    return S.draft.ammunition.ammunition.filter((a) => a.caliberId === caliber).map((a) => [a.id, `${a.displayName} (${a.shortName})`]);
+  }
+  return null;
 }
 function datalistFor(file, key) {
   const id = `dl-${file}-${key}`;
@@ -216,22 +264,22 @@ function datalistFor(file, key) {
 function field(file, path) {
   const original = getAt(S.files[file], path);
   const value = getAt(S.draft[file], path);
+  const sample = original === undefined ? value : original;
   const last = String(path[path.length - 1]);
   const readOnly = isReadOnly(file, path);
-  const ref = REFS[file]?.[last];
+  const choices = choicesFor(file, path);
   let el;
-  if (typeof original === 'boolean') {
+  if (typeof sample === 'boolean') {
     el = h('input', { type: 'checkbox', class: 'field', disabled: readOnly });
     el.checked = value;
     el.addEventListener('change', () => commit(file, path, el.checked, el));
-  } else if (ref) {
-    const options = refOptions(ref, file, path);
-    el = h('select', { class: 'field', disabled: readOnly }, options.map(([id, label]) => h('option', { value: id }, label)));
-    if (!options.some(([id]) => id === value)) el.prepend(h('option', { value }, `${value} (passt nicht)`));
+  } else if (choices) {
+    el = h('select', { class: 'field', disabled: readOnly }, choices.map(([id, label]) => h('option', { value: id }, label)));
+    if (!choices.some(([id]) => id === value)) el.prepend(h('option', { value }, `${value} (passt nicht)`));
     el.value = value;
     el.addEventListener('change', () => { commit(file, path, el.value, el); renderTab(); });
   } else {
-    const numeric = typeof original === 'number';
+    const numeric = typeof sample === 'number';
     el = h('input', { type: 'text', class: `field ${numeric ? 'num' : 'txt'}`, spellcheck: 'false', autocomplete: 'off', disabled: readOnly,
       inputmode: numeric ? 'decimal' : undefined, list: !numeric && ENUM_KEYS.has(last) ? datalistFor(file, last) : undefined });
     el.value = value === null ? '' : String(value);
@@ -243,14 +291,16 @@ function field(file, path) {
         const number = text === '' ? NaN : Number(text);
         if (!Number.isFinite(number)) { el.classList.add('bad'); el.title = 'Zahl erwartet'; return; }
         el.classList.remove('bad');
-        markField(el);
         next = number;
       }
       commit(file, path, next, el);
+      markField(el);
     });
   }
   if (readOnly) el.dataset.hint = READ_ONLY.has(last) ? 'Schreibgeschützt: nur direkt in der Datei ändern' : 'Geschützter Eintrag (protected: true)';
   el.dataset.key = keyOf(file, path);
+  el.dataset.file = file;
+  el.dataset.path = JSON.stringify(path);
   markField(el);
   return el;
 }
@@ -259,17 +309,29 @@ function setFieldValue(el, value) {
   else if (document.activeElement !== el) el.value = String(value);
 }
 function markField(el) {
-  const key = el.dataset.key;
-  el.classList.toggle('changed', S.edits.has(key));
-  const issue = issueForKey(key);
+  const path = JSON.parse(el.dataset.path);
+  el.classList.toggle('changed', getAt(S.files[el.dataset.file], path) !== getAt(S.draft[el.dataset.file], path));
+  const issue = issueForKey(el.dataset.key);
   el.classList.toggle('invalid', Boolean(issue));
   if (!el.classList.contains('bad')) el.title = issue ?? el.dataset.hint ?? '';
 }
 function commit(file, path, value, source) {
   setAt(S.draft[file], path, value);
+  S.dirty.add(file);
   const key = keyOf(file, path);
-  if (value === getAt(S.files[file], path)) S.edits.delete(key); else S.edits.set(key, { file, path, value });
   for (const el of document.querySelectorAll(`[data-key="${CSS.escape(key)}"]`)) { if (el !== source) setFieldValue(el, value); markField(el); }
+  for (const el of document.querySelectorAll('[data-summary]')) {
+    const modifiers = getAt(S.draft.weapons, [...el.dataset.summary.split(':').map((part) => /^\d+$/.test(part) ? Number(part) : part), 'modifiers']);
+    if (modifiers) el.textContent = modifierSummary(modifiers);
+  }
+  updateHeader();
+  scheduleEvaluate();
+}
+/** Structural change (list entries added or removed): re-render, then evaluate. */
+function restructure(file, change) {
+  change(S.draft[file]);
+  S.dirty.add(file);
+  renderTab();
   updateHeader();
   scheduleEvaluate();
 }
@@ -297,19 +359,23 @@ function renderIssues() {
   const box = $('#issues');
   box.hidden = !list.length || box.dataset.closed === 'true';
   box.replaceChildren();
+  for (const el of document.querySelectorAll('[data-key]')) markField(el);
   if (!list.length) return;
   box.append(h('h3', {}, `${list.length} ${list.length === 1 ? 'Problem' : 'Probleme'} – nicht speicherbar`,
     h('button', { class: 'expand', title: 'Ausblenden', onclick: () => { box.dataset.closed = 'true'; box.hidden = true; } }, '✕')));
   box.append(h('ul', {}, issueIndex.map((issue) => h('li', { onclick: () => revealIssue(issue) }, issue.text))));
-  for (const el of document.querySelectorAll('[data-key]')) markField(el);
 }
 function revealIssue(issue) {
   const tab = TAB_OF_FILE[issue.file];
   if (!tab) { toast(`${S.fileNames[issue.file] ?? 'Diese Datei'} wird im Editor nicht angezeigt – bitte direkt in der Datei prüfen.`); return; }
-  if (Array.isArray(issue.path) && typeof issue.path[1] === 'number') S.open.add(`${issue.file}:${issue.path[0]}:${issue.path[1]}`);
+  if (Array.isArray(issue.path) && typeof issue.path[1] === 'number') {
+    S.open.add(`${issue.file}:${issue.path[0]}:${issue.path[1]}`);
+    if (typeof issue.path[3] === 'number') S.open.add(`${issue.file}:${issue.path.slice(0, 4).join(':')}`);
+  }
   setTab(tab);
   const target = [...document.querySelectorAll('[data-key]')].find((el) => issueForKey(el.dataset.key) === issue.message);
   if (target) { target.scrollIntoView({ block: 'center' }); target.focus(); }
+  else toast('Der betroffene Wert wird in dieser Ansicht nicht angezeigt – bitte direkt in der Datei prüfen.');
 }
 
 // ---------- evaluation ----------
@@ -318,7 +384,7 @@ function scheduleEvaluate() { clearTimeout(timer); setStatus('busy'); timer = se
 async function runEvaluate() {
   const id = ++sequence;
   try {
-    const result = await api('/api/evaluate', { edits: [...S.edits.values()], revision: S.revision, ...analysisOptions() });
+    const result = await api('/api/evaluate', { drafts: drafts(), revision: S.revision, ...analysisOptions() });
     if (id !== sequence) return;
     applyEvaluation(result);
   } catch (error) { if (id === sequence) { setStatus('offline'); toast(`Server nicht erreichbar: ${error.message}`); } }
@@ -333,8 +399,8 @@ function applyEvaluation(result) {
 }
 async function refreshBaseline() {
   const [base, current] = await Promise.all([
-    api('/api/evaluate', { edits: [], revision: S.revision, ...analysisOptions() }),
-    api('/api/evaluate', { edits: [...S.edits.values()], revision: S.revision, ...analysisOptions() }),
+    api('/api/evaluate', { drafts: {}, revision: S.revision, ...analysisOptions() }),
+    api('/api/evaluate', { drafts: drafts(), revision: S.revision, ...analysisOptions() }),
   ]);
   S.baseline = base.evaluation;
   applyEvaluation(current);
@@ -349,19 +415,19 @@ function setStatus(mode) {
   if (mode === 'offline') { pill.textContent = 'Server getrennt'; pill.classList.add('bad'); return; }
   const count = (S.current?.issues.length ?? 0) + S.editErrors.length;
   if (!count) { pill.textContent = 'gültig'; pill.classList.add('ok'); return; }
-  pill.textContent = `${count} ${count === 1 ? 'Fehler' : 'Fehler'}`;
+  pill.textContent = `${count} Fehler`;
   pill.classList.add('bad');
   pill.onclick = () => { $('#issues').dataset.closed = 'false'; renderIssues(); };
 }
 function updateHeader() {
   const base = S.baseline?.version;
   const now = S.current?.version;
+  const count = localChanges().length;
   $('#version').replaceChildren(
     'Release ', h('b', {}, S.files?.manifest.release ?? '?'),
     ' · Hash ', h('b', {}, base?.hash ?? '?'),
-    ...(S.edits.size && now && now.hash !== base?.hash ? [h('span', { class: 'arrow' }, '→'), h('b', {}, now.hash)] : []),
+    ...(count && now && now.hash !== base?.hash ? [h('span', { class: 'arrow' }, '→'), h('b', {}, now.hash)] : []),
   );
-  const count = S.edits.size;
   $('#save').disabled = !count;
   $('#save').textContent = count ? `Speichern (${count})` : 'Speichern';
   $('#discard').disabled = !count;
@@ -374,46 +440,48 @@ function renderStale() {
     'Die Dateien wurden außerhalb des Editors geändert.', h('button', { class: 'btn', onclick: reload }, 'Neu laden (Änderungen bleiben erhalten)')));
 }
 
-// ---------- derived cells ----------
-function analysisFor(evaluation) { return evaluation?.analysis ?? null; }
-function derivedCell(compute, digits = 1) {
-  const td = h('td', { class: 'derived' });
-  S.derived.push({ td, compute, digits });
-  return td;
+// ---------- derived values ----------
+const analysisFor = (evaluation) => evaluation?.analysis ?? null;
+/** A cell (or span) whose number comes from the analysis; shows the deviation from the saved state. */
+function derived(compute, digits = 1, tag = 'td') {
+  const el = h(tag, { class: tag === 'td' ? 'derived' : 'derived-value' });
+  S.derived.push({ el, compute, digits });
+  return el;
 }
 function updateDerived() {
   const current = analysisFor(S.current);
   const shown = current ?? analysisFor(S.lastValid);
   const base = analysisFor(S.baseline);
-  for (const { td, compute, digits } of S.derived) {
+  for (const { el, compute, digits } of S.derived) {
     const value = shown ? compute(shown) : null;
     const before = base ? compute(base) : null;
-    td.classList.toggle('stale', !current);
-    td.replaceChildren(fmt(value, digits));
+    el.classList.toggle('stale', !current);
+    el.replaceChildren(fmt(value, digits));
     if (current && Number.isFinite(value) && Number.isFinite(before) && Math.abs(value - before) > 1e-9) {
-      td.append(h('span', { class: 'delta', title: `gespeichert: ${fmt(before, digits)}` }, sign(value - before, digits)));
+      el.append(h('span', { class: 'delta', title: `gespeichert: ${fmt(before, digits)}` }, sign(value - before, digits)));
     }
   }
 }
-const defaultRow = (a, weaponId) => a.weapons.find((w) => w.weaponId === weaponId && w.isDefaultAmmo);
+const weaponRow = (a, weaponId, magazine = 'standard') => a.weapons.find((w) => w.weaponId === weaponId && w.isDefaultAmmo && w.magazine === magazine);
 const difficultyIndex = (a) => Math.max(0, a.difficulties.findIndex((d) => d.id === a.difficultyId));
+const supplyRow = (a, weaponId) => a.supplies.weapons.find((w) => w.weaponId === weaponId);
 
 // ---------- tables ----------
 const TABLES = {
   weapons: {
     file: 'weapons', list: ['weapons'], title: 'Waffen',
-    note: () => `Abgeleitete Spalten mit Standardmunition auf ${fmt(S.distance, 0)} m, ohne Panzerung. Aufklappen zeigt alle Werte (Rückstoß, Streuung, Zuführung …).`,
+    note: () => `Abgeleitete Spalten mit Standardmunition und Standardmagazin auf ${fmt(S.distance, 0)} m, ohne Panzerung. Aufklappen zeigt alle Werte (Rückstoß, Streuung, Zuführung …).`,
     columns: [
       ['displayName', 'Name'], ['slot', 'Slot'], ['caliberId', 'Kaliber'], ['defaultAmmoId', 'Standardmunition'],
       ['ballistics.damageMultiplier', 'Schaden ×'], ['ballistics.velocityMultiplier', 'V₀ ×'], ['roundsPerSecond', 'Schuss/s'],
       ['magazineSize', 'Magazin'], ['reserve', 'Reserve'], ['maxReserve', 'Max. Res.'], ['reloadSeconds', 'Nachladen s'], ['effectiveRange', 'Reichweite m'],
     ],
     derived: [
-      ['Schaden/Schuss', (a, e) => defaultRow(a, e.id)?.shotDamage, 1],
-      ['Durchschlag', (a, e) => defaultRow(a, e.id)?.penetration, 0],
-      ['DPS', (a, e) => defaultRow(a, e.id)?.dps, 0],
-      ['DPS inkl. Nachladen', (a, e) => defaultRow(a, e.id)?.sustainedDps, 0],
-      ['Magazinschaden', (a, e) => defaultRow(a, e.id)?.magazineDamage, 0],
+      ['Schaden/Schuss', (a, e) => weaponRow(a, e.id)?.shotDamage, 1],
+      ['Durchschlag', (a, e) => weaponRow(a, e.id)?.penetration, 0],
+      ['DPS', (a, e) => weaponRow(a, e.id)?.dps, 0],
+      ['DPS inkl. Nachladen', (a, e) => weaponRow(a, e.id)?.sustainedDps, 0],
+      ['Schuss gesamt', (a, e) => weaponRow(a, e.id)?.totalRounds, 0],
     ],
   },
   calibers: {
@@ -427,9 +495,9 @@ const TABLES = {
   },
   ammunition: {
     file: 'ammunition', list: ['ammunition'], title: 'Munitionssorten',
-    note: () => 'Modifikatoren (z. B. damage × 1,2) im aufgeklappten Eintrag.',
+    note: () => 'Modifikatoren (z. B. damage × 1,2) im aufgeklappten Eintrag. Neue Modifikatoren werden direkt in ammunition.json angelegt.',
     columns: [['displayName', 'Name'], ['shortName', 'Kürzel'], ['caliberId', 'Kaliber'], ['damageType', 'Schadensart']],
-    static: [['Modifikatoren', (e) => e.modifiers.map((m) => `${m.stat} ${{ add: '+', multiply: '×', divide: '÷' }[m.operation] ?? m.operation} ${m.value}`).join(', ') || '—']],
+    static: [['Modifikatoren', (e) => modifierSummary(e.modifiers)]],
   },
   enemies: {
     file: 'enemies', list: ['archetypes'], title: 'Gegner',
@@ -445,11 +513,19 @@ const TABLES = {
     ],
   },
 };
+const modifierSummary = (modifiers) => modifiers.map((m) => `${MAG_STATS[m.stat] ?? m.stat} ${OPERATIONS[m.operation] ?? m.operation} ${fmt(m.value, 3)}`).join(', ') || '—';
 function zoneSummary(enemy) {
   if (!enemy.hitZones?.length) return '—';
   const byClass = new Map();
   for (const zone of enemy.hitZones) byClass.set(zone.armorClass, (byClass.get(zone.armorClass) ?? 0) + 1);
   return [...byClass].sort((a, b) => a[0] - b[0]).map(([c, n]) => `${n}× Kl. ${c}`).join(', ') + (enemy.frontArmor ? ` · Front Kl. ${enemy.frontArmor.armorClass}` : '');
+}
+function expandButton(openKey) {
+  const isOpen = S.open.has(openKey);
+  return h('button', { class: 'expand', title: isOpen ? 'Zuklappen' : 'Alle Werte', onclick: () => { if (isOpen) S.open.delete(openKey); else S.open.add(openKey); renderTab(); } }, isOpen ? '▾' : '▸');
+}
+function section(title, note, ...content) {
+  return h('section', {}, h('h2', {}, title), note ? h('p', { class: 'note' }, note) : null, content);
 }
 function renderTable(def) {
   const entries = getAt(S.draft[def.file], def.list);
@@ -460,10 +536,7 @@ function renderTable(def) {
   entries.forEach((entry, index) => {
     const base = [...def.list, index];
     const openKey = `${def.file}:${def.list.join('.')}:${index}`;
-    const isOpen = S.open.has(openKey);
-    const toggle = () => { if (isOpen) S.open.delete(openKey); else S.open.add(openKey); renderTab(); };
-    const row = h('tr', { class: entry.protected ? 'locked' : '' },
-      h('td', {}, h('button', { class: 'expand', title: isOpen ? 'Zuklappen' : 'Alle Werte', onclick: toggle }, isOpen ? '▾' : '▸')));
+    const row = h('tr', { class: entry.protected ? 'locked' : '' }, h('td', {}, expandButton(openKey)));
     def.columns.forEach(([dotted], column) => {
       const path = [...base, ...dotted.split('.')];
       const td = h('td', { class: typeof getAt(S.files[def.file], path) === 'number' ? 'num' : '' });
@@ -472,27 +545,172 @@ function renderTable(def) {
       row.append(td);
     });
     for (const [, compute] of def.static ?? []) row.append(h('td', { class: 'muted' }, compute(entry)));
-    for (const [, compute, digits] of def.derived ?? []) row.append(derivedCell((a) => compute(a, entry), digits));
+    for (const [, compute, digits] of def.derived ?? []) row.append(derived((a) => compute(a, entry), digits));
     body.append(row);
-    if (isOpen) body.append(h('tr', { class: 'detail' }, h('td', { colspan: width }, objectBody(def.file, base, entry))));
+    if (S.open.has(openKey)) body.append(h('tr', { class: 'detail' }, h('td', { colspan: width }, objectBody(def.file, base, entry))));
   });
-  return h('section', {}, h('h2', {}, def.title), h('p', { class: 'note' }, def.note()),
-    h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, head), body)));
+  return section(def.title, def.note(), h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, head), body)));
 }
-function objectBody(file, path, object) {
+function objectBody(file, path, object, skip = []) {
   const grid = h('div', { class: 'kv' });
   const groups = [];
   for (const [key, value] of Object.entries(object)) {
+    if (skip.includes(key)) continue;
     const p = [...path, key];
     if (isScalar(value)) grid.append(h('label', {}, h('span', { class: 'k' }, key), field(file, p)));
     else if (Array.isArray(value) && value.every(isScalar)) {
       grid.append(h('label', {}, h('span', { class: 'k' }, key), value.length ? h('span', { class: 'vec' }, value.map((_, i) => field(file, [...p, i]))) : h('span', { class: 'muted' }, 'leer')));
     } else if (Array.isArray(value)) {
       groups.push(h('fieldset', { class: 'items' }, h('legend', {}, `${key} (${value.length})`),
-        value.map((item, i) => h('fieldset', {}, h('legend', {}, item?.id ?? `#${i + 1}`), objectBody(file, [...p, i], item)))));
+        value.map((item, i) => h('fieldset', {}, h('legend', {}, item?.id ?? item?.type ?? `#${i + 1}`), objectBody(file, [...p, i], item)))));
     } else groups.push(h('fieldset', {}, h('legend', {}, key), objectBody(file, p, value)));
   }
   return h('div', { class: 'obj' }, grid, groups);
+}
+
+// ---------- magazine variants ----------
+function suggestedSize(weapon, type) {
+  const base = weapon.magazineSize;
+  const extended = weapon.magazineVariants.find((v) => v.type === 'extended')?.magazineSize ?? base;
+  if (type === 'compact') return Math.max(1, Math.min(base - 1, Math.round(base * 2 / 3)));
+  if (type === 'extended') return Math.max(base + 1, Math.round(base * 4 / 3));
+  return Math.max(extended + 1, Math.round(base * 2.2));
+}
+function addVariant(index, type) {
+  restructure('weapons', (data) => {
+    const weapon = data.weapons[index];
+    const variant = { type, displayName: MAG_TYPES[type], magazineSize: suggestedSize(weapon, type), modifiers: [] };
+    const at = weapon.magazineVariants.findIndex((v) => MAG_ORDER.indexOf(v.type) > MAG_ORDER.indexOf(type));
+    weapon.magazineVariants.splice(at < 0 ? weapon.magazineVariants.length : at, 0, variant);
+  });
+  toast(`${MAG_TYPES[type]} angelegt. Die Größe ist ein Vorschlag – bitte anpassen.`);
+}
+function renderMagazines() {
+  const weapons = S.draft.weapons.weapons;
+  const cols = [['Kapazität', 'capacity', 0], ['Schuss gesamt', 'totalRounds', 0], ['Nachladen leer s', 'fullReloadSeconds', 2], ['DPS inkl. Nachladen', 'sustainedDps', 0], ['Magazinschaden', 'magazineDamage', 0]];
+  const head = h('tr', {}, h('th', {}), ['Waffe / Variante', 'Name', 'Schuss', 'Modifikatoren'].map((t) => h('th', {}, t)), cols.map(([t]) => h('th', { class: 'derived' }, t)), h('th', {}));
+  const body = h('tbody');
+  const width = 6 + cols.length;
+  weapons.forEach((weapon, i) => {
+    const derivedCells = (type) => cols.map(([, key, digits]) => derived((a) => weaponRow(a, weapon.id, type())?.[key], digits));
+    body.append(h('tr', { class: 'group' }, h('td', {}), h('td', {}, weapon.displayName), h('td', { class: 'muted' }, 'Standardmagazin'),
+      h('td', { class: 'num' }, field('weapons', ['weapons', i, 'magazineSize'])), h('td', { class: 'muted' }, '—'), derivedCells(() => 'standard'), h('td', {})));
+    weapon.magazineVariants.forEach((variant, j) => {
+      const base = ['weapons', i, 'magazineVariants', j];
+      const openKey = `weapons:${base.join(':')}`;
+      body.append(h('tr', {},
+        h('td', {}, expandButton(openKey)),
+        h('td', {}, field('weapons', [...base, 'type'])),
+        h('td', {}, field('weapons', [...base, 'displayName'])),
+        h('td', { class: 'num' }, field('weapons', [...base, 'magazineSize'])),
+        h('td', { class: 'muted', 'data-summary': base.join(':') }, modifierSummary(variant.modifiers)),
+        derivedCells(() => S.draft.weapons.weapons[i]?.magazineVariants[j]?.type),
+        h('td', {}, h('button', { class: 'btn small danger', title: 'Variante entfernen',
+          onclick: () => restructure('weapons', (data) => data.weapons[i].magazineVariants.splice(j, 1)) }, '✕'))));
+      if (S.open.has(openKey)) body.append(h('tr', { class: 'detail' }, h('td', { colspan: width }, modifierEditor(i, j))));
+    });
+    const missing = MAG_ORDER.filter((type) => !weapon.magazineVariants.some((v) => v.type === type));
+    body.append(h('tr', { class: 'add' }, h('td', {}), h('td', { colspan: width - 1 },
+      weapon.feed.type !== 'magazine' ? h('span', { class: 'muted' }, weapon.feed.type === 'break' ? 'Kipplauf: keine wechselbaren Magazine.' : 'Einzelpatronen-Zuführung: keine wechselbaren Magazine.')
+        : missing.length ? missing.map((type) => h('button', { class: 'btn link', onclick: () => addVariant(i, type) }, `+ ${MAG_TYPES[type]}`))
+          : h('span', { class: 'muted' }, 'Alle Varianten angelegt.'))));
+  });
+  return section('Magazinvarianten', 'Vorbereitet für kleine, erweiterte und Trommelmagazine. Die Werte werden geprüft und in der Analyse ausgewertet, sind im Spiel aber noch nicht wählbar. ' +
+    '„Reserve“ zählt weiter Magazine: Mit Trommelmagazinen steigt die Gesamtmunition, außer ein Modifikator senkt die Reserve. ▸ öffnet die Modifikatoren (z. B. längere Nachladezeit).',
+    h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, head), body)));
+}
+function modifierEditor(i, j) {
+  const base = ['weapons', i, 'magazineVariants', j, 'modifiers'];
+  const modifiers = getAt(S.draft.weapons, base);
+  const unused = Object.keys(MAG_STATS).filter((stat) => !modifiers.some((m) => m.stat === stat));
+  return h('div', { class: 'obj' }, h('div', { class: 'mods' },
+    modifiers.length ? modifiers.map((_, n) => h('div', { class: 'mod' },
+      field('weapons', [...base, n, 'stat']), field('weapons', [...base, n, 'operation']), field('weapons', [...base, n, 'value']),
+      h('button', { class: 'btn small danger', title: 'Modifikator entfernen', onclick: () => restructure('weapons', (data) => getAt(data, base).splice(n, 1)) }, '✕')))
+      : h('span', { class: 'muted' }, 'Keine Modifikatoren: Nur die Magazingröße ändert sich.'),
+    unused.length ? h('button', { class: 'btn small', onclick: () => restructure('weapons', (data) => getAt(data, base).push({ stat: unused[0], operation: 'multiply', value: 1 })) }, '+ Modifikator') : null));
+}
+
+// ---------- supply tab ----------
+function form(rows) {
+  return h('div', { class: 'kv' }, rows.map(([label, file, path, hint]) => h('label', { title: hint },
+    h('span', { class: 'k' }, label),
+    typeof path === 'function' ? path() : Array.isArray(path[0]) ? h('span', { class: 'vec' }, path.map((p) => field(file, p))) : field(file, path))));
+}
+const card = (title, ...content) => h('div', { class: 'card' }, h('h3', {}, title), content);
+function renderSupply() {
+  const { equipment, structures } = S.draft;
+  const weapons = S.draft.weapons.weapons;
+  const vehicle = structures.vehicles.findIndex((v) => v.id === 'vehicle.albatross_02');
+  const pois = card('Vorräte an Points of Interest',
+    form([
+      ['Vorräte je PoI (min / max)', 'loot', [['supplies', 0], ['supplies', 1]], 'Je Vorrat zufällig Munitionsbox, Erste-Hilfe-Kasten oder Granatenkiste'],
+      ['Munitionsbox: Magazine Primärwaffe', 'loot', ['grant', 'primaryMagazines'], 'Einzelpatronen-Waffen erhalten Magazingröße × Anzahl Patronen'],
+      ['Erste-Hilfe-Kasten: Heilstims', 'loot', ['grant', 'stims']],
+      ['Granatenkiste: Granaten', 'loot', ['grant', 'grenades'], 'Was über die Kapazität geht, verfällt'],
+      ['Aufnahmereichweite m', 'loot', ['range']],
+      ['Vorräte je Karte', null, () => h('span', { class: 'derived-value' }, derived((a) => a.supplies.suppliesPerMap[0], 0, 'span'), ' – ', derived((a) => a.supplies.suppliesPerMap[1], 0, 'span'))],
+      ['Erste-Hilfe-Kasten heilt HP', null, () => derived((a) => a.supplies.firstAidKit.heal, 0, 'span')],
+    ]));
+  const medical = card('Heilstim und Granaten',
+    form([
+      ...equipment.medical.flatMap((item, i) => [
+        [`${item.displayName}: Ladungen`, 'equipment', ['medical', i, 'maxCharges']],
+        [`${item.displayName}: Heilung (Anteil max. HP)`, 'equipment', ['medical', i, 'healFractionOfMaxHealth']],
+        [`${item.displayName}: Anwendung s`, 'equipment', ['medical', i, 'applicationSeconds']],
+      ]),
+      ['HP je Stim', null, () => derived((a) => a.supplies.stimHeal, 0, 'span')],
+      ['Operator max. HP', null, () => derived((a) => a.supplies.maxHealth, 0, 'span')],
+      ...equipment.grenades.map((item, i) => [`${item.displayName}: Kapazität`, 'equipment', ['grenades', i, 'capacity']]),
+    ]));
+  const albatross = card('Albatross-Nachschub',
+    form([
+      ['Je Ladung: Magazine Primärwaffe', 'equipment', ['resupply', 'perUse', 'primaryMagazines']],
+      ['Je Ladung: Magazine Sekundärwaffe', 'equipment', ['resupply', 'perUse', 'secondaryMagazines']],
+      ['Je Ladung: Granaten', 'equipment', ['resupply', 'perUse', 'grenades']],
+      ['Je Ladung: Heilstims', 'equipment', ['resupply', 'perUse', 'stims']],
+      ['Interaktion s', 'equipment', ['resupply', 'interactionSeconds']],
+      ['Reichweite m', 'equipment', ['resupply', 'interactionRange']],
+      ['Nutzbar, wenn beschädigt', 'equipment', ['resupply', 'availableWhen', 'vehicleDamaged']],
+      ['Nutzbar, wenn lahmgelegt', 'equipment', ['resupply', 'availableWhen', 'vehicleDisabled']],
+      ['Nutzbar, wenn zerstört', 'equipment', ['resupply', 'availableWhen', 'vehicleDestroyed']],
+      ...(vehicle < 0 ? [] : structures.vehicles[vehicle].supplyContainers.flatMap((container, n) => [
+        [`${container.serial}: Ladungen`, 'structures', ['vehicles', vehicle, 'supplyContainers', n, 'charges']],
+        [`${container.serial}: HP`, 'structures', ['vehicles', vehicle, 'supplyContainers', n, 'health']],
+      ])),
+      ['Ladungen je Einsatz', null, () => derived((a) => a.supplies.albatross.charges, 0, 'span')],
+    ]));
+
+  const ammoHead = h('tr', {}, ['Waffe', 'Einheit'].map((t) => h('th', {}, t)),
+    ['Startreserve', 'Tragekapazität', 'Munitionsbox', 'Munitionsbox Schuss', 'Albatross je Ladung', 'Albatross Schuss'].map((t) => h('th', { class: 'derived' }, t)));
+  const ammoBody = h('tbody', {}, weapons.map((weapon) => h('tr', {},
+    h('td', {}, weapon.displayName),
+    h('td', { class: 'muted' }, weapon.feed.type !== 'magazine' ? 'Patronen' : `Magazine à ${weapon.magazineSize}`),
+    derived((a) => supplyRow(a, weapon.id)?.reserve, 0), derived((a) => supplyRow(a, weapon.id)?.maxReserve, 0),
+    derived((a) => supplyRow(a, weapon.id)?.ammoBox?.units, 0), derived((a) => supplyRow(a, weapon.id)?.ammoBox?.rounds, 0),
+    derived((a) => supplyRow(a, weapon.id)?.albatross.units, 0), derived((a) => supplyRow(a, weapon.id)?.albatross.rounds, 0))));
+
+  const loot = S.draft.loot;
+  const levels = S.lastValid?.analysis?.difficulties ?? Array.from({ length: 7 }, (_, i) => ({ level: i + 1, displayName: '' }));
+  const sampleHead = h('tr', {}, h('th', {}, 'Stufe'), ['Gewebe auf Karte', 'Gewebe Limit', 'Gestein auf Karte', 'Gestein Limit'].map((t) => h('th', {}, t)));
+  const sampleBody = h('tbody', {}, levels.map((d, k) => h('tr', {}, h('td', {}, `${d.level} ${d.displayName}`),
+    ['tissue', 'rock'].flatMap((id) => ['spawn', 'limit'].map((list) => h('td', { class: 'num' }, field('loot', [id, list, k])))))));
+  const samples = card('Proben, Artefakte und Marks',
+    form([
+      ['Gewebe ab Stufe', 'loot', ['tissue', 'fromLevel']], ['Gewebe je PoI (min / max)', 'loot', [['tissue', 'perSite', 0], ['tissue', 'perSite', 1]]],
+      ['Gestein ab Stufe', 'loot', ['rock', 'fromLevel']], ['Gestein je PoI (min / max)', 'loot', [['rock', 'perSite', 0], ['rock', 'perSite', 1]]],
+      ['Artefakte ab Stufe', 'loot', ['artifact', 'fromLevel']], ['Artefakte am Wahrzeichen (min / max)', 'loot', [['artifact', 'perSite', 0], ['artifact', 'perSite', 1]]],
+      ['Mark-Chance je PoI', 'loot', ['markChance'], '0 … 1'],
+    ]),
+    h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, sampleHead), sampleBody)));
+
+  return [
+    section('Versorgung', 'Was Munitionsboxen, Erste-Hilfe-Kästen, Granatenkisten und die Albatross geben. Alle Mengen werden im Spiel an der Tragekapazität gekappt.',
+      h('div', { class: 'cards' }, pois, medical, albatross)),
+    section('Munition aus Kisten', 'Mit Standardmagazin. Einzelpatronen-Waffen zählen Reserve und Nachschub in Patronen. Die Munitionsbox an PoI füllt nur die Primärwaffe.',
+      h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, ammoHead), ammoBody))),
+    section('Beute an Points of Interest', 'Proben je Schwierigkeitsstufe: „auf Karte“ liegt verteilt, das Limit kann der Trupp höchstens tragen und extrahieren.', samples),
+  ];
 }
 
 // ---------- analysis tab ----------
@@ -504,25 +722,29 @@ function renderAnalysis() {
   if (!a) return h('div', { class: 'banner' }, 'Keine gültige Konfiguration – Fehlerliste unten rechts.');
   if (!current) root.append(h('div', { class: 'banner' }, 'Die aktuelle Änderung ist ungültig. Angezeigt wird der letzte gültige Stand.'));
   const difficulty = a.difficulties.find((d) => d.id === a.difficultyId);
+  const visible = (w) => (S.allAmmo || w.isDefaultAmmo) && (S.allMags || w.magazine === 'standard');
+  const ammoLabel = (w) => [w.ammoName, w.isDefaultAmmo ? h('span', { class: 'muted' }, ' · Std.') : null, w.magazine !== 'standard' ? h('span', { class: 'muted' }, ` · ${w.magazineName}`) : null];
+  const toggle = (label, key) => h('label', {}, h('input', { type: 'checkbox', checked: S[key] || undefined,
+    onchange: (e) => { S[key] = e.target.checked; store.set(key, S[key]); renderTab(); } }), ` ${label}`);
 
   // Time-to-kill matrix
-  const rows = a.weapons.map((w, i) => ({ w, i })).filter(({ w }) => S.allAmmo || w.isDefaultAmmo);
+  const rows = a.weapons.map((w, i) => ({ w, i })).filter(({ w }) => visible(w));
   const groups = [];
   a.targets.forEach((t, j) => { const g = groups[groups.length - 1]; if (g?.enemyId === t.enemyId) g.items.push(j); else groups.push({ enemyId: t.enemyId, items: [j] }); });
   const firstOfGroup = new Set(groups.map((g) => g.items[0]));
   let maxSeconds = 0;
   for (const { i } of rows) for (const cell of a.kills[i]) if (cell.seconds !== null) maxSeconds = Math.max(maxSeconds, cell.seconds);
-  const baseKey = (w) => `${w.weaponId}|${w.ammoId}`;
+  const baseKey = (w) => `${w.weaponId}|${w.ammoId}|${w.magazine}`;
   const baseIndex = new Map(base?.weapons.map((w, i) => [baseKey(w), i]) ?? []);
   const baseTarget = new Map(base?.targets.map((t, j) => [t.key, j]) ?? []);
-  const head1 = h('tr', {}, h('th', {}, 'Waffe'), h('th', {}, 'Munition'),
+  const head1 = h('tr', {}, h('th', {}, 'Waffe'), h('th', {}, 'Munition / Magazin'),
     groups.map((g) => h('th', { class: 'group', colspan: g.items.length }, enemyName(g.enemyId),
       h('span', { class: 'muted' }, ` · ${fmt(a.enemies.find((e) => e.enemyId === g.enemyId)?.health[difficultyIndex(a)], 0)} HP`))));
   const head2 = h('tr', {}, h('th', {}), h('th', {}), a.targets.map((t, j) => h('th', {
     class: firstOfGroup.has(j) ? 'first' : '', title: t.zones.length ? `Zonen: ${t.zones.join(', ')}` : 'ohne Trefferzonen',
   }, `Klasse ${t.armorClass}`, t.zones.length ? h('span', { class: 'muted' }, ` (${t.zones.length})`) : null)));
   const body = h('tbody', {}, rows.map(({ w, i }) => h('tr', {},
-    h('td', {}, weaponName(w.weaponId)), h('td', {}, w.ammoName, w.isDefaultAmmo ? h('span', { class: 'muted' }, ' · Std.') : null),
+    h('td', {}, weaponName(w.weaponId)), h('td', {}, ammoLabel(w)),
     a.kills[i].map((cell, j) => {
       const td = h('td', { class: `kill${firstOfGroup.has(j) ? ' first' : ''}${cell.penetrates ? '' : ' np'}${cell.enoughAmmo ? '' : ' noammo'}` });
       if (cell.shots === null) { td.append(h('div', { class: 'muted' }, 'kein Schaden')); return td; }
@@ -536,12 +758,11 @@ function renderAnalysis() {
       td.title = `${fmt(cell.shotDamage, 2)} Schaden pro Schuss${cell.penetrates ? '' : ' (kein Durchschlag)'}`;
       return td;
     }))));
-  root.append(h('section', {},
-    h('h2', {}, 'Schüsse und Zeit bis zum Kill'),
+  root.append(section('Schüsse und Zeit bis zum Kill', null,
     h('p', { class: 'note' }, `Stufe „${difficulty?.displayName}“, Distanz ${fmt(a.distance, 0)} m. Eine Spalte je Panzerklasse, die Kugeln treffen können (bei Trefferzonen: Zonen dieser Klasse, Liste im Tooltip). `,
-      h('label', {}, h('input', { type: 'checkbox', checked: S.allAmmo || undefined, onchange: (e) => { S.allAmmo = e.target.checked; store.set('allAmmo', S.allAmmo); renderTab(); } }), ' alle Munitionssorten')),
+      toggle('alle Munitionssorten', 'allAmmo'), ' ', toggle('alle Magazinvarianten', 'allMags')),
     h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, head1, head2), body)),
-    h('p', { class: 'legend' }, `⛨ = kein Durchschlag, nur ${fmt((S.draft.ammunition.armor.nonPenetratingDamageFraction) * 100, 0)} % Schaden. `,
+    h('p', { class: 'legend' }, `⛨ = kein Durchschlag, nur ${fmt(S.draft.ammunition.armor.nonPenetratingDamageFraction * 100, 0)} % Schaden. `,
       'Näherung: alle Projektile treffen, erster Schuss bei 0 s, Nachladen mit voller Nachladezeit (Einzelpatronen: Kammer plus ein Zyklus je Patrone). Farbe = Zeit relativ zum langsamsten Wert (Wurzelskala). Gelbe Werte = Abweichung vom gespeicherten Stand.')));
 
   // Enemies per difficulty
@@ -552,24 +773,22 @@ function renderAnalysis() {
       before && before.health[k] !== hp ? h('span', { class: 'delta' }, `${sign(hp - before.health[k], 0)} HP`) : null,
       before && before.meleeDamage[k] !== e.meleeDamage[k] ? h('span', { class: 'delta' }, `${sign(e.meleeDamage[k] - before.meleeDamage[k], 1)} Schaden`) : null)));
   }));
-  root.append(h('section', {}, h('h2', {}, 'Gegner je Schwierigkeitsgrad'),
-    h('p', { class: 'note' }, 'Lebenspunkte und Nahkampfschaden nach den Multiplikatoren aus difficulty.json.'),
+  root.append(section('Gegner je Schwierigkeitsgrad', 'Lebenspunkte und Nahkampfschaden nach den Multiplikatoren aus difficulty.json.',
     h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, enemyHead), enemyBody))));
 
-  // Weapon × ammunition stats
+  // Weapon × ammunition × magazine stats
   const cols = [['Schaden/Proj.', 'damage', 1], ['Projektile', 'projectilesPerShot', 0], ['Schaden/Schuss', 'shotDamage', 1], ['Abfall ×', 'falloffMultiplier', 2],
-    ['Durchschlag', 'penetration', 0], ['Schuss/s', 'roundsPerSecond', 2], ['Kapazität', 'capacity', 0], ['Nachladen leer s', 'fullReloadSeconds', 2],
+    ['Durchschlag', 'penetration', 0], ['Schuss/s', 'roundsPerSecond', 2], ['Kapazität', 'capacity', 0], ['Schuss gesamt', 'totalRounds', 0], ['Nachladen leer s', 'fullReloadSeconds', 2],
     ['DPS', 'dps', 0], ['DPS inkl. Nachladen', 'sustainedDps', 0], ['Magazinschaden', 'magazineDamage', 0]];
-  const statHead = h('tr', {}, h('th', {}, 'Waffe'), h('th', {}, 'Munition'), cols.map(([label]) => h('th', { class: 'derived' }, label)), h('th', {}, 'Abfall'));
-  const statBody = h('tbody', {}, a.weapons.filter((w) => S.allAmmo || w.isDefaultAmmo).map((w) => {
+  const statHead = h('tr', {}, h('th', {}, 'Waffe'), h('th', {}, 'Munition / Magazin'), cols.map(([label]) => h('th', { class: 'derived' }, label)), h('th', {}, 'Abfall'));
+  const statBody = h('tbody', {}, a.weapons.filter(visible).map((w) => {
     const before = current && baseIndex.has(baseKey(w)) ? base.weapons[baseIndex.get(baseKey(w))] : null;
-    return h('tr', {}, h('td', {}, weaponName(w.weaponId)), h('td', {}, w.ammoName),
+    return h('tr', {}, h('td', {}, weaponName(w.weaponId)), h('td', {}, ammoLabel(w)),
       cols.map(([, key, digits]) => h('td', { class: 'derived' }, fmt(w[key], digits),
         before && Math.abs(before[key] - w[key]) > 1e-9 ? h('span', { class: 'delta' }, sign(w[key] - before[key], digits)) : null)),
       h('td', { class: 'muted' }, `${fmt(w.falloff.startMeters, 0)}–${fmt(w.falloff.endMeters, 0)} m → ×${fmt(w.falloff.minMultiplier, 2)}`));
   }));
-  root.append(h('section', {}, h('h2', {}, 'Waffenwerte je Munition'),
-    h('p', { class: 'note' }, `Effektive Werte aus dem Resolver (Kaliber × Waffe × Munition), Schaden auf ${fmt(a.distance, 0)} m. Schuss/s ist auf Simulations-Ticks (30 Hz) gerundet.`),
+  root.append(section('Waffenwerte je Munition und Magazin', `Effektive Werte aus dem Resolver (Kaliber × Waffe × Munition × Magazin), Schaden auf ${fmt(a.distance, 0)} m. Schuss/s ist auf Simulations-Ticks (30 Hz) gerundet.`,
     h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, statHead), statBody))));
   return root;
 }
@@ -581,13 +800,14 @@ function renderTab() {
   const scroll = window.scrollY;
   main.replaceChildren();
   if (!S.files) return;
-  if (S.tab === 'weapons') main.append(renderTable(TABLES.weapons));
+  if (S.tab === 'weapons') main.append(renderTable(TABLES.weapons), renderMagazines());
   if (S.tab === 'ammo') {
     main.append(renderTable(TABLES.calibers), renderTable(TABLES.ammunition));
-    main.append(h('section', {}, h('h2', {}, 'Panzerung'), h('p', { class: 'note' }, 'Ein Treffer schlägt durch, wenn Durchschlag ≥ Panzerklasse. Sonst wirkt nur der Restschaden.'),
+    main.append(section('Panzerung', 'Ein Treffer schlägt durch, wenn Durchschlag ≥ Panzerklasse. Sonst wirkt nur der Restschaden.',
       h('div', { class: 'scroll' }, h('div', { style: 'padding:10px 14px' }, objectBody('ammunition', ['armor'], S.draft.ammunition.armor)))));
   }
   if (S.tab === 'enemies') main.append(renderTable(TABLES.enemies));
+  if (S.tab === 'supply') main.append(...renderSupply());
   if (S.tab === 'analysis') main.append(renderAnalysis());
   for (const el of document.querySelectorAll('nav .tab')) el.classList.toggle('active', el.dataset.tab === S.tab);
   renderStale();
@@ -597,18 +817,22 @@ function renderTab() {
 function setTab(tab) { if (S.tab !== tab) { S.tab = tab; store.set('tab', tab); window.scrollTo(0, 0); } renderTab(); }
 
 // ---------- load, save, discard ----------
-function adopt(state, keepEdits) {
-  const previous = keepEdits ? [...S.edits.values()] : [];
+function adopt(state, keepChanges) {
+  const previous = keepChanges ? localChanges() : [];
   S.files = state.files;
   S.fileNames = state.fileNames;
   S.revision = state.revision;
   S.draft = clone(state.files);
-  S.edits = new Map();
-  for (const edit of previous) {
-    const original = getAt(S.files[edit.file], edit.path);
-    if (original === undefined || typeof original !== typeof edit.value || original === edit.value) continue;
-    setAt(S.draft[edit.file], edit.path, edit.value);
-    S.edits.set(keyOf(edit.file, edit.path), edit);
+  S.dirty = new Set();
+  for (const change of previous) {
+    if (change.kind === 'structure') continue;
+    const parent = getAt(S.draft[change.file], change.path.slice(0, -1));
+    const original = getAt(S.files[change.file], change.path);
+    if (!parent || typeof parent !== 'object' || original === undefined) continue;
+    if (change.kind === 'value' && typeof original !== typeof change.after) continue;
+    if (change.kind === 'list' && !Array.isArray(original)) continue;
+    setAt(S.draft[change.file], change.path, clone(change.after));
+    S.dirty.add(change.file);
   }
   S.baseline = state.evaluation;
   S.current = state.evaluation;
@@ -620,11 +844,11 @@ function adopt(state, keepEdits) {
   select.replaceChildren(...difficulties.map((d) => h('option', { value: d.id }, `${d.level} · ${d.displayName}`)));
   select.value = S.difficultyId;
 }
-async function load(keepEdits = false) {
+async function load(keepChanges = false) {
   try {
-    adopt(await api('/api/state', analysisOptions()), keepEdits);
+    adopt(await api('/api/state', analysisOptions()), keepChanges);
     renderTab();
-    if (S.edits.size) await runEvaluate(); else refresh();
+    if (S.dirty.size) await runEvaluate(); else refresh();
   } catch (error) { setStatus('offline'); toast(`Laden fehlgeschlagen: ${error.message}`, 6000); }
 }
 const reload = () => load(true);
@@ -634,24 +858,24 @@ function suggestRelease(release) {
   return match ? `${match[1]}${Number(match[2]) + 1}` : `${release}-1`;
 }
 async function openSave() {
-  if (!S.edits.size) return;
+  if (!localChanges().length) return;
   clearTimeout(timer);
   await runEvaluate();
   const dialog = $('#saveDialog');
   const valid = S.current?.ok && !S.editErrors.length && !S.stale;
   const release = h('input', { type: 'text', value: suggestRelease(S.files.manifest.release), spellcheck: 'false' });
   const rows = S.changes.map((c) => { const label = entryLabel(c.file, c.path);
-    return h('tr', {}, h('td', { class: 'muted' }, c.fileName), h('td', {}, label.name), h('td', {}, label.rest),
+    return h('tr', {}, h('td', { class: 'muted' }, c.fileName), h('td', {}, label.name), h('td', {}, label.rest, c.kind === 'list' ? h('span', { class: 'muted' }, ' (Einträge)') : null),
       h('td', { class: 'num' }, String(c.before)), h('td', { class: 'arrow' }, '→'), h('td', { class: 'num' }, h('b', {}, String(c.after)))); });
   const confirm = h('button', { class: 'btn primary', disabled: !valid }, 'In Dateien schreiben');
   confirm.addEventListener('click', async () => {
     confirm.disabled = true;
     try {
-      const result = await api('/api/save', { edits: [...S.edits.values()], release: release.value, revision: S.revision, ...analysisOptions() });
+      const result = await api('/api/save', { drafts: drafts(), release: release.value, revision: S.revision, ...analysisOptions() });
       dialog.close();
       adopt(result, false);
       renderTab(); refresh();
-      toast(`Gespeichert: ${result.saved.length} Werte · Hash ${result.evaluation.version?.hash}. Als Nächstes: npm test, dann Server neu starten.`, 7000);
+      toast(`Gespeichert: ${result.saved.length} Änderungen · Hash ${result.evaluation.version?.hash}. Als Nächstes: npm test, dann Server neu starten.`, 7000);
     } catch (error) {
       confirm.disabled = false;
       toast(`Nicht gespeichert: ${error.message}${error.data?.issues ? ` (${error.data.issues.length} Probleme)` : ''}`, 7000);
@@ -668,9 +892,10 @@ async function openSave() {
   dialog.showModal();
 }
 function discard() {
-  if (!S.edits.size || !window.confirm(`${S.edits.size} ungespeicherte Änderungen verwerfen?`)) return;
+  const count = localChanges().length;
+  if (!count || !window.confirm(`${count} ungespeicherte Änderungen verwerfen?`)) return;
   S.draft = clone(S.files);
-  S.edits.clear();
+  S.dirty.clear();
   S.current = S.baseline;
   S.editErrors = []; S.changes = [];
   renderTab(); refresh();
@@ -686,13 +911,14 @@ $('#distance').addEventListener('change', (e) => {
   e.target.value = value; S.distance = value; store.set('distance', value); refreshBaseline().then(renderTab);
 });
 document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); openSave(); } });
-window.addEventListener('beforeunload', (e) => { if (S.edits.size) e.preventDefault(); });
+window.addEventListener('beforeunload', (e) => { if (S.files && localChanges().length) e.preventDefault(); });
 window.addEventListener('focus', () => { if (S.files) runEvaluate(); });
 
 S.tab = store.get('tab', 'weapons');
 S.difficultyId = store.get('difficulty', 'normal');
 S.distance = store.get('distance', 0);
 S.allAmmo = store.get('allAmmo', false);
+S.allMags = store.get('allMags', false);
 $('#distance').value = S.distance;
 load();
 </script>

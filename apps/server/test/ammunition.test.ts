@@ -52,7 +52,7 @@ test('calibers, ammunition and seven armor classes are registered; existing weap
   assert.equal(primary.caliber.id, 'caliber.5-55x39');
   assert.equal(primary.ammo.id, 'ammo.5-55x39.fmj');
   assert.equal(primary.damage, 24);
-  assert.equal(primary.projectile.penetration, 3);
+  assert.equal(primary.projectile.penetration, 2); // 8.2C: 3 → 2
   assert.equal(secondary.caliber.id, 'caliber.10mm');
   assert.equal(secondary.damage, 21.6);
   assert.equal(secondary.projectile.penetration, 2);
@@ -117,10 +117,10 @@ test('ammunition modifies weapon values on its own layer before equipment, and w
   const rifle = loadout.weapons.primary;
   assert.equal(rifle.ammo.shortName, 'TM');
   assert.ok(Math.abs(rifle.damage - 24 * 1.15 * 2) < 1e-9);
-  assert.equal(rifle.projectile.penetration, 2);
+  assert.equal(rifle.projectile.penetration, 1);
   assert.ok(Math.abs(rifle.handling.recoil.pitchPerShot - BASE_LOADOUT.weapons.primary.handling.recoil.pitchPerShot * 1.1) < 1e-12);
   assert.deepEqual(loadout.trace['weapon.kestrel-ar-01.damage'].applied, ['× 1.15 (ammo:ammo.5-55x39.sp)', '× 2 (attachment:test)']);
-  assert.ok(explainBalance(loadout.trace).some((line) => line.startsWith('weapon.kestrel-ar-01.penetration: 3 → 2')));
+  assert.ok(explainBalance(loadout.trace).some((line) => line.startsWith('weapon.kestrel-ar-01.penetration: 2 → 1')));
   // Without a selection the default ammunition is loaded.
   assert.equal(resolveLoadout(registry).weapons.primary.damage, 24);
   assert.throws(() => resolveLoadout(registry, undefined, [], [], { secondary: 'ammo.5-55x39.sp' }), /p-01 verschießt caliber\.10mm/);
@@ -150,7 +150,7 @@ test('broken caliber and ammunition data is rejected with located messages', () 
   // An unused ammunition type is still resolved against every weapon of its caliber.
   rejects((d) => {
     withSoftPoint(d);
-    (d.ammunition.ammunition.at(-1)!.modifiers[1] as { value: number }).value = -3;
+    (d.ammunition.ammunition.at(-1)!.modifiers[1] as { value: number }).value = -2;
   }, /weapon\.kestrel-ar-01\.penetration = 0 unterschreitet das Minimum 1/);
 });
 
@@ -184,12 +184,17 @@ function shoot(registry: BalanceRegistry, slot: 'primary' | 'secondary'): number
   return 200 - field.horde.hp[enemy];
 }
 
-test('server shots respect the enemy armor class: 10 mm stops at class 3, 5,55 penetrates it', () => {
-  const data = sources();
-  (data.enemies.archetypes[0] as { armorClass: number }).armorClass = 3;
-  const armored = createBalanceRegistry(data);
-  assert.ok(Math.abs(shoot(armored, 'secondary') - 21.6 * .1) < 1e-4);
-  assert.ok(Math.abs(shoot(armored, 'primary') - 24) < 1e-4);
+test('server shots respect the enemy armor class: 10 mm and 5,55 stop at class 3 and penetrate class 2', () => {
+  const armored = (armorClass: number) => {
+    const data = sources();
+    (data.enemies.archetypes[0] as { armorClass: number }).armorClass = armorClass;
+    return createBalanceRegistry(data);
+  };
+  // 8.2C: 5,55 × 39 mm has penetration 2 like 10 mm.
+  assert.ok(Math.abs(shoot(armored(3), 'secondary') - 21.6 * .1) < 1e-4);
+  assert.ok(Math.abs(shoot(armored(3), 'primary') - 24 * .1) < 1e-4);
+  assert.ok(Math.abs(shoot(armored(2), 'secondary') - 21.6) < 1e-4);
+  assert.ok(Math.abs(shoot(armored(2), 'primary') - 24) < 1e-4);
   // Unarmored Schabe: unchanged damage.
   assert.ok(Math.abs(shoot(BALANCE, 'secondary') - 21.6) < 1e-4);
 });

@@ -4,7 +4,7 @@ import type { ContactShadows } from './ContactShadows.ts';
 import { EnemyVisualLOD } from './EnemyVisualLOD.ts';
 import type { EnemyPose } from './EnemyVisualLOD.ts';
 import type { GraphicsQuality } from './GraphicsQuality.ts';
-import { BREACHER_VISUAL, JAEGER_VISUAL, WarriorVisualLOD } from './WarriorVisualLOD.ts';
+import { ASSAULT_BREAKER_VISUAL, BREACHER_VISUAL, JAEGER_VISUAL, WarriorVisualLOD } from './WarriorVisualLOD.ts';
 
 /** Geometry and material of a fallen body, by wire type. */
 export interface FallenVisual {
@@ -27,7 +27,8 @@ export class SwarmVisuals {
 
   constructor(scene: T.Scene) {
     this.schabe = new EnemyVisualLOD(scene);
-    this.warriors = [new WarriorVisualLOD(scene, JAEGER_VISUAL), new WarriorVisualLOD(scene, BREACHER_VISUAL)];
+    this.warriors = [new WarriorVisualLOD(scene, JAEGER_VISUAL), new WarriorVisualLOD(scene, BREACHER_VISUAL),
+      new WarriorVisualLOD(scene, ASSAULT_BREAKER_VISUAL)];
     const fallen: FallenVisual[] = [{ geometry: this.schabe.fallenGeometry, material: this.schabe.material }];
     for (const warrior of this.warriors) fallen[warrior.caste.type] = { geometry: warrior.fallenGeometry, material: warrior.material };
     this.fallen = fallen;

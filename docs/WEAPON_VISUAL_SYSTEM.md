@@ -27,6 +27,10 @@ Die Angaben beziehen sich auf das Weapon-Rig, in Metern. Ursprung ist der Griff 
 
 Registrierte Waffen-GLBs werden einmal pro Pfad geladen und je Figur als starre Knoten geklont. Normalisierte Koordinaten und identische Socket-Namen erlauben das Wiederverwenden der vorhandenen Logik. Benannte Marker im Modell ersetzen die lokalen Standardtransforms. Für ein austauschbares Magazin liefert der Export ein separates `MagazineMesh`, das in den animierten Knoten übernommen wird. Ein Modell mit vorinstalliertem festem Magazin oder Optik sollte diese Teile vor dem Export in separate Baugruppen aufteilen, damit die prozeduralen Module nicht überlagert werden. Visuelle Attachments liefern ihren eigenen Ursprung am Mount. Die Rig-Anbindung des Produktionsmodells erfordert Clip- und Socket-QA mit beiden Händen. [Charakter-Assetvertrag](CHARACTER_SYSTEM.md) · [Performance](PERFORMANCE.md#milestone-3)
 
+## Waffenprofile
+
+Seit 8.2A beschreibt ein `WeaponProfile` (`WeaponVisualController.ts`), wie sich ein Modell bewegt: Sockets, `action` (`fixed` Kestrel, `slide` für Pistolenschlitten und Verschlüsse, `pump` für die VX-13, `break` für den Kipplauf der Kaibal 50 mit `hinge`, `barrelSpacing` und `ejectsPerShot`), Verschlussweg pro Schuss (`cycle`), Verriegelung beim Nachladen (`lock`), Magazinweg und Griffpunkt (`magazine`) sowie das Spannen durch die Stützhand (`charge`). Jedes Modell liefert sein Profil neben der Geometrie, z. B. `MP99_HANDLING` in `Mp99.ts`. Der `PlayerVisualController` hält zusätzliche Primärwaffen in `primaries` (nach Waffen-ID) und blendet die gewählte ein. [Maschinenpistolen](SUBMACHINE_GUNS.md)
+
 ## P-01 und Wechsel
 
 Die P-01 hat ein separates prozedurales Gehäuse, Visier und bewegliches Magazin. Dieselbe Controllerklasse nutzt dafür ein eigenes Socket-Layout. Beim Wechsel senkt sich die aktive Waffe. Zur Mitte der Ziehbewegung wechseln Sichtbarkeit und Handziele. Das Holstermodell sitzt am rechten Becken, die Handmodelle behalten ihre Elternknoten. Die Bilddarstellung verwendet -Z als Laufrichtung, +Y nach oben. Der Server gibt die neue Waffe am Ende der Wechselzeit frei. [Ausrüstungsregeln](EQUIPMENT_SYSTEM.md)

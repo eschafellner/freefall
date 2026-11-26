@@ -1,7 +1,7 @@
 import * as T from 'three';
 
 /** Direction from the carrier towards its star. The rear panorama window of the mess looks straight at it. */
-export const CARRIER_SUN = new T.Vector3(.25, .35, 1).normalize();
+export const CARRIER_SUN = new T.Vector3(.22, .17, 1).normalize();
 /** Dev' Ault below the starboard hull: visible from the starboard rooms, the rear window and the hangar. */
 export const CARRIER_PLANET = { position: new T.Vector3(268, -138, 112), radius: 218 } as const;
 
@@ -229,9 +229,10 @@ export class CarrierSpace {
     this.planet.rotation.set(.35, 0, .2);
     const air = atmosphere(radius, 0x5cb0ff, position);
 
-    this.moon = body(19, { ocean: 0x4a4a4c, land: 0x8d8a86, shore: 0x77736f, high: 0xb4afa8, ice: 0xc8c6c2,
+    this.moon = body(19, { ocean: 0x2e2e30, land: 0x55534f, shore: 0x4a4744, high: 0x6e6a64, ice: 0x7a7874,
       night: 0x000000, atmosphere: 0x000000, sea: -1, clouds: 0, cities: 0, scale: 3.4 }, { time: this.time });
-    this.moon.position.set(-330, 46, -70);
+    // Ahead of the bow: seen through the open hangar gate, lit from behind the viewer.
+    this.moon.position.set(-125, 66, -318);
 
     const sun = new T.Sprite(glow([[0, 'rgba(255,255,255,1)'], [.06, 'rgba(255,246,226,1)'], [.16, 'rgba(255,214,160,.45)'],
       [.45, 'rgba(255,170,110,.09)'], [1, 'rgba(0,0,0,0)']], 0xffffff, 1));

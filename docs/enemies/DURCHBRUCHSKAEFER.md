@@ -8,7 +8,7 @@ Der Durchbruchskäfer (`swarm.durchbruchskaefer`, Wire-ID 2) ist der langsame, s
 | --- | ---: |
 | Lebenspunkte | 300 |
 | Geschwindigkeit | 3,2 m/s (Schabe 3,55 m/s) |
-| Panzerung | Frontzonen Klasse 3 (mittel), Körper und Schwachstelle Klasse 1 |
+| Panzerung | Frontzonen Klasse 3 (mittel), Körper und Schwachstelle Klasse 1. Seit 8.2C kommen nur 7,77 × 50 mm (Kaibal 50) durch die Front, Kestrel, P-01 und Maschinenpistolen nicht (10 % Restschaden). |
 | Nahkampfschaden | 12 |
 | Nahkampfreichweite (ab Körpermitte) | 2,5 m |
 | Angriffsintervall | 1,6 s |

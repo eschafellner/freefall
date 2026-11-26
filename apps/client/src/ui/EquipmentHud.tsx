@@ -1,6 +1,6 @@
 import { bindings } from '../input/Bindings.ts';
 import { emptyWeaponHint } from '../game/DryFire.ts';
-import { FRAG, NET, PLAYER, STIM, allowsPostureAction } from '@freefall/shared';
+import { FRAG, NET, PLAYER, STIM, allowsPostureAction, reserveInRounds } from '@freefall/shared';
 import { playerWeapon, reserveLabel } from '../game/Loadouts.ts';
 import type { PlayerState } from '@freefall/shared';
 import { KitIcon, Pips } from './HudIcons.tsx';
@@ -15,6 +15,9 @@ const RELOAD_LABEL = {
   RELOAD_COMPLETE: 'Durchladen', RELOAD_INTERRUPTED: 'Nachladen abgebrochen', READY: '',
   SHELL_LOADING: 'Patrone laden', SHELL_INSERTION: 'Patrone geladen',
 } as const;
+/** Break action (Kipplauf): open, load the chambers, close. */
+const BREAK_LABEL = { ...RELOAD_LABEL, RELOAD_START: 'Kipplauf öffnen', MAGAZINE_REMOVAL: 'Patronen laden', MAGAZINE_INSERTION: 'Patronen geladen',
+  RELOAD_COMPLETE: 'Kipplauf schließen' } as const;
 
 /**
  * Own kit, bottom right: health and stims above the weapons. The drawn weapon is shown large with its magazine,
@@ -28,6 +31,8 @@ export function CombatLoadout({ player, tick, dryFireTick, resupply = false }:
   const weapon = playerWeapon(player, slot);
   const spare = playerWeapon(player, other);
   const single = weapon.feed.type === 'single';
+  const loose = reserveInRounds(weapon.feed);
+  const labels = weapon.feed.type === 'break' ? BREAK_LABEL : RELOAD_LABEL;
   const switching = gear?.action === 'primary' || gear?.action === 'secondary';
   const reload = player.reload?.slot === slot ? player.reload : undefined;
   const reloading = reload && reload.phase !== 'READY' && reload.phase !== 'RELOAD_INTERRUPTED';
@@ -69,17 +74,17 @@ export function CombatLoadout({ player, tick, dryFireTick, resupply = false }:
         <KitIcon id={weapon.id} slot={slot} className="large"/>
         <div className="weapon-meta">
           <span className="kit-name"><kbd>{bindings.label(slot === 'primary' ? 'SWITCH_PRIMARY' : 'SWITCH_SECONDARY')}</kbd> {weapon.displayName}</span>
-          <strong className={`ammo ${ammo === 0 ? 'empty' : low ? 'low' : ''}`} aria-label={`${ammo} von ${weapon.capacity} Schuss, ${mags} ${single ? 'Reservepatronen' : 'Reservemagazine'}`}>
+          <strong className={`ammo ${ammo === 0 ? 'empty' : low ? 'low' : ''}`} aria-label={`${ammo} von ${weapon.capacity} Schuss, ${mags} ${loose ? 'Reservepatronen' : 'Reservemagazine'}`}>
             {player.ammo ?? '–'}<small> / {weapon.capacity}</small><em>{reserveLabel(weapon, mags)}</em>
           </strong>
         </div>
       </div>
       <div className="mag-bar" aria-hidden="true"><i style={{ width: `${Math.min(1, ammo / weapon.capacity) * 100}%` }}/></div>
-      {reloading && <ActionProgress label={RELOAD_LABEL[reload.phase]} remaining={reload.until - tick} ticks={reload.until - reload.started}/>}
-      {reloading && !single && tick < reload.insertAt && ammo > weapon.feed.chamberRounds && <small className="kit-note">Beim Magazinwechsel gehen {ammo - weapon.feed.chamberRounds} Schuss verloren.</small>}
+      {reloading && <ActionProgress label={labels[reload.phase]} remaining={reload.until - tick} ticks={reload.until - reload.started}/>}
+      {reloading && !loose && tick < reload.insertAt && ammo > weapon.feed.chamberRounds && <small className="kit-note">Beim Magazinwechsel gehen {ammo - weapon.feed.chamberRounds} Schuss verloren.</small>}
       {reloading && single && ammo > 0 && <small className="kit-note"><kbd>{bindings.label('FIRE')}</kbd> beendet das Nachladen</small>}
       {interrupted && <small className="kit-note" role="status">{RELOAD_LABEL.RELOAD_INTERRUPTED}</small>}
-      {dry && <small className="kit-note warn" role="status">{single ? 'Keine Reservepatronen' : 'Keine Reservemagazine'}</small>}
+      {dry && <small className="kit-note warn" role="status">{loose ? 'Keine Reservepatronen' : 'Keine Reservemagazine'}</small>}
       {empty && <small key={clicked ? dryFireTick : 'idle'} className={`kit-note warn${clicked ? ' flash' : ''}`} role="status">
         Keine Munition · {empty.key && <><kbd>{empty.key}</kbd> </>}{empty.text}</small>}
       {gear && <>

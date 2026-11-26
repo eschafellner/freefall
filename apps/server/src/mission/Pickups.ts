@@ -3,7 +3,7 @@
  * Operator; fällt er, liegen sie als einzelne Proben an seiner Position. Der Trupp darf je Probenart höchstens
  * `limits` tragen. Einsatzmarken werden sofort für den ganzen Trupp gezählt.
  */
-import { POI_LOOT, SAMPLE_IDS } from '@freefall/shared';
+import { POI_LOOT, SAMPLE_IDS, reserveInRounds } from '@freefall/shared';
 import type { PickupKind, PickupSnapshot, PositionXZ, SampleAmounts, SampleId, WorldDefinition } from '@freefall/shared';
 import type { SimPlayer } from '../simulation/Player.ts';
 
@@ -70,8 +70,8 @@ export class PickupSystem {
     const gear = player.equipment;
     const primary = player.loadout.weapons.primary;
     if (kind === 'ammo') {
-      // Einzelpatronen-Waffen (Flinten) erhalten den Gegenwert der Magazine in Patronen.
-      const units = POI_LOOT.grant.primaryMagazines * (primary.feed.type === 'single' ? primary.magazineSize : 1);
+      // Waffen mit loser Reserve (Einzelpatronen, Kipplauf) erhalten den Gegenwert der Magazine in Patronen.
+      const units = POI_LOOT.grant.primaryMagazines * (reserveInRounds(primary.feed) ? primary.magazineSize : 1);
       return { primary: Math.max(0, Math.min(units, primary.maxReserve - gear.magazines.primary)), stims: 0, grenades: 0 };
     }
     if (kind === 'stims') return { primary: 0, stims: Math.max(0, Math.min(POI_LOOT.grant.stims, player.loadout.medical.maxCharges - gear.stims)), grenades: 0 };

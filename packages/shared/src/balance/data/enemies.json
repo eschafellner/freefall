@@ -177,6 +177,129 @@
       },
       "vehicleTargets": "thrusters",
       "staggerImmune": true
+    },
+    {
+      "id": "swarm.assaultbreaker",
+      "factionId": "swarm",
+      "displayName": "Assaultbreaker",
+      "protected": false,
+      "wireType": 3,
+      "visualAssetId": "enemy.swarm.assaultbreaker.procedural",
+      "gameplay": {
+        "health": 1800,
+        "speed": 3.2,
+        "hitRadius": 2.8,
+        "hitHeight": 1.6,
+        "meleeRange": 4,
+        "meleeDamage": 30,
+        "meleeCooldown": 2.2
+      },
+      "armorClass": 4,
+      "resistances": { "kinetic": 1, "explosive": 1 },
+      "ai": { "detectionRange": 34 },
+      "groundRadius": 1.3,
+      "hitZones": [
+        {
+          "id": "head",
+          "armorClass": 5,
+          "from": [0, 1.62, -2.3],
+          "to": [0, 1.4, -3.15],
+          "radius": 0.55
+        },
+        {
+          "id": "crest-left",
+          "armorClass": 5,
+          "from": [-1.35, 2.25, -1.6],
+          "to": [0, 3.2, -1.4],
+          "radius": 0.6
+        },
+        {
+          "id": "crest-right",
+          "armorClass": 5,
+          "from": [1.35, 2.25, -1.6],
+          "to": [0, 3.2, -1.4],
+          "radius": 0.6
+        },
+        {
+          "id": "chest",
+          "armorClass": 5,
+          "from": [-0.55, 1.4, -1.45],
+          "to": [0.55, 1.4, -1.45],
+          "radius": 0.6
+        },
+        {
+          "id": "back",
+          "armorClass": 5,
+          "from": [0, 2.05, -1],
+          "to": [0, 1.95, 1.4],
+          "radius": 1
+        },
+        {
+          "id": "belly",
+          "armorClass": 2,
+          "from": [0, 1, -0.8],
+          "to": [0, 1, 1],
+          "radius": 0.42
+        },
+        {
+          "id": "foreleg-left",
+          "armorClass": 4,
+          "from": [-0.95, 1.55, -1.1],
+          "to": [-1.35, 0.2, -1.3],
+          "radius": 0.42
+        },
+        {
+          "id": "foreleg-right",
+          "armorClass": 4,
+          "from": [0.95, 1.55, -1.1],
+          "to": [1.35, 0.2, -1.3],
+          "radius": 0.42
+        },
+        {
+          "id": "hindleg-left",
+          "armorClass": 4,
+          "from": [-0.9, 1.55, 1.1],
+          "to": [-1.25, 0.2, 1.1],
+          "radius": 0.4
+        },
+        {
+          "id": "hindleg-right",
+          "armorClass": 4,
+          "from": [0.9, 1.55, 1.1],
+          "to": [1.25, 0.2, 1.1],
+          "radius": 0.4
+        },
+        {
+          "id": "tail",
+          "armorClass": 4,
+          "from": [0, 1.6, 1.9],
+          "to": [0, 1.05, 3.2],
+          "radius": 0.38
+        }
+      ],
+      "frontArmor": { "halfAngleDegrees": 70, "armorClass": 5 },
+      "tactics": "direct",
+      "attack": {
+        "windupTicks": 18,
+        "activeTicks": 4,
+        "recoveryTicks": 16,
+        "halfAngleDegrees": 60
+      },
+      "charge": {
+        "minRange": 6,
+        "maxRange": 16,
+        "windupTicks": 30,
+        "runTicks": 33,
+        "recoveryTicks": 24,
+        "cooldownSeconds": 8,
+        "speed": 15,
+        "steerDegreesPerSecond": 30,
+        "contactHalfWidth": 1.5,
+        "contactReach": 3.6,
+        "damageMultiplier": 1.5
+      },
+      "vehicleTargets": "thrusters",
+      "staggerImmune": true
     }
   ]
 }

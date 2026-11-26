@@ -217,7 +217,7 @@ test('mission reconnect restores prone and an in-progress supine get-up on its o
   }
 });
 
-test('four networked operators share mission selection, deployment and a reconnectable rescue state', { timeout: 20_000 }, async () => {
+test('four networked operators share mission selection, deployment and a reconnectable rescue state', { timeout: 25_000 }, async () => {
   const debug = process.env.FREEFALL_MISSION_DEBUG;
   process.env.FREEFALL_MISSION_DEBUG = '1';
   const serverStart = startServer(0, '127.0.0.1', false);
@@ -347,7 +347,8 @@ test('four networked operators share mission selection, deployment and a reconne
     await assert.rejects(() => client.joinById(host.roomId));
     host.send('mission-debug', 'fighter');
     await states(host, (s) => s.extraction?.phase === 'LIFT');
-    const finished = await states(host, (s) => !!s.result);
+    // The fighter tows the line for BALLOON.liftTicks before the result.
+    const finished = await waitFor<MissionSnapshot>(host, 'mission-state', (s) => !!s.result, 8000);
     assert.deepEqual(finished.result?.extractedOperatorIds, [host.sessionId]);
     assert.equal(finished.result?.primaryObjectivesCompleted, true);
     for (const member of [host, wing, rejoined]) member.send('mission-action', 'return-vote');

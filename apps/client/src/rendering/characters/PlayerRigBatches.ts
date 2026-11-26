@@ -1,6 +1,12 @@
 import * as T from 'three';
 
-const transport = new WeakMap<T.Scene, ReadonlyMap<number, T.Vector3>>();
+/**
+ * Transport of a rig: a plain offset (the Albatross carries its passengers rigidly) or a carry on a line: the rig's
+ * harness point (pivot metres above its feet) is placed at anchor and the rig turned by rotation around it.
+ */
+export type RigTransport = T.Vector3 | { readonly anchor: T.Vector3; readonly rotation: T.Quaternion; readonly pivot: number };
+
+const transport = new WeakMap<T.Scene, ReadonlyMap<number, RigTransport>>();
 
 interface Part {
   source: T.Mesh;
@@ -17,8 +23,10 @@ export class PlayerRigBatches {
   private readonly scene: T.Scene;
   private readonly followsTransport: boolean;
   private readonly offsetMatrix = new T.Matrix4();
+  private readonly carryMatrix = new T.Matrix4();
+  private readonly pivotMatrix = new T.Matrix4();
 
-  static setTransport(scene: T.Scene, offsets: ReadonlyMap<number, T.Vector3> | undefined): void {
+  static setTransport(scene: T.Scene, offsets: ReadonlyMap<number, RigTransport> | undefined): void {
     if (offsets) transport.set(scene, offsets);
     else transport.delete(scene);
   }
@@ -68,17 +76,24 @@ export class PlayerRigBatches {
       const offset = offsets?.get(index++);
       if (!root.visible) continue;
       this.bounds.center.set(root.position.x, root.position.y + .86, root.position.z);
-      if (offset) this.bounds.center.add(offset);
+      const shift = offset instanceof T.Vector3 ? offset : undefined;
+      const carry = offset && !shift ? offset as Exclude<RigTransport, T.Vector3> : undefined;
+      if (carry) {
+        this.bounds.center.copy(carry.anchor);
+        this.carryMatrix.makeRotationFromQuaternion(carry.rotation).setPosition(carry.anchor);
+        this.carryMatrix.multiply(this.pivotMatrix.makeTranslation(-root.position.x, -root.position.y - carry.pivot, -root.position.z));
+      } else if (shift) this.bounds.center.add(shift);
       if (!this.frustum.intersectsSphere(this.bounds)) continue;
       root.updateMatrixWorld();
       for (const { source, mesh } of parts) {
         if (!this.attached(source, root)) continue;
         if (!offset) mesh.setMatrixAt(mesh.count++, source.matrixWorld);
+        else if (carry) mesh.setMatrixAt(mesh.count++, this.offsetMatrix.multiplyMatrices(this.carryMatrix, source.matrixWorld));
         else {
           const matrix = this.offsetMatrix.copy(source.matrixWorld).setPosition(
-            source.matrixWorld.elements[12] + offset.x,
-            source.matrixWorld.elements[13] + offset.y,
-            source.matrixWorld.elements[14] + offset.z,
+            source.matrixWorld.elements[12] + shift!.x,
+            source.matrixWorld.elements[13] + shift!.y,
+            source.matrixWorld.elements[14] + shift!.z,
           );
           mesh.setMatrixAt(mesh.count++, matrix);
         }

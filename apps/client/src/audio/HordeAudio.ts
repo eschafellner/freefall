@@ -1,4 +1,4 @@
-import { BREACHER_TYPE, JAEGER_TYPE, NET, attackStrikeAt, groundHeight, replicatedAttackTiming } from '@freefall/shared';
+import { ASSAULT_BREAKER_TYPE, BREACHER_TYPE, JAEGER_TYPE, NET, attackStrikeAt, groundHeight, replicatedAttackTiming } from '@freefall/shared';
 import type { HordeFrame, WorldDefinition } from '@freefall/shared';
 import type { AudioEngine, AudioPosition, SampleVoice } from './AudioEngine.ts';
 import { takeIds, Takes } from './Soundscape.ts';
@@ -15,6 +15,7 @@ const CASTE_VOICE: Readonly<Record<number, { pitch: number; level: number }>> = 
   0: { pitch: 1, level: 1 },
   [JAEGER_TYPE]: { pitch: 1.28, level: .9 },
   [BREACHER_TYPE]: { pitch: .6, level: 1.25 },
+  [ASSAULT_BREAKER_TYPE]: { pitch: .42, level: 1.5 },
 };
 
 interface AttackCue {
@@ -134,7 +135,7 @@ export class HordeAudio {
     for (const cue of this.nearby.slice(0, 2)) {
       const windup = cue.phase === 'windup';
       const close = cue.distance < 12 ** 2;
-      // Warriors reuse the swarm voice: the hunter higher and sharper, the breacher deep and loud.
+      // Warriors reuse the swarm voice: the hunter higher and sharper, the breacher deep and loud, the assault breaker deepest.
       const voice = CASTE_VOICE[cue.type] ?? CASTE_VOICE[0];
       const played = this.follow(cue.id, this.takes.pick(cue.phase, windup ? 'schabe-hiss' : 'schabe-impact', windup ? 3 : 2),
         cue.x, cue.z, (windup ? .95 : .66) * voice.level, (close ? PRIORITY.threat + 12 : PRIORITY.combat) - Math.sqrt(cue.distance) / 7,

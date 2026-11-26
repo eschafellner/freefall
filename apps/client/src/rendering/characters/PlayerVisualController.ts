@@ -5,9 +5,9 @@ import * as T from 'three';
 import { EQUIPMENT_SLOTS } from '../AssetRegistry.ts';
 import type { EquipmentSlot, SoldierAsset } from '../AssetRegistry.ts';
 import type { createKestrel } from '../weapons/Kestrel.ts';
-import type { createCerberus } from '../weapons/Cerberus.ts';
 import { weaponById } from '../../game/Loadouts.ts';
 import { WeaponVisualController } from '../weapons/WeaponVisualController.ts';
+import type { WeaponParts, WeaponProfile } from '../weapons/WeaponVisualController.ts';
 import { CharacterAnimation } from './CharacterAnimation.ts';
 import { CharacterClipPlayer } from './CharacterClipPlayer.ts';
 import { SkeletonOverlay } from './animation/SkeletonOverlay.ts';
@@ -19,6 +19,13 @@ import type { EffectiveWeapon, EquipmentState, PostureState, ReloadState, ShotEv
 
 export type WeaponCue = Pick<ShotEvent, 'shooter' | 'tick' | 'life' | 'slot'>;
 export type PresentShot = (weapon: WeaponVisualController | undefined, now: number) => void;
+
+/** A primary weapon model besides the Kestrel, shown when it is the operator's primary weapon. */
+export interface PrimaryWeaponModel {
+  weaponId: string;
+  parts: WeaponParts;
+  profile: WeaponProfile;
+}
 
 interface QueuedShot {
   cue: WeaponCue;
@@ -34,8 +41,8 @@ export class PlayerVisualController {
   readonly animation = new CharacterAnimation();
   readonly weapon: WeaponVisualController;
   readonly sidearm: WeaponVisualController;
-  /** VX-13 Cerberus, shown instead of the rifle when it is the operator's primary weapon. */
-  readonly shotgun?: WeaponVisualController;
+  /** Further primary weapons by weapon ID (VX-13, MP-99, Viktor 55, Kaibal 50), shown instead of the rifle when selected. */
+  readonly primaries = new Map<string, WeaponVisualController>();
   private primary: EffectiveWeapon = WEAPONS.primary;
   private secondary: EffectiveWeapon = WEAPONS.secondary;
   private readonly holstered: T.Mesh;
@@ -64,13 +71,14 @@ export class PlayerVisualController {
   private lastQueuedShot?: { shooter: string; tick: number };
 
   constructor(parts: ReturnType<typeof createSoldierParts>, rifle: ReturnType<typeof createKestrel>, team: number, operator = true,
-    shotgun?: ReturnType<typeof createCerberus>) {
+    primaries: readonly PrimaryWeaponModel[] = []) {
     this.weapon = new WeaponVisualController(rifle);
     this.rig = new SoldierRig(parts, team, this.weapon, operator);
-    if (shotgun) {
-      this.shotgun = new WeaponVisualController(shotgun, 'shotgun');
-      this.shotgun.root.visible = false;
-      this.weapon.root.parent?.add(this.shotgun.root);
+    for (const { weaponId, parts: model, profile } of primaries) {
+      const weapon = new WeaponVisualController(model, profile);
+      weapon.root.visible = false;
+      this.weapon.root.parent?.add(weapon.root);
+      this.primaries.set(weaponId, weapon);
     }
     this.sidearm = new WeaponVisualController(rifle.pistol, true);
     this.sidearm.root.visible = false;
@@ -106,11 +114,11 @@ export class PlayerVisualController {
     this.importedStage.add(model);
     this.importedStage.visible = true;
     this.rig.root.visible = false;
-    mount.add(this.weapon.root, this.sidearm.root, ...(this.shotgun ? [this.shotgun.root] : []));
-    this.weapon.root.position.set(0, 0, 0);
-    this.shotgun?.root.position.set(0, 0, 0);
-    this.shotgun?.root.quaternion.identity();
-    this.weapon.root.quaternion.identity();
+    mount.add(this.weapon.root, this.sidearm.root, ...this.primaryRoots());
+    for (const weapon of [this.weapon, ...this.primaries.values()]) {
+      weapon.root.position.set(0, 0, 0);
+      weapon.root.quaternion.identity();
+    }
     for (const name of EQUIPMENT_SLOTS) {
       this.importedAnchors[name] = model.getObjectByName(asset.equipmentNodes?.[name] ?? name);
     }
@@ -169,10 +177,10 @@ export class PlayerVisualController {
     const progress = gear && action ? T.MathUtils.clamp((gearTick - gear.started) / Math.max(1, gear.until - gear.started), 0, 1) : 0;
     const switching = action === 'primary' || action === 'secondary';
     const slot = switching && progress >= .5 ? action : gear?.slot ?? 'primary';
-    const shotgun = !!this.shotgun && this.primary.category === 'shotgun';
+    const primary = this.primaries.get(this.primary.id);
     this.holstered.visible = slot === 'primary';
-    this.weapon.root.visible = slot === 'primary' && !shotgun;
-    if (this.shotgun) this.shotgun.root.visible = slot === 'primary' && shotgun;
+    this.weapon.root.visible = slot === 'primary' && !primary;
+    for (const weapon of this.primaries.values()) weapon.root.visible = slot === 'primary' && weapon === primary;
     this.sidearm.root.visible = slot === 'secondary';
     this.expireShots(now);
     while (this.pendingShots.length && (this.pendingShots[0].cue.tick ?? tick) <= tick) {
@@ -231,7 +239,7 @@ export class PlayerVisualController {
     const { clip, fallback } = this.animation.tactical;
     const imported = this.imported && (hp <= 0 && !fresh ? this.importedStage.visible : !clip || this.imported.tacticalClip(clip, fallback));
     const mount = imported ? this.importedMount! : this.rig.torso;
-    if (this.weapon.root.parent !== mount) mount.add(this.weapon.root, this.sidearm.root, ...(this.shotgun ? [this.shotgun.root] : []));
+    if (this.weapon.root.parent !== mount) mount.add(this.weapon.root, this.sidearm.root, ...this.primaryRoots());
     if (Boolean(imported) !== this.importedStage.visible) {
       this.imported!.reset();
       this.mountEquipment(Boolean(imported));
@@ -250,7 +258,7 @@ export class PlayerVisualController {
     }
     else this.rig.pose(this.animation, this.activeWeapon, this.target, pitch, now, tactical ? this.muzzleWorld : undefined);
     this.sidearm.update(dt);
-    this.shotgun?.update(dt);
+    for (const weapon of this.primaries.values()) weapon.update(dt);
     for (const present of this.posedShots) present(this.activeWeapon, now);
     this.posedShots.length = 0;
   }
@@ -268,8 +276,12 @@ export class PlayerVisualController {
   }
 
   private get activeWeapon() {
-    return this.sidearm.root.visible ? this.sidearm : this.shotgun?.root.visible ? this.shotgun : this.weapon;
+    if (this.sidearm.root.visible) return this.sidearm;
+    const primary = this.primaries.get(this.primary.id);
+    return primary?.root.visible ? primary : this.weapon;
   }
+
+  private primaryRoots(): T.Object3D[] { return [...this.primaries.values()].map((weapon) => weapon.root); }
 
   /** Weapons of this operator's loadout (`PlayerState.weapons`); picks the matching model and handling. */
   setWeapons(weapons?: Readonly<Record<WeaponSlot, string>>): void {
@@ -341,9 +353,12 @@ export class PlayerVisualController {
     if (this.sidearm.root.visible) {
       this.animation.kick *= this.secondary.recoil.visualKick;
       this.sidearm.cycle();
-    } else if (this.shotgun?.root.visible) {
-      this.animation.kick *= this.primary.recoil.visualKick;
-      this.shotgun.cycle();
+    } else {
+      const primary = this.primaries.get(this.primary.id);
+      if (primary?.root.visible) {
+        this.animation.kick *= this.primary.recoil.visualKick;
+        primary.cycle();
+      }
     }
   }
 

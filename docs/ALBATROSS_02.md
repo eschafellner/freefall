@@ -18,3 +18,11 @@ Die bestehende Gegnersteuerung kann Ziele in der Nähe der Landestelle verfolgen
 ## Modell 2026-11-22
 
 Das Außenmodell bekam abgeschrägte Dachkanten, ein Rückengrat mit Kühlgittern, Sensorkuppel und Antennen, ein gepanzertes Bugkinn mit Cockpitrahmen, Panelfugen und Lufteinlässe an den Flanken, abgerundete Panzerschürzen, Verkleidungen über den Triebwerksträgern, gebänderte Triebwerksgondeln mit Kappen, Positionslichter (Backbord rot, Steuerbord grün) und Warnwinkel am Heck. Neu sind außerdem ein keramischer Hitzeschild unter Bauch und Kinn, der beim Eintritt glüht, und ein vierbeiniges Teleskopfahrwerk mit Federung für den Aufschlag. Die Details liegen außerhalb des Kabinenvolumens, die Kollision ist unverändert. Bei Zerstörung dunkeln sie zusammen mit dem Rumpf ab. [Vergleich](visual-style/albatross-vorher-nachher.jpg) · [Drop-Sequenz](DEPLOYMENT_SYSTEM.md)
+
+## Fahrwerk 2026-11-25
+
+Die vier Landebeine liefen durch die seitlichen Panzerschürzen, und der eingefahrene Fuß steckte in Schürze und Seitenverkleidung. Die Beine stehen jetzt vor und hinter den Triebwerksgondeln (x ±3,55, z ±4,7) außerhalb der Schürzen. Die Schürzen enden vor den Beinen und lassen so Fahrwerksschächte frei. Jeder Kolben gleitet in eine Hülse, die über Konsole, Oberarm und Diagonalstrebe am Rumpf hängt. Ausgefahren, eingefedert und eingefahren schneidet kein Teil mehr Rumpf, Schürze oder Triebwerk. Kollision und Landeablauf bleiben unverändert.
+
+## Landezone und Kabinenboden 2026-11-25
+
+Die Landezone wird im Gelände exakt auf Höhe 0 eingeebnet, und auch die Oberkante des Kabinenbodens lag bei 0. Betonscheibe und „LZ“-Markierung lagen ein bis zweieinhalb Zentimeter darüber und schienen durch den Boden des gelandeten Albatross. Die Platte an der Landezone ist entfernt. Die Markierungsplatten an den Relais bleiben. Der Kabinenboden liegt jetzt 2 cm über dem Gelände (`FLOOR_TOP` in `AlbatrossView`) und konkurriert nicht mehr mit ihm um die Tiefe. Operatoren stehen weiter auf Geländehöhe, die 2 cm fallen an den Stiefeln nicht auf. Die Landefüße steckten bisher 20 cm im Boden. Jetzt stehen sie auf dem Gelände und bleiben beim Einfedern dort.

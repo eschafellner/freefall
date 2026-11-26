@@ -1,8 +1,16 @@
 import { MAX_ENEMIES } from '../config/arena.ts';
-import { ATTACK_LEAP, maxAttackTicks } from '../combat/enemyBody.ts';
+import { ATTACK_CHARGE, ATTACK_LEAP, ATTACK_MELEE, maxAttackTicks } from '../combat/enemyBody.ts';
+import type { AttackKind } from '../combat/enemyBody.ts';
 
-/** Bit 15 of a replicated attack age marks a leap attack; the lower 15 bits hold the age. */
+/** Bit 15 of a replicated attack age marks a leap attack, bit 14 a charge; the lower 14 bits hold the age. */
 export const HORDE_LEAP_FLAG = 0x8000;
+export const HORDE_CHARGE_FLAG = 0x4000;
+const HORDE_AGE_MASK = 0x3fff;
+
+/** Attack kind bits of a replicated attack age. */
+export function hordeAttackFlag(kind: AttackKind): number {
+  return kind === ATTACK_LEAP ? HORDE_LEAP_FLAG : kind === ATTACK_CHARGE ? HORDE_CHARGE_FLAG : 0;
+}
 let attackAgeLimit = 0;
 
 export const HORDE_HEADER = 6;
@@ -22,7 +30,7 @@ export class HordeFrame {
   readonly type = new Uint8Array(MAX_ENEMIES);
   /** Age in server ticks plus one. Zero means no attack in this frame. */
   readonly attackAge = new Uint16Array(MAX_ENEMIES);
-  /** Attack kind of the entries with an age (ATTACK_MELEE or ATTACK_LEAP). */
+  /** Attack kind of the entries with an age (ATTACK_MELEE, ATTACK_LEAP or ATTACK_CHARGE). */
   readonly attackKind = new Uint8Array(MAX_ENEMIES);
   windupTicks = 0;
   activeTicks = 0;
@@ -53,10 +61,11 @@ export function decodeHorde(packet: Uint8Array, frame: HordeFrame, positionScale
     for (let offset = recordsEnd + HORDE_COMBAT_HEADER; offset < packet.byteLength; offset += HORDE_ATTACK_BYTES) {
       const index = view.getUint16(offset, true);
       const raw = view.getUint16(offset + 2, true);
-      const age = raw & ~HORDE_LEAP_FLAG;
+      const age = raw & HORDE_AGE_MASK;
       if (index >= count || age > tick || age >= limit || frame.attackAge[index]) return false;
       frame.attackAge[index] = age + 1;
-      frame.attackKind[index] = raw & HORDE_LEAP_FLAG ? ATTACK_LEAP : 0;
+      if ((raw & HORDE_LEAP_FLAG) && (raw & HORDE_CHARGE_FLAG)) return false;
+      frame.attackKind[index] = raw & HORDE_LEAP_FLAG ? ATTACK_LEAP : raw & HORDE_CHARGE_FLAG ? ATTACK_CHARGE : ATTACK_MELEE;
     }
     frame.windupTicks = windup;
     frame.activeTicks = active;

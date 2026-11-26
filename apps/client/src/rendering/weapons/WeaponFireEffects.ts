@@ -136,6 +136,7 @@ export class WeaponFireEffects {
     }
 
     if (!local && distance > casingDistance ** 2) return;
+    if (weapon.profile.ejectsPerShot === false) return;
     const casing = claim(this.casings, shellCasings, now, local);
     if (!casing) return;
     const socket = weapon.sockets.EjectionPort;

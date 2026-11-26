@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { availableParallelism, cpus, release, totalmem } from 'node:os';
 import {
-  ALBATROSS, BALANCE, BALLOON, BOARDING_TICKS, BODENBRUCH, CAMERA_LIFT, CAMERA_SHOULDER, CARRIER_SHIP,
+  ALBATROSS, BALANCE, BALLOON, extractionLiftTicks, BOARDING_TICKS, BODENBRUCH, CAMERA_LIFT, CAMERA_SHOULDER, CARRIER_SHIP,
   LANDING_STAGE_TICKS, LOOK_HEIGHT, MAX_PITCH, NET, PROCEDURAL_CONTRACT_ID, WIDE_POSITION_SCALE, clearWorldLine,
   createBalanceRegistry, distanceSquared, groundHeight, isOptionalObjective, missionGround, openGround, wrapAngle,
 } from '@freefall/shared';
@@ -273,7 +273,7 @@ function attempt(scenario: Scenario, session?: { mission: MissionInstance; crew:
     for (const passenger of passengers) assert.ok(mission.action(passenger.id, 'secure'));
     const countdown = method === 'albatross' ? ALBATROSS.launchTicks : BALLOON.countdownTicks + BALLOON.approachTicks;
     hold(countdown, crew, method === 'balloon');
-    hold(BALLOON.liftTicks + 1, [], false);
+    hold(extractionLiftTicks(method) + 1, [], false);
     requireRoute(finished, 'Extraction window did not produce a result');
   }
 

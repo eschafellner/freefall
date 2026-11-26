@@ -50,6 +50,19 @@ export class ModelParts {
     this.add(part.rotateX(pitch).rotateZ(roll).translate(x, y, z), color);
   }
 
+  /**
+   * Side-profile prism: a polygon of `[z, y]` points (as seen from the right), extruded `width` across x and centred
+   * on `x`. For slanted receivers and housings that a box cannot follow. `bevel` rounds the outline edges.
+   */
+  profile(color: number, points: readonly (readonly [number, number])[], width: number, x = 0, bevel = 0): void {
+    const depth = Math.max(.0002, width - 2 * bevel);
+    const part = new T.ExtrudeGeometry(new T.Shape(points.map(([z, y]) => new T.Vector2(z, y))), {
+      depth, bevelEnabled: bevel > 0, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 1, curveSegments: 1, steps: 1,
+    });
+    // Shape x becomes model z, the extrusion runs across model x.
+    this.add(part.translate(0, 0, -depth / 2).rotateY(-Math.PI / 2).translate(x, 0, 0), color);
+  }
+
   /** Ellipsoid; without `detail` the tessellation follows its size (small parts get fewer segments). */
   oval(color: number, x: number, y: number, z: number, w: number, h: number, d: number, pitch = 0, roll = 0, detail?: number): void {
     const level = detail ?? Math.min(1, Math.max(.4, Math.max(w, h, d) / .16));

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ARMOR, BALANCE, NET, STANDARD_LOADOUT, resolveWeapon } from '@freefall/shared';
+import { ARMOR, BALANCE, NET, STANDARD_LOADOUT, reserveInRounds, resolveWeapon } from '@freefall/shared';
 import type { EffectiveWeapon, LoadoutSelection, WeaponSlot } from '@freefall/shared';
 import type { GameStatus } from '../game/Game.ts';
 import { sameSelection } from '../game/Loadouts.ts';
@@ -13,12 +13,13 @@ const penetration = (level: number) => ARMOR.classes[level - 1]?.penetrationName
 function WeaponStats({ weapon }: { weapon: EffectiveWeapon }) {
   const { projectile, feed } = weapon;
   const single = feed.type === 'single';
+  const loose = reserveInRounds(feed);
   const rows: [string, string][] = [
     ['Kaliber', `${weapon.caliber.displayName} · ${weapon.ammo.displayName}`],
     ['Schaden', projectile.projectilesPerShot > 1 ? `${projectile.projectilesPerShot} × ${number.format(projectile.damage)}` : number.format(projectile.damage)],
     ['Durchschlag', `${projectile.penetration} · ${penetration(projectile.penetration)}`],
     ['Feuerrate', `${number.format(weapon.roundsPerSecond * 60)} Schuss/min`],
-    [single ? 'Röhrenmagazin' : 'Magazin', `${weapon.magazineSize}${feed.chamberRounds ? ` + ${feed.chamberRounds}` : ''} · Reserve ${weapon.reserve} ${single ? 'Patr.' : 'Mag.'}`],
+    [single ? 'Röhrenmagazin' : feed.type === 'break' ? 'Läufe' : 'Magazin', `${weapon.magazineSize}${feed.chamberRounds ? ` + ${feed.chamberRounds}` : ''} · Reserve ${weapon.reserve} ${loose ? 'Patr.' : 'Mag.'}`],
     ['Nachladen', single ? `${number.format(weapon.reloadSeconds)} s je Patrone` : `${number.format(weapon.reloadSeconds)} s`],
     ['Reichweite', `${weapon.effectiveRange} m`],
   ];

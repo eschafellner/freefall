@@ -1,6 +1,6 @@
 # Loadout, VX-13 Cerberus und Einzelpatronen-Nachladen
 
-Release `8.1A`. Operatoren stellen ihre Ausrüstung im Carrier an der Station **Ausrüstung** zusammen. Erste neue Waffe ist die Vorderschaftrepetierflinte **VX-13 Cerberus** (Kaliber 13) mit Einzelpatronen-Nachladen. Das Standard-Loadout und seine Werte sind unverändert, die Golden Traces sind identisch. Grundlagen: [AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md).
+Release `8.1A`. Operatoren stellen ihre Ausrüstung im Carrier an der Station **Ausrüstung** zusammen. Erste neue Waffe ist die Vorderschaftrepetierflinte **VX-13 Cerberus** (Kaliber 13) mit Einzelpatronen-Nachladen. Das Standard-Loadout und seine Werte sind unverändert, die Golden Traces sind identisch. Grundlagen: [AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md). Seit 8.2A gibt es zwei Maschinenpistolen: [SUBMACHINE_GUNS](SUBMACHINE_GUNS.md).
 
 ## VX-13 Cerberus (`weapons.json › vx-13`)
 
@@ -8,7 +8,7 @@ Release `8.1A`. Operatoren stellen ihre Ausrüstung im Carrier an der Station **
 | --- | --- |
 | Slot / Kategorie | primary / shotgun |
 | Kaliber / Munition | Kaliber 13 (`caliber.13g`) / Schrot (`ammo.13g.buckshot`) |
-| Schaden | 8 Kugeln × 12, Kegel 2,6°, Durchschlag 2 (Niedrig) |
+| Schaden | 12 Kugeln × 18 (seit 8.2C, vorher 8 × 12), Kegel 2,6°, Durchschlag 2 (Niedrig) |
 | Schadensabfall | voll bis 12 m, linear bis 35 m auf 20 % |
 | Feuerrate | 1,4 Schuss/s (84/min, Repetierbewegung) |
 | Kapazität | 9 im Röhrenmagazin + 1 im Lauf = 10 |
@@ -26,6 +26,8 @@ Jede Waffe hat ein Feld `feed`:
 - `{ "type": "magazine", "chamberRounds": 0 }`: Magazinwechsel wie bisher. `reserve`/`maxReserve` zählen **ganze Magazine**; der Rest im alten Magazin geht verloren. Mit `chamberRounds: 1` bleibt bei einem taktischen Nachladen die Patrone im Lauf (n + 1).
 - `{ "type": "single", "chamberRounds": 1, "startSeconds": 0.35, "chamberSeconds": 0.8 }`: Einzelpatronen. `reserve`/`maxReserve` zählen **lose Patronen**, `reloadSeconds` und `reloadTimeline` beschreiben **einen Patronenzyklus**.
 
+- `{ "type": "break" }` (seit 8.2B): Kipplauf. `magazineSize` ist die Zahl der Läufe, `reserve` zählt **lose Patronen**, ein Nachladevorgang füllt alle leeren Läufe auf, ohne etwas zu verwerfen ([KAIBAL_50](KAIBAL_50.md)).
+
 `reserveMagazines`/`maxReserveMagazines` heißen seit 8.1A `reserve`/`maxReserve`. `EffectiveWeapon.capacity` = `magazineSize` + `chamberRounds`. Netzwerkseitig bleibt das Feld `equipment.magazines`; es enthält die Reserve in der Einheit der Waffe. Der Nachschub am Albatross gibt Schrotflinten je gewährtem Magazin `magazineSize` Patronen (bei der VX-13: 2 × 9 = 18 je Ladung, gedeckelt auf 80).
 
 ## Einzelpatronen-Nachladen (Server, `systems/combat.ts`)
@@ -42,7 +44,7 @@ RELOAD_START (startSeconds) → SHELL_LOADING ──insertAt──▶ SHELL_INSE
 
 ## Schrot (Server)
 
-`fireWeapon` würfelt Streuung und Rückstoß einmal pro Schuss. Bei `projectilesPerShot > 1` verfolgt `tracePellet` jede Kugel als eigenen Strahl: Treffer, Schaden mit Abfall und Panzerung, Kills und Einschläge gelten je Kugel. Die Telemetrie zählt einen Schuss und höchstens einen Treffer. Das `ShotEvent` ist die erste Kugel; `pellets` enthält die übrigen (`shotRays(shot)` liefert alle Strahlen). So gibt es einen Mündungsblitz und einen Schussknall, aber acht Leuchtspuren und Einschläge.
+`fireWeapon` würfelt Streuung und Rückstoß einmal pro Schuss. Bei `projectilesPerShot > 1` verfolgt `tracePellet` jede Kugel als eigenen Strahl: Treffer, Schaden mit Abfall und Panzerung, Kills und Einschläge gelten je Kugel. Die Telemetrie zählt einen Schuss und höchstens einen Treffer. Das `ShotEvent` ist die erste Kugel; `pellets` enthält die übrigen (`shotRays(shot)` liefert alle Strahlen). So gibt es einen Mündungsblitz und einen Schussknall, aber zwölf Leuchtspuren und Einschläge (bis 8.2B: acht).
 
 ## Loadout-Auswahl
 
@@ -60,14 +62,14 @@ RELOAD_START (startSeconds) → SHELL_LOADING ──insertAt──▶ SHELL_INSE
 
 ## Darstellung
 
-- Prozedurales Modell `rendering/weapons/Cerberus.ts`: Lauf über Röhrenmagazin, Vorderschaft als bewegliches Teil (Repetierbewegung nach jedem Schuss), Patronenhalter am Gehäuse. Beim Nachladen hält die Stützhand eine Patrone.
+- Prozedurales Modell `rendering/weapons/Cerberus.ts` (Profil `CERBERUS_HANDLING`): Lauf über Röhrenmagazin, Vorderschaft als bewegliches Teil (Repetierbewegung nach jedem Schuss), Patronenhalter am Gehäuse. Beim Nachladen hält die Stützhand eine Patrone.
 - Ton: Es gibt noch keine eigenen Aufnahmen. Der Schuss nutzt den Kestrel-Knall, verlangsamt auf 0,7. Dazu kommen ein synthetisches Repetiergeräusch und ein Klicken je eingelegter Patrone (`WeaponAudioCatalog.ts › shotgun`). Eigene Aufnahmen sollen das ersetzen.
 - HUD: `9 / 10 · 80 PAT` statt `MAG`; „Patrone laden“ als Nachladefortschritt und der Hinweis, dass Feuern das Nachladen beendet.
 
 ## Tests und Playtest
 
 - `apps/server/test/shotgun-loadout.test.ts`: Werte, Schrottreffer, Zyklen bis 9 + 1, Kammerladung bei leerer Waffe, Abbruch durch Feuern, gehaltener Abzug, Waffenwechsel, Kammerpatrone bei Magazinwaffen, Validierung und Carrier-Regel.
-- `scripts/playtest-loadout.mjs` (Playwright): Station öffnen, VX-13 wählen und übernehmen, dann in der Arena schießen (8 Strahlen) und nachladen.
+- `scripts/playtest-loadout.mjs` (Playwright): Station öffnen, VX-13 wählen und übernehmen, dann in der Arena schießen (12 Strahlen) und nachladen.
 
 ## Offen
 

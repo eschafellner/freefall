@@ -105,9 +105,11 @@ export class ArenaView {
   private cameraTotal = 0;
   private reticleTotal = 0;
   private readonly vector = new T.Vector3();
+  private readonly towCamera = new T.Vector3();
   private readonly reticleRay = { x: 0, y: 0, z: 0, dx: 0, dy: 0, dz: 0 };
   private readonly reticleMuzzle = { x: 0, y: 0, z: 0 };
   private readonly overview = { x: -1.8, z: 7.7 };
+  private readonly deckOperators: PositionXZ[] = [];
   private quality: GraphicsQuality = GRAPHICS_QUALITY.medium;
   private debugMarkers?: { server: T.Mesh; predicted: T.Mesh; collider: T.LineSegments; zones: T.Group };
   private post?: { composer: EffectComposer; render: RenderPass; sanitize: ShaderPass; bloom: UnrealBloomPass; output: OutputPass; fxaa: ShaderPass };
@@ -437,7 +439,12 @@ export class ArenaView {
     if (operation) {
       PlayerRigBatches.setTransport(this.scene, undefined);
       if (mission && state) {
-        operation.carrier.update(now, state, low, this.renderer.getPixelRatio());
+        // Doors on deck open for every operator nearby: the own predicted position and the others from the snapshot.
+        const operators = this.deckOperators;
+        operators.length = 0;
+        if (own) operators.push(position);
+        for (const player of latest?.players ?? []) if (player.id !== own) operators.push(player);
+        operation.carrier.update(now, state, low, this.renderer.getPixelRatio(), operators);
         operation.ship.update(state, missionTick, this.quality, latest, mission.surface, cameraPreferences.reducedMotion);
         mission.pois.update(state.pickups, now, cameraPreferences.reducedMotion);
         operation.recovery.update(state.result || state.state === 'RETURN_TO_CARRIER' ? undefined : state.extraction,
@@ -466,17 +473,26 @@ export class ArenaView {
         }
         const extraction = state.extraction;
         if (extraction?.phase === 'LIFT' && !state.result) {
-          const t = T.MathUtils.clamp((missionTick - extraction.phaseAt) / Math.max(1, extraction.endsAt - extraction.phaseAt), 0, 1);
-          const offset = extraction.method === 'albatross'
-            ? this.vector.set(0, ship.position.y, ship.position.z - extraction.z)
-            : this.vector.set(Math.sin(Math.PI * .235) * 95 * t ** 1.8, 45 * t, -Math.cos(Math.PI * .235) * 95 * t ** 1.8);
           const secured = latest?.players.filter((player) => extraction.securedIds.includes(player.id)) ?? [];
-          PlayerRigBatches.setTransport(this.scene, new Map(secured.map(({ slot }) => [slot, offset])));
-          if (extraction.securedIds.includes(own)) {
-            const rescuedByFighter = extraction.method === 'balloon';
-            this.camera.position.set(position.x + offset.x + (rescuedByFighter ? 21 : 8),
-              position.y + offset.y + (rescuedByFighter ? 11.8 : 5.8), position.z + offset.z + (rescuedByFighter ? 22 : 11));
-            this.camera.lookAt(position.x + offset.x, position.y + offset.y + (rescuedByFighter ? 8.3 : 2.5), position.z + offset.z);
+          if (extraction.method === 'albatross') {
+            const offset = this.vector.set(0, ship.position.y, ship.position.z - extraction.z);
+            PlayerRigBatches.setTransport(this.scene, new Map(secured.map(({ slot }) => [slot, offset])));
+            if (extraction.securedIds.includes(own)) {
+              this.camera.position.set(position.x + offset.x + 8, position.y + offset.y + 5.8, position.z + offset.z + 11);
+              this.camera.lookAt(position.x + offset.x, position.y + offset.y + 2.5, position.z + offset.z);
+            }
+          } else {
+            // Fulton tow: every secured operator hangs on its own line, simulated in RecoveryView.
+            const { recovery } = operation;
+            PlayerRigBatches.setTransport(this.scene, new Map(secured.flatMap(({ id, slot }) => {
+              const carry = recovery.carry(id);
+              return carry ? [[slot, carry] as const] : [];
+            })));
+            if (recovery.chase(own, this.camera.position, this.towCamera)) {
+              this.camera.position.y = Math.max(this.camera.position.y,
+                groundHeight(mission.surface, this.camera.position.x, this.camera.position.z) + 1.6);
+              this.camera.lookAt(this.towCamera);
+            }
           }
         }
         this.camera.updateMatrixWorld();

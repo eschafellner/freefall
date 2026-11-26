@@ -36,7 +36,7 @@ function setup(selection = CERBERUS, registry?: BalanceRegistry) {
   return { field, player, drive };
 }
 
-test('VX-13 Cerberus: Kaliber 13, 9 im Röhrenmagazin + 1 im Lauf, 80 Patronen Reserve, 8 Schrotkugeln', () => {
+test('VX-13 Cerberus: Kaliber 13, 9 im Röhrenmagazin + 1 im Lauf, 80 Patronen Reserve, 12 Schrotkugeln à 18', () => {
   const loadout = resolveSelection(BALANCE, CERBERUS);
   const shotgun = loadout.weapons.primary;
   assert.equal(shotgun.displayName, 'VX-13 Cerberus');
@@ -46,7 +46,8 @@ test('VX-13 Cerberus: Kaliber 13, 9 im Röhrenmagazin + 1 im Lauf, 80 Patronen R
   assert.equal(shotgun.feed.chamberRounds, 1);
   assert.equal(shotgun.capacity, 10);
   assert.equal(shotgun.reserve, 80);
-  assert.equal(shotgun.projectile.projectilesPerShot, 8);
+  assert.equal(shotgun.projectile.projectilesPerShot, 12);
+  assert.equal(shotgun.projectile.damage, 18);
   assert.ok(shotgun.projectile.pelletSpread > 0);
   // The standard loadout keeps its values; magazine weapons have no chamber round.
   const standard = resolveSelection(BALANCE, STANDARD_LOADOUT);
@@ -62,11 +63,11 @@ test('a shotgun shot traces every pellet, deals damage per pellet and counts as 
   drive({ fire: true, pitch: -.16 });
   assert.equal(field.shots.length, 1);
   const shot = field.shots[0];
-  assert.equal(shot.pellets?.length, 7);
-  assert.equal(shotRays(shot).length, 8);
+  assert.equal(shot.pellets?.length, 11);
+  assert.equal(shotRays(shot).length, 12);
   const hits = shotRays(shot).filter((ray) => ray.enemy === field.horde.id[enemy]).length;
-  assert.ok(hits >= 6, `nur ${hits} Kugeln getroffen`);
-  assert.ok(Math.abs(1000 - field.horde.hp[enemy] - hits * 12) < 1e-6);
+  assert.ok(hits >= 9, `nur ${hits} Kugeln getroffen`);
+  assert.ok(Math.abs(1000 - field.horde.hp[enemy] - hits * 18) < 1e-6);
   assert.equal(field.stats.data.shots.primary, 1);
   assert.equal(field.stats.data.hits.primary, 1);
   assert.equal(player.ammo, 9);

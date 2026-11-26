@@ -14,7 +14,7 @@ import { LOADOUT_SELECTION_KEYS, OPERATOR_SLIDE_LIMITS } from './definitions.ts'
 import { deepFreeze } from './schema.ts';
 import type {
   AmmoDefinition, ArmorRules, BackpackDefinition, BodyArmorDefinition, CaliberDefinition, LoadoutSelection, CombatDefinition, ConvictKitDefinition, DamageType, EnemyArchetype, ConvictSquadDefinition, DamagePolicy, DifficultyDefinition, EnemyGameplay,
-  GrenadeDefinition, MedicalDefinition, MeleeDefinition, NestDefinition, OperatorSlideDefinition, ResupplyRules, SupplyContainerDefinition,
+  GrenadeDefinition, MagazineVariantType, MedicalDefinition, MeleeDefinition, NestDefinition, OperatorSlideDefinition, ResupplyRules, SupplyContainerDefinition,
   SwarmDefinition, WeaponDefinition, WeaponSlot,
 } from './definitions.ts';
 import type { BalanceRegistry } from './registry.ts';
@@ -164,9 +164,15 @@ export interface EffectiveBallistics {
   readonly falloff: CaliberDefinition['falloff'];
 }
 
+/** True when `reserve`/`maxReserve` count loose rounds (single feed, break action) instead of whole magazines. */
+export function reserveInRounds(feed: { readonly type: string }): boolean {
+  return feed.type !== 'magazine';
+}
+
 /** Resolved feed. Single feed: `reloadTicks` and the removal/insertion ticks describe one round cycle. */
 export type EffectiveFeed =
   | { readonly type: 'magazine'; readonly chamberRounds: number }
+  | { readonly type: 'break'; readonly chamberRounds: 0 }
   | { readonly type: 'single'; readonly chamberRounds: number; readonly startTicks: number; readonly chamberTicks: number };
 
 export interface EffectiveWeapon extends Omit<WeaponDefinition, 'feed'> {
@@ -248,6 +254,23 @@ export function ammoModifiers(weapon: WeaponDefinition, ammo: AmmoDefinition): S
   }));
 }
 
+/**
+ * A magazine variant as `equipment`-layer modifiers on `weapon.<id>.<stat>`: its size replaces `magazineSize`, its own
+ * modifiers follow. Pass the result to `resolveWeapon` to get the weapon with that magazine.
+ */
+export function magazineModifiers(weapon: WeaponDefinition, type: MagazineVariantType): StatModifier[] {
+  const variant = weapon.magazineVariants.find((entry) => entry.type === type);
+  if (!variant) throw new BalanceResolutionError(`${weapon.id} hat keine Magazinvariante "${type}"`);
+  const source = `magazine:${type}`;
+  const size = variant.magazineSize - weapon.magazineSize;
+  return [
+    ...(size ? [{ source, layer: 'equipment' as const, stat: `weapon.${weapon.id}.magazineSize`, operation: 'add' as const, value: size }] : []),
+    ...variant.modifiers.map((modifier) => ({
+      source, layer: 'equipment' as const, stat: `weapon.${weapon.id}.${modifier.stat}`, operation: modifier.operation, value: modifier.value,
+    })),
+  ];
+}
+
 /** Equipment item modifiers; `primary.` / `secondary.` address the weapon in that slot. */
 function itemModifiers(source: string, modifiers: readonly { stat: string; operation: ModifierOperation; value: number }[],
   weapons: Readonly<Record<WeaponSlot, string>>): StatModifier[] {
@@ -287,7 +310,7 @@ function effectiveWeapon(resolver: StatResolver, registry: BalanceRegistry, weap
   const feed: EffectiveFeed = source.type === 'single'
     ? { type: 'single', chamberRounds: source.chamberRounds, startTicks: Math.round(source.startSeconds * SIMULATION_HZ),
       chamberTicks: Math.max(2, Math.ceil(source.chamberSeconds * SIMULATION_HZ)) }
-    : { type: 'magazine', chamberRounds: source.chamberRounds };
+    : source.type === 'break' ? { type: 'break', chamberRounds: 0 } : { type: 'magazine', chamberRounds: source.chamberRounds };
   const { recoil, spread } = weapon;
   const pitch = resolver.resolve(`${key}.recoilPitch`, recoil.pitchPerShot * recoil.verticalMultiplier, { layers: WEAPON, min: 0 });
   const yaw = resolver.resolve(`${key}.recoilYaw`, recoil.yawPerShot * recoil.horizontalMultiplier, { layers: WEAPON, min: 0 });
@@ -535,6 +558,10 @@ export interface MissionBalance {
     readonly hunterPatrolPureChance: number;
     readonly breachersPerReinforcement: number;
     readonly breacherNestGuards: number;
+    readonly assaultBreakerWireType: number;
+    readonly assaultBreakersPerReinforcement: number;
+    readonly assaultBreakerNestGuards: number;
+    readonly maxActiveAssaultBreakers: number;
   };
   readonly trace: Readonly<Record<string, ResolvedStat>>;
 }
@@ -657,6 +684,10 @@ export function resolveMissionBalance(registry: BalanceRegistry, difficultyId: s
       hunterPatrolPureChance: difficulty.hunterPatrolPureChance,
       breachersPerReinforcement: difficulty.breachersPerReinforcement,
       breacherNestGuards: difficulty.breacherNestGuards,
+      assaultBreakerWireType: registry.enemy(swarm.castes.assaultBreakerArchetypeId).wireType,
+      assaultBreakersPerReinforcement: difficulty.assaultBreakersPerReinforcement,
+      assaultBreakerNestGuards: difficulty.assaultBreakerNestGuards,
+      maxActiveAssaultBreakers: difficulty.maxActiveAssaultBreakers,
     },
     trace: resolver.trace,
   };

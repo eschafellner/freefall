@@ -135,6 +135,14 @@ export const UNLOCKS: UnlockRegistry = createUnlockRegistry([
   // Schrotflinte: ab Level 2 im Arsenal für 3.000 SKR (seit Migration 5 nicht mehr Grundausstattung).
   { id: 'weapon.vx-13', kind: 'weapon', displayName: 'VX-13 Cerberus', description: 'Vorderschaftrepetierflinte, Kaliber 13, Einzelpatronen-Nachladen.',
     acquisition: 'choice', level: 2, requires: [], weaponId: 'vx-13', cost: { credits: 3000 } },
+  // Maschinenpistolen (8.2A): Primärwaffen, im Arsenal gegen SKR.
+  { id: 'weapon.mp-99', kind: 'weapon', displayName: 'MP-99', description: 'Kompakte Maschinenpistole, 10 mm, 40 Schuss, 720 Schuss/min, kaum Rückstoß.',
+    acquisition: 'choice', level: 5, requires: [], weaponId: 'mp-99', cost: { credits: 4500 } },
+  { id: 'weapon.viktor-55', kind: 'weapon', displayName: 'Viktor 55', description: 'Maschinenpistole, .55, 35 Schuss, 1.100 Schuss/min, starker seitlicher Rückstoß.',
+    acquisition: 'choice', level: 7, requires: [], weaponId: 'viktor-55', cost: { credits: 6000 } },
+  // Doppelläufige Kipplaufwaffe (8.2B).
+  { id: 'weapon.kaibal-50', kind: 'weapon', displayName: 'Kaibal 50', description: 'Doppellauf mit Kipplauf, 7,77 × 50 mm, zwei Schuss, starker Hochschlag.',
+    acquisition: 'choice', level: 8, requires: [], weaponId: 'kaibal-50', cost: { credits: 3000 } },
   { id: 'upgrade.weapon-strike', kind: 'upgrade', displayName: 'Kolbenstoß', description: 'Nahkampfangriff mit der Waffe.',
     acquisition: 'starter', level: 1, requires: [], equipmentId: standard.meleeId },
   { id: 'upgrade.standard-frame', kind: 'upgrade', displayName: 'Standard-Tragegestell', description: 'Rucksack der Grundausstattung.',

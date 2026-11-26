@@ -3,7 +3,7 @@
  * stims up to the carry capacity. All checks and the transaction run on the server tick, so simultaneous requests
  * are serialized: the first completion consumes the charge, later ones see the updated state.
  */
-import { ALBATROSS } from '@freefall/shared';
+import { ALBATROSS, reserveInRounds } from '@freefall/shared';
 import type { CombatEvent, EffectiveResupply, PositionXZ, ResupplyGrant, SupplyContainerSnapshot } from '@freefall/shared';
 import type { SimPlayer } from '../simulation/Player.ts';
 import type { MeleeObject } from '../systems/combat.ts';
@@ -85,8 +85,8 @@ export class ResupplySystem implements ResupplyHooks {
     const { perUse } = this.config;
     const gear = player.equipment;
     const { primary, secondary } = player.loadout.weapons;
-    // Single-feed weapons (shotguns) count loose rounds: one granted magazine is `magazineSize` rounds.
-    const units = (weapon: typeof primary, magazines: number) => weapon.feed.type === 'single' ? magazines * weapon.magazineSize : magazines;
+    // Single feed and break action count loose rounds: one granted magazine is `magazineSize` rounds.
+    const units = (weapon: typeof primary, magazines: number) => reserveInRounds(weapon.feed) ? magazines * weapon.magazineSize : magazines;
     return {
       primaryMagazines: Math.max(0, Math.min(units(primary, perUse.primaryMagazines), primary.maxReserve - gear.magazines.primary)),
       secondaryMagazines: Math.max(0, Math.min(units(secondary, perUse.secondaryMagazines), secondary.maxReserve - gear.magazines.secondary)),

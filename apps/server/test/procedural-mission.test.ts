@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  ALBATROSS, BALANCE, BALLOON, CAMERA_BACK, CAMERA_LIFT, CAMERA_SHOULDER, ENEMY_TYPES, LOOK_HEIGHT, MAX_PITCH, wrapAngle, BOARDING_TICKS, BODENBRUCH, CARRIER_SHIP, DEV_AULT_PROFILE, DIFFICULTIES,
+  ALBATROSS, BALANCE, BALLOON, extractionLiftTicks, CAMERA_BACK, CAMERA_LIFT, CAMERA_SHOULDER, ENEMY_TYPES, LOOK_HEIGHT, MAX_PITCH, wrapAngle, BOARDING_TICKS, BODENBRUCH, CARRIER_SHIP, DEV_AULT_PROFILE, DIFFICULTIES,
   LANDING_STAGE_TICKS, MAX_ENEMIES, MISSION_TEMPLATES, NET, PROCEDURAL_CONTRACT_ID, SCHABE_TYPE, WORLD_REGISTRY,
   distanceSquared, groundHeight, isOptionalObjective, missionGround, openGround,
 } from '@freefall/shared';
@@ -329,7 +329,7 @@ for (const [seed, type, count, method, planetId = 'dev-ault', worldSeed, difficu
     }
     assert.ok(mission.action(lead.id, method));
     for (const operator of crew.slice(1)) assert.ok(mission.action(operator.id, 'secure'));
-    const maxTicks = (method === 'albatross' ? ALBATROSS.launchTicks : BALLOON.countdownTicks + BALLOON.approachTicks) + BALLOON.liftTicks + 1;
+    const maxTicks = (method === 'albatross' ? ALBATROSS.launchTicks : BALLOON.countdownTicks + BALLOON.approachTicks) + extractionLiftTicks(method) + 1;
     for (let i = 0; i < maxTicks && (mission.state as string) !== 'MISSION_RESULTS'; i++) {
       if (method === 'balloon' && mission.snapshot().extraction?.phase !== 'LIFT') {
         for (const operator of crew) {
@@ -363,7 +363,7 @@ for (const [seed, type, count, method, planetId = 'dev-ault', worldSeed, difficu
     assert.equal(telemetry.stateTicks.DEPLOYMENT, LANDING_STAGE_TICKS);
     assert.equal(Object.values(telemetry.stateTicks).reduce((total, ticks) => total + ticks, 0), snapshot.result.durationTicks);
     assert.equal(telemetry.extraction[method].starts, 1);
-    assert.equal(telemetry.extraction[method].liftTicks, BALLOON.liftTicks);
+    assert.equal(telemetry.extraction[method].liftTicks, extractionLiftTicks(method));
     for (const { definition } of plan.objectives) {
       const timing = telemetry.objectives[definition.id];
       assert.equal(timing.state, isOptionalObjective(definition) ? 'cancelled' : 'complete');

@@ -83,7 +83,7 @@ export class WeaponAudio {
    * The reservation covers all layers and their travel delay.
    */
   private voice(owner: string, source: SoundSource, listener: Listener, own: boolean, seconds: number,
-    gain = 1, priority?: number, recorded = false): Voice | undefined {
+    gain = 1, priority?: number, recorded = false, perOwner?: number): Voice | undefined {
     const context = this.engine.context;
     const bus = this.engine.bus('weapons');
     if (!context || !bus || context.state !== 'running') return;
@@ -101,7 +101,7 @@ export class WeaponAudio {
         if (release) this.transient.delete(release);
         for (const source of sources) source.stop();
         out.disconnect(); wet?.disconnect(); dry.disconnect(); filter.disconnect(); pan.disconnect();
-      });
+      }, perOwner);
     if (!release) return;
     if (recorded || priority !== undefined) this.transient.add(release);
     const at = context.currentTime + .005 + travel;
@@ -230,7 +230,7 @@ export class WeaponAudio {
     const length = Math.max((near?.duration ?? 0) / pitch, (distant?.duration ?? 0) / pitch,
       casing ? casingOffset + casing.duration : 0);
     const priority = own ? PRIORITY.threat - 1 : PRIORITY.combat - Math.min(14, distance / 6);
-    const voice = this.voice(shooter, source, listener, own, length, profile.level * (.96 + this.rand() * .08), priority, true);
+    const voice = this.voice(shooter, source, listener, own, length, profile.level * (.96 + this.rand() * .08), priority, true, profile.voices);
     if (!voice) return false;
     if (near) this.sample(voice, near, pitch, distant ? 1 - mix : 1);
     if (distant) this.sample(voice, distant, pitch, near ? mix : 1);

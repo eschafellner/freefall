@@ -8,9 +8,10 @@ Seit Milestone 7.2A liegen alle wichtigen Gameplay-Werte als JSON in einer zentr
 packages/shared/src/balance/
 ├── data/                 Gameplay-Daten (die einzige Stelle für Werte)
 │   ├── manifest.json     Schema-Version und Release-Label
-│   ├── weapons.json      Primär- und Sekundärwaffen
+│   ├── weapons.json      Primär- und Sekundärwaffen, vorbereitete Magazinvarianten (8.1B)
 │   ├── ammunition.json   Kaliber, Munitionssorten, Panzerklassen (8.0A)
 │   ├── equipment.json    Granaten, Heilstims, Nahkampf, Loadouts, Nachschubregeln
+│   ├── loot.json         Beute an Points of Interest: Vorratskisten, Proben, Marks (8.1B)
 │   ├── combat.json       Damage Policy (Friendly Fire), Operator-Hitbox, Audio-Parameter (7.2B)
 │   ├── operators.json    Lebenspunkte, Bewegung, Respawn, Schutzzeiten
 │   ├── enemies.json      Fraktionen und Gegner-Archetypen (Schabe)

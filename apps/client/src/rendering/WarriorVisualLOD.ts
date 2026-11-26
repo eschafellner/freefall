@@ -1,19 +1,28 @@
 import * as T from 'three';
 import {
-  ATTACK_LEAP, BREACHER_TYPE, ENEMY_TRAITS, JAEGER_TYPE, MAX_ENEMIES, attackDuration, attackStrikeAt, enemyAttackTiming, groundHeight,
+  ASSAULT_BREAKER_TYPE, ATTACK_CHARGE, ATTACK_LEAP, BREACHER_TYPE, ENEMY_TRAITS, JAEGER_TYPE, MAX_ENEMIES, attackDuration, attackStrikeAt, enemyAttackTiming, groundHeight,
   leapElevation, lerpAngle,
 } from '@freefall/shared';
 import type { EnemyAttackTiming, HordeFrame, WorldDefinition } from '@freefall/shared';
 import { applySurface } from './AgentMeshes.ts';
+import { ASSAULT_HEAD_PIVOT, assaultBreakerGeometry } from './AssaultBreakerModel.ts';
+import { ASSAULT_RIG_GLSL, assaultBreakerPose, assaultCycle } from './AssaultBreakerRig.ts';
+import { attackPhase } from './WarriorAttack.ts';
+import type { AttackSample } from './WarriorAttack.ts';
 import { breacherGeometry } from './BreacherModel.ts';
 import type { ContactShadows } from './ContactShadows.ts';
 import type { EnemyPose } from './EnemyVisualLOD.ts';
 import type { GraphicsQuality } from './GraphicsQuality.ts';
 import { jaegerGeometry } from './JaegerModel.ts';
 import { applyWarriorSurface } from './WarriorSurface.ts';
+import type { WarriorSurfaceOptions } from './WarriorSurface.ts';
 import { ROLE } from './WarriorKit.ts';
+import type { Vec3 } from './SwarmOrganism.ts';
 
-/** Instance pose: body offset and tilt plus the shader controls (crouch, tuck, limb strike angle, jaw). */
+/**
+ * Instance pose: body offset and tilt plus the shader controls (crouch, tuck, limb strike angle, jaw). Castes with a
+ * `head` rig swing their head (and jaw) by `strike` instead of forelimbs.
+ */
 export interface WarriorPose {
   lift: number;
   pitch: number;
@@ -22,13 +31,23 @@ export interface WarriorPose {
   tuck: number;
   strike: number;
   jaw: number;
+  /** Rigged castes only (see `CasteVisual.rig`): forward lunge (m), head yaw (rad), gallop blend, skid brace, tail raise
+   * (rad) and forefoot scrape progress (0 none … 1). */
+  surge?: number;
+  headYaw?: number;
+  gallop?: number;
+  brace?: number;
+  tail?: number;
+  paw?: number;
 }
 
-/** Attack state of one enemy on the render clock: kind, timing and fractional ticks since the attack started. */
-export interface AttackSample {
-  kind: number;
-  timing: EnemyAttackTiming;
-  elapsed: number;
+export type { AttackSample };
+
+/** What a pose may read besides the gait: smoothed ground speed (m/s), render time (s) and a per-enemy seed. */
+export interface PoseContext {
+  speed: number;
+  time: number;
+  seed: number;
 }
 
 export interface CasteVisual {
@@ -38,22 +57,28 @@ export interface CasteVisual {
   readonly gait: { readonly stride: number; readonly lift: number; readonly drop: number; readonly cycle: number };
   readonly bounds: number;
   readonly shadow: readonly [number, number];
-  pose(out: WarriorPose, moving: number, gaitPhase: number, attack: AttackSample | undefined): void;
+  /** Rigid head: vertices with ROLE.head (and the jaw) pitch about this joint by the pose's `strike` angle. */
+  readonly head?: { readonly pivot: Vec3 };
+  /** Detail tier distances scale with the body: a giant keeps its near tier further out. Default 1. */
+  readonly lodScale?: number;
+  /** Surface options of the shared warrior finish (e.g. a scale pattern). */
+  readonly surface?: WarriorSurfaceOptions;
+  /**
+   * Model-space rig: GLSL declaring `abPose(inout vec3 p, inout vec3 n, float breath)`. Its instances carry only position
+   * and yaw in the instance matrix; lift, pitch and roll go to the `body` attribute so the rig can keep feet planted.
+   */
+  readonly rig?: { readonly vertex: string };
+  /** Metres per gait cycle at a ground speed (default `gait.cycle`). */
+  readonly cycleAt?: (speed: number) => number;
+  /** Turning on the spot steps the legs as if walking this radius (rigged castes). */
+  readonly turnRadius?: number;
+  pose(out: WarriorPose, moving: number, gaitPhase: number, attack: AttackSample | undefined, context: PoseContext): void;
 }
 
 const ease = (t: number) => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/** Phase progress of an attack: 'windup' | 'flight' | 'active' | 'recovery' with 0…1 within the phase. */
-function phaseOf(attack: AttackSample): { phase: 'windup' | 'flight' | 'active' | 'recovery'; t: number } | undefined {
-  const { timing, elapsed } = attack;
-  const strike = attackStrikeAt(timing);
-  if (elapsed < 0 || elapsed >= attackDuration(timing)) return;
-  if (elapsed < timing.windupTicks) return { phase: 'windup', t: elapsed / timing.windupTicks };
-  if (elapsed < strike) return { phase: 'flight', t: (elapsed - timing.windupTicks) / timing.flightTicks };
-  if (elapsed < strike + timing.activeTicks) return { phase: 'active', t: (elapsed - strike) / timing.activeTicks };
-  return { phase: 'recovery', t: (elapsed - strike - timing.activeTicks) / timing.recoveryTicks };
-}
+const phaseOf = attackPhase;
 
 /** Jäger: bounding gallop, rearing slash, and the leap (crouch, airborne tuck with reaching claws, strike, recovery). */
 export const JAEGER_VISUAL: CasteVisual = {
@@ -137,18 +162,86 @@ export const BREACHER_VISUAL: CasteVisual = {
   },
 };
 
-/** Living gait clock per enemy id: integrates the cycle phase from the distance actually covered. */
-interface GaitClock { phase: number; seen: number }
+/**
+ * Assaultbreaker: model-space rig with planted feet (see AssaultBreakerRig.ts): a heavy lateral-sequence walk that
+ * becomes a rotary gallop in the charge, the charge windup (roar, forefoot scrape, coil), the skidding head toss and
+ * the hooking gore.
+ */
+export const ASSAULT_BREAKER_VISUAL: CasteVisual = {
+  type: ASSAULT_BREAKER_TYPE,
+  geometry: assaultBreakerGeometry,
+  gait: { stride: 0, lift: 0, drop: .36, cycle: 3.2 },
+  bounds: 4,
+  shadow: [3.8, 6.4],
+  head: { pivot: ASSAULT_HEAD_PIVOT },
+  lodScale: 1.8,
+  surface: { scales: 12 },
+  rig: { vertex: ASSAULT_RIG_GLSL },
+  cycleAt: assaultCycle,
+  turnRadius: 1.8,
+  pose: assaultBreakerPose,
+};
 
-function warriorMaterial(caste: CasteVisual): { material: T.MeshStandardMaterial; pulse: { value: number } } {
+/**
+ * Living gait clock per enemy id: integrates the cycle phase from the distance actually covered. Rigged castes also
+ * smooth the ground speed (gait blends) and remember the yaw (stepping while turning on the spot).
+ */
+interface GaitClock { phase: number; seen: number; speed: number; yaw: number }
+
+/**
+ * Material of a rigged caste: the rig deforms position and normal in model space (`abPose`); the depth material
+ * (shadow casting) runs the same deformation so shadows follow the animation.
+ */
+function riggedMaterial(caste: CasteVisual, rig: { readonly vertex: string }, pulse: { value: number }):
+  { material: T.MeshStandardMaterial; depth: T.MeshDepthMaterial } {
+  const material = new T.MeshStandardMaterial({ vertexColors: true, roughness: .86, metalness: .05 });
+  material.customProgramCacheKey = () => 'swarm-warrior-rig-v1-' + caste.type;
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.warriorClock = pulse;
+    applySurface(shader);
+    applyWarriorSurface(shader, caste.surface);
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', `#include <common>
+${rig.vertex}
+      varying vec3 vWarriorTint;`).replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
+      vec3 warriorPosed = position;
+      abPose(warriorPosed, objectNormal, tissue.x);`).replace('#include <begin_vertex>', `#include <begin_vertex>
+      transformed = warriorPosed;
+      vWarriorPulse = (1.0 - motion.w) * pow(.5 + .5 * sin(warriorClock * 4.4 + motion.z), 3.0);
+      {
+        // Per-enemy shade (id % 9 from the clock offset) and the hit flash, instead of an instance colour.
+        float variation = .84 + mod(floor(motion.z / 1.37 + .5), 9.0) * .02;
+        vWarriorTint = mix(vec3(variation + action.x, variation + action.x * .38, variation), vec3(1.0), motion.w);
+      }`);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `#include <common>
+      varying vec3 vWarriorTint;`).replace('#include <color_fragment>', `#include <color_fragment>
+      diffuseColor.rgb *= vWarriorTint;`);
+  };
+  const depth = new T.MeshDepthMaterial();
+  depth.customProgramCacheKey = () => 'swarm-warrior-rig-depth-v1-' + caste.type;
+  depth.onBeforeCompile = (shader) => {
+    shader.uniforms.warriorClock = pulse;
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', `#include <common>
+      attribute vec4 tissue;
+${rig.vertex}`).replace('#include <begin_vertex>', `#include <begin_vertex>
+      {
+        vec3 warriorNormal = vec3(0.0, 1.0, 0.0);
+        abPose(transformed, warriorNormal, tissue.x);
+      }`);
+  };
+  return { material, depth };
+}
+
+function warriorMaterial(caste: CasteVisual): { material: T.MeshStandardMaterial; pulse: { value: number }; depth?: T.MeshDepthMaterial } {
   const pulse = { value: 0 };
+  if (caste.rig) return { ...riggedMaterial(caste, caste.rig, pulse), pulse };
   const material = new T.MeshStandardMaterial({ vertexColors: true, roughness: .86, metalness: .05 });
   const { stride, lift, drop } = caste.gait;
+  const head = caste.head?.pivot.map((v) => v.toFixed(3)).join(', ');
   material.customProgramCacheKey = () => 'swarm-warrior-v1-' + caste.type;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.warriorClock = pulse;
     applySurface(shader);
-    applyWarriorSurface(shader);
+    applyWarriorSurface(shader, caste.surface);
     shader.vertexShader = shader.vertexShader.replace('#include <common>', `
       #include <common>
       attribute vec4 limb;
@@ -161,6 +254,7 @@ function warriorMaterial(caste: CasteVisual): { material: T.MeshStandardMaterial
       float warriorAngle() {
         if (abs(limb.x - ${ROLE.arm.toFixed(1)}) < .5) return action.z;
         if (abs(limb.x - ${ROLE.jaw.toFixed(1)}) < .5) return -.55 * action.w - .25 * motion.w;
+        ${head ? `if (abs(limb.x - ${ROLE.head.toFixed(1)}) < .5) return action.z - .12 * motion.w;` : ''}
         return 0.0;
       }
       vec3 warriorRotate(vec3 v, float a) {
@@ -170,6 +264,7 @@ function warriorMaterial(caste: CasteVisual): { material: T.MeshStandardMaterial
     `).replace('#include <beginnormal_vertex>', `
       #include <beginnormal_vertex>
       objectNormal = warriorRotate(objectNormal, warriorAngle());
+      ${head ? `if (abs(limb.x - ${ROLE.jaw.toFixed(1)}) < .5) objectNormal = warriorRotate(objectNormal, action.z - .12 * motion.w);` : ''}
     `).replace('#include <begin_vertex>', `
       #include <begin_vertex>
       {
@@ -178,6 +273,11 @@ function warriorMaterial(caste: CasteVisual): { material: T.MeshStandardMaterial
         float dead = motion.w;
         // Rigid swing of forelimbs and jaw about their root joint.
         transformed = pivot + warriorRotate(transformed - pivot, warriorAngle());
+        ${head ? `// The jaw hangs from the head and follows its swing.
+        if (abs(role - ${ROLE.jaw.toFixed(1)}) < .5) {
+          vec3 headPivot = vec3(${head});
+          transformed = headPivot + warriorRotate(transformed - headPivot, action.z - .12 * motion.w);
+        }` : ''}
         if (limbPart) {
           // Airborne tuck, and the curled legs of a fallen body.
           float tuck = max(action.y, dead * .55);
@@ -217,6 +317,9 @@ export class WarriorVisualLOD {
   private readonly meshes: T.InstancedMesh[];
   private readonly motions: T.InstancedBufferAttribute[] = [];
   private readonly actions: T.InstancedBufferAttribute[] = [];
+  /** Rigged castes: body (pitch, roll, heave, surge) and gait (gallop, brace, tail raise, head yaw) per instance. */
+  private readonly bodies: T.InstancedBufferAttribute[] = [];
+  private readonly strides: T.InstancedBufferAttribute[] = [];
   private readonly gaits = new Map<number, GaitClock>();
   private readonly reactions = new Map<number, number>();
   private readonly eliminated = new Map<number, number>();
@@ -226,13 +329,14 @@ export class WarriorVisualLOD {
   private readonly sphere = new T.Sphere(new T.Vector3(), 2);
   private readonly tint = new T.Color();
   private readonly pose: WarriorPose = { lift: 0, pitch: 0, roll: 0, crouch: 0, tuck: 0, strike: 0, jaw: 0 };
+  private readonly context: PoseContext = { speed: 0, time: 0, seed: 0 };
   private readonly attack: AttackSample = { kind: 0, timing: ENEMY_TRAITS[0].melee, elapsed: 0 };
   private lastNow = 0;
   visible = 0;
 
   constructor(scene: T.Scene, caste: CasteVisual) {
     this.caste = caste;
-    const { material, pulse } = warriorMaterial(caste);
+    const { material, pulse, depth } = warriorMaterial(caste);
     this.material = material;
     this.clock = pulse;
     this.sphere.radius = caste.bounds;
@@ -245,12 +349,24 @@ export class WarriorVisualLOD {
       geometry.setAttribute('action', action);
       this.motions.push(motion);
       this.actions.push(action);
+      if (caste.rig) {
+        const body = new T.InstancedBufferAttribute(new Float32Array(MAX_ENEMIES * 4), 4).setUsage(T.DynamicDrawUsage);
+        const stride = new T.InstancedBufferAttribute(new Float32Array(MAX_ENEMIES * 4), 4).setUsage(T.DynamicDrawUsage);
+        geometry.setAttribute('body', body);
+        geometry.setAttribute('gait', stride);
+        this.bodies.push(body);
+        this.strides.push(stride);
+      }
       const mesh = new T.InstancedMesh(geometry, material, MAX_ENEMIES);
+      if (depth) mesh.customDepthMaterial = depth;
       mesh.count = 0;
       mesh.frustumCulled = false;
       mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);
-      mesh.setColorAt(0, this.tint.setScalar(1));
-      mesh.instanceColor!.setUsage(T.DynamicDrawUsage);
+      // Rigged castes tint in the shader (one vertex attribute less).
+      if (!caste.rig) {
+        mesh.setColorAt(0, this.tint.setScalar(1));
+        mesh.instanceColor!.setUsage(T.DynamicDrawUsage);
+      }
       mesh.castShadow = tier === 0;
       scene.add(mesh);
       return mesh;
@@ -301,10 +417,12 @@ export class WarriorVisualLOD {
     if (a && b) {
       this.viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
       this.frustum.setFromProjectionMatrix(this.viewProjection);
-      const near = quality.enemyNear ** 2, far = quality.enemyFar ** 2, shadow = quality.enemyShadowDistance ** 2;
+      const scale = (this.caste.lodScale ?? 1) ** 2;
+      const near = quality.enemyNear ** 2 * scale, far = quality.enemyFar ** 2 * scale, shadow = quality.enemyShadowDistance ** 2 * scale;
       const tick = a.tick + (b.tick - a.tick) * alpha;
       const ticks = Math.max(1, b.tick - a.tick);
       const { cycle } = this.caste.gait;
+      const rigged = !!this.caste.rig;
       for (let i = 0; i < a.count; i++) {
         if (a.type[i] !== this.caste.type) continue;
         const id = a.id[i];
@@ -321,24 +439,50 @@ export class WarriorVisualLOD {
         const mesh = this.meshes[tier];
         // Ground speed from the two frames drives the gait clock.
         const speed = next === undefined ? 0 : Math.hypot(b.x[next] - a.x[i], b.z[next] - a.z[i]) * 30 / ticks;
-        let clock = this.gaits.get(id);
-        if (!clock) this.gaits.set(id, clock = { phase: id * 2.399, seen: now });
-        clock.phase += dt * speed / cycle * Math.PI * 2;
-        clock.seen = now;
-        const moving = Math.min(1, speed / 2.2);
-        const attack = tier < 2 ? this.sampleAttack(a, i, b, next, tick) : undefined;
-        this.caste.pose(this.pose, moving, clock.phase, attack);
-        const reaction = Math.max(0, (this.reactions.get(id) ?? 0) - now) / 150;
         const yaw = -(next === undefined ? a.yaw[i] : lerpAngle(a.yaw[i], b.yaw[next], alpha));
-        this.transform.position.set(x, ground + this.pose.lift, z);
-        this.transform.rotation.set(this.pose.pitch - reaction * .12, yaw, this.pose.roll);
+        let clock = this.gaits.get(id);
+        if (!clock) this.gaits.set(id, clock = { phase: id * 2.399, seen: now, speed, yaw });
+        let pace = speed;
+        if (rigged) {
+          // Smoothed speed blends the gaits; turning on the spot steps the legs.
+          clock.speed += (speed - clock.speed) * (1 - Math.exp(-dt / .2));
+          const turn = dt > 0 ? Math.abs(Math.atan2(Math.sin(yaw - clock.yaw), Math.cos(yaw - clock.yaw))) / dt : 0;
+          pace = Math.max(clock.speed, Math.min(2.4, turn * (this.caste.turnRadius ?? 0)));
+        }
+        clock.yaw = yaw;
+        clock.phase += dt * pace / (this.caste.cycleAt?.(clock.speed) ?? cycle) * Math.PI * 2;
+        clock.seen = now;
+        const moving = Math.min(1, pace / 2.2);
+        const attack = tier < 2 ? this.sampleAttack(a, i, b, next, tick) : undefined;
+        this.context.speed = rigged ? clock.speed : speed;
+        this.context.time = now / 1000;
+        this.context.seed = id * 1.37;
+        this.caste.pose(this.pose, moving, clock.phase, attack, this.context);
+        const reaction = Math.max(0, (this.reactions.get(id) ?? 0) - now) / 150;
+        const pose = this.pose;
+        // Yaw first, then pitch about the body's own lateral axis, then roll.
+        this.transform.rotation.order = 'YXZ';
+        if (rigged) {
+          this.transform.position.set(x, ground, z);
+          this.transform.rotation.set(0, yaw, 0);
+        } else {
+          this.transform.position.set(x, ground + pose.lift, z);
+          this.transform.rotation.set(pose.pitch - reaction * .12, yaw, pose.roll);
+        }
         this.transform.updateMatrix();
         const slot = mesh.count;
         mesh.setMatrixAt(slot, this.transform.matrix);
-        this.motions[tier].setXYZW(slot, clock.phase, tier < 2 ? moving : 0, id * 1.37, 0);
-        this.actions[tier].setXYZW(slot, this.pose.crouch, this.pose.tuck, this.pose.strike, this.pose.jaw);
-        const variation = .84 + (id % 9) * .02;
-        mesh.setColorAt(mesh.count++, this.tint.setRGB(variation + reaction, variation + reaction * .38, variation));
+        this.motions[tier].setXYZW(slot, clock.phase, tier < 2 || rigged ? moving : 0, id * 1.37, 0);
+        if (rigged) {
+          this.actions[tier].setXYZW(slot, reaction, pose.paw ?? 0, pose.strike, pose.jaw);
+          this.bodies[tier].setXYZW(slot, pose.pitch - reaction * .05, pose.roll, pose.lift - pose.crouch * this.caste.gait.drop, pose.surge ?? 0);
+          this.strides[tier].setXYZW(slot, pose.gallop ?? 0, pose.brace ?? 0, pose.tail ?? 0, pose.headYaw ?? 0);
+          mesh.count++;
+        } else {
+          this.actions[tier].setXYZW(slot, pose.crouch, pose.tuck, pose.strike, pose.jaw);
+          const variation = .84 + (id % 9) * .02;
+          mesh.setColorAt(mesh.count++, this.tint.setRGB(variation + reaction, variation + reaction * .38, variation));
+        }
         if (distance < shadow) shadows.add(x, z, yaw, this.caste.shadow[0], this.caste.shadow[1]);
         visible++;
       }
@@ -347,7 +491,7 @@ export class WarriorVisualLOD {
     this.visible = visible;
     for (const [tier, mesh] of this.meshes.entries()) {
       if (!mesh.count) continue;
-      for (const attribute of [this.motions[tier], this.actions[tier]]) {
+      for (const attribute of [this.motions[tier], this.actions[tier], ...(this.caste.rig ? [this.bodies[tier], this.strides[tier]] : [])]) {
         attribute.clearUpdateRanges();
         attribute.addUpdateRange(0, mesh.count * 4);
         attribute.needsUpdate = true;
@@ -355,9 +499,11 @@ export class WarriorVisualLOD {
       mesh.instanceMatrix.clearUpdateRanges();
       mesh.instanceMatrix.addUpdateRange(0, mesh.count * 16);
       mesh.instanceMatrix.needsUpdate = true;
-      mesh.instanceColor!.clearUpdateRanges();
-      mesh.instanceColor!.addUpdateRange(0, mesh.count * 3);
-      mesh.instanceColor!.needsUpdate = true;
+      if (mesh.instanceColor) {
+        mesh.instanceColor.clearUpdateRanges();
+        mesh.instanceColor.addUpdateRange(0, mesh.count * 3);
+        mesh.instanceColor.needsUpdate = true;
+      }
     }
   }
 }

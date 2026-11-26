@@ -20,7 +20,8 @@ export class VoiceBudget {
     for (const voice of this.voices) if (voice.until <= now) this.release(voice);
   }
 
-  reserve(now: number, owner: string, priority: number, seconds: number, cleanup: () => void): (() => void) | undefined {
+  reserve(now: number, owner: string, priority: number, seconds: number, cleanup: () => void,
+    perOwner: number = COMBAT.audio.maxVoicesPerShooter): (() => void) | undefined {
     this.prune(now);
     const limit = VOICE_LIMIT - (priority >= PRIORITY.alert ? 0 : priority >= PRIORITY.threat ? 2 : 6);
     let owned = 0;
@@ -29,7 +30,7 @@ export class VoiceBudget {
       if (voice.owner === owner) owned++;
       if (voice.priority < priority && (!weakest || voice.priority < weakest.priority)) weakest = voice;
     }
-    if (owned >= COMBAT.audio.maxVoicesPerShooter || (this.voices.size >= limit && !weakest)) {
+    if (owned >= perOwner || (this.voices.size >= limit && !weakest)) {
       this.dropped++;
       return;
     }

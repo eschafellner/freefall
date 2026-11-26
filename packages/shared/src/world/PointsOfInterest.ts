@@ -5,6 +5,7 @@
  * darstellt. Die Platzierung ist deterministisch aus dem Welt-Seed; die Beute hängt zusätzlich von der Schwierigkeit
  * ab und wird beim Einsatzstart vom Server erzeugt (`spawnPoiLoot`).
  */
+import { BALANCE } from '../balance/defaults.ts';
 import type { PositionXZ } from '../config/movement.ts';
 import type { Circle, Obstacle, WorldDefinition } from '../definitions/missions.ts';
 import type { SampleAmounts, SampleId } from '../definitions/resources.ts';
@@ -149,20 +150,12 @@ export interface PickupSnapshot extends PositionXZ {
 }
 
 /**
- * Beute je Schwierigkeitsstufe (Index = Stufe − 1). `spawn`: so viele Einheiten liegen auf der Karte, `limit`: so viele
- * darf der Trupp höchstens tragen und extrahieren. Artefakte: ein Fundort am prägnanten PoI, Limit = Fundmenge.
+ * Beute an den PoI aus `balance/data/loot.json` (im Balance-Editor unter „Versorgung & Beute“). Listen je Stufe:
+ * Index = Stufe − 1. `spawn`: so viele Einheiten liegen auf der Karte, `limit`: so viele darf der Trupp höchstens
+ * tragen und extrahieren. Artefakte: ein Fundort am prägnanten PoI, Limit = Fundmenge. `grant`: was eine Munitionsbox,
+ * ein Erste-Hilfe-Kasten oder eine Granatenkiste gibt.
  */
-export const POI_LOOT = {
-  tissue: { fromLevel: 1, perSite: [2, 7], spawn: [8, 12, 17, 22, 27, 32, 37], limit: [6, 10, 14, 18, 22, 26, 30] },
-  rock: { fromLevel: 4, perSite: [3, 6], spawn: [0, 0, 0, 8, 12, 15, 18], limit: [0, 0, 0, 6, 9, 12, 15] },
-  artifact: { fromLevel: 6, perSite: [2, 3] },
-  markChance: .15,
-  supplies: [2, 4],
-  /** Aufnahmereichweite in Metern. */
-  range: 1.8,
-  /** Munitionsbox: Magazine für die Primärwaffe; Erste-Hilfe-Kasten: Stims; Granatenkiste: Granaten bis zur Kapazität. */
-  grant: { primaryMagazines: 2, stims: 2, grenades: 4 },
-} as const;
+export const POI_LOOT = BALANCE.loot;
 
 const levelIndex = (level: number) => Math.max(0, Math.min(6, Math.round(level) - 1));
 

@@ -14,11 +14,11 @@
   "calibers": [
     { "id": "caliber.10mm", "displayName": "10 mm", "family": "pistol", "damage": 21.6, "projectilesPerShot": 1, "pelletSpreadDegrees": 0, "muzzleVelocity": 360, "penetration": 2, "falloff": { "startMeters": 48, "endMeters": 90, "minMultiplier": 0.6 } },
     { "id": "caliber.55", "displayName": ".55", "family": "pistol", "damage": 32, "projectilesPerShot": 1, "pelletSpreadDegrees": 0, "muzzleVelocity": 260, "penetration": 2, "falloff": { "startMeters": 30, "endMeters": 70, "minMultiplier": 0.5 } },
-    { "id": "caliber.5-55x39", "displayName": "5,55 × 39 mm", "family": "rifle", "damage": 24, "projectilesPerShot": 1, "pelletSpreadDegrees": 0, "muzzleVelocity": 900, "penetration": 3, "falloff": { "startMeters": 80, "endMeters": 160, "minMultiplier": 0.65 } },
-    { "id": "caliber.7-77x50", "displayName": "7,77 × 50 mm", "family": "rifle", "damage": 38, "projectilesPerShot": 1, "pelletSpreadDegrees": 0, "muzzleVelocity": 820, "penetration": 4, "falloff": { "startMeters": 110, "endMeters": 220, "minMultiplier": 0.7 } },
+    { "id": "caliber.5-55x39", "displayName": "5,55 × 39 mm", "family": "rifle", "damage": 24, "projectilesPerShot": 1, "pelletSpreadDegrees": 0, "muzzleVelocity": 900, "penetration": 2, "falloff": { "startMeters": 80, "endMeters": 160, "minMultiplier": 0.65 } },
+    { "id": "caliber.7-77x50", "displayName": "7,77 × 50 mm", "family": "rifle", "damage": 58, "projectilesPerShot": 1, "pelletSpreadDegrees": 0, "muzzleVelocity": 820, "penetration": 4, "falloff": { "startMeters": 110, "endMeters": 220, "minMultiplier": 0.7 } },
     { "id": "caliber.8-88x55", "displayName": "8,88 × 55 mm", "family": "rifle", "damage": 85, "projectilesPerShot": 1, "pelletSpreadDegrees": 0, "muzzleVelocity": 950, "penetration": 5, "falloff": { "startMeters": 250, "endMeters": 500, "minMultiplier": 0.8 } },
-    { "id": "caliber.13g", "displayName": "Kaliber 13", "family": "shotgun", "damage": 12, "projectilesPerShot": 8, "pelletSpreadDegrees": 2.6, "muzzleVelocity": 400, "penetration": 2, "falloff": { "startMeters": 12, "endMeters": 35, "minMultiplier": 0.2 } },
-    { "id": "caliber.21g", "displayName": "Kaliber 21", "family": "shotgun", "damage": 11, "projectilesPerShot": 6, "pelletSpreadDegrees": 2.2, "muzzleVelocity": 420, "penetration": 1, "falloff": { "startMeters": 14, "endMeters": 38, "minMultiplier": 0.25 } }
+    { "id": "caliber.13g", "displayName": "Kaliber 13", "family": "shotgun", "damage": 18, "projectilesPerShot": 12, "pelletSpreadDegrees": 2.6, "muzzleVelocity": 400, "penetration": 2, "falloff": { "startMeters": 12, "endMeters": 35, "minMultiplier": 0.2 } },
+    { "id": "caliber.21g", "displayName": "Kaliber 21", "family": "shotgun", "damage": 16, "projectilesPerShot": 10, "pelletSpreadDegrees": 2.2, "muzzleVelocity": 420, "penetration": 1, "falloff": { "startMeters": 14, "endMeters": 38, "minMultiplier": 0.25 } }
   ],
   "ammunition": [
     { "id": "ammo.10mm.fmj", "caliberId": "caliber.10mm", "displayName": "Vollmantel", "shortName": "VM", "damageType": "kinetic", "modifiers": [] },

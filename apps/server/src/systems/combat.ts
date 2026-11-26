@@ -184,11 +184,19 @@ export function updateReload(player: SimPlayer, tick: number, context?: CombatCo
         interruptReload(player, tick, context);
         return;
       }
-      // A chambered round stays in the weapon on a tactical reload (`feed.chamberRounds`).
-      const chambered = weapon.feed.chamberRounds && player.ammo > 0 ? 1 : 0;
-      const discarded = player.ammo - chambered;
-      gear.magazines[reload.slot]--;
-      player.ammo = weapon.magazineSize + chambered;
+      let discarded = 0;
+      if (weapon.feed.type === 'break') {
+        // Break action: the reserve counts loose rounds; every empty chamber is topped up, live rounds stay.
+        const loaded = Math.min(weapon.magazineSize - player.ammo, gear.magazines[reload.slot]);
+        gear.magazines[reload.slot] -= loaded;
+        player.ammo += loaded;
+      } else {
+        // A chambered round stays in the weapon on a tactical reload (`feed.chamberRounds`).
+        const chambered = weapon.feed.chamberRounds && player.ammo > 0 ? 1 : 0;
+        discarded = player.ammo - chambered;
+        gear.magazines[reload.slot]--;
+        player.ammo = weapon.magazineSize + chambered;
+      }
       reload.phase = 'MAGAZINE_INSERTION';
       reload.at = tick;
       if (context?.stats) {

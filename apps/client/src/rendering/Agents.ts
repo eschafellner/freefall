@@ -14,12 +14,23 @@ import type { SoldierPart } from './characters/SoldierRig.ts';
 import type { ContactShadows } from './ContactShadows.ts';
 import { createKestrel } from './weapons/Kestrel.ts';
 import { createCerberus } from './weapons/Cerberus.ts';
+import { MP99_HANDLING, createMp99 } from './weapons/Mp99.ts';
+import { VIKTOR55_HANDLING, createViktor55 } from './weapons/Viktor55.ts';
+import { KAIBAL50_HANDLING, createKaibal50 } from './weapons/Kaibal50.ts';
+import { CERBERUS_HANDLING } from './weapons/WeaponVisualController.ts';
+import type { PrimaryWeaponModel } from './characters/PlayerVisualController.ts';
 
 export class PlayerView {
   private readonly parts = createSoldierParts();
   private readonly rifle = createKestrel();
-  private readonly shotgun = createCerberus(this.rifle.finish);
-  private readonly models = TEAM_COLORS.map((color) => new PlayerVisualController(this.parts, this.rifle, color, true, this.shotgun));
+  /** Primary weapons besides the Kestrel; every operator model carries all of them and shows the selected one. */
+  private readonly primaries: readonly PrimaryWeaponModel[] = [
+    { weaponId: 'vx-13', parts: createCerberus(this.rifle.finish), profile: CERBERUS_HANDLING },
+    { weaponId: 'mp-99', parts: createMp99(this.rifle.finish), profile: MP99_HANDLING },
+    { weaponId: 'viktor-55', parts: createViktor55(this.rifle.finish), profile: VIKTOR55_HANDLING },
+    { weaponId: 'kaibal-50', parts: createKaibal50(this.rifle.finish), profile: KAIBAL50_HANDLING },
+  ];
+  private readonly models = TEAM_COLORS.map((color) => new PlayerVisualController(this.parts, this.rifle, color, true, this.primaries));
   private readonly batches: PlayerRigBatches;
   private disposed = false;
   private latest?: PlayersSnapshot;
@@ -149,7 +160,7 @@ export class PlayerView {
     }
     for (const part of [this.rifle.body, this.rifle.optic, this.rifle.magazine, this.rifle.pistol.body, this.rifle.pistol.optic, this.rifle.pistol.magazine]) part.dispose();
     this.rifle.pistol.slide?.dispose();
-    for (const part of [this.shotgun.body, this.shotgun.optic, this.shotgun.magazine, this.shotgun.slide]) part?.dispose();
+    for (const { parts } of this.primaries) for (const part of [parts.body, parts.optic, parts.magazine, parts.slide, parts.spent]) part?.dispose();
     for (const material of materials) material.dispose();
   }
 }

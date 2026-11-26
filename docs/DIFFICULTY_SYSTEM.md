@@ -33,3 +33,17 @@ Ab Normal mischt der Encounter Director die Kriegerkasten des Schwarms dazu. Die
 | 7 FREEFALL | 60 % | 35 % | 1,5 | 2,5 |
 
 Bei den Durchbruchskäfern gilt der ganzzahlige Teil immer und der Rest als Chance. 0,35 bedeutet also: Bei 35 % der Rufe kommt ein Käfer mit. Die Käfer eines Rufs schlüpfen aus dem neuen Durchbruchsnest oder aus dem verstärkten Nest. Nestwachen entstehen aus den ersten Spawns eines Nests und werden nicht nachproduziert. Wellen des Horden-Direktors und die Arena bleiben vorerst reine Schaben. Die Würfe nutzen einen eigenen Zufallsstrom. Deshalb verschieben sie die übrigen Spawnsequenzen nicht: Mit allen Anteilen auf 0 reproduziert jede Stufe ihre bisherigen Golden Traces exakt. [Jäger](enemies/JAEGER.md) · [Durchbruchskäfer](enemies/DURCHBRUCHSKAEFER.md)
+
+### Assaultbreaker
+
+Ab Schwer kommt der [Assaultbreaker](enemies/ASSAULTBREAKER.md) hinzu, zuerst selten, dann mit jeder Stufe häufiger. Er entsteht wie der Durchbruchskäfer als Nestwache oder mit einem Verstärkungsruf und hat Vorrang vor Käfern desselben Nests. Eine Obergrenze je Stufe begrenzt, wie viele gleichzeitig leben. Fällige Assaultbreaker über der Grenze warten im Nest, bis einer fällt.
+
+| Stufe | Je Verstärkungsruf | Wachen je Nest | Höchstens gleichzeitig |
+| ---: | ---: | ---: | ---: |
+| 1–3 | 0 | 0 | 0 |
+| 4 Schwer | 0,08 | 0,1 | 1 |
+| 5 Extrem | 0,15 | 0,2 | 2 |
+| 6 Albtraum | 0,25 | 0,35 | 2 |
+| 7 FREEFALL | 0,4 | 0,5 | 3 |
+
+Die Werte stehen in `difficulty.json` (`assaultBreakersPerReinforcement`, `assaultBreakerNestGuards`, `maxActiveAssaultBreakers`), der Archetyp in `swarm.json › castes.assaultBreakerArchetypeId`. Die Würfe nutzen einen eigenen Zufallsstrom. Jäger- und Käferwürfe bleiben dadurch auf jeder Stufe unverändert, und mit beiden Anteilen auf 0 reproduziert jede Stufe ihre bisherigen Golden Traces exakt.

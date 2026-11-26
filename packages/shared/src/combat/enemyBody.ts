@@ -27,6 +27,19 @@ export interface EnemyLeap extends EnemyAttackTiming {
   readonly arcHeight: number;
 }
 
+export interface EnemyCharge extends EnemyAttackTiming {
+  readonly minRange: number;
+  readonly maxRange: number;
+  readonly cooldownTicks: number;
+  /** Metres per tick while running. */
+  readonly step: number;
+  /** Maximum course correction per running tick (radians). */
+  readonly steer: number;
+  readonly contactHalfWidth: number;
+  readonly contactReach: number;
+  readonly damageMultiplier: number;
+}
+
 export interface EnemyHitZone {
   readonly id: string;
   readonly armorClass: number;
@@ -45,6 +58,7 @@ export interface EnemyTraits {
   readonly flank?: { readonly radius: number; readonly sideCos: number; readonly abortDistance: number; readonly abortAfterHitTicks: number };
   readonly melee: EnemyAttackTiming;
   readonly leap?: EnemyLeap;
+  readonly charge?: EnemyCharge;
   readonly vehicleTargets: 'all' | 'thrusters';
   readonly staggerImmune: boolean;
   /** True when the archetype has its own melee timing; others follow the replicated default (horde frame header). */
@@ -53,7 +67,8 @@ export interface EnemyTraits {
 
 export const ATTACK_MELEE = 0;
 export const ATTACK_LEAP = 1;
-export type AttackKind = typeof ATTACK_MELEE | typeof ATTACK_LEAP;
+export const ATTACK_CHARGE = 2;
+export type AttackKind = typeof ATTACK_MELEE | typeof ATTACK_LEAP | typeof ATTACK_CHARGE;
 
 export function attackDuration(timing: EnemyAttackTiming): number {
   return timing.windupTicks + timing.flightTicks + timing.activeTicks + timing.recoveryTicks;
@@ -77,6 +92,7 @@ function traitsOf(archetype: EnemyArchetype, registry: BalanceRegistry): EnemyTr
   const base = archetype.attack ?? registry.swarm.meleeAttack;
   const groundRadius = archetype.groundRadius ?? DEFAULT_ENEMY_GROUND_RADIUS;
   const leap = archetype.leap;
+  const charge = archetype.charge;
   return Object.freeze({
     groundRadius,
     size: groundRadius / DEFAULT_ENEMY_GROUND_RADIUS,
@@ -93,6 +109,12 @@ function traitsOf(archetype: EnemyArchetype, registry: BalanceRegistry): EnemyTr
       windupTicks: leap.windupTicks, flightTicks: leap.flightTicks, activeTicks: base.activeTicks, recoveryTicks: leap.recoveryTicks,
       halfAngleDegrees: base.halfAngleDegrees, minRange: leap.minRange, maxRange: leap.maxRange,
       cooldownTicks: Math.ceil(leap.cooldownSeconds * SIMULATION_HZ), arcHeight: leap.arcHeight }) }),
+    ...(charge && { charge: Object.freeze({
+      windupTicks: charge.windupTicks, flightTicks: charge.runTicks, activeTicks: base.activeTicks, recoveryTicks: charge.recoveryTicks,
+      halfAngleDegrees: base.halfAngleDegrees, minRange: charge.minRange, maxRange: charge.maxRange,
+      cooldownTicks: Math.ceil(charge.cooldownSeconds * SIMULATION_HZ), step: charge.speed / SIMULATION_HZ,
+      steer: charge.steerDegreesPerSecond * Math.PI / 180 / SIMULATION_HZ, contactHalfWidth: charge.contactHalfWidth,
+      contactReach: charge.contactReach, damageMultiplier: charge.damageMultiplier }) }),
     vehicleTargets: archetype.vehicleTargets ?? 'all',
     staggerImmune: archetype.staggerImmune ?? false,
     ownTiming: !!archetype.attack,
@@ -106,22 +128,23 @@ export function enemyTraits(registry: BalanceRegistry): readonly EnemyTraits[] {
 
 export const ENEMY_TRAITS = enemyTraits(BALANCE);
 
-/** Timing of an attack kind for a wire type (leap falls back to melee for archetypes without a leap). */
+/** Timing of an attack kind for a wire type (leap and charge fall back to melee for archetypes without them). */
 export function enemyAttackTiming(type: number, kind: number, traits: readonly EnemyTraits[] = ENEMY_TRAITS): EnemyAttackTiming {
   const entry = traits[type] ?? traits[0];
-  return kind === ATTACK_LEAP && entry.leap ? entry.leap : entry.melee;
+  if (kind === ATTACK_LEAP && entry.leap) return entry.leap;
+  return kind === ATTACK_CHARGE && entry.charge ? entry.charge : entry.melee;
 }
 
 /**
  * Timing of a replicated attack: the frame header (default melee timing sent by the server) for archetypes without
- * their own timing, the registry timing for leaps and archetypes with an `attack` block.
+ * their own timing, the registry timing for leaps, charges and archetypes with an `attack` block.
  */
 export function replicatedAttackTiming(frame: { readonly type: ArrayLike<number>; readonly attackKind: ArrayLike<number>;
   readonly windupTicks: number; readonly activeTicks: number; readonly recoveryTicks: number }, index: number,
   traits: readonly EnemyTraits[] = ENEMY_TRAITS): EnemyAttackTiming {
   const type = frame.type[index], kind = frame.attackKind[index];
   const entry = traits[type] ?? traits[0];
-  if (kind === ATTACK_LEAP || entry.ownTiming || !frame.windupTicks) return enemyAttackTiming(type, kind, traits);
+  if (kind !== ATTACK_MELEE || entry.ownTiming || !frame.windupTicks) return enemyAttackTiming(type, kind, traits);
   return { windupTicks: frame.windupTicks, flightTicks: 0, activeTicks: frame.activeTicks, recoveryTicks: frame.recoveryTicks,
     halfAngleDegrees: entry.melee.halfAngleDegrees };
 }
@@ -129,7 +152,10 @@ export function replicatedAttackTiming(frame: { readonly type: ArrayLike<number>
 /** Longest attack of any archetype: the upper bound for a replicated attack age. */
 export function maxAttackTicks(traits: readonly EnemyTraits[] = ENEMY_TRAITS): number {
   let longest = 0;
-  for (const entry of traits) longest = Math.max(longest, attackDuration(entry.melee), entry.leap ? attackDuration(entry.leap) : 0);
+  for (const entry of traits) {
+    longest = Math.max(longest, attackDuration(entry.melee), entry.leap ? attackDuration(entry.leap) : 0,
+      entry.charge ? attackDuration(entry.charge) : 0);
+  }
   return longest;
 }
 

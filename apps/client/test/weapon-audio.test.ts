@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { BALANCE, newPosture } from '@freefall/shared';
+import { BALANCE, COMBAT, newPosture } from '@freefall/shared';
 import type { PlayerState, ReloadState } from '@freefall/shared';
 import { AudioAssets } from '../src/audio/AudioAssets.ts';
 import { AudioEngine } from '../src/audio/AudioEngine.ts';
@@ -26,7 +26,8 @@ test('each registered operator weapon has an auditable sample bank within the su
   for (const weapon of BALANCE.weapons.values()) {
     const bank = WEAPON_RECORDINGS[weapon.sounds.fire];
     const maxDuration = Math.max(...[...bank.near, bank.distant].map((id) => masters.find((asset) => asset.id === id)!.seconds));
-    assert.ok(maxDuration / (.98 * (bank.pitch ?? 1)) + .115 + .025 < 4 / weapon.roundsPerSecond, weapon.id);
+    const voices = bank.voices ?? COMBAT.audio.maxVoicesPerShooter;
+    assert.ok(maxDuration / (.98 * (bank.pitch ?? 1)) + .115 + .025 < voices / weapon.roundsPerSecond, weapon.id);
     assert.notEqual(bank.near[0], bank.near[1]);
   }
 });

@@ -1,6 +1,6 @@
 import type { Obstacle, WorldDefinition } from '../definitions/missions.ts';
 import type { ImpactNormal } from '../contracts/messages.ts';
-import { CARRIER_WORLD } from '../definitions/deployment.ts';
+import { CARRIER_WORLD } from '../definitions/carrier.ts';
 import { ICE_ID } from './PlanetProfiles.ts';
 import { dominantTerrainFinish } from './PlanetSurfaces.ts';
 import type { SurfaceFinish } from './PlanetSurfaces.ts';

@@ -1,0 +1,9 @@
+{
+  "range": 1.8,
+  "supplies": [2, 4],
+  "grant": { "primaryMagazines": 2, "stims": 2, "grenades": 4 },
+  "markChance": 0.15,
+  "tissue": { "fromLevel": 1, "perSite": [2, 7], "spawn": [8, 12, 17, 22, 27, 32, 37], "limit": [6, 10, 14, 18, 22, 26, 30] },
+  "rock": { "fromLevel": 4, "perSite": [3, 6], "spawn": [0, 0, 0, 8, 12, 15, 18], "limit": [0, 0, 0, 6, 9, 12, 15] },
+  "artifact": { "fromLevel": 6, "perSite": [2, 3] }
+}

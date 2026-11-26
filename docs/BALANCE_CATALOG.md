@@ -2,7 +2,7 @@
 
 Bestandsaufnahme der Gameplay-Werte nach Milestone 7.2A, fortgeschrieben für 7.2B (geänderte Werte sind markiert, Details in [COMBAT_BALANCE_7_2B](COMBAT_BALANCE_7_2B.md)). Alle Pfade beziehen sich auf `packages/shared/src/balance/data/`. Die Spalte „Vorher“ nennt die Stelle, an der der Wert bis 7.1 fest codiert war. Alle Werte wurden 1:1 übernommen. [Architektur](BALANCE_ARCHITECTURE.md) · [Workflow](BALANCE_WORKFLOW.md)
 
-Aktuelle Version: Release `8.1A`, Schema 3. Den Hash zeigt `npm run balance:check`. Kaliber, Munition und Panzerklassen: [AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md). VX-13 Cerberus, Zuführung (`feed`) und frei wählbares Loadout: [LOADOUT_SYSTEM](LOADOUT_SYSTEM.md). Die Tabelle unten beschreibt das Standard-Loadout.
+Aktuelle Version: Release `8.2C`, Schema 5 (8.2C: Munitionswerte, siehe [AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md); 8.2B: Zuführung `break`, Kategorien `double-barrel` und `submachine-gun`, Tonprofile `double`, `smg`, `smg-heavy`; 8.1B: `loot.json`, `weapons[].magazineVariants`). Den Hash zeigt `npm run balance:check`. Kaliber, Munition und Panzerklassen: [AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md). VX-13 Cerberus, Zuführung (`feed`) und frei wählbares Loadout: [LOADOUT_SYSTEM](LOADOUT_SYSTEM.md). MP-99 und Viktor 55: [SUBMACHINE_GUNS](SUBMACHINE_GUNS.md). Kaibal 50 und Kipplauf: [KAIBAL_50](KAIBAL_50.md). Die Tabelle unten beschreibt das Standard-Loadout.
 
 ## Waffen (`weapons.json`)
 
@@ -10,7 +10,7 @@ Aktuelle Version: Release `8.1A`, Schema 3. Den Hash zeigt `npm run balance:chec
 | --- | ---: | ---: | --- |
 | Slot / Kategorie | primary / assault-rifle | secondary / pistol | `definitions/combat.ts` |
 | Schaden (seit 8.0A aus `caliberId` × `ballistics.damageMultiplier`) | 24 (5,55 × 39 mm, × 1) | **21,6** (10 mm, × 1; 7.2A: 18, × 1,2) | `combat.ts` (`TEST_RIFLE`, `SERVICE_PISTOL`) |
-| `defaultAmmoId` / Durchschlag | `ammo.5-55x39.fmj` / 3 Mittel | `ammo.10mm.fmj` / 2 Niedrig | neu in 8.0A |
+| `defaultAmmoId` / Durchschlag | `ammo.5-55x39.fmj` / **2 Niedrig** (bis 8.2B: 3 Mittel) | `ammo.10mm.fmj` / 2 Niedrig | neu in 8.0A |
 | `roundsPerSecond` (Feuerintervall) | 10 (3 Ticks) | 4 (7,5 Ticks: abwechselnd 8 und 7) | `combat.ts`. Gebrochenes Intervall (`fireInterval`, `nextShotAt`), Dauerfeuer erreicht im Mittel genau `roundsPerSecond`. Server und Client-Recoil-Vorhersage nutzen dieselbe Funktion |
 | `magazineSize` | **45** (7.2A: 30) | 12 | `combat.ts` |
 | `reserve` / `maxReserve` | **8 / 8** (7.2A: unbegrenzt) | **4 / 4 ganze Magazine** (7.2A: 48 lose Patronen) | taktisches Nachladen, [TACTICAL_RELOADING](TACTICAL_RELOADING.md) |
@@ -27,6 +27,7 @@ Aktuelle Version: Release `8.1A`, Schema 3. Den Hash zeigt `npm run balance:chec
 | `assets.visual` | `weapon.kestrel-ar-01` | `weapon.p-01` | `combat.ts` (`visualAssetId`) |
 | `sounds.fire` | `rifle` | `pistol` | Slot-Abfrage in `game/Game.ts` |
 | `attachmentSlots` | – | – | nicht vorhanden |
+| `magazineVariants` (klein, erweitert, Trommel) | – | – | neu in 8.1B, vorbereitet, im Spiel noch nicht wählbar ([Workflow](BALANCE_WORKFLOW.md#magazinvarianten-vorbereitet)) |
 
 ## Ausrüstung (`equipment.json`)
 
@@ -57,9 +58,23 @@ Aktuelle Version: Release `8.1A`, Schema 3. Den Hash zeigt `npm run balance:chec
 | `damagePolicy.operatorToOperator` / `selfDamage` / `operatorToConvict` | 0,3 / 0,3 / 0,3 |
 | `damagePolicy.explosionsDamageOperators` | `true` |
 | `operatorHitbox.radius` / `height` | 0,42 m / 1,85 m |
-| `audio.*` | Stimmenlimit 28 (4 pro Quelle), Hörweite 150 m, Fern-Überblendung 22–95 m, Limiter −6 dB, Profile je Waffe und Umgebung, [WEAPON_AUDIO](WEAPON_AUDIO.md) |
+| `audio.*` | Stimmenlimit 28 (4 pro Quelle, Maschinenpistolen 8), Hörweite 150 m, Fern-Überblendung 22–95 m, Limiter −6 dB, Profile je Waffe und Umgebung, [WEAPON_AUDIO](WEAPON_AUDIO.md) |
 
 Albatross-Nachschubcontainer stehen in `structures.json › vehicles[0].supplyContainers` (Seite, Seriennummer, Montagepunkt, 4 Ladungen, 420 HP).
+
+## Beute an Points of Interest (`loot.json`, neu in 8.1B)
+
+Bis 8.1A fest codiert als `POI_LOOT` in `world/PointsOfInterest.ts`. Werte 1:1 übernommen, `POI_LOOT` verweist jetzt auf `BALANCE.loot`. Details: [POINTS_OF_INTEREST](POINTS_OF_INTEREST.md#beute).
+
+| Wert | Aktuell |
+| --- | ---: |
+| `supplies` (Vorratskisten je PoI) | 2–4 |
+| `grant.primaryMagazines` (Munitionsbox) | 2 Magazine der Primärwaffe |
+| `grant.stims` (Erste-Hilfe-Kasten) | 2 Stims |
+| `grant.grenades` (Granatenkiste) | 4 Granaten, gekappt an der Kapazität |
+| `range` (Aufnahmereichweite) | 1,8 m |
+| `markChance` | 0,15 je PoI |
+| `tissue` / `rock` / `artifact` | ab Stufe 1 / 4 / 6, Mengen je Stufe siehe POINTS_OF_INTEREST |
 
 ## Operator (`operators.json`)
 

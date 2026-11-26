@@ -199,9 +199,9 @@ export class AudioEngine {
     for (const bus of BUSES) this.buses[bus].gain.setTargetAtTime(this.settings[bus] ** 2, now, .03);
   }
 
-  reserve(owner: string, seconds: number, priority: number, cleanup: () => void): (() => void) | undefined {
+  reserve(owner: string, seconds: number, priority: number, cleanup: () => void, perOwner?: number): (() => void) | undefined {
     if (!this.running) return;
-    const release = this.budget.reserve(this.context!.currentTime, owner, priority, seconds, cleanup);
+    const release = this.budget.reserve(this.context!.currentTime, owner, priority, seconds, cleanup, perOwner);
     if (release) this.played++;
     return release;
   }

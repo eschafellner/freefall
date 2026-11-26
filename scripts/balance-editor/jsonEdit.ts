@@ -14,9 +14,23 @@ export interface Span {
   readonly end: number;
 }
 
-export interface LeafEdit {
+/** Replaces the value at `path`: a scalar by a scalar, or a list by a list (formatted like the file). */
+export interface JsonEdit {
   readonly path: JsonPath;
-  readonly value: JsonScalar;
+  readonly value: unknown;
+}
+
+/**
+ * One difference between two JSON documents:
+ *   - `value`: a scalar changed,
+ *   - `list`: a list changed its length (entries added or removed); `before`/`after` are the whole lists,
+ *   - `structure`: anything else (keys added or removed, a type changed). The editor refuses those.
+ */
+export interface JsonChange {
+  readonly path: JsonPath;
+  readonly kind: 'value' | 'list' | 'structure';
+  readonly before: unknown;
+  readonly after: unknown;
 }
 
 export const pathKey = (path: JsonPath): string => JSON.stringify(path);
@@ -103,21 +117,69 @@ export function setAt(root: unknown, path: JsonPath, value: unknown): void {
   (parent as Record<string | number, unknown>)[path[path.length - 1]!] = value;
 }
 
+export function diffJson(before: unknown, after: unknown, path: JsonPath = [], out: JsonChange[] = []): JsonChange[] {
+  if (isScalar(before) || isScalar(after)) {
+    if (before !== after) out.push({ path, kind: isScalar(before) && isScalar(after) ? 'value' : 'structure', before, after });
+  } else if (Array.isArray(before) !== Array.isArray(after)) {
+    out.push({ path, kind: 'structure', before, after });
+  } else if (Array.isArray(before) && Array.isArray(after)) {
+    if (before.length !== after.length) out.push({ path, kind: 'list', before, after });
+    else before.forEach((entry, index) => diffJson(entry, after[index], [...path, index], out));
+  } else {
+    const a = before as Record<string, unknown>, b = after as Record<string, unknown>;
+    const keys = Object.keys(a);
+    if (keys.length !== Object.keys(b).length || keys.some((key) => !(key in b))) out.push({ path, kind: 'structure', before, after });
+    else for (const key of keys) diffJson(a[key], b[key], [...path, key], out);
+  }
+  return out;
+}
+
 /**
- * Replaces the text of existing scalar values. Every other byte of `text` stays unchanged. Throws if a path does not
- * name an existing scalar, so structural changes can never slip through.
+ * Serializes like the hand-written balance files: two-space indentation, lists of numbers and small flat objects on
+ * one line. `indent` is the indentation of the line the value starts on.
  */
-export function applyLeafEdits(text: string, edits: readonly LeafEdit[]): string {
+export function formatJson(value: unknown, indent = ''): string {
+  if (isScalar(value)) return JSON.stringify(value);
+  const inner = `${indent}  `;
+  if (Array.isArray(value)) {
+    if (!value.length) return '[]';
+    if (value.every(isScalar)) return `[${value.map((entry) => JSON.stringify(entry)).join(', ')}]`;
+    return `[\n${value.map((entry) => inner + formatJson(entry, inner)).join(',\n')}\n${indent}]`;
+  }
+  const entries = Object.entries(value as Record<string, unknown>);
+  if (!entries.length) return '{}';
+  if (entries.every(([, entry]) => isScalar(entry))) {
+    const flat = `{ ${entries.map(([key, entry]) => `${JSON.stringify(key)}: ${JSON.stringify(entry)}`).join(', ')} }`;
+    if (indent.length + flat.length <= 110) return flat;
+  }
+  return `{\n${entries.map(([key, entry]) => `${inner}${JSON.stringify(key)}: ${formatJson(entry, inner)}`).join(',\n')}\n${indent}}`;
+}
+
+/**
+ * Replaces values in `text`. Every other byte stays unchanged. A scalar may only replace a scalar and a list only a
+ * list, so keys can never be added or removed this way.
+ */
+export function applyJsonEdits(text: string, edits: readonly JsonEdit[]): string {
   const spans = valueSpans(text);
   const replacements = edits.map(({ path, value }) => {
     const span = spans.get(pathKey(path));
     if (!span) throw new Error(`Pfad ${pathKey(path)} existiert nicht`);
-    if ('{['.includes(text[span.start]!)) throw new Error(`Pfad ${pathKey(path)} ist kein Einzelwert`);
+    const opening = text[span.start]!;
+    if (Array.isArray(value)) {
+      if (opening !== '[') throw new Error(`Pfad ${pathKey(path)} ist keine Liste`);
+      const lineStart = text.lastIndexOf('\n', span.start - 1) + 1;
+      const indent = /^[ \t]*/.exec(text.slice(lineStart, span.start))![0];
+      return { ...span, text: formatJson(value, indent) };
+    }
+    if ('{['.includes(opening)) throw new Error(`Pfad ${pathKey(path)} ist kein Einzelwert`);
     if (!isScalar(value) || (typeof value === 'number' && !Number.isFinite(value))) {
       throw new Error(`Pfad ${pathKey(path)}: ungültiger Wert ${String(value)}`);
     }
     return { ...span, text: JSON.stringify(value) };
   }).sort((a, b) => b.start - a.start);
+  for (let i = 1; i < replacements.length; i++) {
+    if (replacements[i]!.end > replacements[i - 1]!.start) throw new Error('Überlappende Änderungen');
+  }
   let result = text;
   for (const { start, end, text: replacement } of replacements) result = result.slice(0, start) + replacement + result.slice(end);
   return result;

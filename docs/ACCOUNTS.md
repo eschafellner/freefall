@@ -78,7 +78,7 @@ Das Register liegt in `packages/shared/src/definitions/unlocks.ts` (`UNLOCKS`). 
 | --- | --- |
 | `starter` | Grundausstattung, jeder Account besitzt sie. Heute: Kestrel AR-01, P-01, Sprenggranate, Heilstim. |
 | `level` | Automatisch, sobald Level und Voraussetzungen erfüllt sind. Der Raum vergibt sie direkt nach der Einsatzabrechnung und meldet sie im Ergebnisbildschirm. |
-| `choice` | Der Spieler schaltet sie im **Arsenal** selbst frei, sobald Level und Voraussetzungen erfüllt sind, und bezahlt den Preis ([Ressourcen](RESOURCES.md)). Heute: VX-13 Cerberus ab Level 2 für 3.000 SKR. |
+| `choice` | Der Spieler schaltet sie im **Arsenal** selbst frei, sobald Level und Voraussetzungen erfüllt sind, und bezahlt den Preis ([Ressourcen](RESOURCES.md)). Heute: VX-13 Cerberus ab Level 2 für 3.000 SKR, MP-99 ab Level 5 für 4.500 SKR, Viktor 55 ab Level 7 für 6.000 SKR, Kaibal 50 ab Level 8 für 3.000 SKR. |
 
 Regeln, die `createUnlockRegistry` beim Laden prüft: IDs sind eindeutig, Voraussetzungen stehen weiter oben (keine Zyklen), und die Grundausstattung hat keine Bedingungen. Ein Test prüft zusätzlich die Verweise auf Waffen und Attachment-Slots. IDs werden nie umbenannt oder neu vergeben. Entfernte Einträge bleiben in `account_unlocks` stehen und werden ignoriert.
 

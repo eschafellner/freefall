@@ -21,16 +21,19 @@ npm run typecheck && npm run build
 npm run balance:edit   # dann http://localhost:5180 öffnen, beenden mit Strg+C
 ```
 
-Ein lokales Werkzeug, mit dem man Waffen, Kaliber, Munition, Panzerklassen und Gegner zentral ansehen und bearbeiten kann. Es läuft nur auf `127.0.0.1` und gehört nicht zum Spiel-Build oder Deployment. Code: `scripts/balance-editor/`.
+Ein lokales Werkzeug, mit dem man Waffen, Magazinvarianten, Kaliber, Munition, Panzerklassen, Gegner, Vorratskisten und PoI-Beute zentral ansehen und bearbeiten kann. Es läuft nur auf `127.0.0.1` und gehört nicht zum Spiel-Build oder Deployment. Code: `scripts/balance-editor/`.
 
 - **Tabs:**
   - **Waffen**, **Kaliber & Munition** und **Gegner** zeigen die wichtigsten Werte als Tabelle. ▸ klappt einen Eintrag auf und zeigt alle Felder (Rückstoß, Streuung, Trefferzonen, Angriffe …).
-  - **Analyse** zeigt Schüsse und Zeit bis zum Kill für jede Waffe gegen jede Panzerklasse jedes Gegners, Gegner-HP je Schwierigkeitsgrad sowie DPS und Magazinschaden je Munition.
+  - **Waffen › Magazinvarianten:** kleines, erweitertes und Trommelmagazin je Waffe anlegen, ändern und entfernen, mit Modifikatoren wie längerer Nachladezeit (siehe [Magazinvarianten](#magazinvarianten-vorbereitet)).
+  - **Versorgung & Beute:** Munitionsbox, Erste-Hilfe-Kasten und Granatenkiste an PoI, Albatross-Nachschub und Container, Heilstims, Granatenkapazität sowie Proben, Artefakte und Marks je Schwierigkeitsstufe. Eine Tabelle zeigt, wie viel Schuss jede Kiste je Waffe bringt.
+  - **Analyse** zeigt Schüsse und Zeit bis zum Kill für jede Waffe (optional je Munition und Magazinvariante) gegen jede Panzerklasse jedes Gegners, Gegner-HP je Schwierigkeitsgrad sowie DPS, Gesamtmunition und Magazinschaden.
 - **Abgeleitete Werte** (blaue Spalten) kommen aus dem Resolver und den gemeinsamen Schadensregeln (`combat/ballistics.ts`). Sie gelten für die Schwierigkeit und Distanz oben rechts. Gelbe Zahlen zeigen die Abweichung vom gespeicherten Stand.
 - **Prüfung:** Jede Änderung läuft durch dieselbe Validierung wie `balance:check`. Fehler erscheinen unten rechts und am betroffenen Feld. Ungültige Stände lassen sich nicht speichern.
 - **Speichern** (oder Strg+S) zeigt alle Änderungen als „alt → neu“ und schlägt ein neues Release-Label für `manifest.json` vor. Geschrieben wird nur der Text der geänderten Werte. Formatierung und Feldreihenfolge bleiben erhalten, der Git-Diff enthält also nur echte Wertänderungen.
 - **Schreibschutz:**
-  - `id`, `wireType` und `protected` lassen sich nur direkt in der Datei ändern, ebenso neue Einträge oder Felder.
+  - `id`, `wireType` und `protected` lassen sich nur direkt in der Datei ändern.
+  - Einträge anlegen oder entfernen geht im Editor nur bei Magazinvarianten und ihren Modifikatoren. Neue Waffen, Gegner oder Felder werden in den Dateien angelegt.
   - Gegner mit `protected: true` (die Schabe) sind nur lesbar.
 - **Externe Änderungen:** Ändert jemand die Dateien, während der Editor offen ist, erscheint ein Hinweis. „Neu laden“ übernimmt den neuen Stand und behält die eigenen, noch nicht gespeicherten Änderungen.
 - **Näherungen der Kill-Zeiten:**
@@ -41,13 +44,47 @@ Ein lokales Werkzeug, mit dem man Waffen, Kaliber, Munition, Panzerklassen und G
 
 Nach dem Speichern gilt der übliche Ablauf: `npm test`, bei gewollten Änderungen die Golden Traces mit `npm run balance:trace` erneuern, Server neu starten. Mit `BALANCE_EDITOR_DATA=<Ordner>` arbeitet der Editor auf einer Kopie des Datenordners, `BALANCE_EDITOR_PORT` ändert den Port.
 
+## Magazinvarianten (vorbereitet)
+
+Seit 8.1B kann jede Waffe mit Magazin-Zuführung neben ihrem Standardmagazin (`magazineSize`) Varianten in `weapons.json › weapons[].magazineVariants` haben:
+
+```json
+"magazineVariants": [
+  {
+    "type": "drum",
+    "displayName": "Trommelmagazin",
+    "magazineSize": 100,
+    "modifiers": [
+      { "stat": "reloadSeconds", "operation": "multiply", "value": 1.4 },
+      { "stat": "reserve", "operation": "add", "value": -4 }
+    ]
+  }
+]
+```
+
+- **Typen:** `compact` (kleines Magazin), `extended` (erweitert), `drum` (Trommel), je höchstens einmal je Waffe.
+- **Prüfregeln:**
+  - Das kleine Magazin fasst weniger als das Standardmagazin, die beiden anderen mehr.
+  - Die Trommel fasst mehr als das erweiterte Magazin.
+  - Einzelpatronen-Waffen (VX-13) und Kipplaufwaffen (Kaibal 50) haben keine Varianten.
+- **Wirkung:** Die Größe ersetzt `magazineSize`. Die Modifikatoren wirken auf der Ebene `equipment`. Erlaubt sind `reserve`, `maxReserve`, `reloadSeconds`, `roundsPerSecond`, `recoilPitch`, `recoilYaw`, `spreadHip` und `spreadAim`.
+- **Reserve:** `reserve` zählt weiter ganze Magazine. Ein Trommelmagazin erhöht die Gesamtmunition deshalb stark, außer ein Modifikator senkt die Reserve. Der Editor zeigt das in der Spalte „Schuss gesamt“.
+- **Auflösen:** `resolveWeapon(registry, id, ammoId, magazineModifiers(weapon, 'drum'))` liefert die effektive Waffe mit diesem Magazin. Die Registry löst beim Laden jede Variante einmal auf, ungültige Werte fallen also sofort auf.
+- **Noch offen fürs Spiel:**
+  - Auswahl im Carrier (Loadout-Auswahl, Freischaltung und Preis)
+  - Übertragung der Wahl an den Server
+  - Anzeige im HUD
+
+  Bis dahin nutzen Server und Client immer das Standardmagazin.
+
 ## Wo Werte geändert werden
 
 | Thema | Datei |
 | --- | --- |
-| Feuerrate, Magazin, Reserve, Nachladen, Reichweite, Kaliber und Lauf-Faktoren | `weapons.json` |
+| Feuerrate, Magazin, Reserve, Nachladen, Reichweite, Kaliber und Lauf-Faktoren, Magazinvarianten | `weapons.json` |
 | Kaliber (Schaden, Durchschlag, Abfall), Munitionssorten, Panzerklassen, Restschaden | `ammunition.json` ([AMMUNITION_SYSTEM](AMMUNITION_SYSTEM.md)) |
-| Granaten, Heilstims, Loadout, Waffenwechsel, Nachschub | `equipment.json` |
+| Granaten, Heilstims, Loadout, Waffenwechsel, Albatross-Nachschub | `equipment.json` |
+| Munitionsboxen, Erste-Hilfe-Kästen, Granatenkisten, Proben und Marks an PoI | `loot.json` |
 | Operator-HP, Lauf- und Sprinttempo, Respawn | `operators.json` |
 | Schabe und weitere Archetypen, Fraktionen | `enemies.json` |
 | Nester, Albatross | `structures.json` |

@@ -11,7 +11,7 @@ import type { Infer } from './schema.ts';
 const MOVEMENT_7_2B = 'waffenabhängige Laufgeschwindigkeit ist noch nicht in Server und Prediction verdrahtet';
 
 export const manifestSchema = obj({
-  schemaVersion: oneOf([3] as const),
+  schemaVersion: oneOf([5] as const),
   release: str(),
   description: str(),
 });
@@ -25,7 +25,16 @@ export const AMMO_MODIFIABLE_STATS = [
   'damage', 'penetration', 'muzzleVelocity', 'roundsPerSecond', 'recoilPitch', 'recoilYaw', 'spreadHip', 'spreadAim', 'pelletSpread',
 ] as const;
 
+/** Magazines a magazine-fed weapon can offer besides its standard magazine (`magazineSize`). */
+export const MAGAZINE_VARIANT_TYPES = ['compact', 'extended', 'drum'] as const;
+export type MagazineVariantType = (typeof MAGAZINE_VARIANT_TYPES)[number];
+/** Weapon stats a magazine variant may change besides its size (stat key `weapon.<id>.<stat>`, layer `equipment`). */
+export const MAGAZINE_MODIFIABLE_STATS = [
+  'reserve', 'maxReserve', 'reloadSeconds', 'roundsPerSecond', 'recoilPitch', 'recoilYaw', 'spreadHip', 'spreadAim',
+] as const;
+
 const armorClass = () => count({ min: 1, max: ARMOR_CLASS_COUNT });
+const modifierOperation = () => oneOf(['add', 'multiply', 'divide'] as const);
 
 export const caliberSchema = obj({
   id: id(),
@@ -78,10 +87,23 @@ export const ammunitionSchema = obj({
   ammunition: arr(ammoSchema, { min: 1 }),
 });
 
+/**
+ * Alternative magazine of a magazine-fed weapon (small, extended, drum). The standard magazine is the weapon's own
+ * `magazineSize`. Prepared data: editor and validation know the variants, Carrier and simulation do not offer them yet.
+ */
+export const magazineVariantSchema = obj({
+  type: oneOf(MAGAZINE_VARIANT_TYPES),
+  displayName: str(),
+  /** Rounds per magazine with this variant. Replaces `magazineSize`; `reserve` keeps counting magazines. */
+  magazineSize: count({ min: 1, max: 500 }),
+  /** Further effects on the `equipment` layer, e.g. a slower reload for the drum or fewer spare magazines. */
+  modifiers: arr(obj({ stat: oneOf(MAGAZINE_MODIFIABLE_STATS), operation: modifierOperation(), value: num() })),
+});
+
 export const weaponSchema = obj({
   id: id(),
   displayName: str(),
-  category: oneOf(['assault-rifle', 'pistol', 'shotgun'] as const),
+  category: oneOf(['assault-rifle', 'submachine-gun', 'double-barrel', 'pistol', 'shotgun'] as const),
   slot: oneOf(['primary', 'secondary'] as const),
   /** Defines damage, penetration, velocity, falloff and the usable ammunition (`ammunition.json`). */
   caliberId: id(),
@@ -101,10 +123,16 @@ export const weaponSchema = obj({
    *   - `magazine`: `reserve` counts full spare magazines; a reload swaps the magazine, the rest is discarded.
    *   - `single`: `reserve` counts loose rounds; a reload inserts one round per `reloadSeconds` cycle until the
    *     weapon is full, the reserve is empty or the operator fires (fire input ends the reload between rounds).
+   *   - `break`: break action (Kipplauf), one chamber per barrel (`magazineSize` = barrels). `reserve` counts loose
+   *     rounds; one reload opens the action and tops every empty chamber up at `insertionAt`, nothing is discarded.
    * `chamberRounds` (0 or 1): one extra round in the chamber on top of `magazineSize`.
    */
   feed: either(
-    obj({ type: oneOf(['magazine'] as const), chamberRounds: count({ max: 1 }) }),
+    either(
+      obj({ type: oneOf(['magazine'] as const), chamberRounds: count({ max: 1 }) }),
+      obj({ type: oneOf(['break'] as const) }),
+      'feed: { type: "magazine", chamberRounds } oder { type: "break" } erwartet',
+    ),
     obj({
       type: oneOf(['single'] as const), chamberRounds: count({ max: 1 }),
       /** Raising the weapon to the loading port before the first round. */
@@ -112,9 +140,9 @@ export const weaponSchema = obj({
       /** Empty weapon: the first round goes straight into the chamber and takes this long instead of `reloadSeconds`. */
       chamberSeconds: positive({ max: 5 }),
     }),
-    'feed: { type: "magazine", chamberRounds } oder { type: "single", chamberRounds, startSeconds, chamberSeconds } erwartet',
+    'feed: { type: "magazine", chamberRounds }, { type: "break" } oder { type: "single", chamberRounds, startSeconds, chamberSeconds } erwartet',
   ),
-  /** Spare reserve at mission start: magazines (`feed.type: magazine`) or loose rounds (`single`). */
+  /** Spare reserve at mission start: magazines (`feed.type: magazine`) or loose rounds (`single`, `break`). */
   reserve: count({ max: 500 }),
   /** Carry capacity of the reserve, same unit. Resupply never exceeds it. */
   maxReserve: count({ max: 500 }),
@@ -165,8 +193,10 @@ export const weaponSchema = obj({
   }),
   assets: obj({ visual: id() }),
   /** Audio cue IDs. Each cue needs a profile in `combat.json › audio.weapons`. */
-  sounds: obj({ fire: oneOf(['rifle', 'pistol', 'shotgun'] as const) }),
+  sounds: obj({ fire: oneOf(['rifle', 'smg', 'smg-heavy', 'double', 'pistol', 'shotgun'] as const) }),
   attachmentSlots: arr(id()),
+  /** Selectable magazines besides the standard one. Magazine feed only. */
+  magazineVariants: arr(magazineVariantSchema),
 });
 
 export const grenadeSchema = obj({
@@ -282,6 +312,46 @@ export const resupplySchema = obj({
   availableWhen: obj({ vehicleDamaged: bool(), vehicleDisabled: bool(), vehicleDestroyed: bool() }),
 });
 
+/** Difficulty levels 1 … 7 (`DIFFICULTY_LEVEL_COUNT` in registry.ts). */
+const LEVELS = 7;
+const minMax = (max: number) => tuple(2, { min: 0, max, integer: true });
+const perLevel = () => tuple(LEVELS, { min: 0, max: 500, integer: true });
+
+/** Samples lying at Points of Interest. */
+const sampleLootSchema = obj({
+  /** First difficulty level on which the sample spawns. */
+  fromLevel: count({ min: 1, max: LEVELS }),
+  /** Units per PoI, [min, max]. */
+  perSite: minMax(50),
+  /** Units on the whole map per difficulty level 1 … 7. */
+  spawn: perLevel(),
+  /** Units the squad may carry and extract per difficulty level 1 … 7. */
+  limit: perLevel(),
+});
+
+/** Loot on the ground at Points of Interest (`loot.json`): supply items, samples and Marks. */
+export const lootSchema = obj({
+  /** Pickup reach in meters. */
+  range: positive({ max: 10 }),
+  /** Supply items per PoI, [min, max]. Each is an ammo box, a first aid kit or a grenade crate with equal chance. */
+  supplies: minMax(20),
+  /** What one supply item grants, capped at the carry capacity. */
+  grant: obj({
+    /** Ammo box: spare magazines for the primary weapon (single feed: `magazineSize` rounds per magazine). */
+    primaryMagazines: count({ max: 50 }),
+    /** First aid kit: medical stims. */
+    stims: count({ max: 20 }),
+    /** Grenade crate: grenades; whatever exceeds the capacity is lost. */
+    grenades: count({ max: 20 }),
+  }),
+  /** Chance per PoI to hold a Mark. */
+  markChance: num({ min: 0, max: 1 }),
+  tissue: sampleLootSchema,
+  rock: sampleLootSchema,
+  /** Artifacts lie only at the prominent PoI. Their carry limit equals the amount found. */
+  artifact: obj({ fromLevel: count({ min: 1, max: LEVELS }), perSite: minMax(50) }),
+});
+
 export const operatorSchema = obj({
   id: id(),
   loadoutId: id(),
@@ -365,6 +435,26 @@ export const enemySchema = obj({
     recoveryTicks: count({ min: 1, max: 300 }),
     cooldownSeconds: positive({ max: 60 }),
     arcHeight: nonNegative({ max: 10 }),
+  })),
+  /**
+   * Charge: the archetype lowers its head, then runs straight at the target at `speed` for `runTicks` and tramples
+   * every operator (and the targeted convict) in its path once, with `meleeDamage × damageMultiplier`.
+   */
+  charge: optional(obj({
+    minRange: positive({ max: 60 }),
+    maxRange: positive({ max: 60 }),
+    windupTicks: count({ min: 1, max: 300 }),
+    runTicks: count({ min: 1, max: 300 }),
+    recoveryTicks: count({ min: 1, max: 300 }),
+    cooldownSeconds: positive({ max: 120 }),
+    /** Running speed in m/s. */
+    speed: positive({ max: 60 }),
+    /** Course correction while running, degrees per second (0 = straight line). */
+    steerDegreesPerSecond: nonNegative({ max: 720 }),
+    /** Trample contact: half width of the swept band and its reach ahead of the body centre (m). */
+    contactHalfWidth: positive({ max: 10 }),
+    contactReach: positive({ max: 10 }),
+    damageMultiplier: nonNegative({ max: 20 }),
   })),
   /** Albatross parts this archetype attacks: the whole ship (default) or only its thrusters. */
   vehicleTargets: optional(oneOf(['all', 'thrusters'] as const)),
@@ -463,7 +553,7 @@ export const combatSchema = obj({
     distantBlendEnd: positive({ max: 2000 }),
     speedOfSound: positive({ max: 2000 }),
     limiterThresholdDb: num({ min: -40, max: 0 }),
-    weapons: obj({ rifle: weaponAudioSchema, pistol: weaponAudioSchema, shotgun: weaponAudioSchema }),
+    weapons: obj({ rifle: weaponAudioSchema, smg: weaponAudioSchema, 'smg-heavy': weaponAudioSchema, double: weaponAudioSchema, pistol: weaponAudioSchema, shotgun: weaponAudioSchema }),
     explosion: obj({ gain: nonNegative({ max: 4 }), bodyHz: positive({ max: 1000 }), tailGain: nonNegative({ max: 4 }) }),
     environments: obj({ carrier: environmentAudioSchema, 'open-field': environmentAudioSchema, outpost: environmentAudioSchema }),
   }),
@@ -565,7 +655,7 @@ export const swarmSchema = obj({
       count({ min: 1, max: MAX_ENEMIES })(value === undefined ? 100 : value, path, issues),
   }),
   /** Warrior castes the director mixes into patrols, reinforcements and nest garrisons (shares in difficulty.json). */
-  castes: obj({ hunterArchetypeId: id(), breacherArchetypeId: id() }),
+  castes: obj({ hunterArchetypeId: id(), breacherArchetypeId: id(), assaultBreakerArchetypeId: id() }),
   patrols: obj({
     archetypeId: id(),
     perceptionPeriodTicks: count({ min: 1, max: 300 }),
@@ -682,6 +772,12 @@ export const difficultySchema = obj({
   breachersPerReinforcement: nonNegative({ max: 20 }),
   /** Breachers guarding each nest: the whole part always, the fraction as a chance. */
   breacherNestGuards: nonNegative({ max: 20 }),
+  /** Assault breakers per reinforcement call (`swarm.json › castes.assaultBreakerArchetypeId`): whole part always, fraction as a chance. */
+  assaultBreakersPerReinforcement: nonNegative({ max: 20 }),
+  /** Assault breakers guarding each nest: the whole part always, the fraction as a chance. */
+  assaultBreakerNestGuards: nonNegative({ max: 20 }),
+  /** At most this many assault breakers alive at once; owed ones wait in their nest. */
+  maxActiveAssaultBreakers: count({ max: 64 }),
 });
 
 const postureColliderSchema = obj({
@@ -740,6 +836,7 @@ export const SOURCE_SCHEMAS = {
   manifest: manifestSchema,
   weapons: obj({ weapons: arr(weaponSchema, { min: 1 }) }),
   ammunition: ammunitionSchema,
+  loot: lootSchema,
   equipment: obj({
     grenades: arr(grenadeSchema, { min: 1 }),
     medical: arr(medicalSchema, { min: 1 }),
@@ -764,6 +861,8 @@ export type WeaponDefinition = Infer<typeof weaponSchema>;
 export type CaliberDefinition = Infer<typeof caliberSchema>;
 export type AmmoDefinition = Infer<typeof ammoSchema>;
 export type AmmoModifier = AmmoDefinition['modifiers'][number];
+export type MagazineVariant = Infer<typeof magazineVariantSchema>;
+export type LootRules = Infer<typeof lootSchema>;
 export type ArmorRules = Infer<typeof ammunitionSchema>['armor'];
 export type ArmorClassDefinition = ArmorRules['classes'][number];
 export type EnemyResistances = EnemyArchetype['resistances'];
@@ -811,7 +910,7 @@ export type WeaponSlot = WeaponDefinition['slot'];
 
 /** File name of each source, used in error messages. */
 export const SOURCE_FILES: Readonly<Record<keyof typeof SOURCE_SCHEMAS, string>> = {
-  manifest: 'manifest.json', weapons: 'weapons.json', ammunition: 'ammunition.json', equipment: 'equipment.json', operators: 'operators.json',
+  manifest: 'manifest.json', weapons: 'weapons.json', ammunition: 'ammunition.json', loot: 'loot.json', equipment: 'equipment.json', operators: 'operators.json',
   enemies: 'enemies.json', structures: 'structures.json', swarm: 'swarm.json', convicts: 'convicts.json',
   difficulty: 'difficulty.json', combat: 'combat.json', movement: 'movement.json',
 };

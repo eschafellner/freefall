@@ -9,12 +9,12 @@ import {
 } from './definitions.ts';
 import { ARMOR_CLASS_COUNT } from './definitions.ts';
 import type {
-  AmmoDefinition, ArmorRules, BackpackDefinition, BalanceManifest, BodyArmorDefinition, BalanceSources, CaliberDefinition, CombatDefinition, ConvictKitDefinition, ConvictSquadDefinition, DifficultyDefinition, EnemyArchetype,
+  AmmoDefinition, ArmorRules, LootRules, BackpackDefinition, BalanceManifest, BodyArmorDefinition, BalanceSources, CaliberDefinition, CombatDefinition, ConvictKitDefinition, ConvictSquadDefinition, DifficultyDefinition, EnemyArchetype,
   FactionDefinition, GrenadeDefinition, LoadoutDefinition, MedicalDefinition, MeleeDefinition, MovementDefinition, NestDefinition, OperatorDefinition,
   ResupplyRules, SwarmDefinition, VehicleDefinition, WeaponDefinition,
 } from './definitions.ts';
 import { balanceHash } from './hash.ts';
-import { presetSelection, resolveLoadout, resolveMissionBalance, resolveSelection, resolveWeapon } from './resolver.ts';
+import { magazineModifiers, presetSelection, resolveLoadout, resolveMissionBalance, resolveSelection, resolveWeapon } from './resolver.ts';
 import { BalanceValidationError, Issues, deepFreeze } from './schema.ts';
 
 /** FREEFALL ships exactly seven difficulty levels. Level 7 is FREEFALL. */
@@ -42,6 +42,8 @@ export interface BalanceRegistry {
   readonly backpacks: ReadonlyMap<string, BackpackDefinition>;
   readonly bodyArmors: ReadonlyMap<string, BodyArmorDefinition>;
   readonly resupply: ResupplyRules;
+  /** Supply items, samples and Marks at Points of Interest (`loot.json`). */
+  readonly loot: LootRules;
   readonly operator: OperatorDefinition;
   readonly factions: ReadonlyMap<string, FactionDefinition>;
   readonly enemies: ReadonlyMap<string, EnemyArchetype>;
@@ -174,6 +176,7 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
       issues.add(`${path}.defaultAmmoId`, `"${ammo.id}" ist Munition für ${ammo.caliberId}, die Waffe verschießt ${weapon.caliberId}`);
     }
     if (weapon.feed.type === 'single' && weapon.reserve > 500) issues.add(`${path}.reserve`, 'zu groß');
+    if (weapon.feed.type === 'break' && weapon.magazineSize > 4) issues.add(`${path}.magazineSize`, 'Kipplauf: höchstens 4 Läufe');
     if (weapon.reserve > weapon.maxReserve) {
       issues.add(`${path}.reserve`, `Startreserve ${weapon.reserve} übersteigt die Tragekapazität maxReserve ${weapon.maxReserve}`);
     }
@@ -184,7 +187,9 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
       issues.add(`${path}.sounds.fire`, `kein Audio-Profil in combat.json › audio.weapons.${weapon.sounds.fire}`);
     }
     if (new Set(weapon.attachmentSlots).size !== weapon.attachmentSlots.length) issues.add(`${path}.attachmentSlots`, 'doppelte Slot-IDs');
+    checkMagazineVariants(weapon, path, issues);
   });
+  checkLoot(data.loot, issues);
   data.equipment.loadouts.forEach((loadout, i) => {
     const path = `equipment.json › loadouts[${i}]`;
     ref(weapons, loadout.primaryWeaponId, `${path}.primaryWeaponId`, 'Waffen');
@@ -238,6 +243,7 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
     if (previous) issues.add(`${path}.wireType`, `Wire-Typ ${enemy.wireType} ist bereits an "${previous.id}" vergeben`);
     else enemiesByWireType[enemy.wireType] = enemy;
     if (enemy.leap && enemy.leap.minRange >= enemy.leap.maxRange) issues.add(`${path}.leap.minRange`, 'muss kleiner als maxRange sein');
+    if (enemy.charge && enemy.charge.minRange >= enemy.charge.maxRange) issues.add(`${path}.charge.minRange`, 'muss kleiner als maxRange sein');
     if (enemy.tactics === 'flank' && !enemy.flank) issues.add(`${path}.flank`, 'tactics "flank" braucht flank-Werte');
     const timing = enemy.attack ?? data.swarm.meleeAttack;
     const duration = timing.windupTicks + timing.activeTicks + timing.recoveryTicks;
@@ -272,6 +278,7 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   ref(enemies, data.swarm.patrols.archetypeId, 'swarm.json › patrols.archetypeId', 'Gegner');
   ref(enemies, data.swarm.castes.hunterArchetypeId, 'swarm.json › castes.hunterArchetypeId', 'Gegner');
   ref(enemies, data.swarm.castes.breacherArchetypeId, 'swarm.json › castes.breacherArchetypeId', 'Gegner');
+  ref(enemies, data.swarm.castes.assaultBreakerArchetypeId, 'swarm.json › castes.assaultBreakerArchetypeId', 'Gegner');
   ref(weapons, data.convicts.squad.reloadWeaponId, 'convicts.json › squad.reloadWeaponId', 'Waffen');
   const { timing, pressure, wave, spawn } = data.swarm.director;
   if (timing.assaultMinTicks > timing.assaultMaxTicks || timing.peakMinTicks > timing.peakMaxTicks ||
@@ -329,7 +336,7 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
     version: { schemaVersion: data.manifest.schemaVersion, release: data.manifest.release, hash },
     manifest: data.manifest,
     weapons, calibers, ammunition, armor: data.ammunition.armor, grenades, medicalItems: medical, meleeAttacks: melee, loadouts,
-    backpacks, bodyArmors, resupply: data.equipment.resupply, operator: data.operators.operator,
+    backpacks, bodyArmors, resupply: data.equipment.resupply, loot: data.loot, operator: data.operators.operator,
     factions, enemies, enemiesByWireType, nests, primaryNest: nests.get(PRIMARY_NEST_ID)!, vehicles,
     swarm: data.swarm,
     convicts: { squad: data.convicts.squad, kits },
@@ -361,6 +368,8 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   // Every weapon with every ammunition of its caliber, so an unused ammunition type cannot hide invalid values.
   for (const weapon of weapons.values()) {
     for (const ammo of registry.ammoForCaliber(weapon.caliberId)) resolveWeapon(registry, weapon.id, ammo.id);
+    // Magazine variants are not selectable yet, but their effective values must already be valid.
+    for (const variant of weapon.magazineVariants) resolveWeapon(registry, weapon.id, weapon.defaultAmmoId, magazineModifiers(weapon, variant.type));
   }
   // Every selectable item once in the standard loadout, so broken item modifiers fail at startup.
   const standard = presetSelection(registry);
@@ -371,6 +380,48 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
   for (const armor of bodyArmors.keys()) resolveSelection(registry, { ...standard, armorId: armor });
   for (const difficulty of registry.difficulties) resolveMissionBalance(registry, difficulty.id);
   return registry;
+}
+
+const MAGAZINE_NAMES = { compact: 'Das kleine Magazin', extended: 'Das erweiterte Magazin', drum: 'Das Trommelmagazin' } as const;
+
+function checkMagazineVariants(weapon: WeaponDefinition, path: string, issues: Issues): void {
+  const variants = weapon.magazineVariants;
+  if (variants.length && weapon.feed.type !== 'magazine') {
+    issues.add(`${path}.magazineVariants`, 'nur für Waffen mit wechselbarem Magazin (feed.type "magazine")');
+  }
+  const types = variants.map((variant) => variant.type);
+  variants.forEach((variant, n) => {
+    const at = `${path}.magazineVariants[${n}]`;
+    if (types.indexOf(variant.type) !== n) issues.add(`${at}.type`, `Variante "${variant.type}" ist bereits vorhanden`);
+    const smaller = variant.type === 'compact';
+    if (smaller ? variant.magazineSize >= weapon.magazineSize : variant.magazineSize <= weapon.magazineSize) {
+      issues.add(`${at}.magazineSize`, `${MAGAZINE_NAMES[variant.type]} muss ${smaller ? 'weniger' : 'mehr'} als das Standardmagazin (${weapon.magazineSize}) fassen, erhalten ${variant.magazineSize}`);
+    }
+    const stats = variant.modifiers.map((modifier) => modifier.stat);
+    stats.forEach((stat, m) => {
+      if (stats.indexOf(stat) !== m) issues.add(`${at}.modifiers[${m}].stat`, `"${stat}" ist bereits modifiziert. Je Wert ein Modifikator`);
+    });
+  });
+  const extended = variants.find((variant) => variant.type === 'extended');
+  const drum = variants.findIndex((variant) => variant.type === 'drum');
+  if (extended && drum >= 0 && variants[drum]!.magazineSize <= extended.magazineSize) {
+    issues.add(`${path}.magazineVariants[${drum}].magazineSize`, `Das Trommelmagazin muss mehr als das erweiterte Magazin (${extended.magazineSize}) fassen`);
+  }
+}
+
+function checkLoot(loot: LootRules, issues: Issues): void {
+  const range = (pair: readonly number[], path: string) => {
+    if (pair[0]! > pair[1]!) issues.add(path, `[min, max] erwartet, min ${pair[0]} ist größer als max ${pair[1]}`);
+  };
+  range(loot.supplies, 'loot.json › supplies');
+  for (const id of ['tissue', 'rock', 'artifact'] as const) range(loot[id].perSite, `loot.json › ${id}.perSite`);
+  for (const id of ['tissue', 'rock'] as const) {
+    loot[id].spawn.forEach((amount, level) => {
+      if (level + 1 < loot[id].fromLevel && amount > 0) {
+        issues.add(`loot.json › ${id}.spawn[${level}]`, `Stufe ${level + 1} liegt vor fromLevel ${loot[id].fromLevel}, hier spawnt nichts. 0 erwartet`);
+      }
+    });
+  }
 }
 
 /** Maps stay Map instances for lookups but reject mutation. */

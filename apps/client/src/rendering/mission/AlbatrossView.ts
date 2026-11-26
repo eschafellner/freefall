@@ -20,6 +20,16 @@ const DOWNWASH = {
 };
 
 const destroyedHull = (albatross: MissionSnapshot['albatross']) => albatross?.lifecycleState === 'DESTROYED';
+/**
+ * Landing legs fore and aft of the thruster pods and outboard of the armour skirts, so neither the piston nor the
+ * stowed pad passes through the flank dressing. The skirts end ahead of the legs (gear bays).
+ */
+const GEAR = { x: 3.55, z: 4.7, sleeveTop: 2.02, sleeveBottom: .86, stow: .85 } as const;
+/**
+ * Top of the cabin floor. The landing zone is flattened to exactly 0 and operators stand on it, so the floor sits two
+ * centimetres above the ground instead of fighting the terrain for depth.
+ */
+const FLOOR_TOP = .02;
 
 export class AlbatrossView {
   readonly root = new T.Group();
@@ -62,7 +72,7 @@ export class AlbatrossView {
     const panel = staticParts.add.bind(staticParts);
     const detail = extraParts.add.bind(extraParts);
 
-    panel(graphite, 0, -.12, .04, 5.28, .24, 10.85);
+    panel(graphite, 0, FLOOR_TOP - .12, .04, 5.28, .24, 10.85);
     panel(steel, 0, 3.62, -.05, 5.62, .62, 10.59);
     panel(plateGray, 0, 4.05, -.28, 3.92, .43, 7.49);
     panel(steel, 0, 1.76, -5.21, 5.16, 3.52, .46);
@@ -80,7 +90,7 @@ export class AlbatrossView {
       panel(graphite, side * 2.57, -.06, -.22, .56, .38, 7.78);
       panel(lamp, side * 2.21, 2.79, 5.31, .24, .35, .17);
       panel(cargoLamp, side * 1.75, 3.27, -.13, .13, .12, 7.78);
-      panel(orange, side * 1.13, .008, .15, .05, .02, 10.17);
+      panel(orange, side * 1.13, FLOOR_TOP + .008, .15, .05, .02, 10.17);
       panel(graphite, side * 1.81, 2.85, -.2, .15, .13, 8.85);
       panel(lamp, side * 1.6, 1.44, -6.87, .3, .19, .11);
       for (let row = 0; row < 4; row++) {
@@ -163,10 +173,10 @@ export class AlbatrossView {
     piston.tube(0x262a28, 0, .07, 0, .42, .5, .14, 0, 0, 14);
     piston.box(0x3a3f3a, 0, .2, 0, .32, .14, .32, .04);
     const pistonGeometry = piston.geometry();
-    for (const side of [-1, 1]) for (const z of [-3.75, 3.75]) {
+    for (const side of [-1, 1]) for (const z of [-GEAR.z, GEAR.z]) {
       const leg = new T.Group();
       leg.add(new T.Mesh(pistonGeometry, this.dressing));
-      leg.position.set(side * 3.22, -.2, z);
+      leg.position.set(side * GEAR.x, -.2, z);
       this.root.add(leg);
       this.gear.push(leg);
     }
@@ -211,12 +221,18 @@ export class AlbatrossView {
       for (let i = 0; i < 7; i++) m.box(black, side * 3.06, 1.62, -4.5 + i * 1.5, .025, 2.7, .035);
       m.box(black, side * 3.06, 2.62, -.2, .025, .035, 9.6);
       // Rounded armour skirts, intakes and gear struts on the flanks.
-      m.capsule(olive, side * 3.1, .4, -.3, .3, 9.6, Math.PI / 2);
+      m.capsule(olive, side * 3.1, .4, 0, .3, 8.3, Math.PI / 2);
       m.box(black, side * 3.07, 2.9, -4.6, .08, .52, 1.3, .03);
       m.box(black, side * 3.07, 2.9, 4.0, .08, .4, .9, .03);
-      for (const z of [-3.75, 3.75]) {
-        m.segment(graphite, [side * 2.86, 1.45, z], [side * 3.22, .95, z], .16, .12, 8);
-        m.box(mid, side * 2.9, 1.5, z, .36, .5, .7, .08);
+      for (const z of [-GEAR.z, GEAR.z]) {
+        // Gear mount: hull bracket, upper arm and diagonal brace holding the sleeve the piston slides into.
+        const sleeve = GEAR.sleeveTop - GEAR.sleeveBottom;
+        m.box(mid, side * 2.92, 1.5, z, .36, .62, .7, .08);
+        m.box(graphite, side * 3.28, 1.78, z, .56, .16, .26, .04);
+        m.segment(graphite, [side * 3.02, 1.27, z], [side * (GEAR.x - .1), 1.02, z], .1, .08, 8);
+        m.tube(dark, side * GEAR.x, GEAR.sleeveBottom + sleeve / 2, z, .14, .15, sleeve, 0, 0, 12);
+        m.tube(graphite, side * GEAR.x, GEAR.sleeveBottom + .05, z, .18, .18, .1, 0, 0, 12);
+        m.tube(graphite, side * GEAR.x, GEAR.sleeveTop, z, .17, .17, .08, 0, 0, 12);
       }
       for (const z of [-2.9, 2.9]) {
         // Pylon fairings and pod caps over the existing thruster housings.
@@ -267,8 +283,8 @@ export class AlbatrossView {
     const gearDown = pose?.gear ?? 1;
     const squeeze = Math.max(0, pose?.compression ?? 0);
     for (const leg of this.gear) {
-      // Stowed legs retract into the strut; while compressed the pad stays planted and the piston slides in.
-      leg.position.y = -.2 + (1 - gearDown) * .95 + squeeze;
+      // Stowed legs retract into the sleeve; the pads rest on the ground and stay planted while the hull compresses.
+      leg.position.y = (1 - gearDown) * GEAR.stow + squeeze;
       leg.visible = !destroyedHull(albatross);
     }
     const impact = pose?.sinceImpact ?? -1;

@@ -1,5 +1,5 @@
 /** Sample routing and mix values are client presentation. Gameplay still resolves weapons on the server. */
-export type WeaponSound = 'rifle' | 'pistol' | 'shotgun';
+export type WeaponSound = 'rifle' | 'smg' | 'smg-heavy' | 'double' | 'pistol' | 'shotgun';
 
 interface WeaponRecordings {
   near: readonly [string, string];
@@ -13,6 +13,11 @@ interface WeaponRecordings {
   pitch?: number;
   /** Pump-action weapon: a synthesized slide rack follows every shot. */
   pump?: boolean;
+  /**
+   * Overlapping shot voices one shooter may hold (default `combat.json › audio.maxVoicesPerShooter`). Fast-firing
+   * weapons need more, or every few shots would be dropped while earlier tails still ring.
+   */
+  voices?: number;
 }
 
 /** Keyed by `weapons.json › sounds.fire`. */
@@ -21,6 +26,25 @@ export const WEAPON_RECORDINGS: Readonly<Record<WeaponSound, WeaponRecordings>> 
     near: ['kestrel-shot-1', 'kestrel-shot-2'], distant: 'kestrel-shot-distant',
     remove: 'kestrel-mag-out', insert: 'kestrel-mag-in', finish: 'kestrel-reload-finish',
     casing: 'weapon-casing-hard', level: .91,
+  },
+  // MP-99 and Viktor 55: no own recordings yet. The P-01 report, slightly tighter (MP-99) or lower and heavier for the
+  // subsonic .55 (Viktor), with the Kestrel magazine handling; `finish` is the charging handle / bolt release.
+  smg: {
+    near: ['p01-shot-1', 'p01-shot-2'], distant: 'p01-shot-distant',
+    remove: 'kestrel-mag-out', insert: 'kestrel-mag-in', finish: 'kestrel-reload-finish',
+    casing: 'weapon-casing-hard', level: .8, pitch: 1.06, voices: 8,
+  },
+  'smg-heavy': {
+    near: ['p01-shot-1', 'p01-shot-2'], distant: 'p01-shot-distant',
+    remove: 'kestrel-mag-out', insert: 'kestrel-mag-in', finish: 'kestrel-reload-finish',
+    casing: 'weapon-casing-hard', level: .84, pitch: .9, voices: 8,
+  },
+  // Kaibal 50: no own recordings yet. The Kestrel report slowed to 0.8 for the full-power 7.77 round; the action click
+  // opens the barrels, the rounds drop in with the insert sample, the closing snap is the finish.
+  double: {
+    near: ['kestrel-shot-1', 'kestrel-shot-2'], distant: 'kestrel-shot-distant',
+    remove: 'p01-mag-out', insert: 'p01-mag-in-slide', finish: 'kestrel-reload-finish',
+    level: 1, pitch: .8,
   },
   pistol: {
     near: ['p01-shot-1', 'p01-shot-2'], distant: 'p01-shot-distant',

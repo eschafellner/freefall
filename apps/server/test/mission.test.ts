@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  ALBATROSS, BALANCE, BALLOON, FRAG, BOARDING_TICKS, BODENBRUCH, CARRIER_ROOM_SIZE, CARRIER_ROOMS, CARRIER_SHIP, DIFFICULTIES, LANDING_STAGE_TICKS, HordeFrame, MAX_ENEMIES, NET, SCHABE_TYPE, BREACHER_TYPE, WIDE_POSITION_SCALE, decodeHorde,
+  ALBATROSS, BALANCE, BALLOON, extractionLiftTicks, FRAG, BOARDING_TICKS, BODENBRUCH, CARRIER_ROOM_SIZE, CARRIER_ROOMS, CARRIER_SHIP, DIFFICULTIES, LANDING_STAGE_TICKS, HordeFrame, MAX_ENEMIES, NET, SCHABE_TYPE, BREACHER_TYPE, WIDE_POSITION_SCALE, decodeHorde,
   distanceSquared, inAlbatross, missionGround, newPosture, openGround, resolveMissionBalance,
 } from '@freefall/shared';
 import type { DifficultyDefinition, MissionDefinition, MissionEvent, PatrolRegion, PositionXZ } from '@freefall/shared';
@@ -58,8 +58,8 @@ test('each side room can be entered and left through its doorway with regular in
   for (const room of CARRIER_ROOMS) {
     const mission = new MissionInstance(10, BODENBRUCH);
     const player = mission.addPlayer('operator');
-    // Stage the approach in the mess, then cross the doorway through the movement system.
-    Object.assign(player, { x: 0, z: room.z + 2.4 });
+    // Stage the approach in the mess in line with the doorway, then cross it through the movement system.
+    Object.assign(player, { x: 0, z: room.z });
     let seq = 0;
     const walk = (yaw: number, count: number) => {
       for (let i = 0; i < count; i++) {
@@ -189,7 +189,7 @@ test('Alpha gates Bravo and an Albatross departure rewards only secured living p
   advance(mission, 6);
   assert.ok(mission.interact(player.id));
   assert.equal(mission.action(player.id, 'balloon'), false);
-  advance(mission, ALBATROSS.launchTicks + BALLOON.liftTicks);
+  advance(mission, ALBATROSS.launchTicks + ALBATROSS.liftTicks);
   const { result } = mission.snapshot();
   assert.ok(result?.primaryObjectivesCompleted && result.extractionSucceeded);
   assert.deepEqual(result.extractedOperatorIds, [player.id]);
@@ -605,7 +605,7 @@ for (const [count, method] of [[1, 'albatross'], [2, 'balloon'], [4, 'albatross'
     assert.ok(mission.action(player.id, method));
     for (const operator of crew.slice(1)) assert.ok(mission.action(operator.id, 'secure'));
     const pickup = method === 'albatross' ? ALBATROSS.launchTicks : BALLOON.countdownTicks + BALLOON.approachTicks;
-    advance(mission, pickup + BALLOON.liftTicks + 1);
+    advance(mission, pickup + extractionLiftTicks(method) + 1);
     const result = mission.snapshot().result;
     assert.ok(result?.extractionSucceeded && result.primaryObjectivesCompleted);
     assert.equal(result.extractionMethod, method);
@@ -730,7 +730,7 @@ for (const method of ['albatross', 'balloon'] as const) {
     advance(mission, pickup);
     assert.equal(mission.snapshot().extraction?.phase, 'LIFT');
     assert.deepEqual(mission.snapshot().extraction?.securedIds, [wing.id]);
-    advance(mission, BALLOON.liftTicks);
+    advance(mission, extractionLiftTicks(method));
     assert.deepEqual(mission.snapshot().result?.extractedOperatorIds, [wing.id]);
   });
 }

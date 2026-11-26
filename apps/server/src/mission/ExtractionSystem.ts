@@ -1,4 +1,4 @@
-import { ALBATROSS, BALLOON, canSecureExtraction, distanceSquared, inAlbatross, openGround } from '@freefall/shared';
+import { ALBATROSS, BALLOON, canSecureExtraction, distanceSquared, extractionLiftTicks, inAlbatross, openGround } from '@freefall/shared';
 import type { ExtractionMethod, ExtractionSnapshot, MissionLocation, PositionXZ, WorldDefinition } from '@freefall/shared';
 import type { SimPlayer } from '../simulation/Player.ts';
 
@@ -99,7 +99,7 @@ export class ExtractionSystem {
     }
     active.phase = 'LIFT';
     active.phaseAt = tick;
-    active.endsAt = tick + BALLOON.liftTicks;
+    active.endsAt = tick + extractionLiftTicks(active.method);
   }
 
   snapshot(): ExtractionSnapshot | undefined {

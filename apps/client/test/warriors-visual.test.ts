@@ -128,9 +128,9 @@ test('swarm visuals draw each wire type with its own renderer and keep the type 
   const shadows = { add() {} } as unknown as ContactShadows;
   swarm.draw(camera, frame(10), frame(11), .5, 1000, GRAPHICS_QUALITY.high, shadows);
   assert.equal(swarm.schabe.visible, 1);
-  assert.deepEqual(swarm.warriors.map(({ visible }) => visible), [1, 1]);
+  assert.deepEqual(swarm.warriors.map(({ visible }) => visible), [1, 1, 0]);
   assert.equal(swarm.visible, 3);
-  assert.equal(swarm.fallen.length, 3);
+  assert.equal(swarm.fallen.length, 4);
   assert.equal(swarm.hit(2, 1000, true)?.type, JAEGER_TYPE);
   assert.equal(swarm.hit(3, 1000, true)?.type, BREACHER_TYPE);
   swarm.draw(camera, frame(11), frame(12), .5, 1100, GRAPHICS_QUALITY.high, shadows);

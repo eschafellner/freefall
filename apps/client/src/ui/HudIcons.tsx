@@ -14,6 +14,27 @@ const PATHS: Record<string, ReactNode> = {
     <path d="M33 10.2h11v3.8H33z" opacity=".8"/>
     <path d="M17 11h4.6l-2.2 7.6h-4.4z"/>
   </>,
+  // MP-99: sliding rod stock, boxy upper with rail, vented shroud, straight magazine ahead of the grip, foregrip.
+  'mp-99': <>
+    <path d="M3 6.6h2.2v9.4H3z M5 7.6h12v1.4H5z M5 11.6h12v1.4H5z"/>
+    <path d="M17 6h27v6H17z M44 6.6h8v4.8h-8z M52 8h6v2h-6z M58 7.4h3v3.2h-3z"/>
+    <path d="M20 4.6h20v1.4H20z" opacity=".75"/>
+    <path d="M20 12h5l-1.6 7h-4.6z M30 12h4.2l.8 10h-4.2z M46 11.4h3l-.4 5h-2.4z"/>
+  </>,
+  // Viktor 55: skeletal stock, tall upper under a long rail, low barrel, sloping chin in front of the magazine.
+  'viktor-55': <>
+    <path d="M2 5.6h2.2v10.6H2z M4 6.4h12v1.8H4z M4 13.4l12-3.6v1.8L4 15.2z"/>
+    <path d="M16 5h24v8H16z M40 5.4l5 4v3.6h-5z M40 9.6h12v3.4H40z M52 10.2h7v2.2h-7z"/>
+    <path d="M17 3.4h28v1.6H17z" opacity=".75"/>
+    <path d="M18.6 13h5l-.8 7.4h-5z M26 13h4.2l.2 9.6H26.2z M30.2 13H41l-6.4 6.2h-4.4z M45 13h3l-.3 5h-2.4z"/>
+  </>,
+  // Kaibal 50: stock with semi-pistol grip, action with two triggers, long side-by-side barrels over the forend.
+  'kaibal-50': <>
+    <path d="M1 9.4l13-1.6h6v6.4h-4.4l-3.4 5.6H7.6l1.4-5L1 15.6z"/>
+    <path d="M20 7h7v6.4h-7z M27 7.4h35v1.6H27z M27 9.6h35v1.6H27z"/>
+    <path d="M30 11.2h14v2.6H30z" opacity=".8"/>
+    <path d="M21 13.4h4.4v1.6H21z M22 13.4h1.2v3.4H22z M24 13.4h1.2v3.4H24z" opacity=".75"/>
+  </>,
   // Silhouettes for the Carrier loadout cards.
   'melee.weapon_strike': <path d="M6 14l26-6 2 3-26 6z M34 8.5l9-2.5 1.5 4-9 2.5z"/>,
   'backpack.standard_frame': <path d="M22 3h20l3 4v14l-3 2H22l-3-2V7z M25 8h14v5H25z" fillRule="evenodd"/>,

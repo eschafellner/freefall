@@ -40,7 +40,8 @@
       "movement": { "walkSpeedMultiplier": 1, "sprintSpeedMultiplier": 1 },
       "assets": { "visual": "weapon.kestrel-ar-01" },
       "sounds": { "fire": "rifle" },
-      "attachmentSlots": []
+      "attachmentSlots": [],
+      "magazineVariants": []
     },
     {
       "id": "p-01",
@@ -82,7 +83,8 @@
       "movement": { "walkSpeedMultiplier": 1, "sprintSpeedMultiplier": 1 },
       "assets": { "visual": "weapon.p-01" },
       "sounds": { "fire": "pistol" },
-      "attachmentSlots": []
+      "attachmentSlots": [],
+      "magazineVariants": []
     },
     {
       "id": "vx-13",
@@ -124,7 +126,137 @@
       "movement": { "walkSpeedMultiplier": 1, "sprintSpeedMultiplier": 1 },
       "assets": { "visual": "weapon.vx-13" },
       "sounds": { "fire": "shotgun" },
-      "attachmentSlots": []
+      "attachmentSlots": [],
+      "magazineVariants": []
+    },
+    {
+      "id": "mp-99",
+      "displayName": "MP-99",
+      "category": "submachine-gun",
+      "slot": "primary",
+      "caliberId": "caliber.10mm",
+      "defaultAmmoId": "ammo.10mm.fmj",
+      "ballistics": { "damageMultiplier": 1, "velocityMultiplier": 1 },
+      "roundsPerSecond": 12,
+      "magazineSize": 40,
+      "feed": { "type": "magazine", "chamberRounds": 0 },
+      "reserve": 8,
+      "maxReserve": 8,
+      "reloadSeconds": 2.2,
+      "reloadTimeline": { "removalAt": 0.16, "insertionAt": 0.56 },
+      "effectiveRange": 50,
+      "recoil": {
+        "pitchPerShot": 0.2,
+        "yawPerShot": 0.1,
+        "verticalMultiplier": 1,
+        "horizontalMultiplier": 1,
+        "sustainedGrowthPerShot": 0.02,
+        "maxSustainedMultiplier": 1.3,
+        "maxClimbDegrees": 4.5,
+        "recoveryDelaySeconds": 0.08,
+        "recoveryPerSecond": 7,
+        "visualKick": 0.6,
+        "cameraKick": 0.3
+      },
+      "spread": {
+        "hipDegrees": 1.1,
+        "aimDegrees": 0.3,
+        "movingMultiplier": 1.3,
+        "bloomPerShot": 0.06,
+        "maxBloomDegrees": 1.6,
+        "bloomRecoveryPerSecond": 7
+      },
+      "movement": { "walkSpeedMultiplier": 1, "sprintSpeedMultiplier": 1 },
+      "assets": { "visual": "weapon.mp-99" },
+      "sounds": { "fire": "smg" },
+      "attachmentSlots": [],
+      "magazineVariants": []
+    },
+    {
+      "id": "viktor-55",
+      "displayName": "Viktor 55",
+      "category": "submachine-gun",
+      "slot": "primary",
+      "caliberId": "caliber.55",
+      "defaultAmmoId": "ammo.55.fmj",
+      "ballistics": { "damageMultiplier": 1, "velocityMultiplier": 1 },
+      "roundsPerSecond": 18.33333,
+      "magazineSize": 35,
+      "feed": { "type": "magazine", "chamberRounds": 0 },
+      "reserve": 8,
+      "maxReserve": 8,
+      "reloadSeconds": 1.4,
+      "reloadTimeline": { "removalAt": 0.14, "insertionAt": 0.6 },
+      "effectiveRange": 36,
+      "recoil": {
+        "pitchPerShot": 0.15,
+        "yawPerShot": 0.3,
+        "verticalMultiplier": 0.6,
+        "horizontalMultiplier": 2,
+        "sustainedGrowthPerShot": 0.04,
+        "maxSustainedMultiplier": 1.8,
+        "maxClimbDegrees": 6,
+        "recoveryDelaySeconds": 0.06,
+        "recoveryPerSecond": 8,
+        "visualKick": 0.7,
+        "cameraKick": 0.35
+      },
+      "spread": {
+        "hipDegrees": 1.3,
+        "aimDegrees": 0.35,
+        "movingMultiplier": 1.3,
+        "bloomPerShot": 0.08,
+        "maxBloomDegrees": 2,
+        "bloomRecoveryPerSecond": 6
+      },
+      "movement": { "walkSpeedMultiplier": 1, "sprintSpeedMultiplier": 1 },
+      "assets": { "visual": "weapon.viktor-55" },
+      "sounds": { "fire": "smg-heavy" },
+      "attachmentSlots": [],
+      "magazineVariants": []
+    },
+    {
+      "id": "kaibal-50",
+      "displayName": "Kaibal 50",
+      "category": "double-barrel",
+      "slot": "primary",
+      "caliberId": "caliber.7-77x50",
+      "defaultAmmoId": "ammo.7-77x50.fmj",
+      "ballistics": { "damageMultiplier": 1, "velocityMultiplier": 1 },
+      "roundsPerSecond": 3.333334,
+      "magazineSize": 2,
+      "feed": { "type": "break" },
+      "reserve": 90,
+      "maxReserve": 90,
+      "reloadSeconds": 0.8,
+      "reloadTimeline": { "removalAt": 0.3, "insertionAt": 0.7 },
+      "effectiveRange": 90,
+      "recoil": {
+        "pitchPerShot": 4.2,
+        "yawPerShot": 0.05,
+        "verticalMultiplier": 1,
+        "horizontalMultiplier": 1,
+        "sustainedGrowthPerShot": 0,
+        "maxSustainedMultiplier": 1,
+        "maxClimbDegrees": 9,
+        "recoveryDelaySeconds": 0.08,
+        "recoveryPerSecond": 16,
+        "visualKick": 2.2,
+        "cameraKick": 1.4
+      },
+      "spread": {
+        "hipDegrees": 1.2,
+        "aimDegrees": 0.12,
+        "movingMultiplier": 1.6,
+        "bloomPerShot": 0.5,
+        "maxBloomDegrees": 1,
+        "bloomRecoveryPerSecond": 4
+      },
+      "movement": { "walkSpeedMultiplier": 1, "sprintSpeedMultiplier": 1 },
+      "assets": { "visual": "weapon.kaibal-50" },
+      "sounds": { "fire": "double" },
+      "attachmentSlots": [],
+      "magazineVariants": []
     }
   ]
 }

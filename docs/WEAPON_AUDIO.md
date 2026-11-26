@@ -16,6 +16,6 @@ Das Audio folgt Mündung, Entfernung und Hörerausrichtung. Die Hörweite beträ
 
 Planetare Profile gewichten den bestehenden Hall-Send und Tiefpass unterschiedlich. Grüne Ebene nutzt einen offenen Ausklang, die Wüste etwas stärkere Reflexion, Eis einen helleren Fernklang und Wald stärker gedämpfte Ferne. Carrier und Arena verwenden ihre etablierten Raumprofile. Die Akustikparameter liegen im Client-Katalog.
 
-Der bestehende Mixer verwaltet 28 Stimmen und vier pro Quelle. Nahe Waffenstimmen haben höhere Priorität als entbehrliche Details. Gefahren und UI-Signale behalten ihre reservierten Plätze. Master-Limiter, Stummschaltung und Lautstärkeregler gelten auch für die Waffenaufnahmen. F2 zeigt Wiedergaben für lokale und entfernte Waffen, Handhabung, fehlende Puffer, Stimmen, Ladezeit und PCM-Cache.
+Der bestehende Mixer verwaltet 28 Stimmen und vier pro Quelle. Schnell feuernde Waffen dürfen über `WeaponRecordings.voices` mehr halten, die Maschinenpistolen acht ([SUBMACHINE_GUNS](SUBMACHINE_GUNS.md#ton)). Nahe Waffenstimmen haben höhere Priorität als entbehrliche Details. Gefahren und UI-Signale behalten ihre reservierten Plätze. Master-Limiter, Stummschaltung und Lautstärkeregler gelten auch für die Waffenaufnahmen. F2 zeigt Wiedergaben für lokale und entfernte Waffen, Handhabung, fehlende Puffer, Stimmen, Ladezeit und PCM-Cache.
 
 [Ausgangsinventar](WEAPON_AUDIO_INVENTORY_7_9A.md) · [Aufnahmen, Lizenz und Abnahme](WEAPON_AUDIO_7_9A.md)

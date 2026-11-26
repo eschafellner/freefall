@@ -52,11 +52,16 @@ export class EncounterDirector {
   private readonly hunterPatrols = new WeakSet<PatrolGroup>();
   /** Breachers per nest: guards still to spawn and breachers owed to reinforcement calls. */
   private readonly breachers = new Map<number, { guards: number; called: number }>();
+  /** Assault breakers per nest, like `breachers`. They wait in the nest while the difficulty's live cap is reached. */
+  private readonly assaultBreakers = new Map<number, { guards: number; called: number }>();
   /** Separate stream for caste rolls, so the composition never shifts the established spawn sequences. */
   private readonly casteRandom: () => number;
-  readonly casteSpawns = { hunters: 0, breachers: 0 };
+  /** Own stream for assault breaker rolls: they leave the hunter and breacher rolls of every level untouched. */
+  private readonly assaultRandom: () => number;
+  readonly casteSpawns = { hunters: 0, breachers: 0, assaultBreakers: 0 };
   private readonly mission: MissionDefinition;
   private readonly players: readonly (SimPlayer | undefined)[];
+  private readonly horde: HordeManager;
   private readonly random: () => number;
   /** Fixed balance snapshot of this mission run. All difficulty effects are already resolved. */
   readonly balance: MissionBalance;
@@ -69,6 +74,7 @@ export class EncounterDirector {
     balance: MissionBalance, random: () => number, waveRandom: () => number, emit: (event: MissionEvent) => void) {
     this.mission = mission;
     this.players = players;
+    this.horde = horde;
     this.balance = balance;
     this.limits = balance.limits;
     this.calls = balance.reinforcements;
@@ -76,6 +82,7 @@ export class EncounterDirector {
     this.level = balance.difficulty.level;
     this.random = random;
     this.casteRandom = seededRandom(seedOf(mission.id + '/' + mission.world.id) ^ this.level);
+    this.assaultRandom = seededRandom(seedOf(mission.id + '/' + mission.world.id + '/assault') ^ this.level);
     this.patrols = new PatrolManager(mission.world, horde, random, emit, balance);
     this.nests = new SwarmNestManager(emit, random, balance, mission.world);
     this.spawns = new SpawnManager(mission, horde, this.patrols.navigation, players, balance,
@@ -120,6 +127,8 @@ export class EncounterDirector {
   /** Rolls the breacher guards of a new nest (difficulty.json › breacherNestGuards). */
   private guard(nest: SwarmNest): SwarmNest {
     this.breachers.set(nest.id, { guards: rollCount(this.balance.castes.breacherNestGuards, this.casteRandom), called: 0 });
+    const assault = this.balance.castes.assaultBreakerNestGuards;
+    if (assault > 0) this.assaultBreakers.set(nest.id, { guards: rollCount(assault, this.assaultRandom), called: 0 });
     return nest;
   }
 
@@ -127,6 +136,19 @@ export class EncounterDirector {
   private callBreachers(nestId: number): void {
     const entry = this.breachers.get(nestId);
     if (entry) entry.called += rollCount(this.balance.castes.breachersPerReinforcement, this.casteRandom);
+    const assault = this.assaultBreakers.get(nestId);
+    if (assault) assault.called += rollCount(this.balance.castes.assaultBreakersPerReinforcement, this.assaultRandom);
+  }
+
+  /** Living assault breakers (only counted while one is owed). */
+  private liveAssaultBreakers(horde: HordeManager): number {
+    const type = this.balance.castes.assaultBreakerWireType;
+    let count = 0;
+    for (let i = 0; i < horde.count; i++) {
+      const slot = horde.active[i];
+      if (horde.type[slot] === type && horde.hp[slot] > 0) count++;
+    }
+    return count;
   }
 
   validBreachPosition(position: PositionXZ, checkPlayers = true): boolean {
@@ -237,16 +259,25 @@ export class EncounterDirector {
 
   private readonly spawnGarrison = (nest: SwarmNest, exit: PositionXZ): boolean | undefined => {
     const garrison = this.balance.nest.garrison;
-    // Owed breachers first (reinforcement calls), then the nest's guards, otherwise the nest's regular spawn.
+    const castes = this.balance.castes;
+    // Owed assault breakers first while the live cap allows, then owed breachers (reinforcement calls before guards),
+    // otherwise the nest's regular spawn.
+    const heavy = this.assaultBreakers.get(nest.id);
+    const assault = !!heavy && (heavy.called > 0 || heavy.guards > 0) &&
+      this.liveAssaultBreakers(this.horde) < castes.maxActiveAssaultBreakers;
     const owed = this.breachers.get(nest.id);
-    const breacher = !!owed && (owed.called > 0 || owed.guards > 0);
-    const type = breacher ? this.balance.castes.breacherWireType : this.balance.nest.spawnWireType;
+    const breacher = !assault && !!owed && (owed.called > 0 || owed.guards > 0);
+    const type = assault ? castes.assaultBreakerWireType : breacher ? castes.breacherWireType : this.balance.nest.spawnWireType;
     const slot = this.spawns.spawnAuthored('nest', exit, nest, 'nest-' + nest.id, type);
     if (slot === SPAWN_DEFERRED) return;
     if (slot < 0) return false;
-    if (breacher) {
-      if (owed.called > 0) owed.called--;
-      else owed.guards--;
+    if (assault) {
+      if (heavy.called > 0) heavy.called--;
+      else heavy.guards--;
+      this.casteSpawns.assaultBreakers++;
+    } else if (breacher) {
+      if (owed!.called > 0) owed!.called--;
+      else owed!.guards--;
       this.casteSpawns.breachers++;
     }
     let group = this.garrisons.get(nest.id);
@@ -293,6 +324,7 @@ export class EncounterDirector {
     this.seedPatrols(tick);
     for (const id of this.garrisons.keys()) if (!this.nests.active.has(id)) this.garrisons.delete(id);
     for (const id of this.breachers.keys()) if (!this.nests.active.has(id)) this.breachers.delete(id);
+    for (const id of this.assaultBreakers.keys()) if (!this.nests.active.has(id)) this.assaultBreakers.delete(id);
 
     let hold: EncounterHold | undefined;
     if (state !== 'ACTIVE_MISSION') hold = 'mission-phase';

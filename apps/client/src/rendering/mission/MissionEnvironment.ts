@@ -101,7 +101,7 @@ export class MissionEnvironment {
       const interactionZones = objectives.filter((objective) => objective.kind === 'activate');
       this.generated = new GeneratedTerrain(world, [...reservations, ...interactionZones], anisotropy, wind);
       this.root.add(this.generated.root, this.debug);
-      sitePlate(this.root, world.deployment.x, world.deployment.z, 8, 'LZ', materials.concrete);
+      // No plate at the landing zone: the lander's cabin floor sits at ground level and the plate showed through it.
       const mast = new T.CylinderGeometry(.065, .12, 2.7, 8);
       const cabinet = unitBox();
       for (const objective of objectives) {
@@ -220,7 +220,6 @@ export class MissionEnvironment {
       panel(materials.lamps, 0xe58353, mastX, 13.7, mastZ, .22, .16, .22);
     }
 
-    sitePlate(this.root, world.deployment.x, world.deployment.z, 12, 'LZ', stone);
     for (const site of [world.deployment]) {
       for (let i = 0; i < 12; i++) {
         const angle = i * Math.PI / 6;

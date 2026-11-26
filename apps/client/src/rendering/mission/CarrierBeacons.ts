@@ -22,6 +22,8 @@ export class CarrierBeacons {
   readonly root = new T.Group();
   private readonly spinners: T.Group[] = [];
   private readonly spots: T.SpotLight[] = [];
+  /** Light cones and flares: hidden while the lamps are off (they would only cost draw calls). */
+  private readonly effects: T.Object3D[] = [];
   private readonly dome = new T.MeshStandardMaterial({ color: 0x3a0a05, emissive: RED, emissiveIntensity: 0, roughness: .2,
     transparent: true, opacity: .82 });
   private readonly beam: T.ShaderMaterial;
@@ -90,6 +92,7 @@ export class CarrierBeacons {
         const ray = new T.Mesh(cone, this.beam);
         ray.rotation.z = -.16;
         blade.add(mirrorMesh, ray);
+        this.effects.push(ray);
         spinner.add(blade);
       }
       if (light) {
@@ -101,6 +104,7 @@ export class CarrierBeacons {
       const flare = new T.Sprite(this.flare);
       flare.scale.setScalar(1.6);
       flare.position.y = .1 * flip;
+      this.effects.push(flare);
       lamp.add(foot, dome, spinner, flare);
       this.spinners.push(spinner);
       this.root.add(lamp);
@@ -122,6 +126,7 @@ export class CarrierBeacons {
     this.color.copy(level === 1 ? AMBER : RED);
     this.spinners.forEach((spinner, i) => { spinner.rotation.y = this.angle + i * 1.3; });
     const s = this.strength;
+    for (const effect of this.effects) effect.visible = s > .002;
     this.beam.uniforms.tint.value.copy(this.color);
     this.beam.uniforms.strength.value = s * (low ? .7 : 1);
     this.dome.emissive.copy(this.color);

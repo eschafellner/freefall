@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  ATTACK_LEAP, BALANCE, aimRay, BODENBRUCH, BREACHER_TYPE, CARRIER_WORLD, ENEMY_TRAITS, HordeFrame, JAEGER_TYPE, SCHABE_TYPE, decodeHorde,
+  ATTACK_LEAP, BALANCE, aimRay, BODENBRUCH, STANDARD_LOADOUT, resolveSelection, BREACHER_TYPE, CARRIER_WORLD, ENEMY_TRAITS, HordeFrame, JAEGER_TYPE, SCHABE_TYPE, decodeHorde,
   directionalArmorClass, modelToWorld, resolveMissionBalance, zoneRayHit,
 } from '@freefall/shared';
 import type { AimRay } from '@freefall/shared';
@@ -25,12 +25,16 @@ function shooter(slot: 'primary' | 'secondary') {
   return p;
 }
 
-function breacherDamage(yaw: number, slot: 'primary' | 'secondary', aim?: { yaw: number; pitch: number }) {
+function breacherDamage(yaw: number, slot: 'primary' | 'secondary', aim?: { yaw: number; pitch: number }, primaryWeaponId?: string) {
   const horde = new HordeManager();
   const i = horde.spawn(0, -9, BREACHER_TYPE);
   horde.yaw[i] = yaw;
   const before = horde.hp[i];
   const operator = shooter(slot);
+  if (primaryWeaponId) {
+    operator.loadout = resolveSelection(BALANCE, { ...STANDARD_LOADOUT, primaryWeaponId });
+    operator.ammo = operator.loadout.weapons.primary.capacity;
+  }
   if (aim) Object.assign(operator.input, aim);
   const shot = fireWeapon(horde, operator, { ...ray }, 1, open);
   return { damage: before - horde.hp[i], impact: shot?.impact };
@@ -53,9 +57,12 @@ test('the breacher front is medium armor: low-penetration rounds glance off, fla
   assert.ok(Math.abs(front.damage / side.damage - BALANCE.armor.nonPenetratingDamageFraction) < 1e-6, `${front.damage} vs ${side.damage}`);
   assert.equal((front.impact as { armored?: true }).armored, true);
   assert.equal((side.impact as { armored?: true }).armored, undefined);
-  // The current rifle round (penetration 3) still penetrates the front.
+  // 8.2C: the Kestrel round (5,55, penetration 2) glances off the front as well; 7,77 × 50 mm (penetration 4) goes through.
   const rifle = breacherDamage(Math.PI, 'primary');
-  assert.ok(rifle.damage > front.damage * 5);
+  assert.equal((rifle.impact as { armored?: true }).armored, true);
+  const heavy = breacherDamage(Math.PI, 'primary', undefined, 'kaibal-50');
+  assert.equal((heavy.impact as { armored?: true }).armored, undefined);
+  assert.ok(Math.abs(heavy.damage - 58) < 1e-6, String(heavy.damage));
 });
 
 test('the glowing throat sac is a small frontal weak spot that weak rounds still damage in full', () => {
