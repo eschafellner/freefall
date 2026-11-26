@@ -11,8 +11,9 @@ import type { WeaponParts, WeaponProfile } from '../weapons/WeaponVisualControll
 import { CharacterAnimation } from './CharacterAnimation.ts';
 import { CharacterClipPlayer } from './CharacterClipPlayer.ts';
 import { SkeletonOverlay } from './animation/SkeletonOverlay.ts';
-import { SoldierRig } from './SoldierRig.ts';
-import type { createSoldierParts } from './SoldierRig.ts';
+import { OperatorRig } from './operator/OperatorRig.ts';
+import { CONVICT_LOOK, DEFAULT_LOOK } from './operator/Catalog.ts';
+import type { OperatorLook, OperatorWardrobe } from './operator/Wardrobe.ts';
 import { CLIP_REQUIREMENT } from './animation/ClipLibrary.ts';
 
 import type { EffectiveWeapon, EquipmentState, PostureState, ReloadState, ShotEvent, WeaponSlot, WorldDefinition } from '@freefall/shared';
@@ -46,7 +47,11 @@ export class PlayerVisualController {
   private primary: EffectiveWeapon = WEAPONS.primary;
   private secondary: EffectiveWeapon = WEAPONS.secondary;
   private readonly holstered: T.Mesh;
-  private readonly rig: SoldierRig;
+  readonly rig: OperatorRig;
+  private readonly wardrobe: OperatorWardrobe;
+  /** Look shown when the snapshot has none (standard issue for operators, the prison kit for convicts). */
+  private readonly defaultLook: OperatorLook;
+  private worn: OperatorLook;
   private readonly importedStage = new T.Group();
   private imported?: CharacterClipPlayer;
   private importedOverlay?: SkeletonOverlay;
@@ -70,10 +75,13 @@ export class PlayerVisualController {
   private readonly shotCues = new EventHistory();
   private lastQueuedShot?: { shooter: string; tick: number };
 
-  constructor(parts: ReturnType<typeof createSoldierParts>, rifle: ReturnType<typeof createKestrel>, team: number, operator = true,
-    primaries: readonly PrimaryWeaponModel[] = []) {
+  constructor(wardrobe: OperatorWardrobe, rifle: ReturnType<typeof createKestrel>, team: number, operator = true,
+    primaries: readonly PrimaryWeaponModel[] = [], look: OperatorLook = operator ? DEFAULT_LOOK : CONVICT_LOOK) {
     this.weapon = new WeaponVisualController(rifle);
-    this.rig = new SoldierRig(parts, team, this.weapon, operator);
+    this.wardrobe = wardrobe;
+    this.defaultLook = look;
+    this.worn = look;
+    this.rig = new OperatorRig(wardrobe, team, this.weapon, look);
     for (const { weaponId, parts: model, profile } of primaries) {
       const weapon = new WeaponVisualController(model, profile);
       weapon.root.visible = false;
@@ -97,6 +105,19 @@ export class PlayerVisualController {
       this.slots[name] = slot;
       if (operator && name === 'SecondaryWeapon') slot.add(this.holstered);
     }
+  }
+
+  /**
+   * Puts on another look (armour, helmet, pack); unknown ids fall back to the standard issue per slot. Equipment
+   * slots move to the new anchors. Cheap when nothing changes, so views call it every frame from the snapshot.
+   */
+  setLook(look: Partial<OperatorLook> | undefined): void {
+    const resolved = this.wardrobe.resolve(look, this.defaultLook);
+    const current = this.worn;
+    if (current.armor === resolved.armor && current.helmet === resolved.helmet && current.pack === resolved.pack) return;
+    this.worn = resolved;
+    this.rig.dress(resolved);
+    if (!this.importedStage.visible) this.mountEquipment(false);
   }
 
   attachCharacter(model: T.Object3D, clips: readonly T.AnimationClip[], asset: SoldierAsset): void {
@@ -152,6 +173,7 @@ export class PlayerVisualController {
     if (fresh) {
       this.animation.reset();
       this.imported?.reset();
+      this.rig.resetMotion();
       this.heading = heading;
     } else if (hp > 0 && hp < this.hp) {
       this.animation.hit();
@@ -256,7 +278,7 @@ export class PlayerVisualController {
       look.ground = y;
       this.poseImported(dt);
     }
-    else this.rig.pose(this.animation, this.activeWeapon, this.target, pitch, now, tactical ? this.muzzleWorld : undefined);
+    else this.rig.pose(this.animation, this.activeWeapon, this.target, pitch, dt, tactical ? this.muzzleWorld : undefined);
     this.sidearm.update(dt);
     for (const weapon of this.primaries.values()) weapon.update(dt);
     for (const present of this.posedShots) present(this.activeWeapon, now);

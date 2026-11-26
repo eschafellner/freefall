@@ -4,16 +4,15 @@ import type { ConvictSnapshot, WorldDefinition } from '@freefall/shared';
 import { PlayerVisualController } from '../characters/PlayerVisualController.ts';
 import type { PresentShot, WeaponCue } from '../characters/PlayerVisualController.ts';
 import { PlayerRigBatches } from '../characters/PlayerRigBatches.ts';
-import { createSoldierParts } from '../characters/SoldierRig.ts';
-import type { SoldierPart } from '../characters/SoldierRig.ts';
+import { createOperatorWardrobe } from '../characters/operator/Catalog.ts';
 import { createKestrel } from '../weapons/Kestrel.ts';
 
 import { stencil } from './ShipParts.ts';
 
 export class ConvictView {
-  private readonly parts = createSoldierParts({ olive: 0xb4592a, fabric: 0x9a4b26, variant: 'convict' });
+  private readonly wardrobe = createOperatorWardrobe();
   private readonly rifle = createKestrel();
-  private readonly models = Array.from({ length: 4 }, () => new PlayerVisualController(this.parts, this.rifle, 0xc47541, false));
+  private readonly models = Array.from({ length: 4 }, () => new PlayerVisualController(this.wardrobe, this.rifle, 0xc47541, false));
   private readonly batch: PlayerRigBatches;
   /** Backpack stencils (own geometry, material and canvas texture per convict). */
   private readonly signs: T.Mesh[] = [];
@@ -64,14 +63,8 @@ export class ConvictView {
       material.dispose();
       sign.geometry.dispose();
     }
+    this.wardrobe.dispose();
     const materials = new Set<T.Material>([this.rifle.finish]);
-    for (const entry of Object.values(this.parts)) {
-      const parts: SoldierPart[] = Array.isArray(entry) ? entry : [entry];
-      for (const part of parts) {
-        part.geometry.dispose();
-        materials.add(part.material);
-      }
-    }
     for (const part of [this.rifle.body, this.rifle.optic, this.rifle.magazine, this.rifle.pistol.body, this.rifle.pistol.optic, this.rifle.pistol.magazine]) part.dispose();
     this.rifle.pistol.slide?.dispose();
     for (const material of materials) material.dispose();

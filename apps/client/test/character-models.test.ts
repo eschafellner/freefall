@@ -1,30 +1,31 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import * as T from 'three';
-import { createSoldierParts } from '../src/rendering/characters/SoldierRig.ts';
+import { CONVICT_LOOK, DEFAULT_LOOK, createOperatorWardrobe } from '../src/rendering/characters/operator/Catalog.ts';
 import { EnemyVisualLOD, SCHABE_GAIT } from '../src/rendering/EnemyVisualLOD.ts';
 
 const triangles = (geometry: T.BufferGeometry) => (geometry.index ? geometry.index.count : geometry.getAttribute('position').count) / 3;
 
-function rigTriangles(parts: ReturnType<typeof createSoldierParts>): number {
-  const once = [parts.pelvis, parts.beltKit, parts.torso, parts.pack, parts.head, ...parts.sleeves];
-  const twice = [parts.forearm, parts.glove, parts.thigh, parts.shin, parts.boot];
-  return once.reduce((sum, part) => sum + triangles(part.geometry), 0) + 2 * twice.reduce((sum, part) => sum + triangles(part.geometry), 0);
-}
-
-test('operator and convict stay within the character triangle budget and carry surface data', () => {
-  const operator = createSoldierParts();
-  const convict = createSoldierParts({ variant: 'convict' });
-  for (const parts of [operator, convict]) {
-    assert.ok(rigTriangles(parts) <= 25_000);
-    for (const part of [parts.torso, parts.head, parts.boot]) assert.ok(part.geometry.getAttribute('surface'), 'roughness/glow attribute');
+test('operator and convict looks stay within the character budget and carry surface and skin data', () => {
+  const wardrobe = createOperatorWardrobe();
+  const operator = wardrobe.look(DEFAULT_LOOK);
+  const convict = wardrobe.look(CONVICT_LOOK);
+  for (const look of [operator, convict]) {
+    assert.ok(look.triangles <= 25_000, `${look.key}: ${look.triangles} triangles`);
+    for (const geometry of Object.values(look.geometries)) {
+      for (const name of ['surface', 'skinIndex', 'skinWeight', 'color', 'normal']) assert.ok(geometry!.getAttribute(name), name);
+    }
   }
-  // The convict variant is its own model, not a recolour.
-  assert.notEqual(triangles(operator.head.geometry), triangles(convict.head.geometry));
-  const glow = convict.head.geometry.getAttribute('surface');
+  // The convict look is its own model, not a recolour, and its custody collar glows.
+  assert.notEqual(operator.triangles, convict.triangles);
   let lit = false;
-  for (let i = 0; i < glow.count; i++) lit ||= glow.getY(i) > 1;
+  for (const geometry of Object.values(convict.geometries)) {
+    const glow = geometry!.getAttribute('surface');
+    for (let i = 0; i < glow.count; i++) lit ||= glow.getY(i) > 1;
+  }
   assert.ok(lit, 'custody collar light');
+  assert.equal(wardrobe.look({ ...DEFAULT_LOOK }), operator, 'looks are shared');
+  wardrobe.dispose();
 });
 
 test('Schabe tiers keep their triangle budgets and only legs carry gait weights', () => {

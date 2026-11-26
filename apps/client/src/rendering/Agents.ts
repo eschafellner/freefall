@@ -9,8 +9,7 @@ import { prepareCharacterClips } from './characters/animation/CharacterClipSet.t
 import { PlayerRigBatches } from './characters/PlayerRigBatches.ts';
 import { PlayerVisualController } from './characters/PlayerVisualController.ts';
 import type { PresentShot, WeaponCue } from './characters/PlayerVisualController.ts';
-import { createSoldierParts } from './characters/SoldierRig.ts';
-import type { SoldierPart } from './characters/SoldierRig.ts';
+import { createOperatorWardrobe } from './characters/operator/Catalog.ts';
 import type { ContactShadows } from './ContactShadows.ts';
 import { createKestrel } from './weapons/Kestrel.ts';
 import { createCerberus } from './weapons/Cerberus.ts';
@@ -21,7 +20,7 @@ import { CERBERUS_HANDLING } from './weapons/WeaponVisualController.ts';
 import type { PrimaryWeaponModel } from './characters/PlayerVisualController.ts';
 
 export class PlayerView {
-  private readonly parts = createSoldierParts();
+  readonly wardrobe = createOperatorWardrobe();
   private readonly rifle = createKestrel();
   /** Primary weapons besides the Kestrel; every operator model carries all of them and shows the selected one. */
   private readonly primaries: readonly PrimaryWeaponModel[] = [
@@ -30,7 +29,7 @@ export class PlayerView {
     { weaponId: 'viktor-55', parts: createViktor55(this.rifle.finish), profile: VIKTOR55_HANDLING },
     { weaponId: 'kaibal-50', parts: createKaibal50(this.rifle.finish), profile: KAIBAL50_HANDLING },
   ];
-  private readonly models = TEAM_COLORS.map((color) => new PlayerVisualController(this.parts, this.rifle, color, true, this.primaries));
+  private readonly models = TEAM_COLORS.map((color) => new PlayerVisualController(this.wardrobe, this.rifle, color, true, this.primaries));
   private readonly batches: PlayerRigBatches;
   private disposed = false;
   private latest?: PlayersSnapshot;
@@ -88,6 +87,7 @@ export class PlayerView {
     if (me) {
       const model = this.models[me.slot];
       model.setWeapons(me.weapons);
+      model.setLook(me.look);
       const actionTick = a && b ? T.MathUtils.lerp(a.tick, b.tick, Math.min(1, alpha)) : localTick;
       const earlier = a?.players.find((p) => p.id === own && p.life === me.life)?.equipment;
       const later = b?.players.find((p) => p.id === own && p.life === me.life)?.equipment;
@@ -116,6 +116,7 @@ export class PlayerView {
       const gear = nextGear && (switched || nextGear.action && nextGear.started <= tick) ? nextGear : currentGear;
       const reload = later?.reload && later.reload.started <= tick && tick < later.reload.until && later.reloadUntil ? later : frame;
       this.models[player.slot].setWeapons(frame.weapons);
+      this.models[player.slot].setLook(frame.look);
       this.models[player.slot].draw(frame.id, frame.life, frame.hp, x, z, heading, playerPitch,
         Boolean(motion & PLAYER_MOTION.aim), Boolean(motion & PLAYER_MOTION.sprint), reload.reloadUntil ?? 0, tick, now, dt,
         false, gear, posture, y, bodyYaw, reload.reload, tick, world);
@@ -150,14 +151,8 @@ export class PlayerView {
     this.disposed = true;
     this.batches.dispose();
     for (const model of this.models) model.dispose();
+    this.wardrobe.dispose();
     const materials = new Set<T.Material>([this.rifle.finish]);
-    for (const entry of Object.values(this.parts)) {
-      const parts: SoldierPart[] = Array.isArray(entry) ? entry : [entry];
-      for (const part of parts) {
-        part.geometry.dispose();
-        materials.add(part.material);
-      }
-    }
     for (const part of [this.rifle.body, this.rifle.optic, this.rifle.magazine, this.rifle.pistol.body, this.rifle.pistol.optic, this.rifle.pistol.magazine]) part.dispose();
     this.rifle.pistol.slide?.dispose();
     for (const { parts } of this.primaries) for (const part of [parts.body, parts.optic, parts.magazine, parts.slide, parts.spent]) part?.dispose();

@@ -4,23 +4,23 @@
 
 ## Integrierte Darstellung
 
-Der prozedurale Soldat ist ein funktionaler Ersatz für ein geskinntes Produktionsmodell. Er verwendet meterbasierte Proportionen, eigenständig modellierte Schutzplatten, Helm, Handschuhe, Stiefel, Taschen und einen Funkrucksack. Stoff und Polymer verwenden matte Materialien, die Waffe einen metallischen Materialansatz. Eine Schulter- und Rückenmarkierung in jeder Squad-Farbe entspricht dem HUD-Slot. Die vorhandene Arena-Beleuchtung wird weiterverwendet. [Waffenhaltung](character/waffenhaltung.jpg) · [Nachladen](character/nachladen.jpg)
+Der Operator ist ein prozedurales, geskinntes Modell auf einem Skelett mit 27 Knochen (FREEFALL-Knochennamen). Rüstung, Helm und Rucksack sind austauschbare Ausrüstungsteile aus der Garderobe; ein Look kostet zwei Draw Calls pro Operator. Die Animation läuft prozedural auf diesem Skelett: Zweigelenk-IK für Arme und Beine, Fußabrollen, Beckenbewegung, Wirbelsäulenverteilung, Gewehrhaltung mit eingedrehtem Oberkörper, Federn für Sekundärbewegung und Schrittkorrektur im Stand. Alles Weitere, auch wie neue Rüstungen angelegt und später spielwirksam gemacht werden: [Operator: Modell, Rüstungen und Animation](OPERATOR_MODELL.md).
 
-**Modellüberarbeitung 2026-11-22.** Die Teile entstehen aus abgerundeten Grundformen (`ModelParts`): mehrstufig gefaste Platten, Kuppeln für Helm, Schulter- und Knieschützer, Kapseln und größenabhängig unterteilte Ellipsoide. Platten, Gläser und Metallteile tragen über das Vertexattribut `surface` einen geringeren Rauheitsfaktor als Stoff. Brillengläser und Statusleuchten haben ein schwaches Eigenleuchten. Eine eingebrannte Vertex-Schattierung dunkelt Fugen, Überlappungen und Unterseiten ab. Der Operator hat jetzt einen runden Helm mit Rand, Seitenschienen, NVG-Halter, Brille, Gehörschutz und Kinnriemen, abgerundete Schulter- und Knieschützer, Plattenträger mit Front- und Rückenplatte, Taschen mit Laschen, Kragen, Handschuhe mit Fingerblock und Daumen sowie Stiefel mit Zehenkappe, Fersenkappe und Sohle. Rund 10.400 Dreiecke pro Operator, Richtwert 25.000. Gelenkpunkte, Segmentlängen, Anker und Animation sind unverändert.
+Convicts nutzen dasselbe Rig mit dem Häftlings-Look: oranger Overall mit Reflexstreifen, Kapuze mit Atemmaske, Gewahrsamshalsband mit Statusleuchte, festgeschnallte Schrottplatten, Arbeitshandschuhe, abgetragene Stiefel und Seesack mit der bisherigen Kennzeichnung.
 
-Convicts nutzen dasselbe Rig mit der Variante `convict`: oranger Overall mit Reflexstreifen, Kapuze mit Atemmaske, Doppelfilter und einfacher Brille, ein Gewahrsamshalsband mit Statusleuchte, ungleiche, festgeschnallte Schrottplatten, Arbeitshandschuhe, abgetragene Stiefel und ein Seesack mit der bisherigen Kennzeichnung. [Vergleich vorher/nachher](visual-style/modelle-vorher-nachher.jpg)
+Frühere Stände: [Waffenhaltung](character/waffenhaltung.jpg) · [Nachladen](character/nachladen.jpg) · [Modelle 2026-11-22](visual-style/modelle-vorher-nachher.jpg)
 
-| Slot | Zweck |
-| --- | --- |
-| `Helmet` | Zubehör am Kopf |
-| `Torso` | Brustpanzer oder Träger |
-| `Arms` | Anker an der linken Schulter im Fallback |
-| `Legs` | Anker an der Hüfte im Fallback |
-| `Backpack` | Anker am Rücken |
-| `PrimaryWeapon` | Gewehr in der aktiven Haltung, mit eigenem Weapon-Rig |
-| `SecondaryWeapon` | Anker am rechten Hüftgurt |
+| Slot | Zweck | Knochen im prozeduralen Rig |
+| --- | --- | --- |
+| `Helmet` | Zubehör am Kopf | `Head` |
+| `Torso` | Brustpanzer oder Träger | `UpperChest` |
+| `Arms` | Anker am linken Oberarm | `LeftUpperArm` |
+| `Legs` | Anker an der Hüfte | `Hips` |
+| `Backpack` | Rückseite des Rucksacks (z. B. Häftlingsbeschriftung), je Rucksack eigener Anker | `Backpack` |
+| `PrimaryWeapon` | Gewehr in der aktiven Haltung, mit eigenem Weapon-Rig | Waffenrahmen am `UpperChest` |
+| `SecondaryWeapon` | Holster am rechten Hüftgurt, Lage je Rüstung | `Hips` |
 
-Jeder Slot ist ein Three.js-Knoten für visuelle Objekte. Externe Rigs können die Anker über `equipmentNodes` zuordnen. Modulare Rüstungsmodelle sollen ihre austauschbaren Meshes getrennt liefern. Progression, Inventar und kosmetische Freischaltungen sind spätere Datenquellen für diese Anker.
+Jeder Slot ist ein Three.js-Knoten für visuelle Objekte. Beim Wechsel des Looks wandern die Slots zu den Ankern der neuen Teile. Externe Rigs können die Anker über `equipmentNodes` zuordnen.
 
 ## GLB und glTF
 

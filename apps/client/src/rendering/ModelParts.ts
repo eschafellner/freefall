@@ -3,6 +3,9 @@ import { bakeOcclusion, combineParts, paintedPart } from './AgentMeshes.ts';
 
 type Vec3 = readonly [number, number, number];
 
+/** Up to four bone influences of one vertex: bone indices and weights (normalised by the builder). */
+export type SkinInfluence = readonly (readonly [bone: number, weight: number])[];
+
 /**
  * Builds a procedural model from rounded primitives. Every part carries a vertex colour, a `surface` attribute
  * (roughness factor, glow) set through `gloss` and `glow`, and optionally a `rig` attribute for vertex animation.
@@ -14,19 +17,40 @@ export class ModelParts {
   glow = 0;
   /** Per-vertex rig data for the following parts (only kept when the builder was created with `rig`). */
   rig?: (x: number, y: number, z: number) => readonly [number, number];
+  /**
+   * Skin weights for the following parts, evaluated at the final (offset) vertex position. Only used when the builder
+   * was created with `skinned`; every part then carries `skinIndex` and `skinWeight` for a `SkinnedMesh`.
+   */
+  skin?: (x: number, y: number, z: number) => SkinInfluence;
+  /** Translation added to the following parts (e.g. a bone's bind position, so pieces are authored bone-local). */
+  readonly offset = new T.Vector3();
+  /** Multiplies the colour of the following parts (seams, worn edges). */
+  shade = 1;
   private readonly parts: T.BufferGeometry[] = [];
+  /** Parts that neither cast nor receive the baked seam occlusion (large lofted bodies that enclose other parts). */
+  private readonly plain: T.BufferGeometry[] = [];
   private readonly contact: number;
   private readonly occlusion: number;
   private readonly rigged: boolean;
+  private readonly skinned: boolean;
 
-  constructor({ contact = .012, occlusion = 1, rig = false } = {}) {
+  constructor({ contact = .012, occlusion = 1, rig = false, skinned = false } = {}) {
     this.contact = contact;
     this.occlusion = occlusion;
     this.rigged = rig;
+    this.skinned = skinned;
   }
 
-  /** Rounded box. `bevel` rounds every edge; 0 keeps a sharp box. */
-  box(color: number, x: number, y: number, z: number, w: number, h: number, d: number, bevel = 0, pitch = 0, roll = 0): void {
+  /** Adds a prepared geometry (positions and normals) with the current colour, surface, offset and skin settings. */
+  custom(geometry: T.BufferGeometry, color: number, occlude = true): void {
+    this.add(geometry, color, occlude);
+  }
+
+  /** Number of parts added so far. */
+  get size(): number { return this.parts.length + this.plain.length; }
+
+  /** Rounded box. `bevel` rounds every edge; 0 keeps a sharp box. Rotations apply as pitch (X), roll (Z), yaw (Y). */
+  box(color: number, x: number, y: number, z: number, w: number, h: number, d: number, bevel = 0, pitch = 0, roll = 0, yaw = 0): void {
     let part: T.BufferGeometry;
     if (bevel > .005 && Math.min(w, h, d) > .02) {
       const bevelSize = Math.min(bevel, w / 2 - .0005, h / 2 - .0005, d / 2 - .0005);
@@ -47,7 +71,9 @@ export class ModelParts {
     } else {
       part = new T.BoxGeometry(w, h, d);
     }
-    this.add(part.rotateX(pitch).rotateZ(roll).translate(x, y, z), color);
+    part.rotateX(pitch).rotateZ(roll);
+    if (yaw) part.rotateY(yaw);
+    this.add(part.translate(x, y, z), color);
   }
 
   /**
@@ -71,8 +97,8 @@ export class ModelParts {
   }
 
   /** Upper part of an ellipsoid (helmet shells, pads). `cover` is the covered fraction of the height (0–1). */
-  dome(color: number, x: number, y: number, z: number, w: number, h: number, d: number, cover = .5, pitch = 0, roll = 0): void {
-    this.add(new T.SphereGeometry(1, 14, 6, 0, Math.PI * 2, 0, Math.PI * cover).scale(w / 2, h / 2, d / 2)
+  dome(color: number, x: number, y: number, z: number, w: number, h: number, d: number, cover = .5, pitch = 0, roll = 0, segments = 14): void {
+    this.add(new T.SphereGeometry(1, segments, Math.max(6, Math.round(segments * .43)), 0, Math.PI * 2, 0, Math.PI * cover).scale(w / 2, h / 2, d / 2)
       .rotateX(pitch).rotateZ(roll).translate(x, y, z), color);
   }
 
@@ -102,12 +128,41 @@ export class ModelParts {
 
   geometry(): T.BufferGeometry {
     bakeOcclusion(this.parts, this.contact, this.occlusion);
-    return combineParts(this.parts);
+    return combineParts([...this.parts, ...this.plain]);
   }
 
-  private add(geometry: T.BufferGeometry, color: number): void {
+  private add(geometry: T.BufferGeometry, color: number, occlude = true): void {
     geometry.deleteAttribute('uv');
+    if (this.offset.lengthSq()) geometry.translate(this.offset.x, this.offset.y, this.offset.z);
     const part = paintedPart(geometry, color, [this.gloss, this.glow]);
+    // Optional per-vertex brightness written by the geometry itself (lofts darken creases and undersides).
+    const shading = part.getAttribute('shade');
+    if (this.shade !== 1 || shading) {
+      const colors = part.getAttribute('color');
+      for (let i = 0; i < colors.count; i++) {
+        const f = this.shade * (shading ? shading.getX(i) : 1);
+        colors.setXYZ(i, colors.getX(i) * f, colors.getY(i) * f, colors.getZ(i) * f);
+      }
+      if (shading) part.deleteAttribute('shade');
+    }
+    if (this.skinned) {
+      const positions = part.getAttribute('position');
+      const index = new Uint16Array(positions.count * 4);
+      const weight = new Float32Array(positions.count * 4);
+      for (let i = 0; i < positions.count; i++) {
+        const influences = this.skin ? this.skin(positions.getX(i), positions.getY(i), positions.getZ(i)) : [[0, 1] as const];
+        // Strongest four, normalised.
+        const top = [...influences].filter(([, w]) => w > 1e-4).sort((a, b) => b[1] - a[1]).slice(0, 4);
+        const total = top.reduce((sum, [, w]) => sum + w, 0) || 1;
+        top.forEach(([bone, w], k) => {
+          index[i * 4 + k] = bone;
+          weight[i * 4 + k] = w / total;
+        });
+        if (!top.length) weight[i * 4] = 1;
+      }
+      part.setAttribute('skinIndex', new T.Uint16BufferAttribute(index, 4));
+      part.setAttribute('skinWeight', new T.BufferAttribute(weight, 4));
+    }
     if (this.rigged) {
       const positions = part.getAttribute('position');
       const values = new Float32Array(positions.count * 2);
@@ -116,6 +171,6 @@ export class ModelParts {
       }
       part.setAttribute('rig', new T.BufferAttribute(values, 2));
     }
-    this.parts.push(part);
+    (occlude ? this.parts : this.plain).push(part);
   }
 }

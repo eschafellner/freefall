@@ -9,7 +9,7 @@ import { newPosture } from '@freefall/shared';
 import { CharacterAnimation } from '../src/rendering/characters/CharacterAnimation.ts';
 import { CharacterClipPlayer } from '../src/rendering/characters/CharacterClipPlayer.ts';
 import { PlayerVisualController } from '../src/rendering/characters/PlayerVisualController.ts';
-import { createSoldierParts } from '../src/rendering/characters/SoldierRig.ts';
+import { createOperatorWardrobe } from '../src/rendering/characters/operator/Catalog.ts';
 import { TACTICAL_LOOPS, TACTICAL_ONCE, TACTICAL_OVERLAYS } from '../src/rendering/characters/TacticalAnimation.ts';
 import { prepareCharacterClips } from '../src/rendering/characters/animation/CharacterClipSet.ts';
 import { CLIP_REQUIREMENTS, clipCoverage } from '../src/rendering/characters/animation/ClipLibrary.ts';
@@ -278,7 +278,7 @@ test('foot IK lifts a foot that a clip pushes into the ground and leaves planted
 });
 
 test('the procedural rig stays the fallback for states whose GLB clip is missing', () => {
-  const player = new PlayerVisualController(createSoldierParts(), createKestrel(), 0x73d5e7);
+  const player = new PlayerVisualController(createOperatorWardrobe(), createKestrel(), 0x73d5e7);
   const { model, pose } = animated();
   const mount = new T.Group();
   mount.name = 'PrimaryWeapon';
@@ -297,7 +297,9 @@ test('the procedural rig stays the fallback for states whose GLB clip is missing
   draw(supine);
   assert.equal(imported.visible, false, 'no supine clip: procedural rig');
   assert.equal(procedural.visible, true);
-  assert.equal(player.slots.SecondaryWeapon.parent, procedural);
+  let holster = player.slots.SecondaryWeapon.parent;
+  while (holster && holster !== procedural) holster = holster.parent;
+  assert.ok(holster === procedural, 'the holster rides on the procedural skeleton again');
   assert.ok(player.clipCoverage?.missingCore.supine?.includes('supineIdle'));
   const slide = { ...newPosture(), current: 'SLIDING' as const, until: 20 };
   for (let i = 0; i < 30; i++) draw(slide, 10);
@@ -359,7 +361,7 @@ test('invalid clip bindings and root transforms cannot satisfy required coverage
 });
 
 test('remote shot animation waits for its render tick and drops shot echoes from other lives', () => {
-  const player = new PlayerVisualController(createSoldierParts(), createKestrel(), 0x73d5e7);
+  const player = new PlayerVisualController(createOperatorWardrobe(), createKestrel(), 0x73d5e7);
   const posture = { ...newPosture(), current: 'SUPINE' as const };
   const draw = (tick: number, life = 1) => player.draw('p', life, 100, 0, 0, 0, 0, false, false, 0, tick, 0, 1 / 60, false, undefined, posture);
   const shot = { shooter: 'p', tick: 20, life: 1, fromX: 0, fromY: .4, fromZ: 0, toX: 0, toY: 1, toZ: -5, enemy: 0, eliminated: false };

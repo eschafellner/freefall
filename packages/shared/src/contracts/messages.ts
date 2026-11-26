@@ -116,6 +116,18 @@ export interface PlayerState {
   equipment?: EquipmentState;
   /** Weapon IDs of the operator's loadout (presentation: model, sound, handling). Absent: standard loadout. */
   weapons?: Record<WeaponSlot, string>;
+  /** Visible armour of the operator (wardrobe ids). Absent: standard issue. Not assigned by the server yet. */
+  look?: OperatorLook;
+}
+
+/**
+ * What an operator wears: armour (suit, plates, gloves, boots), helmet and backpack, as wardrobe ids
+ * (`apps/client/src/rendering/characters/operator/Catalog.ts`). Clients fall back per slot for ids they do not know.
+ */
+export interface OperatorLook {
+  readonly armor: string;
+  readonly helmet: string;
+  readonly pack: string;
 }
 
 /** Client → server: requested `LoadoutSelection`. Server → client: the accepted selection or a refusal. */

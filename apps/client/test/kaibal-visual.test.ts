@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import * as T from 'three';
 import { BALANCE } from '@freefall/shared';
 import { PlayerVisualController } from '../src/rendering/characters/PlayerVisualController.ts';
-import { createSoldierParts } from '../src/rendering/characters/SoldierRig.ts';
+import { createOperatorWardrobe } from '../src/rendering/characters/operator/Catalog.ts';
 import { createKestrel } from '../src/rendering/weapons/Kestrel.ts';
 import { KAIBAL50_HANDLING, createKaibal50 } from '../src/rendering/weapons/Kaibal50.ts';
 import { WeaponVisualController } from '../src/rendering/weapons/WeaponVisualController.ts';
@@ -97,7 +97,7 @@ test('Schüsse wechseln vom rechten zum linken Lauf, nach dem Nachladen wieder r
 });
 
 test('der Operator zeigt die Kaibal 50 als Primärwaffe', () => {
-  const player = new PlayerVisualController(createSoldierParts(), rifle, 0x73d5e7, true, [
+  const player = new PlayerVisualController(createOperatorWardrobe(), rifle, 0x73d5e7, true, [
     { weaponId: 'kaibal-50', parts, profile: KAIBAL50_HANDLING }]);
   player.setWeapons({ primary: 'kaibal-50', secondary: 'p-01' });
   player.draw('a', 1, 100, 0, 0, 0, 0, false, false, 0, 1, 33, 1 / 30, true);

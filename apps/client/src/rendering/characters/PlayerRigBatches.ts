@@ -7,20 +7,21 @@ import * as T from 'three';
 export type RigTransport = T.Vector3 | { readonly anchor: T.Vector3; readonly rotation: T.Quaternion; readonly pivot: number };
 
 const transport = new WeakMap<T.Scene, ReadonlyMap<number, RigTransport>>();
+const IDENTITY = new T.Matrix4();
 
-interface Part {
-  source: T.Mesh;
-  mesh: T.InstancedMesh;
-}
-
+/**
+ * Draws the rigid parts of several character rigs (weapons, props, team patches) as shared instanced meshes, one
+ * draw per geometry and material. Rigs are scanned every frame, so looks can change at runtime. Skinned bodies render
+ * themselves; this class only hands them the rig's transport and hides them outside the view.
+ */
 export class PlayerRigBatches {
-  private readonly batches: T.InstancedMesh[] = [];
-  private readonly parts = new Map<T.Object3D, Part[]>();
+  private readonly batches = new Map<string, T.InstancedMesh>();
   private readonly frustum = new T.Frustum();
   private readonly projection = new T.Matrix4();
   private readonly bounds = new T.Sphere(new T.Vector3(), 1.55);
 
   private readonly scene: T.Scene;
+  private readonly roots: readonly T.Object3D[];
   private readonly followsTransport: boolean;
   private readonly offsetMatrix = new T.Matrix4();
   private readonly carryMatrix = new T.Matrix4();
@@ -33,73 +34,65 @@ export class PlayerRigBatches {
 
   constructor(scene: T.Scene, rigs: readonly T.Object3D[], followsTransport = true) {
     this.scene = scene;
+    this.roots = rigs;
     this.followsTransport = followsTransport;
-    const groups = new Map<string, T.Mesh[]>();
-    const byRoot = new Map<T.Object3D, T.Mesh[]>();
-    for (const root of rigs) {
-      const sources: T.Mesh[] = [];
-      root.traverse((object) => {
-        if (!(object instanceof T.Mesh) || Array.isArray(object.material)) return;
-        const key = object.geometry.uuid + ':' + object.material.uuid;
-        const group = groups.get(key);
-        if (group) group.push(object);
-        else groups.set(key, [object]);
-        object.layers.disable(0);
-        sources.push(object);
-      });
-      byRoot.set(root, sources);
+    // Create the batches for the current pieces up front (shaders compile with the scene).
+    for (const root of rigs) root.traverse((object) => {
+      if (this.rigid(object)) this.batch(object, rigs.length);
+    });
+  }
+
+  private rigid(object: T.Object3D): object is T.Mesh<T.BufferGeometry, T.Material> {
+    return object instanceof T.Mesh && !(object instanceof T.SkinnedMesh) && !(object instanceof T.InstancedMesh) &&
+      !Array.isArray(object.material);
+  }
+
+  private batch(source: T.Mesh<T.BufferGeometry, T.Material>, capacity: number): T.InstancedMesh {
+    source.layers.disable(0);
+    const key = source.geometry.uuid + ':' + source.material.uuid;
+    let mesh = this.batches.get(key);
+    if (mesh && mesh.instanceMatrix.count >= capacity) return mesh;
+    const size = Math.max(capacity, (mesh?.instanceMatrix.count ?? 0) * 2, this.roots.length);
+    const grown = new T.InstancedMesh(source.geometry, source.material, size);
+    grown.name = 'PlayerRigBatch';
+    grown.count = mesh?.count ?? 0;
+    grown.frustumCulled = false;
+    grown.instanceMatrix.setUsage(T.DynamicDrawUsage);
+    if (mesh) {
+      grown.instanceMatrix.array.set(mesh.instanceMatrix.array.subarray(0, mesh.count * 16));
+      mesh.removeFromParent();
+      mesh.dispose();
     }
-    const assignment = new Map<T.Mesh, T.InstancedMesh>();
-    for (const group of groups.values()) {
-      const { geometry, material } = group[0];
-      const mesh = new T.InstancedMesh(geometry, material, group.length);
-      mesh.name = 'PlayerRigBatch';
-      mesh.count = 0;
-      mesh.frustumCulled = false;
-      mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);
-      scene.add(mesh);
-      this.batches.push(mesh);
-      for (const source of group) assignment.set(source, mesh);
-    }
-    for (const [root, sources] of byRoot) {
-      this.parts.set(root, sources.map((source) => ({ source, mesh: assignment.get(source)! })));
-    }
+    this.scene.add(grown);
+    this.batches.set(key, grown);
+    return grown;
   }
 
   draw(camera: T.Camera): void {
     const offsets = this.followsTransport ? transport.get(this.scene) : undefined;
-    let index = 0;
     this.projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     this.frustum.setFromProjectionMatrix(this.projection);
-    for (const mesh of this.batches) mesh.count = 0;
-    for (const [root, parts] of this.parts) {
-      const offset = offsets?.get(index++);
+    for (const mesh of this.batches.values()) mesh.count = 0;
+    for (const [index, root] of this.roots.entries()) {
       if (!root.visible) continue;
+      const offset = offsets?.get(index);
       this.bounds.center.set(root.position.x, root.position.y + .86, root.position.z);
       const shift = offset instanceof T.Vector3 ? offset : undefined;
       const carry = offset && !shift ? offset as Exclude<RigTransport, T.Vector3> : undefined;
+      let moved: T.Matrix4 | undefined;
       if (carry) {
         this.bounds.center.copy(carry.anchor);
         this.carryMatrix.makeRotationFromQuaternion(carry.rotation).setPosition(carry.anchor);
-        this.carryMatrix.multiply(this.pivotMatrix.makeTranslation(-root.position.x, -root.position.y - carry.pivot, -root.position.z));
-      } else if (shift) this.bounds.center.add(shift);
-      if (!this.frustum.intersectsSphere(this.bounds)) continue;
-      root.updateMatrixWorld();
-      for (const { source, mesh } of parts) {
-        if (!this.attached(source, root)) continue;
-        if (!offset) mesh.setMatrixAt(mesh.count++, source.matrixWorld);
-        else if (carry) mesh.setMatrixAt(mesh.count++, this.offsetMatrix.multiplyMatrices(this.carryMatrix, source.matrixWorld));
-        else {
-          const matrix = this.offsetMatrix.copy(source.matrixWorld).setPosition(
-            source.matrixWorld.elements[12] + shift!.x,
-            source.matrixWorld.elements[13] + shift!.y,
-            source.matrixWorld.elements[14] + shift!.z,
-          );
-          mesh.setMatrixAt(mesh.count++, matrix);
-        }
+        moved = this.carryMatrix.multiply(this.pivotMatrix.makeTranslation(-root.position.x, -root.position.y - carry.pivot, -root.position.z));
+      } else if (shift) {
+        this.bounds.center.add(shift);
+        moved = this.carryMatrix.makeTranslation(shift.x, shift.y, shift.z);
       }
+      const seen = this.frustum.intersectsSphere(this.bounds);
+      if (seen) root.updateMatrixWorld();
+      this.collect(root, seen, moved);
     }
-    for (const mesh of this.batches) {
+    for (const mesh of this.batches.values()) {
       if (!mesh.count) continue;
       mesh.instanceMatrix.clearUpdateRanges();
       mesh.instanceMatrix.addUpdateRange(0, mesh.count * 16);
@@ -107,19 +100,28 @@ export class PlayerRigBatches {
     }
   }
 
-  private attached(source: T.Object3D, root: T.Object3D): boolean {
-    // Slot overrides may hide a procedural hierarchy or replace one of its pieces.
-    for (let part: T.Object3D | null = source; part; part = part.parent) {
-      if (!part.visible) return false;
-      if (part === root) return true;
+  /** Visits the visible part of a rig: rigid meshes go into their batch, skinned meshes get the transport. */
+  private collect(node: T.Object3D, seen: boolean, moved: T.Matrix4 | undefined): void {
+    if (node instanceof T.SkinnedMesh) {
+      node.visible = seen;
+      node.matrixWorld.copy(moved ?? IDENTITY);
+      return;
     }
-    return false;
+    if (!node.visible) return;
+    if (seen && this.rigid(node)) {
+      const mesh = this.batch(node, 0);
+      if (mesh.count >= mesh.instanceMatrix.count) this.batch(node, mesh.count + 1);
+      const target = this.batches.get(node.geometry.uuid + ':' + node.material.uuid)!;
+      target.setMatrixAt(target.count++, moved ? this.offsetMatrix.multiplyMatrices(moved, node.matrixWorld) : node.matrixWorld);
+    }
+    for (const child of node.children) this.collect(child, seen, moved);
   }
 
   dispose(): void {
-    for (const mesh of this.batches) {
+    for (const mesh of this.batches.values()) {
       mesh.removeFromParent();
       mesh.dispose();
     }
+    this.batches.clear();
   }
 }

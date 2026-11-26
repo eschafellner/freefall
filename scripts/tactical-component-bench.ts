@@ -5,11 +5,11 @@ import { BALANCE, BODENBRUCH, NET, advancePosture, applyPostureInput, missionGro
 import type { PlayerInput, Posture } from '@freefall/shared';
 import { ThirdPersonCamera, cameraAnchorWeight } from '../apps/client/src/rendering/ThirdPersonCamera.ts';
 import { PlayerVisualController } from '../apps/client/src/rendering/characters/PlayerVisualController.ts';
-import { createSoldierParts } from '../apps/client/src/rendering/characters/SoldierRig.ts';
+import { createOperatorWardrobe } from '../apps/client/src/rendering/characters/operator/Catalog.ts';
 import { createKestrel } from '../apps/client/src/rendering/weapons/Kestrel.ts';
 import { timingStats } from '../apps/server/src/simulation/FixedLoop.ts';
 
-const parts = createSoldierParts();
+const parts = createOperatorWardrobe();
 const rifle = createKestrel();
 const camera = new ThirdPersonCamera();
 const world = missionGround(BODENBRUCH.world);

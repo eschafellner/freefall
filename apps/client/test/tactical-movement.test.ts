@@ -14,7 +14,7 @@ import { cameraPreferences, normalizeCameraPreferences } from '../src/rendering/
 import { LANDING_TICKS, TacticalAnimation } from '../src/rendering/characters/TacticalAnimation.ts';
 import { ThirdPersonCamera, cameraAnchorWeight } from '../src/rendering/ThirdPersonCamera.ts';
 import { PlayerVisualController } from '../src/rendering/characters/PlayerVisualController.ts';
-import { createSoldierParts } from '../src/rendering/characters/SoldierRig.ts';
+import { createOperatorWardrobe } from '../src/rendering/characters/operator/Catalog.ts';
 import { createKestrel } from '../src/rendering/weapons/Kestrel.ts';
 
 const idle = (seq: number): PlayerInput => ({ seq, life: 1, forward: 0, strafe: 0, yaw: 0, pitch: 0, fire: false, sprint: false });
@@ -22,7 +22,7 @@ const movement = BALANCE.movement;
 const player: PlayerState = { id: 'p', slot: 0, x: 0, z: 0, hp: 100, yaw: 0, life: 1, ack: 0, respawnTick: 0, kills: 0 };
 
 test('ground combat weapon pose follows aim above and below the global zero plane', () => {
-  const model = new PlayerVisualController(createSoldierParts(), createKestrel(), 0xffffff);
+  const model = new PlayerVisualController(createOperatorWardrobe(), createKestrel(), 0xffffff);
   try {
     for (const current of ['PRONE', 'SUPINE'] as const) {
       const directions = [];

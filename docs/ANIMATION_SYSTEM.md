@@ -21,7 +21,7 @@ Ziel: hochwertige GLB-Clips für Bewegung und Aktionen, prozedurale Ergänzungen
 | Retargeting | Übertragung zwischen Skeletten mit anderen Namen, Ruheposen und Proportionen | `characters/animation/Retargeting.ts`, `CharacterClipSet.ts` |
 | Clip-Player | Basis- und Oberkörperebene, lineares Blending, Serverfortschritt | `characters/CharacterClipPlayer.ts` |
 | Prozedurale Ergänzung | Blick und Zielneigung über die Wirbelsäule, Rückstoß, Foot IK | `characters/animation/SkeletonOverlay.ts` |
-| Fallback | prozedurales Rig pro Zustand ohne Clip | `characters/PlayerVisualController.ts`, `SoldierRig.ts` |
+| Fallback | prozedurales Skelett-Rig pro Zustand ohne Clip | `characters/PlayerVisualController.ts`, `characters/operator/OperatorRig.ts` |
 
 **Ebenen.** Die Basisebene spielt Locomotion, Ducken, Hechtsprung, Landung, Bauch- und Rückenlage, Aufstehen und Tod. Die Oberkörperebene spielt Haltungsvarianten für Nachladen, Waffenwechsel, Stim und Schuss über der laufenden Grundpose. Mit Humanoid-Zuordnung blendet der Mixer pro Track, sodass ein Clip für die Waffenhand die übrige Haltung erhält. Weitere Details stehen in der [7.3D-Charakteranimation](CHARACTER_ANIMATION.md).
 
@@ -46,6 +46,10 @@ Für Produktionsqualität fehlen ein geskinntes Modell, abgenommene Clips und Fi
 Lokale und fremde Operatoren teilen den Playback-Controller. `players` trägt Haltung, Leben, Ziel- und Sprintflags sowie das vorhandene Timing für Ausrüstung und Magazin. Der Room ergänzt bestätigte Operator-Schüsse um Tick und Lebensnummer. Der Remote-Rückstoß wird bei diesem gerenderten Tick verarbeitet. Alle Posen entstehen auf den Clients. [Charakteranimation](CHARACTER_ANIMATION.md)
 
 Die Schulterkamera nutzt lokale Bewegungsinterpolation und die Blickhöhe der Haltung. Kollisionsanker, Sichtfeld und Komfortoptionen sind in der [taktischen Kamera](TACTICAL_CAMERA.md) beschrieben.
+
+## Operator-Rig 2026-11-26
+
+Das prozedurale Rig ist ein Skelett mit geskinntem Körper. Gangzyklus mit Fersenaufsatz und Abrollen, Beckenbewegung, Hüftsteuerung beim Seitwärtslauf, Wirbelsäulenverteilung, Gewehrhaltung mit eingedrehtem Oberkörper, Federn und Schrittkorrektur im Stand sind in [Operator: Modell, Rüstungen und Animation](OPERATOR_MODELL.md#animation) beschrieben. Die folgenden Abschnitte dokumentieren frühere Stände.
 
 ## Milestone 6
 

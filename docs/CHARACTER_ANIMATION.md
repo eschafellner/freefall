@@ -1,6 +1,6 @@
 # Charakteranimation in FREEFALL 7.3D
 
-Die Operatoren werden lokal und remote durch denselben `PlayerVisualController` dargestellt. Seine Welttransformation kommt von Prediction oder Snapshot-Interpolation. Das Skelett, die Kamera und die Waffenanimation schreiben keine Simulationstransformationen. Im aktuellen Asset-Stand liefert das artikulierte `SoldierRig` sämtliche sichtbaren Posen. [Systemübersicht](ANIMATION_SYSTEM.md) · [Asset-Inventar](ANIMATION_ASSET_INVENTORY.md)
+Die Operatoren werden lokal und remote durch denselben `PlayerVisualController` dargestellt. Seine Welttransformation kommt von Prediction oder Snapshot-Interpolation. Das Skelett, die Kamera und die Waffenanimation schreiben keine Simulationstransformationen. Im aktuellen Asset-Stand liefert das prozedurale Skelett-Rig `OperatorRig` sämtliche sichtbaren Posen ([Modell, Rüstungen und Animation](OPERATOR_MODELL.md)). [Systemübersicht](ANIMATION_SYSTEM.md) · [Asset-Inventar](ANIMATION_ASSET_INVENTORY.md)
 
 | Schicht | Eingaben und Ergebnis |
 | --- | --- |

@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import * as T from 'three';
 import { BALANCE } from '@freefall/shared';
 import { PlayerVisualController } from '../src/rendering/characters/PlayerVisualController.ts';
-import { createSoldierParts } from '../src/rendering/characters/SoldierRig.ts';
+import { createOperatorWardrobe } from '../src/rendering/characters/operator/Catalog.ts';
 import { createCerberus } from '../src/rendering/weapons/Cerberus.ts';
 import { createKestrel } from '../src/rendering/weapons/Kestrel.ts';
 import { MP99_HANDLING, createMp99 } from '../src/rendering/weapons/Mp99.ts';
@@ -44,7 +44,7 @@ test('MP-99 und Viktor 55: Mündung vorn, Griff im Ursprung, Magazin unter dem G
 });
 
 test('der Operator zeigt die gewählte Primärwaffe und lädt mit ihrem Verschluss', () => {
-  const player = new PlayerVisualController(createSoldierParts(), rifle, 0x73d5e7, true, [
+  const player = new PlayerVisualController(createOperatorWardrobe(), rifle, 0x73d5e7, true, [
     { weaponId: 'vx-13', parts: createCerberus(rifle.finish), profile: CERBERUS_HANDLING }, ...models,
   ]);
   const draw = (tick: number) => player.draw('a', 1, 100, 0, 0, 0, 0, false, false, 0, tick, tick * 33, 1 / 30, true);

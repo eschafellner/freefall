@@ -7,7 +7,7 @@ import { CharacterAnimation } from '../src/rendering/characters/CharacterAnimati
 import { CharacterClipPlayer } from '../src/rendering/characters/CharacterClipPlayer.ts';
 import { PlayerRigBatches } from '../src/rendering/characters/PlayerRigBatches.ts';
 import { PlayerVisualController } from '../src/rendering/characters/PlayerVisualController.ts';
-import { createSoldierParts } from '../src/rendering/characters/SoldierRig.ts';
+import { createOperatorWardrobe } from '../src/rendering/characters/operator/Catalog.ts';
 import { createKestrel } from '../src/rendering/weapons/Kestrel.ts';
 import { ThirdPersonCamera } from '../src/rendering/ThirdPersonCamera.ts';
 
@@ -68,7 +68,7 @@ test('aim zoom, sprint and visual recoil preserve the server reticle axis at pit
 });
 
 test('fallback rifle aims from the muzzle and keeps gameplay position independent of pose', () => {
-  const player = new PlayerVisualController(createSoldierParts(), createKestrel(), 0x73d5e7);
+  const player = new PlayerVisualController(createOperatorWardrobe(), createKestrel(), 0x73d5e7);
   const position = { x: 2, z: 5 };
   const origin = new T.Vector3();
   for (const pitch of [-.54, -.12, .42]) {
@@ -173,7 +173,7 @@ test('articulated parts share instanced draws and exclude hidden rigs and replac
 });
 
 test('external rig attaches the primary weapon and a late magazine import returns to the seated transform', () => {
-  const player = new PlayerVisualController(createSoldierParts(), createKestrel(), 0x73d5e7);
+  const player = new PlayerVisualController(createOperatorWardrobe(), createKestrel(), 0x73d5e7);
   const model = new T.Group();
   const mount = new T.Group();
   mount.name = 'RifleSocket';

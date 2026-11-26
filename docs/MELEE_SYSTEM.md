@@ -51,7 +51,7 @@ Umgesetzt in `systems/equipment.ts` (Kommentar am Dateianfang). Tod bricht alles
 
 ## Animation und Darstellung
 
-- Prozeduraler Fallback (kein Animationsclip vorhanden): kurzes Ausholen bis zum Impact-Tick, dann Stoß der Waffe nach vorne und oben, Oberkörper lehnt hinein (`CharacterAnimation.melee`, `SoldierRig.pose`, `PlayerVisualController.poseImported`). Der Höhepunkt liegt exakt auf dem Server-Impact-Tick (`windupTicks / actionTicks`).
+- Prozeduraler Fallback (kein Animationsclip vorhanden): kurzes Ausholen bis zum Impact-Tick, dann Stoß der Waffe nach vorne und oben, Oberkörper lehnt hinein (`CharacterAnimation.melee`, `OperatorRig.pose`, `PlayerVisualController.poseImported`). Der Höhepunkt liegt exakt auf dem Server-Impact-Tick (`windupTicks / actionTicks`).
 - Fehlendes Asset: ein Clip `melee` (0,42 s, Treffer bei 0,14 s) für das Soldaten-GLB. `CharacterClip` kann um `melee` erweitert werden, sobald er existiert.
 - Stagger-Feedback beim Gegner: Die bestehende Trefferreaktion von `EnemyVisualLOD` wird für die Stagger-Dauer gehalten (`ArenaView.stagger`). Das Schabe-Design und seine Dateien sind unverändert.
 - HUD: `V Kolbenstoß` mit Restcooldown, Aktionsbalken während des Stoßes. Audio: Luftzug und bei Treffer ein dumpfer Aufprall.

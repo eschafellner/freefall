@@ -9,11 +9,11 @@ import { Prediction } from '../apps/client/src/game/Prediction.ts';
 import { MatchTimeline } from '../apps/client/src/game/Timeline.ts';
 import { ThirdPersonCamera } from '../apps/client/src/rendering/ThirdPersonCamera.ts';
 import { PlayerVisualController } from '../apps/client/src/rendering/characters/PlayerVisualController.ts';
-import { createSoldierParts } from '../apps/client/src/rendering/characters/SoldierRig.ts';
+import { createOperatorWardrobe } from '../apps/client/src/rendering/characters/operator/Catalog.ts';
 import { createKestrel } from '../apps/client/src/rendering/weapons/Kestrel.ts';
 
 const STEP = 1000 / NET.tickHz;
-const parts = createSoldierParts();
+const parts = createOperatorWardrobe();
 const rifle = createKestrel();
 
 export interface FrameScript { forward: number; strafe: number; sprint: boolean; aim: boolean; yaw: (t: number, yaw: number, dt: number) => number }

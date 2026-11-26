@@ -6,7 +6,7 @@ import type { EquipmentState, Posture, ShotEvent } from '@freefall/shared';
 import { GRAPHICS_QUALITY } from '../src/rendering/GraphicsQuality.ts';
 import { VisualEffectsManager } from '../src/rendering/VisualEffectsManager.ts';
 import { PlayerVisualController } from '../src/rendering/characters/PlayerVisualController.ts';
-import { createSoldierParts } from '../src/rendering/characters/SoldierRig.ts';
+import { createOperatorWardrobe } from '../src/rendering/characters/operator/Catalog.ts';
 import { createKestrel } from '../src/rendering/weapons/Kestrel.ts';
 import { WeaponFireEffects } from '../src/rendering/weapons/WeaponFireEffects.ts';
 import { WeaponVisualController } from '../src/rendering/weapons/WeaponVisualController.ts';
@@ -18,7 +18,7 @@ const shot: ShotEvent = {
 };
 
 test('a firing cue uses the posed weapon in allowed postures and never fires an echo twice', () => {
-  const p = new PlayerVisualController(createSoldierParts(), createKestrel(), 0xffffff);
+  const p = new PlayerVisualController(createOperatorWardrobe(), createKestrel(), 0xffffff);
   const gear = { slot: 'primary', started: 0, until: 0 } as EquipmentState;
   let count = 0;
   let missing = 0;

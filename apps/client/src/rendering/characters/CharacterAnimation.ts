@@ -45,8 +45,11 @@ export class CharacterAnimation {
   gearAction?: EquipmentAction;
   actionProgress = 0;
   weaponSlot: 'primary' | 'secondary' = 'primary';
-  private velocityForward = 0;
-  private velocityStrafe = 0;
+  /** Filtered ground velocity in body axes (m/s) and its rate of change (m/s²), for inertia and lean. */
+  velocityForward = 0;
+  velocityStrafe = 0;
+  accelForward = 0;
+  accelStrafe = 0;
 
   reset(): void {
     this.tactical.reset();
@@ -62,7 +65,7 @@ export class CharacterAnimation {
     this.lower = this.inject = this.throwing = this.melee = 0;
     this.stride = this.turn = this.lean = 0;
     this.reload = -1;
-    this.velocityForward = this.velocityStrafe = 0;
+    this.velocityForward = this.velocityStrafe = this.accelForward = this.accelStrafe = 0;
   }
 
   fire(): void { this.kick = 1; }
@@ -72,6 +75,7 @@ export class CharacterAnimation {
     alive: boolean, reloadUntil: number, tick: number, turnRate = 0, reloadSeconds: number = TEST_RIFLE.reloadSeconds, reloadStarted?: number): void {
     // Prediction advances at 30 Hz even on a high-refresh display. Filter velocity before clipping its magnitude.
     const lastForward = this.velocityForward;
+    const lastStrafe = this.velocityStrafe;
     this.velocityForward = damp(this.velocityForward, alive ? forwardSpeed : 0, 14, dt);
     this.velocityStrafe = damp(this.velocityStrafe, alive ? strafeSpeed : 0, 14, dt);
     const speed = Math.hypot(this.velocityForward, this.velocityStrafe);
@@ -100,9 +104,15 @@ export class CharacterAnimation {
     this.sprint = damp(this.sprint, sprinting && this.combat === 'ready' ? 1 : 0, 11, dt);
     this.fall = alive ? 0 : Math.min(1, this.fall + dt / 0.64);
     this.turn = damp(this.turn, alive ? clamp(turnRate / 5, -1, 1) : 0, 12, dt);
-    this.lean = damp(this.lean, clamp((this.velocityForward - lastForward) / Math.max(.001, dt) / 34, -1, 1), 8, dt);
-    this.stance = .47 - .21 * Math.min(1, this.speed / 9.2);
-    const cadence = Math.max(.68 + this.speed * .20, this.speed * this.stance / .80);
+    const step = Math.max(.001, dt);
+    this.accelForward = damp(this.accelForward, clamp((this.velocityForward - lastForward) / step, -40, 40), 10, dt);
+    this.accelStrafe = damp(this.accelStrafe, clamp((this.velocityStrafe - lastStrafe) / step, -40, 40), 10, dt);
+    this.lean = damp(this.lean, clamp(this.accelForward / 34, -1, 1), 8, dt);
+    // Gait: a walk with double support below ~2 m/s, a combat run at the 5.8 m/s march speed, a long sprint stride.
+    // Stance = fraction of the cycle a foot is planted; the planted foot travels exactly the ground distance.
+    const run = T.MathUtils.smoothstep(this.speed, 1.6, 4.4);
+    this.stance = T.MathUtils.lerp(.6, .3, run) - .07 * T.MathUtils.smoothstep(this.speed, 5.8, 9.2);
+    const cadence = Math.max(.9 + this.speed * .118, this.speed * this.stance / 1.1);
     this.stride = this.speed * this.stance / (2 * cadence);
     if (alive && (moving || Math.abs(this.turn) > .08)) {
       const cycles = moving ? cadence : 1.35 * Math.abs(this.turn);
