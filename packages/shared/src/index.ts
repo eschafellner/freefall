@@ -22,6 +22,7 @@ export * from './combat/enemyBody.ts';
 export * from './config/posture.ts';
 export * from './config/postureGeometry.ts';
 export * from './config/dive.ts';
+export * from './config/stamina.ts';
 export * from './contracts/missionPlan.ts';
 export * from './definitions/proceduralMissions.ts';
 

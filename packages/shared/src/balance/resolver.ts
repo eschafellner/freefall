@@ -10,7 +10,8 @@
  * only once per resolver. Both rules make double application of a difficulty multiplier an error, not a bug.
  */
 import { SIMULATION_HZ } from '../config/limits.ts';
-import { LOADOUT_SELECTION_KEYS, MAX_ARMOR_RATING, OPERATOR_SLIDE_LIMITS } from './definitions.ts';
+import { ARMOR_ACTION_CUTOFF, LOADOUT_SELECTION_KEYS, MAX_ARMOR_RATING, OPERATOR_SLIDE_LIMITS } from './definitions.ts';
+import type { StaminaRules } from '../config/stamina.ts';
 import { deepFreeze } from './schema.ts';
 import type {
   AmmoDefinition, ArmorEffects, ArmorRules, ArmorWeightClass, BackpackDefinition, BodyArmorDefinition, CaliberDefinition, LoadoutSelection, CombatDefinition, ConvictKitDefinition, DamageType, EnemyArchetype, ConvictSquadDefinition, DamagePolicy, DifficultyDefinition, EnemyGameplay,
@@ -239,6 +240,8 @@ export interface EffectiveLoadout {
   readonly protection: { readonly armorRating: number; readonly damageTaken: number; readonly weightClass: ArmorWeightClass };
   /** Visible equipment as wardrobe ids (`PlayerState.look`). */
   readonly look: { readonly armor: string; readonly helmet: string; readonly pack: string };
+  /** Speeds, dive, slide, standing up and stamina of the operator in this armor (`armorEffects`). */
+  readonly mobility: EffectiveMobility;
   /** Armor classes and residual damage of non-penetrating hits. */
   readonly armorRules: ArmorRules;
   readonly slide: OperatorSlideDefinition;
@@ -251,6 +254,18 @@ export interface EffectiveLoadout {
   readonly damagePolicy: DamagePolicy;
   readonly operatorHitbox: CombatDefinition['operatorHitbox'];
   readonly trace: Readonly<Record<string, ResolvedStat>>;
+}
+
+/** Movement of an operator in its armor. Shared by the server simulation and the client prediction. */
+export interface EffectiveMobility {
+  readonly walkSpeed: number;
+  readonly sprintSpeed: number;
+  /** Dive distance in metres; 0 when the armor cannot dive. */
+  readonly diveDistance: number;
+  readonly canSlide: boolean;
+  /** Multiplier of the time to stand up from prone or supine. */
+  readonly getUpMultiplier: number;
+  readonly stamina: StaminaRules;
 }
 
 /** The ammunition's modifiers as `ammunition`-layer modifiers on `weapon.<id>.<stat>`. */
@@ -384,12 +399,44 @@ export function resolveWeapon(registry: BalanceRegistry, weaponId: string, ammoI
  * to the end points. 50 → 1.25, 100 → 1, 150 → 0.75, 200 → 0.5 with the shipped curve.
  */
 export function armorDamageTaken(effects: ArmorEffects, rating: number): number {
-  if (rating <= effects[0].rating) return effects[0].damageTaken;
+  return armorEffect(effects, rating, 'damageTaken');
+}
+
+/** Any column of the armor curve at a rating (same interpolation as `armorDamageTaken`). */
+export function armorEffect(effects: ArmorEffects, rating: number, key: Exclude<keyof ArmorEffects[number], 'rating'>): number {
+  if (rating <= effects[0].rating) return effects[0][key];
   for (let i = 1; i < effects.length; i++) {
     const a = effects[i - 1], b = effects[i];
-    if (rating <= b.rating) return a.damageTaken + (b.damageTaken - a.damageTaken) * (rating - a.rating) / (b.rating - a.rating);
+    if (rating <= b.rating) return a[key] + (b[key] - a[key]) * (rating - a.rating) / (b.rating - a.rating);
   }
-  return effects[effects.length - 1].damageTaken;
+  return effects[effects.length - 1][key];
+}
+
+/** Speeds, dive, slide and stamina for an armor rating. Stamina is in whole thousandths per 1/30 s step. */
+export function armorMobility(registry: BalanceRegistry, rating: number): EffectiveMobility {
+  const effect = (key: Exclude<keyof ArmorEffects[number], 'rating'>) => armorEffect(registry.armorEffects, rating, key);
+  const { movement, operator } = registry;
+  const rules = movement.stamina;
+  const max = Math.round(effect('stamina') * 1000);
+  const recovery = rules.recoveryPerSecond * effect('recovery') * 1000 / SIMULATION_HZ;
+  const dive = effect('dive');
+  return {
+    walkSpeed: operator.walkSpeed * effect('walk'),
+    sprintSpeed: operator.sprintSpeed * effect('sprint'),
+    diveDistance: dive >= ARMOR_ACTION_CUTOFF ? movement.diveDistance * dive : 0,
+    canSlide: effect('slide') >= ARMOR_ACTION_CUTOFF,
+    getUpMultiplier: effect('getUp'),
+    stamina: {
+      max,
+      sprintDrain: Math.round(rules.sprintDrainPerSecond * effect('sprintDrain') * 1000 / SIMULATION_HZ),
+      recovery: Math.round(recovery),
+      lyingRecovery: Math.round(recovery * rules.lyingRecoveryMultiplier),
+      delaySteps: Math.round(rules.recoveryDelaySeconds * SIMULATION_HZ),
+      diveCost: Math.round(rules.diveCost * 1000),
+      slideCost: Math.round(rules.slideCost * 1000),
+      recoverAt: Math.round(max * rules.recoverFraction),
+    },
+  };
 }
 
 /** The IDs of a preset loadout (`equipment.json › loadouts`). */
@@ -455,12 +502,15 @@ export function resolveSelection(registry: BalanceRegistry, selection: LoadoutSe
   const armor = new StatResolver([...itemModifiers(`armor:${bodyArmor.id}`, bodyArmor.modifiers, slots), ...armorModifiers]);
   const slideStat = (key: keyof OperatorSlideDefinition) =>
     armor.resolve(`operator.slide.${key}`, registry.movement.slide[key], { layers: EQUIPMENT, ...OPERATOR_SLIDE_LIMITS[key] });
-  const slide = {
-    seconds: slideStat('seconds'), distance: slideStat('distance'), decay: slideStat('decay'),
-    cooldownSeconds: slideStat('cooldownSeconds'), minSpeed: slideStat('minSpeed'),
-  };
   const armorRating = armor.resolve('operator.armorRating', bodyArmor.armorRating,
     { layers: EQUIPMENT, min: 0, max: MAX_ARMOR_RATING, round: 'round' });
+  const mobility = armorMobility(registry, armorRating);
+  // The armor's slide factor shortens the slide; the standard armor keeps the movement values exactly.
+  const slideFactor = armorEffect(registry.armorEffects, armorRating, 'slide');
+  const slide = {
+    seconds: slideStat('seconds'), distance: slideStat('distance') * (slideFactor === 1 ? 1 : slideFactor), decay: slideStat('decay'),
+    cooldownSeconds: slideStat('cooldownSeconds'), minSpeed: slideStat('minSpeed'),
+  };
   armor.assertAllUsed();
   const grenade = registry.grenade(selection.grenadeId);
   const medical = registry.medical(selection.medicalId);
@@ -490,6 +540,7 @@ export function resolveSelection(registry: BalanceRegistry, selection: LoadoutSe
     backpack, bodyArmor,
     protection: { armorRating, damageTaken: armorDamageTaken(registry.armorEffects, armorRating), weightClass: bodyArmor.weightClass },
     look: { armor: bodyArmor.visual.armor, helmet: bodyArmor.visual.helmet, pack: backpack.visual },
+    mobility,
     armorRules: registry.armor,
     slide,
     switchTicks: Math.ceil((registry.loadouts.get(id) ?? preset).weaponSwitchSeconds * SIMULATION_HZ),

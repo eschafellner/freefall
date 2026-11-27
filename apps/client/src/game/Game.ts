@@ -1,6 +1,6 @@
 import {
   ALBATROSS, BALANCE, BASE_LOADOUT, BODENBRUCH, BODENBRUCH_ROOM, CARRIER_CONSOLE, CARRIER_ROOMS, CARRIER_SHIP, CARRIER_WORLD,
-  NET, PLAYER, PLAYER_MOTION, WEAPONS, allowsPostureAction, applyShotRecoil, canSecureExtraction, createRecoilState, distanceSquared, impactSurface, inAlbatross, isCarrierScene,
+  NET, PLAYER, PLAYER_MOTION, WEAPONS, allowsPostureAction, applyShotRecoil, canSecureExtraction, canSprint, createRecoilState, distanceSquared, impactSurface, inAlbatross, isCarrierScene,
   isOperatorGrounded, missionGround, missionObjectives, postureCollider, postureProgress,
   nextShotAt, recoverRecoil, resetRecoil, restoreWorld,
 } from '@freefall/shared';
@@ -763,6 +763,7 @@ export class Game {
       this.notices.offer(reply.error, 'information', performance.now(), 3200);
     } else {
       this.status.loadout = resolveOwnLoadout(reply.selection);
+      this.prediction.setLoadout(this.status.loadout);
       this.status.loadoutError = undefined;
       this.view.ownWeapons = this.status.loadout.weapons;
       // The first reply after joining is the server's current loadout. Restore the last accepted one once.
@@ -821,6 +822,7 @@ export class Game {
     this.match = undefined;
     this.loadoutRestored = false;
     this.status.loadout = BASE_LOADOUT;
+    this.prediction.setLoadout(BASE_LOADOUT);
     this.view.ownWeapons = BASE_LOADOUT.weapons;
     this.missionPresentation.reset();
     this.damage.clear();
@@ -899,7 +901,7 @@ export class Game {
       if (!carrier && horde.before && horde.after && horde.tick > this.audioFloor)
         this.hordeAudio.update(horde.before, horde.after, horde.alpha, listener, activeWorld);
       const own = players.latest?.players.find(({ id }) => id === this.status.ownId);
-      if (own) this.movementAudio.update(own, pose, posture, dt, this.input.sprint, activeWorld, this.tick, true, listener);
+      if (own) this.movementAudio.update(own, pose, posture, dt, this.input.sprint && canSprint(this.prediction.stamina), activeWorld, this.tick, true, listener);
       const a = players.before, b = players.after;
       if (a && b) for (const player of a.players) {
         if (player.id === this.status.ownId) continue;
@@ -1014,7 +1016,8 @@ export class Game {
     this.view.draw(
       now, dt, this.prediction.rendered, this.input.yaw, this.input.pitch, this.status.ownId, this.hp > 0,
       players.before, players.after, players.alpha, horde.before, horde.after, horde.alpha,
-      this.input.aim, this.input.sprint, players.latest,
+      // Exhausted operators keep the sprint key down but run: animation and camera follow the prediction.
+      this.input.aim, this.input.sprint && canSprint(this.prediction.stamina), players.latest,
       mission, missionTick, this.status.locked && !mission?.result, this.debugRoutes, this.prediction.visualPosture, this.prediction.visualTick,
       this.reticle?.current, this.match?.atmosphere, Boolean(online), this.telemetry,
     );

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
-  "release": "8.3A",
-  "description": "Rüstungen: FR-7 Feldpanzer 100, SR-4 Späher 50, BW-9 Bollwerk 150 Rüstungspunkte; Schadensaufnahme über armorEffects (50 → 125 %, 100 → 100 %, 150 → 75 %, 200 → 50 %). 8.2C: Munitionswerte."
+  "schemaVersion": 7,
+  "release": "8.3B",
+  "description": "Tempo und Ausdauer je Rüstung (armorEffects: walk, sprint, stamina, sprintDrain, recovery, dive, slide, getUp; movement.json › stamina), KR-12 Koloss (überschwer, 200). 8.3A: Rüstungspunkte und Schadensaufnahme."
 }

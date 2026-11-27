@@ -10,7 +10,7 @@
  *      tick). Stim and resupply cannot start during a reload. Sprint does not interrupt a reload.
  *   6. Firing is blocked while any action or reload runs (`fireWeapon`).
  */
-import { BALANCE, allowsPostureAction } from '@freefall/shared';
+import { BALANCE, allowsPostureAction, refillStamina } from '@freefall/shared';
 import type { EquipmentAction } from '@freefall/shared';
 import type { SimPlayer } from '../simulation/Player.ts';
 import { cancelEquipment, reloading } from '../simulation/Player.ts';
@@ -74,6 +74,8 @@ export function updateEquipment(p: SimPlayer, tick: number, hooks: EquipmentHook
       }
       p.hp += heal;
       gear.stims--;
+      // The stim also clears exhaustion: a full stamina pool.
+      refillStamina(p.staminaState, p.loadout.mobility.stamina);
       gear.stimResult = 'completed';
       gear.stimResultAt = tick;
     } else if (gear.action === 'resupply') {

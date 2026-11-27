@@ -11,7 +11,7 @@ import type { Infer } from './schema.ts';
 const MOVEMENT_7_2B = 'waffenabhängige Laufgeschwindigkeit ist noch nicht in Server und Prediction verdrahtet';
 
 export const manifestSchema = obj({
-  schemaVersion: oneOf([6] as const),
+  schemaVersion: oneOf([7] as const),
   release: str(),
   description: str(),
 });
@@ -300,12 +300,41 @@ export const bodyArmorSchema = obj({
 
 /**
  * Effects of the armor rating, as points of a piecewise linear curve sorted by rating. Ratings between two points
- * interpolate, ratings outside use the nearest point. `damageTaken` scales every hit the operator receives.
+ * interpolate, ratings outside use the nearest point. Factors are relative to the operator (`operators.json`) and
+ * movement (`movement.json`) values:
+ *   - `damageTaken` scales every hit the operator receives,
+ *   - `walk`/`sprint` the ground speeds (crouch, prone and supine follow `walk`),
+ *   - `stamina` is the pool in points, `sprintDrain`/`recovery` scale `movement.json › stamina`,
+ *   - `dive`/`slide` scale their distance; below `ARMOR_ACTION_CUTOFF` the action is not available,
+ *   - `getUp` scales the time to stand up from prone or supine.
  */
 export const armorEffectsSchema = arr(obj({
   rating: count({ min: 0, max: MAX_ARMOR_RATING }),
   damageTaken: positive({ max: 4 }),
+  walk: positive({ max: 2 }),
+  sprint: positive({ max: 2 }),
+  stamina: positive({ max: 500 }),
+  sprintDrain: positive({ max: 4 }),
+  recovery: positive({ max: 4 }),
+  dive: nonNegative({ max: 2 }),
+  slide: nonNegative({ max: 2 }),
+  getUp: positive({ max: 3 }),
 }), { min: 2 });
+/** Dive and slide are unavailable when their armor factor falls below this share of the normal distance. */
+export const ARMOR_ACTION_CUTOFF = .3;
+
+/** Stamina of the standard operator; armor scales the pool, drain and recovery (`armorEffects`). */
+export const staminaSchema = obj({
+  sprintDrainPerSecond: positive({ max: 200 }),
+  recoveryPerSecond: positive({ max: 500 }),
+  recoveryDelaySeconds: nonNegative({ max: 10 }),
+  /** Faster recovery while crouched, prone or supine. */
+  lyingRecoveryMultiplier: positive({ max: 4 }),
+  diveCost: nonNegative({ max: 500 }),
+  slideCost: nonNegative({ max: 500 }),
+  /** Share of the pool at which exhaustion ends (sprint possible again). */
+  recoverFraction: num({ min: 0, max: 1 }),
+});
 
 export const loadoutSchema = obj({
   id: id(),
@@ -836,6 +865,7 @@ export const movementSchema = obj({
   crouchSpeedMultiplier: positive({ max: 1 }), proneSpeedMultiplier: positive({ max: 1 }),
   supineSpeedMultiplier: positive({ max: 1 }), crouchSeconds: positive({ max: 3 }),
   slide: operatorSlideSchema,
+  stamina: staminaSchema,
   diveDistance: positive({ max: 12 }), diveSeconds: num({ min: .2, max: 3 }),
   diveCooldownSeconds: nonNegative({ max: 15 }), divePrepSeconds: nonNegative({ max: 2 }),
   diveArcHeight: positive({ max: 2 }), noDirection: oneOf(['forward', 'reject'] as const),

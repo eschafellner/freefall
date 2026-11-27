@@ -291,7 +291,8 @@ export class Battlefield {
       if (player.hp > 0 && this.canMove(player) && (move.life === undefined || move.life === player.life)) {
         const from = player.posture.current;
         applyPostureInput(player, player.posture, move, this.tick, this.movementBalance,
-          this.movementWorld, this.movementBoundary(player), this.registry.operator, player.loadout.slide);
+          this.movementWorld, this.movementBoundary(player), player.loadout.mobility, player.loadout.slide,
+          player.loadout.mobility, player.staminaState);
         const acceptedDive = player.posture.dive?.id === move.seq && player.posture.started === this.tick;
         if (acceptedDive) {
           player.protectedUntil = Math.min(player.protectedUntil, this.tick);

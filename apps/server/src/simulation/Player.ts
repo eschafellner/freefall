@@ -1,6 +1,6 @@
-import { BASE_LOADOUT, createRecoilState, newPosture, resetRecoil } from '@freefall/shared';
+import { BASE_LOADOUT, createRecoilState, freshStamina, newPosture, refillStamina, resetRecoil } from '@freefall/shared';
 import type {
-  EffectiveLoadout, EquipmentCommand, EquipmentState, PlayerInput, PlayerState, PostureState, RecoilState, ReloadState,
+  EffectiveLoadout, EquipmentCommand, EquipmentState, PlayerInput, PlayerState, PostureState, RecoilState, ReloadState, StaminaState,
 } from '@freefall/shared';
 import { idleInput } from '../networking/input.ts';
 
@@ -9,6 +9,8 @@ export interface SimPlayer extends PlayerState {
   posture: PostureState;
   /** Effective, immutable weapon and equipment stats. Resolved once per configuration, never per tick. */
   loadout: EffectiveLoadout;
+  /** Running stamina (advanced per movement input like the client prediction; sent as `stamina`). */
+  staminaState: StaminaState;
   equipment: EquipmentState;
   pendingEquipment?: EquipmentCommand;
   /** Supply container requested through the interaction key, processed on the next tick. */
@@ -78,6 +80,7 @@ export function refillPlayer(player: SimPlayer): void {
   player.reloadUntil = 0;
   player.reloadRequested = false;
   resetRecoil(player.recoil);
+  refillStamina(player.staminaState, player.loadout.mobility.stamina);
 }
 
 export function cancelEquipment(player: SimPlayer, tick: number): void {
@@ -113,6 +116,7 @@ export function respawnPlayer(player: SimPlayer, tick: number): void {
 export function createPlayer(id: string, slot: number, tick: number, loadout: EffectiveLoadout = BASE_LOADOUT): SimPlayer {
   const player: SimPlayer = {
     id, slot, x: 0, y: 0, z: 0, posture: newPosture(), yaw: 0, hp: 0, ack: 0, life: 0, respawnTick: 0, kills: 0, loadout,
+    staminaState: freshStamina(loadout.mobility.stamina),
     equipment: freshEquipment(loadout), lastInputSeq: 0, input: idleInput(), moves: [], moveCredit: 0, moveCushion: 0, moveWaiting: true, moveStarvedAt: -1, moveCushionAt: 0, inputTick: -Infinity, fireAt: 0, protectedUntil: 0, activeInput: false,
     ammo: 0, reloadUntil: 0, reload: readyReload(tick), reloadRequested: false, reloadFireLatch: false, recoil: createRecoilState(), pitch: 0,
   };

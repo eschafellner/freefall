@@ -322,6 +322,13 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
 .health-bar { height: 6px; margin: 7px 0 4px; background: #ffffff1c; transform: skewX(-18deg); }
 .health-bar i { display: block; height: 100%; background: linear-gradient(90deg, #8fcf9f, #d6f0c8); transition: width .25s; }
 .vitals.critical .health-bar i { background: linear-gradient(90deg, #e0674c, #ffb08f); }
+.stamina-bar { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; margin: 2px 0 6px; transition: opacity .4s; }
+.stamina-bar span { font: 600 9px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: #c8ccbe; }
+.stamina-bar b { display: block; height: 3px; background: #ffffff1c; transform: skewX(-18deg); }
+.stamina-bar i { display: block; height: 100%; background: linear-gradient(90deg, #d8c27a, #f4e6b0); transition: width .1s linear; }
+.stamina-bar.full { opacity: .45; }
+.stamina-bar.exhausted span { color: #ffbe83; }
+.stamina-bar.exhausted i { background: linear-gradient(90deg, #c8673f, #ffb08f); }
 .kit-row { display: grid; grid-template-columns: 46px 1fr auto auto; align-items: center; gap: 9px; padding-top: 6px; font-size: 12px; }
 .kit-row b { font: 600 11px var(--mono); color: var(--hud-dim); }
 .kit-row.holstered, .kit-row.locked { color: var(--hud-dim); }

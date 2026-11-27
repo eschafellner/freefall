@@ -114,6 +114,7 @@ Gameplay besitzt weiter die Position. `CharacterAnimation` und `TacticalAnimatio
 | Kopf | stabilisiert gegen das Wippen des Körpers, folgt dem Blick, schaut in Kurven voraus und in Ruhe gelegentlich umher. Liegend und im Fallen reitet der Kopf auf der Brust. |
 | Ruhe | Atmen, langsame Gewichtsverlagerung mit entlastetem Knie, Mikrobewegung der Waffe. Die Füße stehen fest in der Welt. Dreht sich der Körper weiter als etwa 24° oder verschiebt er sich um 11 cm, setzt zuerst der weiter entfernte Fuß in 0,26 s nach. Nach einem Lauf stellen sich die Füße so von selbst wieder hin. |
 | Hilfsknochen | Schulterschalen folgen dem Oberarm zur Hälfte, Beinschutz schwingt mit dem Oberschenkel nach vorn, der Rucksack federt bei jedem Aufsatz. |
+| Gewicht und Erschöpfung | Die Gewichtsklasse der Rüstung (seit 8.3B) macht den Schritt schwerer oder federnder; bei leerer Ausdauer atmet der Operator schnell und tief und sackt im Stand nach vorn ([Rüstungssystem](RUESTUNGSSYSTEM.md#2-laufgeschwindigkeit-und-ausdauer-83b)). |
 | Reaktionen | Treffer werfen die Brust zurück und verdrehen sie abwechselnd zu einer Seite (Feder statt starrer Neigung). Beim Tod knicken zuerst die Knie ein, dann kippt der Körper nach vorn, die Arme fallen schlaff zur Seite. |
 | Hocke | In Ruhe Kniestand auf dem rechten Knie mit aufgestelltem linkem Fuß, in Bewegung Gang auf gebeugten Beinen. Rutschen, Bauch- und Rückenlage, Hechtsprung und Aufstehen nutzen dieselben Gewichte wie vorher, jetzt mit Knien und Füßen, die der Knochenrichtung folgen. |
 

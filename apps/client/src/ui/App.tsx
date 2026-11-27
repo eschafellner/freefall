@@ -663,7 +663,7 @@ export function App() {
         <span><kbd>{bindings.label('FIRE')}</kbd> Feuern</span><span><kbd>Esc</kbd> Menü</span>
       </div>}
       {active && own && status.locked && !inCarrier && !cinematic && <CombatLoadout player={own} tick={status.serverTick}
-        dryFireTick={status.dryFireTick} resupply={status.missionRoom}/>}
+        dryFireTick={status.dryFireTick} resupply={status.missionRoom} staminaMax={status.loadout.mobility.stamina.max}/>}
     </footer>}
   </main>;
 }

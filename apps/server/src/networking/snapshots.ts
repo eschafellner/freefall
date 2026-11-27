@@ -1,4 +1,4 @@
-import { BASE_LOADOUT, ENEMY_BYTES, HORDE_ATTACK_BYTES, HORDE_COMBAT_HEADER, HORDE_HEADER, NET, hordeAttackFlag, PLAYER_MOTION, POSITION_SCALE,
+import { BASE_LOADOUT, ENEMY_BYTES, canSprint, staminaSnapshot, HORDE_ATTACK_BYTES, HORDE_COMBAT_HEADER, HORDE_HEADER, NET, hordeAttackFlag, PLAYER_MOTION, POSITION_SCALE,
   allowsPostureAction, copyPosture } from '@freefall/shared';
 import type { EffectiveLoadout, PlayersSnapshot } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
@@ -42,10 +42,12 @@ export function playerSnapshot(arena: Battlefield, host: string): PlayersSnapsho
   for (const p of arena.players) {
     if (!p) continue;
     const { id, slot, x, z, yaw, hp, ack, life, respawnTick, kills, pitch, ammo, reloadUntil, reload } = p;
+    const stamina = staminaSnapshot(p.staminaState, p.loadout.mobility.stamina);
     const stance = p.posture;
     const balance = arena.movementBalance;
     const motion = p.activeInput && hp > 0
-      ? (p.input.aim && allowsPostureAction(stance, 'aim', balance) ? PLAYER_MOTION.aim : 0) | (p.input.sprint && allowsPostureAction(stance, 'sprint', balance) ? PLAYER_MOTION.sprint : 0)
+      ? (p.input.aim && allowsPostureAction(stance, 'aim', balance) ? PLAYER_MOTION.aim : 0) |
+        (p.input.sprint && allowsPostureAction(stance, 'sprint', balance) && canSprint(p.staminaState) ? PLAYER_MOTION.sprint : 0)
       : 0;
     // The reload state travels only while it matters (running, or interrupted within the last second).
     const recent = reload.phase !== 'READY' && (reload.phase !== 'RELOAD_INTERRUPTED' || arena.tick - reload.at < NET.tickHz);
@@ -59,6 +61,7 @@ export function playerSnapshot(arena: Battlefield, host: string): PlayersSnapsho
       weapons: { primary: p.loadout.weapons.primary.id, secondary: p.loadout.weapons.secondary.id },
       // Armour and pack only travel when they differ from the standard issue the clients show without them.
       ...(!standardLook(p.loadout.look) && { look: p.loadout.look }),
+      ...(stamina && { stamina }),
       ...(p.y !== 0 && { y: p.y }),
       ...(sendPosture ? { posture: copyPosture(stance) } : stance.yaw !== yaw ? { bodyYaw: stance.yaw } : {}),
       ...(recent && { reload: { ...reload } }), equipment: { ...p.equipment, magazines: { ...p.equipment.magazines },

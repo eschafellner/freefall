@@ -101,24 +101,68 @@
         "helmet": "bw9-helm"
       },
       "modifiers": []
+    },
+    {
+      "id": "armor.kr12_colossus",
+      "displayName": "KR-12 Koloss",
+      "description": "Überschwere Panzerung auf einem Stützexoskelett: geschlossene Platten, Sehschlitzhelm, Energiemodul am Rücken. Kein Hechtsprung, kein Rutschen.",
+      "weightClass": "ueberschwer",
+      "armorRating": 200,
+      "visual": {
+        "armor": "kr12",
+        "helmet": "kr12-helm"
+      },
+      "modifiers": []
     }
   ],
   "armorEffects": [
     {
       "rating": 50,
-      "damageTaken": 1.25
+      "damageTaken": 1.25,
+      "walk": 1.06,
+      "sprint": 1.08,
+      "stamina": 120,
+      "sprintDrain": 0.9,
+      "recovery": 1.25,
+      "dive": 1.1,
+      "slide": 1.1,
+      "getUp": 1
     },
     {
       "rating": 100,
-      "damageTaken": 1
+      "damageTaken": 1,
+      "walk": 1,
+      "sprint": 1,
+      "stamina": 100,
+      "sprintDrain": 1,
+      "recovery": 1,
+      "dive": 1,
+      "slide": 1,
+      "getUp": 1
     },
     {
       "rating": 150,
-      "damageTaken": 0.75
+      "damageTaken": 0.75,
+      "walk": 0.92,
+      "sprint": 0.9,
+      "stamina": 85,
+      "sprintDrain": 1.15,
+      "recovery": 0.85,
+      "dive": 0.85,
+      "slide": 0.85,
+      "getUp": 1
     },
     {
       "rating": 200,
-      "damageTaken": 0.5
+      "damageTaken": 0.5,
+      "walk": 0.82,
+      "sprint": 0.75,
+      "stamina": 70,
+      "sprintDrain": 1.35,
+      "recovery": 0.65,
+      "dive": 0,
+      "slide": 0,
+      "getUp": 1.4
     }
   ],
   "loadouts": [

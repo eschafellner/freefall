@@ -209,10 +209,21 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
     }
   });
   const effects = data.equipment.armorEffects;
+  // More armor protects more and never moves, sprints, recovers, dives or slides better; it drains and stands up slower.
+  const falling = ['damageTaken', 'walk', 'sprint', 'stamina', 'recovery', 'dive', 'slide'] as const;
+  const rising = ['sprintDrain', 'getUp'] as const;
   effects.forEach((point, i) => {
-    if (i && point.rating <= effects[i - 1].rating) issues.add(`equipment.json › armorEffects[${i}].rating`, 'Rüstungspunkte müssen aufsteigend sortiert sein');
-    if (i && point.damageTaken > effects[i - 1].damageTaken) issues.add(`equipment.json › armorEffects[${i}].damageTaken`, 'mehr Rüstung darf nicht mehr Schaden zulassen');
+    if (!i) return;
+    const before = effects[i - 1];
+    if (point.rating <= before.rating) issues.add(`equipment.json › armorEffects[${i}].rating`, 'Rüstungspunkte müssen aufsteigend sortiert sein');
+    if (point.damageTaken > before.damageTaken) issues.add(`equipment.json › armorEffects[${i}].damageTaken`, 'mehr Rüstung darf nicht mehr Schaden zulassen');
+    for (const key of falling.slice(1)) if (point[key] > before[key]) issues.add(`equipment.json › armorEffects[${i}].${key}`, 'darf mit mehr Rüstung nicht steigen');
+    for (const key of rising) if (point[key] < before[key]) issues.add(`equipment.json › armorEffects[${i}].${key}`, 'darf mit mehr Rüstung nicht sinken');
   });
+  const reference = effects.find((point) => point.rating === 100);
+  if (reference && (['walk', 'sprint', 'sprintDrain', 'recovery', 'dive', 'slide', 'getUp', 'damageTaken'] as const).some((key) => reference[key] !== 1)) {
+    issues.add('equipment.json › armorEffects', 'der Punkt bei 100 Rüstungspunkten ist die Referenz: alle Faktoren müssen 1 sein');
+  }
   data.equipment.armors.forEach((armor, i) => {
     if (armor.armorRating < effects[0].rating || armor.armorRating > effects[effects.length - 1].rating) {
       issues.add(`equipment.json › armors[${i}].armorRating`, `liegt außerhalb der Kurve armorEffects (${effects[0].rating} … ${effects[effects.length - 1].rating})`);

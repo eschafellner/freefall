@@ -21,7 +21,7 @@ import { rigidWeights } from './BodyLoft.ts';
  */
 export type Channel = 'cloth' | 'plate';
 export type WardrobeSlot = 'armor' | 'helmet' | 'pack';
-export type WeightClass = 'leicht' | 'mittel' | 'schwer';
+export type WeightClass = 'leicht' | 'mittel' | 'schwer' | 'ueberschwer';
 
 export interface WardrobeItem {
   readonly id: string;

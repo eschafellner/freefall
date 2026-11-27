@@ -21,6 +21,7 @@ const Y_AXIS = new T.Vector3(0, 1, 0);
 
 /** Hips height of the relaxed stance (knees soft, not locked). */
 const STAND = .935;
+const WEIGHT = { leicht: -.5, mittel: 0, schwer: .6, ueberschwer: 1 } as const;
 /** The weapon frame: the old torso origin, so weapon poses keep their tuned offsets. Child of UpperChest. */
 const TORSO_FRAME: readonly [number, number, number] = [0, 1.108 - BIND.UpperChest.at[1], -BIND.UpperChest.at[2]];
 /** Hand orientation on the weapon (weapon space): fist axis along the raked pistol grip / along the barrel. */
@@ -84,6 +85,11 @@ export class OperatorRig {
   }));
   private lastFlinch = 0;
   private steer = 0;
+  /** Weight of the worn armour: −0.5 light … 1 over-heavy (step depth, stance, jolts). */
+  private heavy = 0;
+  private fatigue = 0;
+  private fatigueTarget = 0;
+  private breathPhase = 0;
   private lastLoad = [0, 0];
   private hitSide = 1;
   private readonly deathSide: number;
@@ -152,6 +158,7 @@ export class OperatorRig {
     const compiled = this.wardrobe.look(look);
     if (compiled === this.compiledLook) return;
     this.compiledLook = compiled;
+    this.heavy = WEIGHT[compiled.weight];
     for (const channel of ['cloth', 'plate'] as const) {
       const geometry = compiled.geometries[channel];
       let mesh = this.meshes[channel];
@@ -196,6 +203,14 @@ export class OperatorRig {
       PrimaryWeapon: { parent: this.weaponRoot, position: [0, 0, 0] },
       SecondaryWeapon: anchor('SecondaryWeapon', 'Hips', [.205, -.13, .04]),
     };
+  }
+
+  /**
+   * Stamina of the operator as sent by the server (thousandths of a point): exhaustion and a low pool make it pant.
+   * The pool size differs per armour, so the cue uses absolute points (below 30 it starts).
+   */
+  setStamina(value: number, exhausted: boolean): void {
+    this.fatigueTarget = exhausted ? 1 : clamp((30_000 - value) / 30_000, 0, 1) * .6;
   }
 
   /** Clears planted feet and springs (respawn, slot change). */
@@ -253,7 +268,13 @@ export class OperatorRig {
     const rest = 1 - smooth(state.speed, .3, 1.5);
     const still = rest * upright * (airborne ? 0 : 1) * (1 - buckle);
     const kneel = crouch * rest * (1 - slide) * (1 - low);
-    const breathe = Math.sin(t * 1.6);
+    // Exhaustion: fast, deep breaths that heave chest, shoulders and head; the body slumps at rest.
+    this.fatigue = T.MathUtils.damp(this.fatigue, this.fatigueTarget, 1.8, dt);
+    const fatigue = this.fatigue * (1 - buckle);
+    this.breathPhase += dt * (1.6 + 2.8 * fatigue);
+    const breathe = Math.sin(this.breathPhase + this.seed);
+    const gasp = breathe * fatigue;
+    const heavy = this.heavy;
     const shift = wobble(t * .5, this.seed);
     const steady = 1 - .7 * aim;
     this.root.updateWorldMatrix(true, false);
@@ -269,8 +290,8 @@ export class OperatorRig {
       this.travel[i] = planted ? 1 - 2 * s : -1 + 2 * smooth(w, 0, 1);
       // A foot strike jolts the weapon and backpack.
       if (this.load[i] > 0 && this.lastLoad[i] === 0 && gait > .05) {
-        this.spring.gunY.kick(-.22 * gait * steady);
-        this.spring.pack.kick(1.6 * gait);
+        this.spring.gunY.kick(-.22 * gait * steady * (1 + .5 * heavy));
+        this.spring.pack.kick(1.6 * gait * (1 + .6 * heavy));
         this.spring.packRoll.kick((i ? -1 : 1) * .5 * gait);
       }
       this.lastLoad[i] = this.load[i];
@@ -279,8 +300,10 @@ export class OperatorRig {
     // ---- Pelvis ----------------------------------------------------------------------------------------------
     const [loadL, loadR] = this.load;
     const compress = loadL + loadR;
-    const bob = gait * (run * (.014 - .046 * compress) + (1 - run) * (.016 * compress - .01));
-    let hy = STAND - gait * (.032 + .035 * state.sprint) + bob + still * (breathe * .0018 - Math.abs(shift) * .01);
+    // Heavier armour sinks deeper into each step and stands lower; light armour stays springy.
+    const bob = gait * (run * (.014 - .046 * compress) + (1 - run) * (.016 * compress - .01)) * (1 + .35 * heavy);
+    let hy = STAND - .012 * heavy * upright - gait * (.032 + .035 * state.sprint) + bob
+      + still * (breathe * (.0018 + .006 * fatigue) - Math.abs(shift) * .01);
     let hx = gait * (loadR - loadL) * lerp(.028, .012, run) + still * shift * .026;
     let hz = .02 * crouch;
     hy = lerp(hy - lerp(.29, .4, kneel) * crouch, .31 + .08 * supine + .12 * tuck - .075 * landing, low);
@@ -318,7 +341,8 @@ export class OperatorRig {
     const lean = this.spring.pitch.step(-clamp(state.accelForward, -30, 30) * .0045 * upright, 2.2, .55, dt);
     const twist = this.spring.yaw.step(-state.turn * .16 * upright, 2.4, .6, dt);
     const sway = this.spring.roll.step(clamp(state.accelStrafe, -30, 30) * .003 * upright, 2.2, .6, dt);
-    const bodyPitch = -.04 - .13 * gait * run - .12 * state.sprint + aim * (pitch * .34 - .03) + kick * .035
+    const bodyPitch = -.04 - .13 * gait * run - .12 * state.sprint - .03 * heavy * gait - .12 * fatigue * still * (1 - aim)
+      + gasp * .04 + aim * (pitch * .34 - .03) + kick * .035
       - .16 * crouch + handling * .11 - strike * .12 + lean + still * breathe * .012 - .1 * buckle;
     // Rifle stance: the chest turns the right shoulder back so the support arm reaches the handguard. The weapon is
     // posed without this static twist (see below), so it still points where the operator looks.
@@ -391,7 +415,8 @@ export class OperatorRig {
 
     // ---- Head: stabilised look, cheek weld when aiming, glances at rest -------------------------------------
     const glance = this.spring.headYaw.step(still * (1 - aim) * wobble(t * .23, this.seed + 1) * .32 + state.turn * .25, 2.2, .7, dt);
-    this.q1.setFromEuler(this.euler.set(pitch * (.5 + .3 * aim) - .05 * (1 - aim) + still * breathe * .01, glance - .14 * aim, -.16 * aim, 'YXZ'));
+    this.q1.setFromEuler(this.euler.set(pitch * (.5 + .3 * aim) - .05 * (1 - aim) + still * breathe * .01 + gasp * .05,
+      glance - .14 * aim, -.16 * aim, 'YXZ'));
     // Lying, falling or sliding: the head rides on the chest and lifts to look ahead.
     this.q2.setFromEuler(this.euler.set(.75 * prone - .45 * supine - .3 * topple, .5 * topple * this.deathSide, 0)).premultiply(this.rq.UpperChest);
     const ride = Math.max(low, slide * .6, buckle);
@@ -433,7 +458,7 @@ export class OperatorRig {
       this.v3.copy(this.target).sub(this.rp.UpperChest).applyQuaternion(this.q1.copy(this.rq.UpperChest).invert());
       const rel = this.v3.sub(this.v1.set(side * BODY.shoulderWidth, BIND[upper].at[1] - BIND.UpperChest.at[1], 0));
       const protract = clamp(-rel.z * .42, -.06, .28) * (1 - topple);
-      const raise = clamp((rel.y + .32) * .32, -.08, .18) * (1 - topple) + still * breathe * .012;
+      const raise = clamp((rel.y + .32) * .32, -.08, .18) * (1 - topple) + still * breathe * .012 + gasp * .035;
       this.bones[shoulder].quaternion.setFromEuler(this.euler.set(0, side * protract, side * raise));
       this.fk(shoulder);
       this.fk(upper);
@@ -455,7 +480,7 @@ export class OperatorRig {
     const dirX = state.strafe, dirZ = -state.forward;
     const heelAngle = .3 * gait * (1 - .3 * state.sprint);
     const toeOff = .45 * gait + .3 * state.sprint;
-    const lift = gait * lerp(.1, .24, run) + .16 * state.sprint;
+    const lift = (gait * lerp(.1, .24, run) + .16 * state.sprint) * (1 - .15 * heavy);
     // In the dive's flight the legs stretch out behind the body instead of reaching for the ground.
     const lying = airborne ? Math.min(1, low + tuck * 1.5) : low;
     for (let i = 0; i < 2; i++) {

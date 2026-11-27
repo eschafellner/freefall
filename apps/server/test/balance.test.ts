@@ -104,8 +104,8 @@ const GOLDEN_TRACES = {
 // Registry
 
 test('registry loads the published files, freezes them and exposes a stable version', () => {
-  assert.equal(BALANCE.version.schemaVersion, 6);
-  assert.equal(BALANCE.version.release, '8.3A');
+  assert.equal(BALANCE.version.schemaVersion, 7);
+  assert.equal(BALANCE.version.release, '8.3B');
   assert.match(BALANCE.version.hash, /^[0-9a-f]{16}$/);
   deepFrozen(BALANCE.weapon('kestrel-ar-01'));
   deepFrozen(BALANCE.swarm);

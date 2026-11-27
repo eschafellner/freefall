@@ -10,6 +10,15 @@
     "cooldownSeconds": 1.2,
     "minSpeed": 7
   },
+  "stamina": {
+    "sprintDrainPerSecond": 11,
+    "recoveryPerSecond": 18,
+    "recoveryDelaySeconds": 1.2,
+    "lyingRecoveryMultiplier": 1.25,
+    "diveCost": 20,
+    "slideCost": 15,
+    "recoverFraction": 0.3
+  },
   "diveDistance": 5,
   "diveSeconds": 0.75,
   "diveCooldownSeconds": 1.2,

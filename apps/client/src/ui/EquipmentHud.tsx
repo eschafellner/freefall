@@ -23,8 +23,19 @@ const BREAK_LABEL = { ...RELOAD_LABEL, RELOAD_START: 'Kipplauf öffnen', MAGAZIN
  * Own kit, bottom right: health and stims above the weapons. The drawn weapon is shown large with its magazine,
  * the holstered one and the grenades as compact rows. Melee stays bound but has no HUD entry.
  */
-export function CombatLoadout({ player, tick, dryFireTick, resupply = false }:
-  { player: PlayerState; tick: number; dryFireTick?: number; resupply?: boolean }) {
+/** Stamina under the health bar: dim while full, amber while exhausted (no sprint until 30 %). */
+function StaminaBar({ player, max }: { player: PlayerState; max: number }) {
+  const value = player.stamina ? player.stamina.value : max;
+  const exhausted = !!player.stamina?.exhausted;
+  const share = Math.max(0, Math.min(1, value / max));
+  return <div className={`stamina-bar${share >= 1 ? ' full' : ''}${exhausted ? ' exhausted' : ''}`} role="meter" aria-label="Ausdauer"
+    aria-valuemin={0} aria-valuemax={Math.round(max / 1000)} aria-valuenow={Math.round(value / 1000)}>
+    <span>{exhausted ? 'Erschöpft' : 'Ausdauer'}</span><b><i style={{ width: `${share * 100}%` }}/></b>
+  </div>;
+}
+
+export function CombatLoadout({ player, tick, dryFireTick, resupply = false, staminaMax }:
+  { player: PlayerState; tick: number; dryFireTick?: number; resupply?: boolean; staminaMax?: number }) {
   const gear = player.equipment;
   const slot = gear?.slot ?? 'primary';
   const other = slot === 'primary' ? 'secondary' : 'primary';
@@ -61,6 +72,7 @@ export function CombatLoadout({ player, tick, dryFireTick, resupply = false }:
       <div className="health-bar" role="meter" aria-label="Gesundheit" aria-valuemin={0} aria-valuemax={PLAYER.health} aria-valuenow={player.hp}>
         <i style={{ width: `${health * 100}%` }}/>
       </div>
+      {staminaMax && player.hp > 0 && <StaminaBar player={player} max={staminaMax}/>}
       {gear && <div className="kit-row stim">
         <KitIcon id="stim"/><span className="kit-name"><kbd>{bindings.label('USE_STIM')}</kbd> {STIM.displayName}</span>
         <Pips value={gear.stims} max={STIM.maxCharges}/><b>{gear.stims}/{STIM.maxCharges}</b>

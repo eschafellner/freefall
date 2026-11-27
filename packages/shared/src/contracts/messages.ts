@@ -1,4 +1,5 @@
 import type { PostureCommand, PostureState } from '../config/posture.ts';
+import type { StaminaSnapshot } from '../config/stamina.ts';
 import type { OperatorPosition } from '../config/postureGeometry.ts';
 import type { PositionXZ } from '../config/movement.ts';
 import type { HordeSize } from '../config/arena.ts';
@@ -116,8 +117,10 @@ export interface PlayerState {
   equipment?: EquipmentState;
   /** Weapon IDs of the operator's loadout (presentation: model, sound, handling). Absent: standard loadout. */
   weapons?: Record<WeaponSlot, string>;
-  /** Visible armour of the operator (wardrobe ids). Absent: standard issue. Not assigned by the server yet. */
+  /** Visible armour of the operator (wardrobe ids). Absent: standard issue. */
   look?: OperatorLook;
+  /** Stamina after the acknowledged input (`ack`). Absent: full and rested. */
+  stamina?: StaminaSnapshot;
 }
 
 /**

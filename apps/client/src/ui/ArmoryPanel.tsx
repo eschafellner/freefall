@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { BALANCE, MAX_ARMOR_RATING, STANDARD_LOADOUT, TEAM_COLORS, UNLOCKS, armorDamageTaken, formatResourceAmounts, hasResources,
-  missingResources, unlockBlocker } from '@freefall/shared';
+import { BALANCE, MAX_ARMOR_RATING, SIMULATION_HZ, STANDARD_LOADOUT, TEAM_COLORS, UNLOCKS, armorDamageTaken, armorMobility,
+  formatResourceAmounts, hasResources, missingResources, unlockBlocker } from '@freefall/shared';
 import type { AccountProfile, AccountUnlock, ArmorWeightClass, BodyArmorDefinition, LoadoutSelection, OperatorLook } from '@freefall/shared';
 import { unlock, unlocks } from '../account/AccountClient.ts';
 import type { GameStatus } from '../game/Game.ts';
@@ -16,16 +16,33 @@ export const WEIGHT_CLASS_NAMES: Readonly<Record<ArmorWeightClass, string>> = {
 const percent = new Intl.NumberFormat('de-DE', { style: 'percent', maximumFractionDigits: 1 });
 const number = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
 
-/** Armour values of one body armour: rating, damage taken, effective health. */
+const decimal = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const reference = armorMobility(BALANCE, 100);
+/** Green when better than the standard armour, amber when worse. */
+const compare = (value: number, standard: number, higherIsBetter = true) =>
+  Math.abs(value - standard) < 1e-9 ? '' : (value > standard) === higherIsBetter ? 'better' : 'worse';
+
+/** Armour values of one body armour: protection, speed, stamina, dive and slide. */
 export function ArmorStats({ armor }: { armor: BodyArmorDefinition }) {
   const taken = armorDamageTaken(BALANCE.armorEffects, armor.armorRating);
   const health = BALANCE.operator.maxHealth / taken;
+  const mobility = armorMobility(BALANCE, armor.armorRating);
+  const { stamina } = mobility;
+  const sprintSeconds = stamina.max / stamina.sprintDrain / SIMULATION_HZ;
+  const standardSprint = reference.stamina.max / reference.stamina.sprintDrain / SIMULATION_HZ;
+  const diveShare = mobility.diveDistance / BALANCE.movement.diveDistance;
   return <dl className="intel-params loadout-stats armor-stats">
     <div><dt>Gewichtsklasse</dt><dd>{WEIGHT_CLASS_NAMES[armor.weightClass]}</dd></div>
     <div className="armor-rating"><dt>Rüstungspunkte</dt>
       <dd><i style={{ '--fill': `${armor.armorRating / MAX_ARMOR_RATING * 100}%` } as React.CSSProperties}/>{armor.armorRating}</dd></div>
-    <div><dt>Erlittener Schaden</dt><dd className={taken > 1 ? 'worse' : taken < 1 ? 'better' : ''}>{percent.format(taken)}</dd></div>
-    <div><dt>Effektive Lebenspunkte</dt><dd>{number.format(health)}</dd></div>
+    <div><dt>Erlittener Schaden</dt><dd className={compare(taken, 1, false)}>{percent.format(taken)}</dd></div>
+    <div><dt>Effektive Lebenspunkte</dt><dd className={compare(health, BALANCE.operator.maxHealth)}>{number.format(health)}</dd></div>
+    <div><dt>Gehen · Sprint</dt><dd className={compare(mobility.sprintSpeed, reference.sprintSpeed)}>
+      {decimal.format(mobility.walkSpeed)} · {decimal.format(mobility.sprintSpeed)} m/s</dd></div>
+    <div><dt>Ausdauer · Dauersprint</dt><dd className={compare(sprintSeconds, standardSprint)}>
+      {number.format(stamina.max / 1000)} · {decimal.format(sprintSeconds)} s</dd></div>
+    <div><dt>Hechtsprung · Rutschen</dt><dd className={compare(diveShare, 1)}>
+      {mobility.diveDistance ? percent.format(diveShare) : 'gesperrt'} · {mobility.canSlide ? 'ja' : 'gesperrt'}</dd></div>
   </dl>;
 }
 
@@ -127,7 +144,7 @@ export function ArmoryPanel({ status, apply, close, fault, account }: {
       <p className="terminal-note">{chosen.description}</p>
       <ArmorStats armor={chosen}/>
       {account && <ResourceBar balance={account.profile.resources} ids={['credits']}/>}
-      <p className="terminal-note">Rüstungspunkte senken jeden Treffer: Gegner, Explosionen und Eigenbeschuss. Tempo und Ausdauer sind noch für alle Klassen gleich.</p>
+      <p className="terminal-note">Rüstungspunkte senken jeden Treffer: Gegner, Explosionen und Eigenbeschuss. Schwerere Rüstung kostet Tempo und Ausdauer; der Heilstim füllt die Ausdauer auf.</p>
     </section>
   </Terminal>;
 }

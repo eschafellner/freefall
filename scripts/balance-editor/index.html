@@ -153,7 +153,7 @@ const S = {
 };
 const READ_ONLY = new Set(['id', 'wireType', 'protected']);
 const ENUM_KEYS = new Set(['slot', 'category', 'family', 'damageType', 'type', 'tactics', 'vehicleTargets', 'fire', 'side']);
-const TAB_OF_FILE = { weapons: 'weapons', ammunition: 'ammo', enemies: 'enemies', loot: 'supply', equipment: 'supply', structures: 'supply' };
+const TAB_OF_FILE = { weapons: 'weapons', ammunition: 'ammo', enemies: 'enemies', loot: 'supply', equipment: 'supply', structures: 'supply', movement: 'supply' };
 const MAG_TYPES = { compact: 'Kleines Magazin', extended: 'Erweitertes Magazin', drum: 'Trommelmagazin' };
 const MAG_ORDER = Object.keys(MAG_TYPES);
 const MAG_STATS = { reloadSeconds: 'Nachladezeit s', reserve: 'Reserve (Magazine)', maxReserve: 'Max. Reserve', roundsPerSecond: 'Feuerrate',
@@ -709,19 +709,39 @@ function renderSupply() {
   const armors = card('Rüstungen',
     form([
       ...equipment.armors.flatMap((armor, i) => [
-        [`${armor.displayName}: Rüstungspunkte`, 'equipment', ['armors', i, 'armorRating'], 'Ganze Zahl 0 … 300; der erlittene Schaden folgt der Kurve unten'],
+        [`${armor.displayName}: Rüstungspunkte`, 'equipment', ['armors', i, 'armorRating'], 'Ganze Zahl 0 … 300; alle Wirkungen folgen der Kurve unten'],
         [`${armor.displayName}: Gewichtsklasse`, 'equipment', ['armors', i, 'weightClass'], 'leicht, mittel, schwer, ueberschwer'],
-        [`${armor.displayName}: erlittener Schaden %`, null, () => armorRow(armor.id, (row) => row && row.damageTaken * 100, 1)],
-        [`${armor.displayName}: effektive HP`, null, () => armorRow(armor.id, (row) => row?.effectiveHealth, 0)],
+        [`${armor.displayName}: Schaden % · effektive HP`, null, () => h('span', {}, armorRow(armor.id, (row) => row && row.damageTaken * 100, 1), ' · ',
+          armorRow(armor.id, (row) => row?.effectiveHealth, 0))],
+        [`${armor.displayName}: Gehen · Sprint m/s`, null, () => h('span', {}, armorRow(armor.id, (row) => row?.walkSpeed, 2), ' · ',
+          armorRow(armor.id, (row) => row?.sprintSpeed, 2))],
+        [`${armor.displayName}: Ausdauer · Dauersprint s`, null, () => h('span', {}, armorRow(armor.id, (row) => row?.stamina, 0), ' · ',
+          armorRow(armor.id, (row) => row?.sprintSeconds, 1))],
+        [`${armor.displayName}: Hechtsprung m`, null, () => armorRow(armor.id, (row) => row?.diveDistance, 2)],
       ]),
-      ...S.draft.equipment.armorEffects.map((point, i) => [`Kurve ${i + 1}: Rüstungspunkte / Schadensfaktor`, 'equipment',
-        [['armorEffects', i, 'rating'], ['armorEffects', i, 'damageTaken']], 'Stützpunkte aufsteigend; dazwischen linear, außerhalb gilt der nächste Punkt']),
+    ]));
+  const curveKeys = [['rating', 'Punkte'], ['damageTaken', 'Schaden'], ['walk', 'Gehen'], ['sprint', 'Sprint'], ['stamina', 'Ausdauer'],
+    ['sprintDrain', 'Verbrauch'], ['recovery', 'Erholung'], ['dive', 'Hechtsprung'], ['slide', 'Rutschen'], ['getUp', 'Aufstehen']];
+  const curve = card('Rüstungskurve',
+    h('p', { class: 'note' }, 'Faktoren je Rüstungspunkte; dazwischen linear, außerhalb gilt der nächste Punkt. 100 ist die Referenz (alle Faktoren 1). Hechtsprung und Rutschen unter 0,3 sind gesperrt.'),
+    h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, h('tr', {}, curveKeys.map(([, label]) => h('th', {}, label)))),
+      h('tbody', {}, S.draft.equipment.armorEffects.map((point, i) => h('tr', {},
+        curveKeys.map(([key]) => h('td', { class: 'num' }, field('equipment', ['armorEffects', i, key])))))))));
+  const stamina = card('Ausdauer (mittlere Rüstung)',
+    form([
+      ['Sprintverbrauch je s', 'movement', ['stamina', 'sprintDrainPerSecond']],
+      ['Erholung je s', 'movement', ['stamina', 'recoveryPerSecond']],
+      ['Pause vor Erholung s', 'movement', ['stamina', 'recoveryDelaySeconds']],
+      ['Erholung geduckt/liegend ×', 'movement', ['stamina', 'lyingRecoveryMultiplier']],
+      ['Hechtsprung kostet', 'movement', ['stamina', 'diveCost']],
+      ['Rutschen kostet', 'movement', ['stamina', 'slideCost']],
+      ['Erschöpfung endet bei (Anteil)', 'movement', ['stamina', 'recoverFraction']],
     ]));
   return [
     section('Versorgung', 'Was Munitionsboxen, Erste-Hilfe-Kästen, Granatenkisten und die Albatross geben. Alle Mengen werden im Spiel an der Tragekapazität gekappt.',
       h('div', { class: 'cards' }, pois, medical, albatross)),
-    section('Rüstungen', 'Rüstungspunkte senken jeden Treffer auf Operator (Gegner, Explosionen, Eigenbeschuss) nach der Kurve. Tempo und Ausdauer sind noch nicht angebunden.',
-      h('div', { class: 'cards' }, armors)),
+    section('Rüstungen', 'Rüstungspunkte bestimmen über die Kurve Schaden, Tempo, Ausdauer, Hechtsprung, Rutschen und Aufstehen. Gilt für jeden Treffer und jede Bewegung des Operators.',
+      h('div', { class: 'cards' }, armors, curve, stamina)),
     section('Munition aus Kisten', 'Mit Standardmagazin. Einzelpatronen-Waffen zählen Reserve und Nachschub in Patronen. Die Munitionsbox an PoI füllt nur die Primärwaffe.',
       h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, ammoHead), ammoBody))),
     section('Beute an Points of Interest', 'Proben je Schwierigkeitsstufe: „auf Karte“ liegt verteilt, das Limit kann der Trupp höchstens tragen und extrahieren.', samples),

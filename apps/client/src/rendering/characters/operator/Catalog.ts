@@ -3,6 +3,7 @@ import type { OperatorLook, WardrobeItem } from './Wardrobe.ts';
 import { FR7_ARMOR, FR7_HELMET, RADIO_PACK } from './kit/Standard.ts';
 import { SR4_ARMOR, SR4_HELMET, SUPPLY_PACK } from './kit/Scout.ts';
 import { BW9_ARMOR, BW9_HELMET } from './kit/Heavy.ts';
+import { KR12_ARMOR, KR12_HELMET } from './kit/Colossus.ts';
 import { CONVICT_ARMOR, CONVICT_DUFFEL, CONVICT_HOOD } from './kit/Convict.ts';
 
 /**
@@ -10,8 +11,8 @@ import { CONVICT_ARMOR, CONVICT_DUFFEL, CONVICT_HOOD } from './kit/Convict.ts';
  * convict items dress the escorted prisoners.
  */
 export const WARDROBE: readonly WardrobeItem[] = [
-  FR7_ARMOR, SR4_ARMOR, BW9_ARMOR,
-  FR7_HELMET, SR4_HELMET, BW9_HELMET,
+  FR7_ARMOR, SR4_ARMOR, BW9_ARMOR, KR12_ARMOR,
+  FR7_HELMET, SR4_HELMET, BW9_HELMET, KR12_HELMET,
   RADIO_PACK, SUPPLY_PACK,
   CONVICT_ARMOR, CONVICT_HOOD, CONVICT_DUFFEL,
 ];
@@ -20,10 +21,11 @@ export const WARDROBE: readonly WardrobeItem[] = [
 export const DEFAULT_LOOK: OperatorLook = { armor: 'fr7', helmet: 'fr7-helm', pack: 'funk' };
 export const CONVICT_LOOK: OperatorLook = { armor: 'gewahrsam', helmet: 'gewahrsam-haube', pack: 'seesack' };
 /** Example sets: light, medium, heavy. */
-export const LOOK_PRESETS: Readonly<Record<'leicht' | 'mittel' | 'schwer', OperatorLook>> = {
+export const LOOK_PRESETS: Readonly<Record<'leicht' | 'mittel' | 'schwer' | 'ueberschwer', OperatorLook>> = {
   leicht: { armor: 'sr4', helmet: 'sr4-haube', pack: 'funk' },
   mittel: DEFAULT_LOOK,
   schwer: { armor: 'bw9', helmet: 'bw9-helm', pack: 'versorgung' },
+  ueberschwer: { armor: 'kr12', helmet: 'kr12-helm', pack: 'funk' },
 };
 
 export function createOperatorWardrobe(): OperatorWardrobe { return new OperatorWardrobe(WARDROBE); }

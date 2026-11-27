@@ -40,6 +40,7 @@ const PATHS: Record<string, ReactNode> = {
   'backpack.standard_frame': <path d="M22 3h20l3 4v14l-3 2H22l-3-2V7z M25 8h14v5H25z" fillRule="evenodd"/>,
   'armor.standard_carrier': <path d="M20 3l6 2h12l6-2 4 6-3 14H19L16 9z M27 9h10v5H27z" fillRule="evenodd"/>,
   'armor.sr4_scout': <path d="M22 4l5 2h10l5-2 2 5-3 13H23L20 9z M26 11h12v3H26z M26 16h12v2H26z" fillRule="evenodd"/>,
+  'armor.kr12_colossus': <path d="M6 9c2-5 9-6 12-3l5-2h18l5 2c3-3 10-2 12 3l-3 6-6-2-2 10H17l-2-10-6 2z M26 8h12v7H26z M30 17h4v4h-4z" fillRule="evenodd"/>,
   'armor.bw9_bulwark': <path d="M9 7c2-4 8-5 11-2l4-1h16l4 1c3-3 9-2 11 2l-2 6-6-1-2 11H19l-2-11-6 1z M27 8h10v6H27z" fillRule="evenodd"/>,
   // P-01 service pistol.
   'p-01': <path d="M14 6h33.5v2.4H50v2.8H30.2l-1.8 1.4h-3.2l-2.4 8.6h-7.4l2.6-9.2-4-.8z"/>,

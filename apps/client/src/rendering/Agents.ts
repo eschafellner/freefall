@@ -88,6 +88,7 @@ export class PlayerView {
       const model = this.models[me.slot];
       model.setWeapons(me.weapons);
       model.setLook(me.look);
+      model.setStamina(me.stamina);
       const actionTick = a && b ? T.MathUtils.lerp(a.tick, b.tick, Math.min(1, alpha)) : localTick;
       const earlier = a?.players.find((p) => p.id === own && p.life === me.life)?.equipment;
       const later = b?.players.find((p) => p.id === own && p.life === me.life)?.equipment;
@@ -117,6 +118,7 @@ export class PlayerView {
       const reload = later?.reload && later.reload.started <= tick && tick < later.reload.until && later.reloadUntil ? later : frame;
       this.models[player.slot].setWeapons(frame.weapons);
       this.models[player.slot].setLook(frame.look);
+      this.models[player.slot].setStamina(frame.stamina);
       this.models[player.slot].draw(frame.id, frame.life, frame.hp, x, z, heading, playerPitch,
         Boolean(motion & PLAYER_MOTION.aim), Boolean(motion & PLAYER_MOTION.sprint), reload.reloadUntil ?? 0, tick, now, dt,
         false, gear, posture, y, bodyYaw, reload.reload, tick, world);

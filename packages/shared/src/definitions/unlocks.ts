@@ -154,6 +154,9 @@ export const UNLOCKS: UnlockRegistry = createUnlockRegistry([
     acquisition: 'choice', level: 1, requires: [], equipmentId: 'armor.sr4_scout', cost: { credits: 6000 } },
   { id: 'upgrade.bw9-bollwerk', kind: 'upgrade', displayName: 'BW-9 Bollwerk', description: 'Schwere Rüstung, 150 Rüstungspunkte, 75 % Schaden.',
     acquisition: 'choice', level: 1, requires: [], equipmentId: 'armor.bw9_bulwark', cost: { credits: 4000 } },
+  // Überschwere Rüstung 8.3B.
+  { id: 'upgrade.kr12-koloss', kind: 'upgrade', displayName: 'KR-12 Koloss', description: 'Überschwere Rüstung, 200 Rüstungspunkte, 50 % Schaden, kein Hechtsprung und kein Rutschen.',
+    acquisition: 'choice', level: 1, requires: [], equipmentId: 'armor.kr12_colossus', cost: { credits: 8000 } },
 ]);
 
 export const STANDARD_LOADOUT: LoadoutSelection = standard;

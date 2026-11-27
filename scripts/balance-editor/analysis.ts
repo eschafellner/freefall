@@ -115,7 +115,11 @@ export interface SupplySummary {
   /** Supply items per map: [min, max] per PoI × PoI count. */
   readonly suppliesPerMap: readonly [number, number];
   /** Body armours: effective rating, damage factor and the health the operator effectively has. */
-  readonly armors: readonly { readonly armorId: string; readonly rating: number; readonly damageTaken: number; readonly effectiveHealth: number }[];
+  readonly armors: readonly {
+    readonly armorId: string; readonly rating: number; readonly damageTaken: number; readonly effectiveHealth: number;
+    readonly walkSpeed: number; readonly sprintSpeed: number; readonly stamina: number; readonly sprintSeconds: number;
+    readonly diveDistance: number; readonly canSlide: boolean;
+  }[];
 }
 
 export interface Analysis {
@@ -244,8 +248,12 @@ function supplies(registry: BalanceRegistry): SupplySummary {
     albatross: { containers: containers.length, charges: containers.reduce((sum, c) => sum + c.charges, 0), perUse: resupply.perUse },
     suppliesPerMap: [loot.supplies[0]! * POI_COUNT, loot.supplies[1]! * POI_COUNT],
     armors: [...registry.bodyArmors.values()].map((armor) => {
-      const { protection } = resolveSelection(registry, { ...loadout.selection, armorId: armor.id });
-      return { armorId: armor.id, rating: protection.armorRating, damageTaken: protection.damageTaken, effectiveHealth: loadout.maxHealth / protection.damageTaken };
+      const { protection, mobility } = resolveSelection(registry, { ...loadout.selection, armorId: armor.id });
+      return {
+        armorId: armor.id, rating: protection.armorRating, damageTaken: protection.damageTaken, effectiveHealth: loadout.maxHealth / protection.damageTaken,
+        walkSpeed: mobility.walkSpeed, sprintSpeed: mobility.sprintSpeed, stamina: mobility.stamina.max / 1000,
+        sprintSeconds: mobility.stamina.max / mobility.stamina.sprintDrain / SIMULATION_HZ, diveDistance: mobility.diveDistance, canSlide: mobility.canSlide,
+      };
     }),
   };
 }

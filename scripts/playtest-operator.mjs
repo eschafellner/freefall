@@ -76,6 +76,11 @@ try {
   for (let i = 0; i < 3; i++) { await delay(260); await shot('02-lauf-' + i); }
   await page.keyboard.down('Shift');
   for (let i = 0; i < 2; i++) { await delay(420); await shot('03-sprint-' + i); }
+  // Keep sprinting until the stamina pool is empty (about 9 s in the standard armour).
+  await until(() => own.staminaState.exhausted, 'Erschöpfung', 20000);
+  await delay(300);
+  await shot('03-erschoepft');
+  console.log('erschöpft nach Sprint', own.staminaState);
   await page.keyboard.up('Shift');
   await page.keyboard.up('KeyW');
   await delay(600);
@@ -131,6 +136,9 @@ try {
   await station(-22, -9, -Math.PI / 2);
   await deck.screenshot({ path: join(output, '09-ruestkammer.png') });
   // A new account holds 5,000 SKR: SR-4 (6,000) is out of reach, BW-9 (4,000) can be bought and put on.
+  await deck.getByRole('radio', { name: /KR-12 Koloss/ }).click();
+  await delay(900);
+  await deck.screenshot({ path: join(output, '10-ruestkammer-ueberschwer.png') });
   await deck.getByRole('radio', { name: /SR-4 Späher/ }).click();
   await delay(900);
   await deck.screenshot({ path: join(output, '10-ruestkammer-leicht-gesperrt.png') });

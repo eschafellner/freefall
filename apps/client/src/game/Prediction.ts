@@ -1,8 +1,8 @@
 import {
-  BALANCE, advancePosture, applyPostureInput, constrainTether, copyPosture, diveEnvelope,
-  groundHeight, isGroundPosture, lerpAngle, newPosture, postureCollider, postureSweep, sampleDive,
+  BALANCE, BASE_LOADOUT, advancePosture, applyPostureInput, constrainTether, copyPosture, diveEnvelope, freshStamina,
+  groundHeight, isGroundPosture, lerpAngle, newPosture, postureCollider, postureSweep, sampleDive, staminaFromSnapshot,
 } from '@freefall/shared';
-import type { PlayerInput, PlayerState, PositionXZ, PostureState, WorldDefinition } from '@freefall/shared';
+import type { EffectiveLoadout, EffectiveMobility, PlayerInput, PlayerState, PositionXZ, PostureState, StaminaState, WorldDefinition } from '@freefall/shared';
 
 /** Corrections above this distance are shown at once instead of being blended (teleport-sized). */
 const SNAP_DISTANCE = 2;
@@ -27,6 +27,11 @@ export class Prediction {
   tether?: PositionXZ & { radius: number };
   frozen = false;
   balance = BALANCE.movement;
+  /** Speeds, dive, slide and stamina of the own armor; set from the confirmed loadout. */
+  mobility: EffectiveMobility = BASE_LOADOUT.mobility;
+  slide = BASE_LOADOUT.slide;
+  /** Predicted stamina, re-based on every snapshot like the position. */
+  stamina: StaminaState = freshStamina(BASE_LOADOUT.mobility.stamina);
   posture = newPosture();
   visualPosture: PostureState = this.posture;
   visualTick = 0;
@@ -51,7 +56,15 @@ export class Prediction {
     advancePosture(this.position, this.posture, this.tick, this.balance, this.world, this.tether);
     // Like the server: an input of an earlier life is acknowledged but does not move the operator.
     if (input.life !== undefined && input.life !== this.life) return;
-    applyPostureInput(this.position, this.posture, input, this.tick, this.balance, this.world, this.tether);
+    applyPostureInput(this.position, this.posture, input, this.tick, this.balance, this.world, this.tether,
+      this.mobility, this.slide, this.mobility, this.stamina);
+  }
+
+  /** Armor of the own loadout: speeds, dive, slide and stamina rules. */
+  setLoadout(loadout: Pick<EffectiveLoadout, 'mobility' | 'slide'>): void {
+    this.mobility = loadout.mobility;
+    this.slide = loadout.slide;
+    if (this.stamina.value > loadout.mobility.stamina.max) this.stamina.value = loadout.mobility.stamina.max;
   }
 
   /** Predicted inputs the server has not acknowledged yet (network round trip plus server input buffer). */
@@ -79,6 +92,7 @@ export class Prediction {
     this.position.y = player.y ?? 0;
     this.tick = serverTick;
     this.posture = player.posture ? copyPosture(player.posture) : newPosture(player.bodyYaw ?? player.yaw);
+    this.stamina = staminaFromSnapshot(player.stamina, this.mobility.stamina);
     while (this.pending[0] && this.pending[0].seq <= player.ack) this.pending.shift();
     if (snap) this.pending.length = 0;
     if (this.alive) for (const input of this.pending) this.move(input);

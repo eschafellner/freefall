@@ -28,7 +28,7 @@ npm run dev:client   # Vite auf 127.0.0.1:5173
 | --- | --- |
 | WASD | Bewegen |
 | Maus | Kamera und Ziel ausrichten |
-| Shift | Sprinten |
+| Shift | Sprinten (kostet Ausdauer, abhängig von der Rüstung: [Rüstungssystem](docs/RUESTUNGSSYSTEM.md)) |
 | Rechte Maustaste halten | Über die Schulter zielen |
 | Linke Maustaste halten | Automatisch feuern |
 | R | Nachladen (taktisch: Restmunition des Magazins wird verworfen) |

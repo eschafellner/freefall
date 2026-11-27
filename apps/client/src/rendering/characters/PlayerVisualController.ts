@@ -16,7 +16,7 @@ import { CONVICT_LOOK, DEFAULT_LOOK } from './operator/Catalog.ts';
 import type { OperatorLook, OperatorWardrobe } from './operator/Wardrobe.ts';
 import { CLIP_REQUIREMENT } from './animation/ClipLibrary.ts';
 
-import type { EffectiveWeapon, EquipmentState, PostureState, ReloadState, ShotEvent, WeaponSlot, WorldDefinition } from '@freefall/shared';
+import type { EffectiveWeapon, EquipmentState, PlayerState, PostureState, ReloadState, ShotEvent, WeaponSlot, WorldDefinition } from '@freefall/shared';
 
 export type WeaponCue = Pick<ShotEvent, 'shooter' | 'tick' | 'life' | 'slot'>;
 export type PresentShot = (weapon: WeaponVisualController | undefined, now: number) => void;
@@ -304,6 +304,11 @@ export class PlayerVisualController {
   }
 
   private primaryRoots(): T.Object3D[] { return [...this.primaries.values()].map((weapon) => weapon.root); }
+
+  /** Stamina from the snapshot (`PlayerState.stamina`, absent = full): drives the panting of an exhausted operator. */
+  setStamina(stamina: PlayerState['stamina']): void {
+    this.rig.setStamina(stamina ? stamina.value : Infinity, !!stamina?.exhausted);
+  }
 
   /** Weapons of this operator's loadout (`PlayerState.weapons`); picks the matching model and handling. */
   setWeapons(weapons?: Readonly<Record<WeaponSlot, string>>): void {

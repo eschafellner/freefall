@@ -8,6 +8,9 @@ import type { DiveState } from './dive.ts';
 import { constrainTether, movePlayer, wrapAngle } from './movement.ts';
 import type { AimRay, MovementBoundary } from './movement.ts';
 import { groundHeight } from '../world/Terrain.ts';
+import { canSprint, restStamina, spendStamina } from './stamina.ts';
+import type { StaminaState } from './stamina.ts';
+import type { EffectiveMobility } from '../balance/resolver.ts';
 import { fitsPosture, groundedBodyHit, isOperatorGrounded, postureSweep, traceTacticalShot } from './postureGeometry.ts';
 import type { OperatorPosition, ShotWorldContact } from './postureGeometry.ts';
 
@@ -237,20 +240,33 @@ function advanceSlide(p: OperatorPosition, state: PostureState, slide: SlideStat
   transition(state, 'CROUCHING', tick);
 }
 
+/**
+ * One movement input of an operator (server and client prediction). `mobility` and `stamina` come from the operator's
+ * armor (`EffectiveLoadout.mobility`) and its running stamina; without them movement is unlimited (tools and tests).
+ */
 export function applyPostureInput(p: OperatorPosition, state: PostureState, input: PlayerInput, tick: number,
   balance = BALANCE.movement, world?: WorldDefinition, boundary?: MovementBoundary,
   speeds: Pick<typeof BALANCE.operator, 'walkSpeed' | 'sprintSpeed'> = BALANCE.operator,
-  slideBalance: OperatorSlideDefinition = balance.slide): void {
+  slideBalance: OperatorSlideDefinition = balance.slide, mobility?: EffectiveMobility, stamina?: StaminaState): void {
+  const rules = stamina && mobility?.stamina;
+  /** Every input step without spending lets stamina recover (faster crouched or lying). */
+  const rest = () => { if (rules) restStamina(stamina!, rules, state.current !== 'STANDING' && state.current !== 'GETTING_UP'); };
   if (state.current === 'DIVING' || state.current === 'GETTING_UP' || state.current === 'SLIDING' ||
       (state.from === 'DIVING' && state.started === tick) ||
-      (state.current === 'CROUCHING' && state.from === 'SLIDING' && state.started === tick)) return;
+      (state.current === 'CROUCHING' && state.from === 'SLIDING' && state.started === tick)) {
+    rest();
+    return;
+  }
   const runUp = state.slideRunUp;
   delete state.slideRunUp;
   const ground = isGroundPosture(state.current);
   const command = state.started === tick ? undefined : input.posture;
-  if (command === 'dive' && allowsPostureAction(state, 'dive', balance) &&
+  const diveDistance = mobility ? mobility.diveDistance : balance.diveDistance;
+  if (command === 'dive' && allowsPostureAction(state, 'dive', balance) && diveDistance > 0 &&
+      (!rules || stamina!.value >= rules.diveCost) &&
       (state.current === 'STANDING' || state.current === 'CROUCHING') &&
-      startDive(p, state, state.current, input, tick, balance, world, boundary)) {
+      startDive(p, state, state.current, input, tick, balance, world, boundary, diveDistance)) {
+    if (rules) spendStamina(stamina!, rules.diveCost);
     return;
   }
   const stand = command === 'stand' || (command === 'crouch' && state.current === 'CROUCHING');
@@ -260,18 +276,22 @@ export function applyPostureInput(p: OperatorPosition, state: PostureState, inpu
     else if (ground) {
       delete state.groundMotion;
       state.getUpId = input.seq;
-      transition(state, 'GETTING_UP', tick, seconds(state.current === 'PRONE' ? balance.proneGetUpSeconds : balance.supineGetUpSeconds), 'STANDING');
+      transition(state, 'GETTING_UP', tick, seconds((state.current === 'PRONE' ? balance.proneGetUpSeconds : balance.supineGetUpSeconds) *
+        (mobility?.getUpMultiplier ?? 1)), 'STANDING');
+      rest();
       return;
     } else transition(state, 'STANDING', tick, seconds(balance.crouchSeconds));
   } else if (command === 'crouch' && state.current === 'STANDING') {
     if (input.sprint && (input.forward || input.strafe) && isOperatorGrounded(p, world) && runUp && tick <= runUp.tick + 1 &&
-        (state.slideCooldownUntil === undefined || tick >= state.slideCooldownUntil)) {
+        (state.slideCooldownUntil === undefined || tick >= state.slideCooldownUntil) && (mobility?.canSlide ?? true) &&
+        (!rules || stamina!.value >= rules.slideCost)) {
       const yaw = Math.atan2(runUp.x, -runUp.z);
       if (fitsPosture(p, balance.colliders.SLIDING, yaw, world) && fitsPosture(p, balance.colliders.CROUCHING, 0, world)) {
         state.yaw = yaw;
         state.slide = { x: runUp.x, z: runUp.z, distance: slideBalance.distance, decay: slideBalance.decay };
         state.slideCooldownUntil = tick + seconds(slideBalance.cooldownSeconds);
         transition(state, 'SLIDING', tick, seconds(slideBalance.seconds), 'CROUCHING');
+        if (rules) spendStamina(stamina!, rules.slideCost);
         return;
       }
     }
@@ -281,13 +301,17 @@ export function applyPostureInput(p: OperatorPosition, state: PostureState, inpu
   const shape = balance.colliders[state.current];
   if (ground) {
     moveGroundedOperator(p, state, input, tick, shape, balance, speeds.walkSpeed, world, boundary);
+    rest();
     return;
   }
   state.yaw = input.yaw;
 
-  if (!input.forward && !input.strafe) return;
+  if (!input.forward && !input.strafe) {
+    rest();
+    return;
+  }
   const startX = p.x, startZ = p.z;
-  const sprintAllowed = allowsPostureAction(state, 'sprint', balance);
+  const sprintAllowed = allowsPostureAction(state, 'sprint', balance) && (!rules || canSprint(stamina!));
   const sprint = input.sprint && sprintAllowed;
   if (!world?.terrain && state.current === 'STANDING' && !world?.obstacles.some((o) => (o.bottom ?? 0) >= shape.height) &&
       shape.radius === shape.halfLength && shape.radius <= .5) {
@@ -315,6 +339,8 @@ export function applyPostureInput(p: OperatorPosition, state: PostureState, inpu
       state.slideRunUp = { tick, x: dx / distance, z: dz / distance };
     }
   }
+  if (rules && sprint) spendStamina(stamina!, rules.sprintDrain);
+  else rest();
 }
 
 function moveGroundedOperator(p: OperatorPosition, state: PostureState, input: PlayerInput, tick: number,
@@ -356,7 +382,7 @@ function moveGroundedOperator(p: OperatorPosition, state: PostureState, input: P
 }
 
 function startDive(p: OperatorPosition, state: PostureState, from: DiveState['from'], input: PlayerInput, tick: number,
-  balance: MovementDefinition, world?: WorldDefinition, boundary?: MovementBoundary): boolean {
+  balance: MovementDefinition, world?: WorldDefinition, boundary?: MovementBoundary, distance = balance.diveDistance): boolean {
   if (!isOperatorGrounded(p, world) || state.dive ||
       (state.lastDive !== undefined && tick < state.lastDive + seconds(balance.diveCooldownSeconds)) ||
       (boundary && Math.hypot(p.x - boundary.x, p.z - boundary.z) > boundary.radius + 1e-7)) return false;
@@ -381,7 +407,7 @@ function startDive(p: OperatorPosition, state: PostureState, from: DiveState['fr
   state.dive = {
     id: input.seq, x, z, yaw: state.yaw, from, landing, originX: p.x, originZ: p.z,
     started: tick, takeoff: tick + seconds(balance.divePrepSeconds), until: state.until,
-    distance: balance.diveDistance, arcHeight: balance.diveArcHeight,
+    distance, arcHeight: balance.diveArcHeight,
   };
   return true;
 }
