@@ -78,13 +78,22 @@ Das Register liegt in `packages/shared/src/definitions/unlocks.ts` (`UNLOCKS`). 
 | --- | --- |
 | `starter` | Grundausstattung, jeder Account besitzt sie. Heute: Kestrel AR-01, P-01, Sprenggranate, Heilstim. |
 | `level` | Automatisch, sobald Level und Voraussetzungen erfüllt sind. Der Raum vergibt sie direkt nach der Einsatzabrechnung und meldet sie im Ergebnisbildschirm. |
-| `choice` | Der Spieler schaltet sie im **Arsenal** selbst frei, sobald Level und Voraussetzungen erfüllt sind, und bezahlt den Preis ([Ressourcen](RESOURCES.md)). Heute: VX-13 Cerberus ab Level 2 für 3.000 SKR, MP-99 ab Level 5 für 4.500 SKR, Viktor 55 ab Level 7 für 6.000 SKR, Kaibal 50 ab Level 8 für 3.000 SKR, Rüstung SR-4 Späher für 6.000 SKR, BW-9 Bollwerk für 4.000 SKR und KR-12 Koloss für 8.000 SKR (auch in der Rüstkammer des Carriers). |
+| `choice` | Der Spieler schaltet sie im **Arsenal** selbst frei, sobald Level und Voraussetzungen erfüllt sind, und bezahlt den Preis ([Ressourcen](RESOURCES.md)). Heute: VX-13 Cerberus ab Level 2 für 3.000 SKR, MP-99 ab Level 5 für 4.500 SKR, Viktor 55 ab Level 7 für 6.000 SKR, Kaibal 50 ab Level 8 für 3.000 SKR, Rüstung SR-4 Späher für 6.000 SKR, BW-9 Bollwerk für 4.000 SKR und KR-12 Koloss für 8.000 SKR (Rüstungen auch in der Rüstkammer des Carriers). |
 
 Regeln, die `createUnlockRegistry` beim Laden prüft: IDs sind eindeutig, Voraussetzungen stehen weiter oben (keine Zyklen), und die Grundausstattung hat keine Bedingungen. Ein Test prüft zusätzlich die Verweise auf Waffen und Attachment-Slots. IDs werden nie umbenannt oder neu vergeben. Entfernte Einträge bleiben in `account_unlocks` stehen und werden ignoriert.
 
 **Loadout-Prüfung.** Beim Raumbeitritt gleicht der Server die Freischaltungen ab und prüft, ob der Account das Loadout besitzt (`missingLoadoutUnlocks`). Fehlt etwas, wird der Beitritt abgewiesen. Heute setzen alle mit der Standardausrüstung ein, daher greift die Prüfung erst, wenn es eine Loadout-Auswahl gibt.
 
-**Arsenal** im Startbildschirm listet alle Einträge nach Art mit Status: freigeschaltet (Grundausstattung, Levelstufe, ausgewählt, vergeben), gesperrt mit Grund („ab Level 5“, „benötigt …“) oder **Freischalten**. Attachments und Forschung sind leer, bis es Inhalte dafür gibt.
+**Arsenal** ist ein Raum auf Deck 03 des Skyfall Carriers (Steuerbord, bis Ende November 2026 „Waffenkammer“) und die zentrale Stelle für Freischaltungen; im Startbildschirm gibt es es seitdem nicht mehr. Mit `E` an der Station öffnet sich das Terminal `ui/ArsenalPanel.tsx`:
+
+- **Rubriken** Waffen, Rüstungen, Ausstattung und Attachments (Forschung hat ihren eigenen Raum, siehe [FORSCHUNG](FORSCHUNG.md)). Rüstungen sind im Register Verbesserungen (`upgrade.*`), stehen im Arsenal aber in einer eigenen Rubrik. Leere Rubriken sind abgeblendet, bis es Inhalte dafür gibt.
+- **Liste** mit Status je Eintrag: freigeschaltet (Grundausstattung, Levelstufe, freigeschaltet, vergeben), Preis, „ab Level 7“ bzw. „benötigt …“; ausgerüstete Einträge sind markiert. Oben stehen alle fünf Ressourcen mit Maximum.
+- **Detail** mit Waffenwerten (wie im Ausrüstungs-Terminal) oder Rüstungswerten samt drehbarer 3D-Vorschau in der Truppfarbe, Status, Preis und Mindestlevel.
+- **Kaufen** ist zweistufig: „Freischalten · 4.500 SKR“, dann „Kauf bestätigen“ mit dem Hinweis, dass es keine Rückerstattung gibt. Bei zu wenig Guthaben zeigt der Knopf, was fehlt. Gebucht wird über `POST /account/unlocks`; das neue Profil (Guthaben) gilt sofort im ganzen Client.
+- **Ausrüsten** legt Freigeschaltetes direkt ins Loadout (Waffe in ihren Slot, Rüstung, Granate, Medizin, Nahkampf, Rucksack). Der Server prüft wie beim Ausrüstungs-Terminal.
+- **Gastraum** (ohne Account): alles verfügbar und ausrüstbar, nichts käuflich.
+
+Die Rüstkammer (Raum RÜSTUNG) verkauft Rüstungen weiterhin direkt, über denselben Endpunkt.
 
 | Endpunkt | Inhalt |
 | --- | --- |

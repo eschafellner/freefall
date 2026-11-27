@@ -1,4 +1,4 @@
-import { BALLOON, BOARDING_TICKS, DEPLOYMENT_PHASES, NET } from '@freefall/shared';
+import { BALLOON, BOARDING_TICKS, DEPLOYMENT_PHASES, NET, RESULT_TICKS } from '@freefall/shared';
 import type { MissionSnapshot } from '@freefall/shared';
 import type { AudioEngine } from './AudioEngine.ts';
 
@@ -8,15 +8,29 @@ const MUSIC_PATH = (import.meta.env?.BASE_URL ?? '/') + 'music/';
  * Score cues. Levels sit the -14.5 LUFS masters under the -23 LUFS effect mix; the music bus adds the player volume.
  * `tail`: seconds after the Albatross touchdown at which the drop score starts to fade. `loop`: repeats until its
  * state ends. The briefing bed plays at 30 % of the master's level, well under the voices and the deck ambience. The title
- * screen plays "Silent Watch" at 40 %.
+ * screen plays "Silent Watch" at 40 %. `takeover`: when this cue starts, the cue it replaces fades within this many
+ * seconds instead of its own `fadeOut` (the result scores cut in over the extraction music).
  */
+interface MusicTrackSpec {
+  readonly file: string; readonly level: number; readonly fadeIn: number; readonly fadeOut: number; readonly tail: number;
+  readonly loop: boolean; readonly takeover?: number;
+}
+
 export const MUSIC_TRACKS = {
   /** Titel- und Loginbildschirm: „Silent Watch“ bei 40 % der Originallautstärke. */
   title: { file: 'title-silent-watch', level: .4, fadeIn: 3, fadeOut: 2.5, tail: 0, loop: true },
   briefing: { file: 'briefing-silence', level: .3, fadeIn: 4, fadeOut: 3, tail: 0, loop: true },
   drop: { file: 'drop-larree-triomphale', level: .85, fadeIn: 1.2, fadeOut: 6, tail: 15, loop: false },
   balloon: { file: 'extraction-last-stand', level: .7, fadeIn: 2.5, fadeOut: 5, tail: 0, loop: false },
-} as const;
+  /**
+   * Mission result (primary objectives done, extracted or not): "Victory at the Edge". Starts with the result screen,
+   * carries through the return and fades over 5 s once the squad stands on the Carrier again (the 30 s master is
+   * longer than the 12 s result screen and the 1 s return).
+   */
+  victory: { file: 'result-victory-at-the-edge', level: .8, fadeIn: .4, fadeOut: 5, tail: 0, loop: false, takeover: 1.5 },
+  /** Failed mission: "The Final March", same timing; it opens quietly and builds, so it fades a little longer. */
+  defeat: { file: 'result-the-final-march', level: .85, fadeIn: .4, fadeOut: 6, tail: 0, loop: false, takeover: 1.5 },
+} as const satisfies Record<string, MusicTrackSpec>;
 export type MusicTrack = keyof typeof MUSIC_TRACKS;
 export interface MusicCue { track: MusicTrack; offset: number }
 
@@ -33,10 +47,15 @@ const phaseStart = (phase: string): number => {
  * Which score belongs to the mission state, and how far into it (seconds) a client joining late should start.
  * Drop: from the moment every operator has reported ready (boarding countdown) through the flight and a short tail
  * after touchdown. Balloon extraction: from activation until the mission result. Briefing: quietly from the mission
- * selection through boarding until the drop score takes over at the countdown.
+ * selection through boarding until the drop score takes over at the countdown. Result: victory or defeat from the
+ * moment the result arrives through the return to the Carrier; it fades when the squad is back in the hub.
  */
 export function musicCue(state: MissionSnapshot | undefined, tick: number, playing?: MusicTrack): MusicCue | undefined {
-  if (!state || state.result) return;
+  if (!state) return;
+  if (state.result) {
+    const resultAt = state.resultUntil ? state.resultUntil - RESULT_TICKS : tick;
+    return { track: state.result.primaryObjectivesCompleted ? 'victory' : 'defeat', offset: Math.max(0, tick - resultAt) / NET.tickHz };
+  }
   const extraction = state.extraction;
   if (extraction?.method === 'balloon') {
     const countdown = extraction.phase === 'COUNTDOWN' ? 0 : BALLOON.countdownTicks;
@@ -86,7 +105,10 @@ export class MusicPlayer {
     }
     const wanted = cue && !this.finished.has(cue.track) ? cue.track : undefined;
     if (wanted === this.current) return;
-    if (this.current) this.fadeOut(this.current, MUSIC_TRACKS[this.current].fadeOut);
+    if (this.current) {
+      const takeover = wanted ? (MUSIC_TRACKS[wanted] as MusicTrackSpec).takeover : undefined;
+      this.fadeOut(this.current, Math.min(MUSIC_TRACKS[this.current].fadeOut, takeover ?? Infinity));
+    }
     this.current = wanted;
     if (wanted) this.start(context, wanted, cue!.offset);
   }

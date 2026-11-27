@@ -9,7 +9,7 @@ Draufsicht: +x Steuerbord, +z Heck (zur Sonne), −z Bug (Hangar).
 | Bereich | Lage (x / z) | Inhalt |
 | --- | --- | --- |
 | **Messe** | ±12 / −17…17, 9,8 m hoch | Zweistöckiges Atrium. Säulengang bei x = ±8,4 trägt die Galerien (Unterkante 4,6 m). Missionskonsole mit Hologramm und darüber der Ops-Ring. Esstische, Essensausgabe, Getränkeautomaten, Lounge vor dem Panoramafenster, Bereitschaftsbänke und Ausrüstungsregale am Bug. |
-| **Seitenräume** | 12…29 / ±3…±15 | Ausrüstung, Waffenkammer, Rüstung, Forschung (je 17 × 12 m) mit Tür in der Messewand, Station am hinteren Ende, Wandreihe, Regal an der vorderen Wand und einem Zusatzobjekt. |
+| **Seitenräume** | 12…29 / ±3…±15 | Ausrüstung, Arsenal, Rüstung, Forschung (je 17 × 12 m) mit Tür in der Messewand, Station am hinteren Ende, Wandreihe, Regal an der vorderen Wand und einem Zusatzobjekt. |
 | **Krankenstation** | −12…−29 / ±3 | Vier Betten mit Vitalmonitoren und Vorhängen, Körperscanner, Medizinschränke. |
 | **Mannschaftsquartier** | 12…29 / ±3 | Acht Dreifachkojen, Tisch mit Hockern, Fensterband zu Dev’ Ault. |
 | **Druckschleuse** | ±3,1 / −17…−23 | Zwei Schotttürpaare, Gitterboden, Dekontaminationsdüsen, Scannerbogen (Personenkontrolle). |
@@ -49,6 +49,7 @@ Im Golden-Trace für *Albtraum* (`apps/server/test/balance.test.ts`) kehrt der a
 | `CarrierDoors` | Türrahmen und Schiebetüren (instanziert). Raumtüren öffnen sich, sobald ein Operator näher als 4,4 m ist (`ArenaView` übergibt die eigene vorhergesagte Position und die der anderen). Das Schleusenpaar steht auf Deck offen und schließt beim Ausklinken. |
 | `CarrierScreens` | Animierte Anzeigen (Schiffsstatus, Nahbereichsradar, Energiegrafik, Landezonenkarte, Einsatzbereitschaft, Vitalwerte, Probenscan, Rüstungskalibrierung, Waffenausgabe, Versorgung, Flottenverband). Eine Canvas je Art, mehrmals pro Sekunde neu gezeichnet, unter Rotalarm mit „ALARM“. Auf *Niedrig* stehen sie still. |
 | `CarrierDecals` | Aufgemalte Markierungen mit Schablonenstegen und Abrieb: „DECK 03“, Boarding-Pfeil, „02 / STARTPLATZ“, Schildgrenze, „03“ an der Hangarwand, „SKYFALL“ über dem Leitstand. |
+| `CarrierSigns` | Beschilderung: `mountedSign` setzt jede Texttafel auf eine Trägerplatte mit Lichtkante vor die äußerste Wandausstattung (Pfosten, Leisten), damit nichts durch die Schrift schneidet. Alle Türschilder der Messe hängen einheitlich auf 4,2 m zwischen Türsturz und Galerie (`DOOR_SIGN`); die Rohrleitungen an den Messewänden tauchen links und rechts davon mit Flansch und Wanddurchführung in die Wand. Die Schleusenschilder sitzen in einem Gehäuse auf dem Portalsturz. |
 | `CarrierExterior` | Eigene Hülle hinter dem Panoramafenster (Achterdeck, Triebwerksgondeln mit Glühen), drei Begleitfregatten mit Fensterreihen und Positionslichtern, ein Shuttle auf langsamer Umlaufbahn. |
 | `CarrierEffects` | Lichtkarten, Lichtschächte, Staub. |
 
@@ -56,7 +57,7 @@ Alle Elemente entstehen im Client aus Geometrie, Shadern und Canvas. Es gibt kei
 
 ## Fenster und Weltraum
 
-`CarrierSpace` erzeugt den Blick nach draußen: Sternenfeld mit galaktischem Band, Nebel, die Sonne tief über dem Heck (durch das Panoramafenster sichtbar), Dev’ Ault an Steuerbord unterhalb des Carriers (Quartier, Waffenkammer, Forschung und Hangarfenster) und der Mond vor dem Bug, sichtbar durch das offene Hangartor. Alles liegt innerhalb der Kamera-Fernebene (470 m) und ignoriert den Innenraumnebel.
+`CarrierSpace` erzeugt den Blick nach draußen: Sternenfeld mit galaktischem Band, Nebel, die Sonne tief über dem Heck (durch das Panoramafenster sichtbar), Dev’ Ault an Steuerbord unterhalb des Carriers (Quartier, Arsenal, Forschung und Hangarfenster) und der Mond vor dem Bug, sichtbar durch das offene Hangartor. Alles liegt innerhalb der Kamera-Fernebene (470 m) und ignoriert den Innenraumnebel.
 
 ## Licht
 

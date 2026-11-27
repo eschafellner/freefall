@@ -1,12 +1,12 @@
 import * as T from 'three';
 import { CARRIER_CABINS, CARRIER_LOCKERS, CARRIER_ROOMS } from '@freefall/shared';
 import { schabeGeometry } from '../../SchabeModel.ts';
-import { stencil } from '../ShipParts.ts';
 import type { CarrierContext, PropBuilder } from './CarrierContext.ts';
+import { mountedSign } from './CarrierSigns.ts';
 import type { CarrierScreens } from './CarrierScreens.ts';
 
 export const ROOM_ACCENT: Record<string, number> = {
-  AUSRÜSTUNG: 0xffb35c, WAFFENKAMMER: 0xff5a3c, RÜSTUNG: 0x7fa8ff, FORSCHUNG: 0x3fe0c0,
+  AUSRÜSTUNG: 0xffb35c, ARSENAL: 0xff5a3c, RÜSTUNG: 0x7fa8ff, FORSCHUNG: 0x3fe0c0,
 };
 const WHITE = new T.Color(0xd0d4bf);
 
@@ -86,7 +86,7 @@ export const ROOM_BUILDERS: Record<string, PropBuilder> = {
     kit.box(p.warm, 0, 2.54, -d / 2 + .05, w - .4, .02, .06);
   },
   'ausruestung-near'(c, _s, _prop, w, d) { shelving(c, w, d, ['crate', 'box', 'can', 'helmet', 'box', 'crate']); },
-  'waffenkammer-station'(c, screens, _prop, w, d) {
+  'arsenal-station'(c, screens, _prop, w, d) {
     const { kit, p } = c;
     kit.box(p.steel, 0, .95, .1, w, .08, d * .8);
     for (const x of [-w / 2 + .15, w / 2 - .15]) for (const z of [-.45, .65]) kit.box(p.frameDark, x, .46, z, .1, .92, .1);
@@ -114,7 +114,7 @@ export const ROOM_BUILDERS: Record<string, PropBuilder> = {
     kit.cylinder(p.warm, w / 2 - .5, 1.75, .05, .1, .02, 'y', 12);
     screens.place('weapon', -w / 2 + .9, 2.0, -d / 2 + .14, 1.1, .62);
   },
-  'waffenkammer-near'(c, _s, _prop, w, d) {
+  'arsenal-near'(c, _s, _prop, w, d) {
     const { kit, p } = c;
     for (let i = 0; i < 8; i++) {
       const x = -w / 2 + .6 + i * (w - 2.2) / 7;
@@ -209,7 +209,7 @@ export const ROOM_BUILDERS: Record<string, PropBuilder> = {
     for (const x of [-.4, .4]) kit.box(p.yellow, x, .62, 0, .04, 1.0, d * .87);
     kit.box(p.paper, .2, .75, d * .43, .25, .18, .01);
   },
-  'waffenkammer-extra'(c, _s, _prop, w, d) {
+  'arsenal-extra'(c, _s, _prop, w, d) {
     const { kit, p } = c;
     kit.box(p.steel, 0, .82, 0, w, .05, d * .8);
     for (const x of [-w / 2 + .1, w / 2 - .1]) for (const z of [-d * .32, d * .32]) kit.box(p.frameDark, x, .4, z, .06, .8, .06);
@@ -368,7 +368,7 @@ function wallRow(c: CarrierContext, label: string, accent: T.Material, color: nu
         if (kit.random() < .6) kit.cylinder(p.fabricTan, x, 2.68, 0, .17, .9, 'x', 10, { vary: .1 });
       }
       break;
-    case 'WAFFENKAMMER':
+    case 'ARSENAL':
       kit.box(p.frameDark, 0, 1.2, -.3, w, 2.4, .14);
       for (let i = 0; i < 4; i++) {
         const x = -w / 2 + 1.35 + i * 2.7;
@@ -474,7 +474,8 @@ export function buildRoomProps(c: CarrierContext, _screens: CarrierScreens): voi
     kit.push(row.x, 0, row.z, away > 0 ? Math.PI : 0);
     wallRow(c, room.label, accent, color);
     kit.pop();
-    stencil(c.root, room.label, 'SKYFALL  /  CREW DECK  /  STATION', [room.x - side * 1.5, 4.05, room.z - away * 5.7], 3.4, away > 0 ? 0 : Math.PI);
+    // In front of the partition pilasters (face 5.69 m from the room centre), which would otherwise cut through it.
+    mountedSign(c, room.label, 'SKYFALL  /  CREW DECK  /  STATION', [room.x - side * 1.5, 4.05, room.z - away * 5.69], 3.4, away > 0 ? 0 : Math.PI);
     if (room.label === 'FORSCHUNG') {
       // The row faces the room with yaw 0 (bow side), so local x is world x.
       specimens(c, [0, 1, 2, 3].map((i) => new T.Vector3(row.x - 5.4 + 1.35 + i * 2.7, 1.25, row.z)));
@@ -485,7 +486,8 @@ export function buildRoomProps(c: CarrierContext, _screens: CarrierScreens): voi
     kit.zone = medbay ? 'port' : 'starboard';
     c.addLight(medbay ? 0xe2f4ff : 0xffc890, medbay ? 12 : 9, 12, cabin.x, 3.3, 0, true, 1.6);
     const side = Math.sign(cabin.x);
-    stencil(c.root, cabin.label, medbay ? 'SANITÄT  /  DECK 03' : 'KOJEN 1–24  /  RUHEZEIT 22–06', [cabin.x + side * 8.2, 3.05, 0], 2.6, -side * Math.PI / 2);
+    // On the hull wall (face 8.26 m out), above the red cross of the med cabinet and the window lintel.
+    mountedSign(c, cabin.label, medbay ? 'SANITÄT  /  DECK 03' : 'KOJEN 1–24  /  RUHEZEIT 22–06', [cabin.x + side * 8.26, 3.25, 0], 2.6, -side * Math.PI / 2);
     if (medbay) {
       // Curtain rails between the beds.
       for (const x of [-17.75, -21.4]) for (const s of [-1, 1]) {

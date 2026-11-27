@@ -14,14 +14,16 @@ import { MissionHud, seconds } from './MissionHud.tsx';
 import { CarrierConsole } from './CarrierConsole.tsx';
 import { LoadoutPanel } from './LoadoutPanel.tsx';
 import { ArmoryPanel } from './ArmoryPanel.tsx';
+import { ArsenalPanel } from './ArsenalPanel.tsx';
+import { ResearchPanel } from './ResearchPanel.tsx';
 import { Terminal } from './Terminal.tsx';
 import type { GameMode, JoinMode } from '../networking/Match.ts';
-import type { AccountSession } from '@freefall/shared';
+import type { AccountProfile, AccountSession } from '@freefall/shared';
 import { AccountError, forgetSession, logout, restoreSession } from '../account/AccountClient.ts';
 import { LoginPanel, TitleScreen } from './TitleScreen.tsx';
 import { LevelMeter, ServiceRecord } from './ServiceRecord.tsx';
 import { ResourceBar, ResourceGain } from './Resources.tsx';
-import { AccountSettings, Arsenal, PrivacyNotice } from './AccountPanels.tsx';
+import { AccountSettings, PrivacyNotice } from './AccountPanels.tsx';
 import { FullscreenSettings, enterFullscreenIfWanted } from './Fullscreen.tsx';
 import { UNLOCKS, formatResourceAmounts, hasResources } from '@freefall/shared';
 
@@ -273,10 +275,18 @@ export function App() {
   const [accountChecked, setAccountChecked] = useState(false);
   const [accountNotice, setAccountNotice] = useState('');
   const [soundOn, setSoundOn] = useState(true);
-  const [lobbyView, setLobbyView] = useState<'lobby' | 'record' | 'arsenal' | 'account'>('lobby');
+  const [lobbyView, setLobbyView] = useState<'lobby' | 'record' | 'account'>('lobby');
   const [privacy, setPrivacy] = useState(false);
   /** Nach dem Raumbeitritt direkt einsteigen; das Raummenü (Raumcode, Einladung) erscheint erst mit Esc. */
   const [entering, setEntering] = useState(false);
+  /**
+   * Nach dem Einsatzergebnis zurück an Bord: Die Mauserfassung wird ohne Raummenü wieder angefordert. Lehnt der Browser
+   * ohne Nutzergeste ab, erscheint nur ein Klickhinweis (`returnPrompt`) statt des Menüs.
+   */
+  const [returning, setReturning] = useState(false);
+  const [returnPrompt, setReturnPrompt] = useState(false);
+  const [returnTried, setReturnTried] = useState(false);
+  const lastResult = useRef<string>(undefined);
   const [audioLive, setAudioLive] = useState(false);
   const enterAttempt = useRef(false);
   const wasActive = useRef(false);
@@ -299,6 +309,10 @@ export function App() {
   // Unlocked without a result: a Carrier station (opened with INTERACT) or the menu.
   const menu = !status.locked && active && !entering && !result;
   const station = menu && inCarrier && mission ? status.station : undefined;
+  const awaitingReturn = menu && returning;
+  /** Account for the shop stations (Arsenal, Rüstkammer); purchases update the profile shown everywhere. */
+  const stationAccount = session && { token: session.token, profile: session.account,
+    onAccount: (account: AccountProfile) => setSession((current) => current && { ...current, account }) };
   const relock = () => { setFault(''); enterFullscreenIfWanted(); game.current?.lock(); };
   const relockRef = useRef(relock);
   relockRef.current = relock;
@@ -404,6 +418,31 @@ export function App() {
     const timeout = window.setTimeout(() => setEntering(false), 10_000);
     return () => window.clearTimeout(timeout);
   }, [entering]);
+  // Ergebnis vorbei, Trupp wieder im Hub: direkt weiterspielen statt „Carrier betreten“ zu bestätigen.
+  const resultId = mission?.result?.id;
+  useEffect(() => {
+    if (resultId) { lastResult.current = resultId; return; }
+    if (!lastResult.current) return;
+    lastResult.current = undefined;
+    setReturnTried(false);
+    setReturnPrompt(false);
+    setReturning(true);
+  }, [resultId]);
+  const backOnDeck = !!mission && !mission.result;
+  useEffect(() => {
+    if (!returning) return;
+    if (!active || status.locked) { setReturning(false); setReturnPrompt(false); return; }
+    if (returnTried || !status.ready || !backOnDeck) return;
+    // Erlaubt ohne neue Geste: Die Erfassung wurde beim Ergebnis vom Spiel selbst gelöst (Pointer Lock 2.0), und
+    // „Rückkehr bestätigen“ liegt meist nur Sekunden zurück. Antwort über pointerlockchange bzw. den Hinweis.
+    setReturnTried(true);
+    if (!game.current?.lock(true)) setReturnPrompt(true);
+  }, [returning, returnTried, active, status.locked, status.ready, backOnDeck]);
+  useEffect(() => {
+    if (!returning || !returnTried || returnPrompt) return;
+    const prompt = window.setTimeout(() => setReturnPrompt(true), 900);
+    return () => window.clearTimeout(prompt);
+  }, [returning, returnTried, returnPrompt]);
   useEffect(() => { setSoundOn(!(game.current?.audio.settings.muted ?? false)); }, []);
 
   // Nach dem Verlassen eines Raums Level und EP neu laden (Gutschriften aus dem Einsatz).
@@ -494,7 +533,7 @@ export function App() {
         <LevelMeter experience={session.account.experience} compact/>
         <ResourceBar balance={session.account.resources} ids={['credits', 'marks']}/>
         <nav className="title-account-nav" aria-label="Konto">
-          {([['record', 'Dienstakte'], ['arsenal', 'Arsenal'], ['account', 'Konto']] as const).map(([view, label]) =>
+          {([['record', 'Dienstakte'], ['account', 'Konto']] as const).map(([view, label]) =>
             <button key={view} className="title-link" type="button" aria-pressed={lobbyView === view}
               onClick={() => { setPrivacy(false); setLobbyView((current) => current === view ? 'lobby' : view); }}>{label}</button>)}
           <button className="title-link" type="button" onClick={() => void signOut()}>Abmelden</button>
@@ -504,8 +543,6 @@ export function App() {
         : !accountChecked ? <div className="title-card" role="status"><p>Verbindung zur Einsatzleitstelle …</p></div>
         : !session ? <LoginPanel notice={accountNotice} onSession={(next) => { setAccountNotice(''); setSession(next); }}/>
         : lobbyView === 'record' ? <ServiceRecord token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}/>
-        : lobbyView === 'arsenal' ? <Arsenal token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}
-          onAccount={(account) => setSession((current) => current && { ...current, account })}/>
         : lobbyView === 'account' ? <AccountSettings token={session.token} account={session.account} onBack={() => setLobbyView('lobby')}
           onDeleted={() => { setSession(undefined); setLobbyView('lobby'); setAccountNotice('Konto gelöscht.'); }}/>
         : <div className="title-card title-lobby">
@@ -542,7 +579,7 @@ export function App() {
     {active && entering && !status.locked && <div className="entering" role="status">Verbinde mit dem {mode === 'mission' ? 'Skyfall Carrier' : 'Boreal Relay'} …</div>}
     {!status.locked && active && !entering && result && <section className="operations results" aria-label="Einsatzergebnis">
       <div className="eyebrow"><span />{status.missionRoom ? missionName : 'Boreal Relay · Testarena'}</div>
-      <h1 className="room-heading">{result.extractionSucceeded ? 'Einsatz erfolgreich' : 'Einsatz gescheitert'}</h1>
+      <h1 className="room-heading">{result.primaryObjectivesCompleted ? 'Einsatz erfolgreich' : 'Einsatz gescheitert'}</h1>
       {result && <div key={result.id} className="mission-result">
         <p>{result.extractionSucceeded ? `Extraktion bestätigt · ${result.extractedOperatorIds.length} Operator · ${result.extractionMethod === 'balloon' ? 'Rettungsballon' : 'Albatross 02'}`
           : result.outcome === 'objective-unavailable' ? 'Missionsziel nicht verfügbar · Einsatz abgebrochen'
@@ -574,9 +611,17 @@ export function App() {
       select={(selection) => game.current?.select(selection)} start={() => game.current?.startMission()}/>}
     {menu && station === 'locker' && <LoadoutPanel status={status} apply={(selection) => game.current?.setLoadout(selection)} close={relock} fault={fault}/>}
     {menu && station === 'armory' && <ArmoryPanel status={status} apply={(selection) => game.current?.setLoadout(selection)} close={relock} fault={fault}
-      account={session && { token: session.token, profile: session.account,
-        onAccount: (account) => setSession((current) => current && { ...current, account }) }}/>}
-    {menu && !station && <Terminal className="pause-terminal" fault={fault}
+      account={stationAccount}/>}
+    {menu && station === 'arsenal' && <ArsenalPanel status={status} apply={(selection) => game.current?.setLoadout(selection)} close={relock} fault={fault}
+      account={stationAccount}/>}
+    {menu && station === 'research' && <ResearchPanel status={status} close={relock} fault={fault} account={stationAccount}
+      onResearch={() => game.current?.refreshResearch()}/>}
+    {awaitingReturn && returnPrompt && <button type="button" className="return-prompt" onClick={relock}>
+      <span>Skyfall Carrier · Deck 03</span>
+      <strong>Zurück an Bord</strong>
+      <small>Klicken, um weiterzuspielen</small>
+    </button>}
+    {menu && !station && !returning && <Terminal className="pause-terminal" fault={fault}
       kicker={inCarrier ? 'Skyfall Carrier · Deck 03' : status.missionRoom ? missionName : 'Boreal Relay · Testarena'}
       title={inCarrier ? 'Mannschaftsdeck' : status.missionRoom ? 'Einsatz' : 'Testarena'}
       state={`${status.players.length} / ${MAX_PLAYERS} Operator`}
@@ -656,7 +701,7 @@ export function App() {
 
     {!result && <footer className="bottom">
       {active && own && status.locked && !cinematic && <TeamPanel status={status} mission={mission} expanded={showIntel}/>}
-      {menu && !station && !cinematic && <div className="controls">
+      {menu && !station && !returning && !cinematic && <div className="controls">
         <span><kbd>{(['MOVE_FORWARD', 'MOVE_LEFT', 'MOVE_BACKWARD', 'MOVE_RIGHT'] as const).map((action) => bindings.label(action)).join(' ')}</kbd> Bewegen</span>
         <span><kbd>{bindings.label('CROUCH')}</kbd> Ducken</span><span><kbd>{bindings.label('DIVE')}</kbd> Hechtsprung</span>
         <span><kbd>{bindings.label('STAND_UP')}</kbd> Aufstehen</span><span><kbd>{bindings.label('AIM')}</kbd> Zielen</span>

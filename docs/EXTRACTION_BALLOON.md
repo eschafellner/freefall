@@ -11,4 +11,4 @@ Die vier Seile verwenden kurze, geglättete Linien mit berechnetem Durchhang. Ei
 
 ## Musik
 
-Mit der Aktivierung des Ballons beginnt „Last Stand“ und begleitet Countdown, Anflug und Abholung. Mit dem Missionsergebnis blendet das Stück über 5 Sekunden aus. Die Albatross-Extraktion behält den regulären Mix. [Quellen](music-sources.json)
+Mit der Aktivierung des Ballons beginnt „Last Stand“ und begleitet Countdown, Anflug und Abholung. Mit dem Missionsergebnis blendet das Stück innerhalb von 1,5 Sekunden aus, die Ergebnismusik übernimmt (siehe [DEPLOYMENT_SYSTEM](DEPLOYMENT_SYSTEM.md)). Die Albatross-Extraktion behält den regulären Mix. [Quellen](music-sources.json)

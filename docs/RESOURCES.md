@@ -1,6 +1,6 @@
 # Ressourcen
 
-Operator verdienen in Einsätzen fünf Ressourcen. Mit ihnen werden im **Arsenal** Waffen, Waffenaufsätze, Ausrüstung und Forschung freigeschaltet. Das Vorbild ist Helldivers 2: Lohn für den Missionsabschluss, Proben nur bei Extraktion, Verfall an der Obergrenze.
+Operator verdienen in Einsätzen fünf Ressourcen. Mit ihnen werden im **Arsenal** (Raum auf Deck 03 des Skyfall Carriers) Waffen, Waffenaufsätze und Ausrüstung freigeschaltet, in der **Forschung** ([FORSCHUNG](FORSCHUNG.md)) die Forschungsstufen. Das Vorbild ist Helldivers 2: Lohn für den Missionsabschluss, Proben nur bei Extraktion, Verfall an der Obergrenze.
 
 Das Register liegt in `packages/shared/src/definitions/resources.ts` (`RESOURCES`, `MISSION_RESOURCE_REWARDS`). Die IDs stehen in der Datenbank und werden nie umbenannt.
 
@@ -89,7 +89,7 @@ docker compose exec game node apps/server/dist/accounts/admin.js grant-resource 
 | Ort | Anzeige |
 | --- | --- |
 | Startbildschirm oben rechts | SKR und Einsatzmarken neben dem Level |
-| Arsenal, Dienstakte | alle fünf Ressourcen mit Maximum; im Arsenal Preise |
+| Arsenal (Carrier), Dienstakte | alle fünf Ressourcen mit Maximum; im Arsenal Preise |
 | Ergebnisbildschirm | Einsatzlohn, extrahierte Proben, Gutschrift mit verfallenem Teil, neues Guthaben |
 | Dienstakte je Einsatz | gutgeschriebene und verfallene Ressourcen |
 | HUD im Einsatz | getragene Proben und Truppenstand |

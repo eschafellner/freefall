@@ -48,7 +48,7 @@ export function TeamPanel({ status, mission, expanded }: { status: GameStatus; m
       const offline = connection?.connected === false;
       const down = !player.hp;
       const state = offline ? 'Offline' : down ? 'Gefallen' : mission?.extraction ? secured ? 'Gesichert' : 'Ungesichert' : '';
-      const health = Math.max(0, Math.min(1, player.hp / PLAYER.health));
+      const health = Math.max(0, Math.min(1, player.hp / (player.maxHp ?? PLAYER.health)));
       const own = player.id === status.ownId;
       const account = status.roster.find(({ id }) => id === player.id);
       return <article key={player.id} className={`member ${own ? 'own' : ''} ${down ? 'down' : ''} ${offline ? 'offline' : ''}`}

@@ -1,4 +1,4 @@
-import { ARENA_HALF, BALANCE, ENEMY_TYPES, MAX_PLAYERS, MOVEMENT_INPUT, NET, advancePosture, allowsPostureAction,
+import { ARENA_HALF, researchModifiers, BALANCE, ENEMY_TYPES, MAX_PLAYERS, MOVEMENT_INPUT, NET, advancePosture, allowsPostureAction,
   applyPostureInput, enemyProtection, enemyTraits, resolveLoadout, resolveSelection } from '@freefall/shared';
 import type {
   BalanceRegistry, CombatEvent, LoadoutSelection, EffectiveGrenade, EffectiveLoadout, EnemyGameplay, EnemyAIMetrics, EnemyAISample, EnemyTraits, GrenadeState, MovementDefinition, MovementBoundary, ShotEvent,
@@ -148,7 +148,7 @@ export class Battlefield {
     if (!this.loadoutChangeAllowed) return 'Ausrüstung kann nur auf dem Carrier gewechselt werden';
     let loadout: EffectiveLoadout;
     try {
-      loadout = resolveSelection(this.registry, selection);
+      loadout = resolveSelection(this.registry, selection, [], [], {}, 'custom', researchModifiers(player.research ?? []));
     } catch (error) {
       return error instanceof Error ? error.message : String(error);
     }
@@ -156,6 +156,25 @@ export class Battlefield {
     cancelEquipment(player, this.tick);
     refillPlayer(player);
     return undefined;
+  }
+
+  /**
+   * Applies the completed research of an operator's account (join, after a purchase). Allowed at any time: it changes the
+   * operator, not the equipment. Weapons, ammunition and gear stay as they are; a full operator stays full (health and
+   * stamina follow the new maximum), a wounded one keeps its health up to the new maximum.
+   */
+  setResearch(id: string, research: readonly string[]): void {
+    const player = this.players.find((entry) => entry?.id === id);
+    if (!player) return;
+    const before = player.loadout;
+    player.research = [...research];
+    const loadout = resolveSelection(this.registry, before.selection, [], [], {}, before.id, researchModifiers(research));
+    if (loadout.maxHealth === before.maxHealth && loadout.mobility.stamina.max === before.mobility.stamina.max &&
+      loadout.mobility.diveDistance === before.mobility.diveDistance) return;
+    player.loadout = loadout;
+    if (player.hp > 0) player.hp = player.hp >= before.maxHealth ? loadout.maxHealth : Math.min(player.hp, loadout.maxHealth);
+    const stamina = player.staminaState;
+    stamina.value = stamina.value >= before.mobility.stamina.max ? loadout.mobility.stamina.max : Math.min(stamina.value, loadout.mobility.stamina.max);
   }
 
   removePlayer(id: string): void {

@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { UNLOCKS, UNLOCK_KINDS, accountPasswordError, formatResourceAmounts, hasResources, missingResources, unlockBlocker } from '@freefall/shared';
-import type { AccountProfile, AccountUnlock } from '@freefall/shared';
-import { AccountError, changePassword, deleteAccount, downloadExport, revokeOtherSessions, unlock, unlocks } from '../account/AccountClient.ts';
-import { ResourceBar } from './Resources.tsx';
+import { accountPasswordError } from '@freefall/shared';
+import type { AccountProfile } from '@freefall/shared';
+import { AccountError, changePassword, deleteAccount, downloadExport, revokeOtherSessions } from '../account/AccountClient.ts';
 
 const message = (error: unknown, fallback: string) => error instanceof AccountError ? error.message : fallback;
-const SOURCE: Record<AccountUnlock['source'], string> = { starter: 'Grundausstattung', level: 'Levelstufe', choice: 'Ausgewählt', admin: 'Vergeben' };
 
 /** Konto: Passwort ändern, andere Geräte abmelden, Datenexport, Konto löschen. */
 export function AccountSettings({ token, account, onBack, onDeleted }: {
@@ -86,61 +84,6 @@ export function AccountSettings({ token, account, onBack, onDeleted }: {
       </form>
     </details>
     {status && <p className="account-status" role="status">{status}</p>}
-    {fault && <div className="fault" role="alert">{fault}</div>}
-    <button className="title-link" type="button" onClick={onBack}>Zurück zur Einsatzleitstelle</button>
-  </div>;
-}
-
-/** Arsenal: Waffen, Attachments, Verbesserungen und Forschung mit Freischaltstatus. */
-export function Arsenal({ token, account, onBack, onAccount }: {
-  token: string; account: AccountProfile; onBack: () => void; onAccount: (account: AccountProfile) => void;
-}) {
-  const [owned, setOwned] = useState<AccountUnlock[]>();
-  const [fault, setFault] = useState('');
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    unlocks(token).then((list) => { if (!cancelled) setOwned(list); }, (error: unknown) => { if (!cancelled) setFault(message(error, 'Arsenal nicht verfügbar.')); });
-    return () => { cancelled = true; };
-  }, [token]);
-  const have = new Map((owned ?? []).map((entry) => [entry.id, entry]));
-  const ids = new Set(have.keys());
-
-  async function choose(id: string) {
-    setBusy(true); setFault('');
-    try {
-      const result = await unlock(token, id);
-      setOwned(result.unlocks);
-      if (result.account) onAccount(result.account);
-    } catch (error) { setFault(message(error, 'Freischaltung fehlgeschlagen.')); } finally { setBusy(false); }
-  }
-
-  return <div className="title-card arsenal">
-    <div className="title-card-head"><span>Arsenal · Level {account.level}</span></div>
-    <ResourceBar balance={account.resources} max/>
-    {!owned && !fault && <p role="status">Lade Freischaltungen …</p>}
-    {owned && UNLOCK_KINDS.map(({ kind, label }) => {
-      const entries = UNLOCKS.list.filter((entry) => entry.kind === kind);
-      return <section key={kind} className="arsenal-group">
-        <h2>{label}</h2>
-        {!entries.length && <p className="title-hint">Noch keine Einträge. Sie kommen mit neuen Inhalten.</p>}
-        <ul>{entries.map((entry) => {
-          const mine = have.get(entry.id);
-          const blocker = mine ? undefined : unlockBlocker(entry, account.level, ids, UNLOCKS);
-          const price = hasResources(entry.cost) ? formatResourceAmounts(entry.cost) : '';
-          const missing = price && account.resources ? missingResources(account.resources, entry.cost!) : {};
-          return <li key={entry.id} className={mine ? 'unlocked' : 'locked'}>
-            <div><strong>{entry.displayName}</strong><small>{entry.description}</small>
-              {!mine && price && <small className="arsenal-price">Preis: {price}</small>}</div>
-            {mine ? <em>{SOURCE[mine.source]}</em>
-              : blocker ? <em>{blocker}</em>
-              : entry.acquisition === 'choice' ? hasResources(missing) ? <em>fehlen {formatResourceAmounts(missing)}</em>
-                : <button className="secondary" type="button" disabled={busy} onClick={() => void choose(entry.id)}>{price ? `Freischalten · ${price}` : 'Freischalten'}</button>
-              : <em>beim nächsten Abgleich</em>}
-          </li>;
-        })}</ul>
-      </section>;
-    })}
     {fault && <div className="fault" role="alert">{fault}</div>}
     <button className="title-link" type="button" onClick={onBack}>Zurück zur Einsatzleitstelle</button>
   </div>;

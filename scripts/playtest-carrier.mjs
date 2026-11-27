@@ -35,7 +35,7 @@ async function until(predicate, label, ms = 15000) {
 // Blickrichtung (sin yaw, -cos yaw): 0 schaut zum Bug (Konsole, Schleuse), π zum Heck (Panoramafenster), π/2 nach Steuerbord.
 const HUB = [
   ['01-messe', 0, 12, 0], ['02-panorama', 1.5, 6, Math.PI], ['03-messe-diagonal', 6.8, 11, .75],
-  ['04-ausruestung', -14.5, 9, -Math.PI / 2], ['05-waffenkammer', 14.5, 9, Math.PI / 2],
+  ['04-ausruestung', -14.5, 9, -Math.PI / 2], ['05-arsenal', 14.5, 9, Math.PI / 2],
   ['06-ruestung', -14.5, -9, -Math.PI / 2], ['07-forschung', 14.5, -9, Math.PI / 2],
   ['08-krankenstation', -13.6, 0, -Math.PI / 2], ['09-quartier', 13.6, 0, Math.PI / 2],
   ['10-schleuse', 0, -13.5, 0], ['11-hangar', 6.6, -24.8, .1], ['12-hangar-tor', -4.5, -41, 0],

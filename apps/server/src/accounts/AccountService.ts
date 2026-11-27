@@ -1,4 +1,4 @@
-import { STANDARD_LOADOUT, UNLOCKS, automaticUnlocks, formatResourceAmounts, hasResources, missingLoadoutUnlocks, unlockBlocker } from '@freefall/shared';
+import { STANDARD_LOADOUT, UNLOCKS, automaticUnlocks, completedResearch, formatResourceAmounts, hasResources, missingLoadoutUnlocks, unlockBlocker } from '@freefall/shared';
 import type { AccountProfile, LoadoutSelection, UnlockRegistry } from '@freefall/shared';
 import { AccountStore } from './AccountStore.ts';
 import { MissionSettlement } from './MissionSettlement.ts';
@@ -114,6 +114,11 @@ export class AccountService {
   }
 
   /** Fehlende Freischaltungen für ein Loadout; leer, wenn der Account es nutzen darf. */
+  /** Abgeschlossene Forschung eines Accounts (`research.*`), sortiert. */
+  research(accountId: string): string[] {
+    return completedResearch(this.owned(accountId));
+  }
+
   missingForLoadout(account: Pick<AccountProfile, 'id' | 'level'>, loadout: LoadoutSelection = STANDARD_LOADOUT): string[] {
     this.syncUnlocks(account);
     return missingLoadoutUnlocks(this.unlockRegistry, this.owned(account.id), loadout);

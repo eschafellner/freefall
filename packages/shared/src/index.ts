@@ -10,6 +10,7 @@ export * from './contracts/mission.ts';
 export * from './contracts/accounts.ts';
 export * from './definitions/progression.ts';
 export * from './definitions/unlocks.ts';
+export * from './definitions/research.ts';
 export * from './definitions/resources.ts';
 export * from './config/worldGeometry.ts';
 export * from './definitions/deployment.ts';

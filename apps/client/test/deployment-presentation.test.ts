@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
-import { BALLOON, BOARDING_TICKS, DEPLOYMENT_PHASES, LANDING_STAGE_TICKS, NET } from '@freefall/shared';
+import { BALLOON, BOARDING_TICKS, DEPLOYMENT_PHASES, LANDING_STAGE_TICKS, NET, RESULT_TICKS } from '@freefall/shared';
 import type { MissionSnapshot } from '@freefall/shared';
 import { MUSIC_TRACKS, musicCue } from '../src/audio/Music.ts';
 import { DROP, dropPose } from '../src/rendering/mission/DropChoreography.ts';
@@ -50,7 +50,27 @@ test('balloon extraction plays Last Stand from activation until the result', () 
   assert.equal(musicCue(state('LIFT'), 2000)!.offset, (BALLOON.countdownTicks + BALLOON.approachTicks) / NET.tickHz);
   assert.equal(musicCue(snapshot({ state: 'EXTRACTION_IN_PROGRESS', extraction: { ...extraction('LIFT'), method: 'albatross' } as MissionSnapshot['extraction'] }), 2000), undefined,
     'Albatross extraction keeps the regular mix');
-  assert.equal(musicCue({ ...state('LIFT'), result: {} } as MissionSnapshot, 2100), undefined, 'fades with the result');
+  assert.equal(musicCue({ ...state('LIFT'), result: { primaryObjectivesCompleted: true }, resultUntil: 2100 + RESULT_TICKS } as MissionSnapshot, 2100)?.track,
+    'victory', 'the result score takes over');
+});
+
+test('result score: victory for completed primary objectives (extracted or not), defeat otherwise, faded on the Carrier', () => {
+  const result = (primaryObjectivesCompleted: boolean, extractionSucceeded: boolean) =>
+    ({ primaryObjectivesCompleted, extractionSucceeded }) as MissionSnapshot['result'];
+  const resultUntil = 3000 + RESULT_TICKS;
+  const at = (patch: Partial<MissionSnapshot>, tick: number) => musicCue(snapshot({ state: 'MISSION_RESULTS', phase: 'DEPLOYED', resultUntil, ...patch }), tick);
+  assert.deepEqual(at({ result: result(true, true) }, 3000), { track: 'victory', offset: 0 });
+  assert.equal(at({ result: result(true, false) }, 3000)?.track, 'victory', 'objectives done, squad lost: still a success');
+  assert.equal(at({ result: result(false, true) }, 3000)?.track, 'defeat');
+  assert.equal(at({ result: result(false, false) }, 3000)?.track, 'defeat');
+  // Late in the result screen and during the return the score continues where it is.
+  assert.deepEqual(at({ result: result(true, true) }, 3000 + 6 * NET.tickHz), { track: 'victory', offset: 6 });
+  assert.equal(at({ state: 'RETURN_TO_CARRIER', result: result(false, false) }, 3000 + 13 * NET.tickHz)?.offset, 13);
+  // Back on the Carrier: no cue, the player fades the score (5 s / 6 s), well before the 30 s masters end.
+  assert.equal(musicCue(snapshot({ state: 'CARRIER_HUB' }), 4000), undefined);
+  assert.ok(MUSIC_TRACKS.victory.fadeOut <= 6 && MUSIC_TRACKS.defeat.fadeOut <= 6 && !MUSIC_TRACKS.victory.loop && !MUSIC_TRACKS.defeat.loop);
+  assert.ok(RESULT_TICKS / NET.tickHz + 1 + MUSIC_TRACKS.defeat.fadeOut < 29.6, 'the fade ends before the master does');
+  assert.ok(MUSIC_TRACKS.victory.takeover < MUSIC_TRACKS.balloon.fadeOut, 'cuts in over Last Stand');
 });
 
 test('the score files are the documented, project-owned masters', () => {

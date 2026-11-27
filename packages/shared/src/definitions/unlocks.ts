@@ -1,6 +1,7 @@
 import { BALANCE } from '../balance/defaults.ts';
 import type { LoadoutSelection } from '../balance/definitions.ts';
 import { presetSelection } from '../balance/resolver.ts';
+import { RESEARCH_FIELDS } from './research.ts';
 import { RESOURCE_BY_ID, RESOURCE_IDS } from './resources.ts';
 import type { ResourceAmounts } from './resources.ts';
 
@@ -157,6 +158,11 @@ export const UNLOCKS: UnlockRegistry = createUnlockRegistry([
   // Überschwere Rüstung 8.3B.
   { id: 'upgrade.kr12-koloss', kind: 'upgrade', displayName: 'KR-12 Koloss', description: 'Überschwere Rüstung, 200 Rüstungspunkte, 50 % Schaden, kein Hechtsprung und kein Rutschen.',
     acquisition: 'choice', level: 1, requires: [], equipmentId: 'armor.kr12_colossus', cost: { credits: 8000 } },
+  // Forschung (Raum FORSCHUNG): jede Stufe setzt die vorige ihres Gebiets voraus (definitions/research.ts).
+  ...RESEARCH_FIELDS.flatMap((field) => field.stages.map((stage, index): UnlockDefinition => ({
+    id: stage.id, kind: 'research', displayName: stage.displayName, description: stage.effectText,
+    acquisition: 'choice', level: 1, requires: index ? [field.stages[index - 1]!.id] : [], cost: stage.cost,
+  }))),
 ]);
 
 export const STANDARD_LOADOUT: LoadoutSelection = standard;

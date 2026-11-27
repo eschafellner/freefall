@@ -19,7 +19,7 @@ export const CARRIER_SHIP = { x: 0, z: -31 };
 /** Side rooms: 17 m wide (x 12–29 from the mess wall to the hull), 12 m deep, with a window band in the hull. */
 export const CARRIER_ROOM_SIZE = { inner: 12, outer: 29, halfDepth: 6 } as const;
 export const CARRIER_ROOMS = [
-  { x: -20.5, z: 9, label: 'AUSRÜSTUNG' }, { x: 20.5, z: 9, label: 'WAFFENKAMMER' },
+  { x: -20.5, z: 9, label: 'AUSRÜSTUNG' }, { x: 20.5, z: 9, label: 'ARSENAL' },
   { x: -20.5, z: -9, label: 'RÜSTUNG' }, { x: 20.5, z: -9, label: 'FORSCHUNG' },
 ] as const;
 /** Rooms between each pair of side rooms; walk-in only, no station. */

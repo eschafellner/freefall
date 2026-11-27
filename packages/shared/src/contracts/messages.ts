@@ -121,6 +121,8 @@ export interface PlayerState {
   look?: OperatorLook;
   /** Stamina after the acknowledged input (`ack`). Absent: full and rested. */
   stamina?: StaminaSnapshot;
+  /** Maximum health with the operator's research. Absent: the standard `operator.maxHealth`. */
+  maxHp?: number;
 }
 
 /**
@@ -136,7 +138,11 @@ export interface OperatorLook {
 /** Client → server: requested `LoadoutSelection`. Server → client: the accepted selection or a refusal. */
 export const LOADOUT_MESSAGE = 'loadout';
 export type LoadoutReply =
-  | { readonly selection: import('../balance/definitions.ts').LoadoutSelection }
+  | {
+    readonly selection: import('../balance/definitions.ts').LoadoutSelection;
+    /** Completed research of the operator (`research.*` IDs); the client resolves its own loadout with it. Absent: none. */
+    readonly research?: readonly string[];
+  }
   | { readonly error: string };
 
 export const PLAYER_MOTION = { sprint: 1, aim: 2 } as const;

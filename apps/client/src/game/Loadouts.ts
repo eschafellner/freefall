@@ -2,7 +2,7 @@
  * Client view of operator loadouts. The server owns the effective loadout; the client resolves the same shared data
  * for its own prediction (recoil, fire rate) and reads remote weapons from `PlayerState.weapons` for presentation.
  */
-import { BALANCE, BASE_LOADOUT, STANDARD_LOADOUT, reserveInRounds, resolveSelection, resolveWeapon, validateLoadoutSelection } from '@freefall/shared';
+import { BALANCE, BASE_LOADOUT, STANDARD_LOADOUT, reserveInRounds, researchModifiers, resolveSelection, resolveWeapon, validateLoadoutSelection } from '@freefall/shared';
 import type { EffectiveLoadout, EffectiveWeapon, LoadoutSelection, PlayerState, WeaponSlot } from '@freefall/shared';
 
 const weapons = new Map<string, EffectiveWeapon>();
@@ -24,9 +24,10 @@ export function reserveLabel(weapon: EffectiveWeapon, reserve: number): string {
   return reserveInRounds(weapon.feed) ? `${reserve} PAT` : `${reserve} MAG`;
 }
 
-export function resolveOwnLoadout(selection: LoadoutSelection): EffectiveLoadout {
+/** Own effective loadout with the completed research the server reported (`LoadoutReply.research`). */
+export function resolveOwnLoadout(selection: LoadoutSelection, research: readonly string[] = []): EffectiveLoadout {
   try {
-    return resolveSelection(BALANCE, selection);
+    return resolveSelection(BALANCE, selection, [], [], {}, 'custom', researchModifiers(research));
   } catch {
     return BASE_LOADOUT;
   }

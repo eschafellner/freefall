@@ -82,5 +82,47 @@
       "ogg": "abcbd26e43e45cd69fcbcd1bf49f0523da24de8559f920ec8f8112df3dce97b2",
       "mp3": "f34a55ad09e4569a050c55d7338a3b66a0819cd1355a3f883408264a40280e8a"
     }
+  },
+  {
+    "id": "result-victory-at-the-edge",
+    "title": "Victory at the Edge",
+    "role": "mission-success",
+    "rights": "Vom Projektinhaber bereitgestellt (eigene Werke), keine Drittlizenz",
+    "sourceFile": "Victory at the Edge.mp3",
+    "sourceSha256": "34d459607782ca168e844c5017746e75a8ba8e37bf0b020a1d96b76ca2156c27",
+    "seconds": 29.7,
+    "sampleRate": 48000,
+    "channels": 2,
+    "lufs": -15.4,
+    "peakDbtp": -4.3,
+    "encoding": {
+      "ogg": "Vorbis q5, Metadaten und Cover entfernt",
+      "mp3": "Audiostrom unverändert kopiert, Metadaten und Cover entfernt"
+    },
+    "sha256": {
+      "ogg": "7fe55254989ed892078e1f10a279b17cb57b1735a2b69674085b3fdb9f77f17f",
+      "mp3": "2d9e69d15781c21ab0044d5b3e766492a17e32afae85c4f9d4f22d5e69ba9b12"
+    }
+  },
+  {
+    "id": "result-the-final-march",
+    "title": "The Final March",
+    "role": "mission-failure",
+    "rights": "Vom Projektinhaber bereitgestellt (eigene Werke), keine Drittlizenz",
+    "sourceFile": "The Final March.mp3",
+    "sourceSha256": "3e4124da2e8b690f7af4c9a655e393be6f1fea42bf3a90e6b4fdecd756fba529",
+    "seconds": 29.9,
+    "sampleRate": 48000,
+    "channels": 2,
+    "lufs": -14.9,
+    "peakDbtp": -2.6,
+    "encoding": {
+      "ogg": "Vorbis q5, Metadaten und Cover entfernt",
+      "mp3": "Audiostrom unverändert kopiert, Metadaten und Cover entfernt"
+    },
+    "sha256": {
+      "ogg": "868f00cf9e2d8acbc5bbc6289b547179b56ee924b56996955d38af4601759be5",
+      "mp3": "a68435d909e3a986c4defe1801f67cee05559b560e452475c4cadfb77320cc79"
+    }
   }
 ]

@@ -1,8 +1,8 @@
 import { randomInt } from 'node:crypto';
 import { Room, ServerError } from '@colyseus/core';
 import type { AuthContext, Client } from '@colyseus/core';
-import { ACCOUNT_PROGRESS_MESSAGE, BALANCE_VERSION_MESSAGE, BODENBRUCH, LOADOUT_MESSAGE, validateLoadoutSelection, MAX_PLAYERS, NET, RECONNECT_SECONDS, ROSTER_MESSAGE, UNLOCKS, WIDE_POSITION_SCALE } from '@freefall/shared';
-import type { AccountProfile, AccountProgress, LoadoutReply, AtmosphereState, MissionResult, RosterEntry, ServerMetrics } from '@freefall/shared';
+import { ACCOUNT_PROGRESS_MESSAGE, BALANCE_VERSION_MESSAGE, RESEARCH_STAGES, BODENBRUCH, LOADOUT_MESSAGE, validateLoadoutSelection, MAX_PLAYERS, NET, RECONNECT_SECONDS, ROSTER_MESSAGE, UNLOCKS, WIDE_POSITION_SCALE } from '@freefall/shared';
+import type { AccountProfile, AccountProgress, LoadoutReply, LoadoutSelection, AtmosphereState, MissionResult, RosterEntry, ServerMetrics } from '@freefall/shared';
 import type { AccountService } from '../accounts/AccountService.ts';
 import { missionRecord } from '../accounts/MissionSettlement.ts';
 import { MissionInstance } from '../mission/MissionInstance.ts';
@@ -64,7 +64,7 @@ export class FreefallRoom extends Room {
       }
       client.send('players', playerSnapshot(simulation, this.host));
       const own = simulation.players.find((player) => player?.id === client.sessionId);
-      if (own) client.send(LOADOUT_MESSAGE, { selection: own.loadout.selection } satisfies LoadoutReply);
+      if (own) client.send(LOADOUT_MESSAGE, this.loadoutReply(own.loadout.selection, own.research));
     });
     // Carrier › Ausrüstung: shape and IDs, then account unlocks, then the simulation (Carrier only, resolvable).
     this.onMessage(LOADOUT_MESSAGE, (client, payload: unknown) => {
@@ -74,8 +74,11 @@ export class FreefallRoom extends Room {
       const account = this.operators.get(client.sessionId);
       const missing = account ? this.accountService?.missingForLoadout(account, checked.selection) ?? [] : [];
       if (missing.length) return reply({ error: `Nicht freigeschaltet: ${missing.map((id) => UNLOCKS.byId.get(id)?.displayName ?? id).join(', ')}. Freischalten im Arsenal.` });
+      // Research bought in the Forschung terminal since the last request takes effect with this loadout.
+      const research = account && this.accountService ? this.accountService.research(account.id) : [];
+      if (account) simulation.setResearch(client.sessionId, research);
       const error = simulation.setLoadout(client.sessionId, checked.selection);
-      reply(error ? { error } : { selection: checked.selection });
+      reply(error ? { error } : this.loadoutReply(checked.selection, research));
     });
     this.onMessage('horde-size', (client, payload: unknown) => {
       if (client.sessionId === this.host && simulation instanceof Arena) simulation.setHordeSize(payload);
@@ -134,6 +137,7 @@ export class FreefallRoom extends Room {
       this.identities.set(sessionId, account.id);
     }
     this.arena.addPlayer(client.sessionId);
+    if (account) this.arena.setResearch(client.sessionId, this.accountService!.research(account.id));
     this.members.add(client.sessionId);
     if (!this.host) this.host = client.sessionId;
     if (account) this.broadcast(ROSTER_MESSAGE, this.roster());
@@ -177,6 +181,12 @@ export class FreefallRoom extends Room {
       this.heldFull = false;
       void this.unlock();
     }
+  }
+
+  /** Accepted loadout with the operator's completed research (the client resolves its own loadout with it). */
+  private loadoutReply(selection: LoadoutSelection, research: readonly string[] = []): LoadoutReply {
+    const known = research.filter((id) => RESEARCH_STAGES.has(id));
+    return known.length ? { selection, research: known } : { selection };
   }
 
   /** Schreibt das Einsatzergebnis den Accounts gut und meldet jedem Operator seine Gutschrift. */

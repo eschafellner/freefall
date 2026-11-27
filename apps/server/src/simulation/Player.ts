@@ -9,6 +9,8 @@ export interface SimPlayer extends PlayerState {
   posture: PostureState;
   /** Effective, immutable weapon and equipment stats. Resolved once per configuration, never per tick. */
   loadout: EffectiveLoadout;
+  /** Completed research of the operator's account (`research.*`), applied to every loadout it resolves. */
+  research?: readonly string[];
   /** Running stamina (advanced per movement input like the client prediction; sent as `stamina`). */
   staminaState: StaminaState;
   equipment: EquipmentState;

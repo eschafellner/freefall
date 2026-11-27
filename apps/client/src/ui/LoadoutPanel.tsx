@@ -11,7 +11,7 @@ import { Terminal } from './Terminal.tsx';
 const number = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 });
 const penetration = (level: number) => ARMOR.classes[level - 1]?.penetrationName ?? String(level);
 
-function WeaponStats({ weapon }: { weapon: EffectiveWeapon }) {
+export function WeaponStats({ weapon }: { weapon: EffectiveWeapon }) {
   const { projectile, feed } = weapon;
   const single = feed.type === 'single';
   const loose = reserveInRounds(feed);
@@ -55,7 +55,7 @@ export function LoadoutPanel({ status, apply, close, fault }: {
   const changed = !sameSelection(draft, active);
   const primary = resolveWeapon(BALANCE, draft.primaryWeaponId);
   const secondary = resolveWeapon(BALANCE, draft.secondaryWeaponId);
-  return <Terminal kicker="Skyfall Carrier · Waffenkammer" title="Ausrüstung" className="loadout-terminal"
+  return <Terminal kicker="Skyfall Carrier · Deck 03" title="Ausrüstung" className="loadout-terminal"
     state={<span className={changed ? 'pending' : 'active'}>{changed ? 'Nicht übernommen' : 'Aktiv'}</span>}
     onClose={close} closeKey={bindings.label('INTERACT')} fault={status.loadoutError ?? fault}
     actions={<>
@@ -91,7 +91,7 @@ export function LoadoutPanel({ status, apply, close, fault }: {
           <Picker label="Modell" value={draft.armorId} choices={armors} onChange={set('armorId')}/>
           <p className="terminal-note">{BALANCE.bodyArmor(draft.armorId).description} Vorschau im Raum Rüstung.</p>
         </div>
-        <ArmorStats armor={BALANCE.bodyArmor(draft.armorId)}/>
+        <ArmorStats armor={BALANCE.bodyArmor(draft.armorId)} research={status.research}/>
       </div>
     </section>
   </Terminal>;

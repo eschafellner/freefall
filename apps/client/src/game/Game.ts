@@ -77,6 +77,16 @@ export interface MotionTelemetry {
   visualPosition: string;
 }
 
+/** Carrier stations opened with INTERACT. */
+export type CarrierStation = 'console' | 'locker' | 'armory' | 'arsenal' | 'research';
+/** Side rooms with a working station: which terminal opens and the interaction prompt. Other rooms: "Station prüfen". */
+const ROOM_STATIONS: Readonly<Record<string, { id: CarrierStation; prompt: string }>> = {
+  'AUSRÜSTUNG': { id: 'locker', prompt: 'Ausrüstung öffnen' },
+  'RÜSTUNG': { id: 'armory', prompt: 'Rüstkammer öffnen' },
+  'ARSENAL': { id: 'arsenal', prompt: 'Arsenal öffnen' },
+  'FORSCHUNG': { id: 'research', prompt: 'Forschung öffnen' },
+};
+
 export interface GameStatus {
   roomId: string;
   ownId: string;
@@ -105,8 +115,14 @@ export interface GameStatus {
   atLocker: boolean;
   /** Next to the armour station in the RÜSTUNG room (Rüstkammer). */
   atArmory: boolean;
+  /** In the ARSENAL room (unlocks of weapons, armour and kit). */
+  atArsenal: boolean;
+  /** In the FORSCHUNG room (research). */
+  atResearch: boolean;
+  /** Completed research of the own operator as reported by the server (`research.*`). */
+  research: readonly string[];
   /** Station opened with INTERACT; stays open until the pointer is captured again or the operator walks away. */
-  station?: 'console' | 'locker' | 'armory';
+  station?: CarrierStation;
   /** Own effective loadout as accepted by the server. */
   loadout: EffectiveLoadout;
   /** Last refusal of a loadout change. */
@@ -152,7 +168,7 @@ const STEP = 1000 / NET.tickHz;
 
 export const INITIAL_STATUS: GameStatus = {
   roomId: '', ownId: '', ready: false, locked: false, host: false, players: [], roster: [],
-  missionRoom: false, atConsole: false, atLocker: false, atArmory: false, loadout: BASE_LOADOUT, serverTick: 0, interaction: '', notice: '',
+  missionRoom: false, atConsole: false, atLocker: false, atArmory: false, atArsenal: false, atResearch: false, research: [], loadout: BASE_LOADOUT, serverTick: 0, interaction: '', notice: '',
   fps: 0, frameMs: 0, cpuMs: 0, gpuMs: null, drawCalls: 0, triangles: 0, meshes: 0, instances: 0,
   geometries: 0, textures: 0, visibleEnemies: 0, activeEnemies: 0, ping: null,
   bytesPerSecond: 0, hit: false, eliminated: false, hurt: false, allyHit: false, friendlyNotice: '', respawn: 0,
@@ -329,7 +345,7 @@ export class Game {
           if (this.status.ready && own.hp < this.hp) {
             const now = performance.now();
             if (now >= this.hurtUntil) this.hurtUntil = now + 170;
-            if (own.hp > 0 && own.hp <= PLAYER.health * .35 && this.hp > PLAYER.health * .35)
+            if (own.hp > 0 && own.hp <= this.status.loadout.maxHealth * .35 && this.hp > this.status.loadout.maxHealth * .35)
               this.notices.offer('Vitalstatus kritisch', 'damage', now, 1400);
             if (!own.hp) {
               this.damage.clear();
@@ -755,6 +771,14 @@ export class Game {
     this.emit();
   }
 
+  /**
+   * After a research purchase: asks the server to apply the account's research. The server re-reads it with every
+   * loadout request, so the current selection is requested again (on the Carrier, where research is bought).
+   */
+  refreshResearch(): void {
+    this.match?.setLoadout(this.status.loadout.selection);
+  }
+
   private loadoutRestored = false;
 
   private loadoutReply(reply: LoadoutReply): void {
@@ -762,7 +786,8 @@ export class Game {
       this.status.loadoutError = reply.error;
       this.notices.offer(reply.error, 'information', performance.now(), 3200);
     } else {
-      this.status.loadout = resolveOwnLoadout(reply.selection);
+      this.status.research = reply.research ?? [];
+      this.status.loadout = resolveOwnLoadout(reply.selection, this.status.research);
       this.prediction.setLoadout(this.status.loadout);
       this.status.loadoutError = undefined;
       this.view.ownWeapons = this.status.loadout.weapons;
@@ -790,11 +815,13 @@ export class Game {
         this.emit();
       } else {
         const room = CARRIER_ROOMS.find((entry) => distanceSquared(this.prediction.position, entry) < 5 ** 2);
-        if (room?.label === 'AUSRÜSTUNG' || room?.label === 'RÜSTUNG') {
-          const armory = room.label === 'RÜSTUNG';
-          this.status.atLocker = !armory;
-          this.status.atArmory = armory;
-          this.status.station = armory ? 'armory' : 'locker';
+        const station = room && ROOM_STATIONS[room.label];
+        if (station) {
+          this.status.atLocker = station.id === 'locker';
+          this.status.atArmory = station.id === 'armory';
+          this.status.atArsenal = station.id === 'arsenal';
+          this.status.atResearch = station.id === 'research';
+          this.status.station = station.id;
           this.missionAudio.alert('confirm');
           if (this.input.locked) document.exitPointerLock();
           this.emit();
@@ -929,7 +956,7 @@ export class Game {
     if (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION') {
       if (distanceSquared(position, CARRIER_CONSOLE) <= CARRIER_CONSOLE.radius ** 2) return 'Missionskonsole öffnen';
       const room = CARRIER_ROOMS.find((entry) => distanceSquared(position, entry) < 5 ** 2);
-      return room?.label === 'AUSRÜSTUNG' ? 'Ausrüstung öffnen' : room?.label === 'RÜSTUNG' ? 'Rüstkammer öffnen' : room ? 'Station prüfen' : '';
+      return room ? ROOM_STATIONS[room.label]?.prompt ?? 'Station prüfen' : '';
     }
     if (mission.state === 'BOARDING' && inAlbatross(position, CARRIER_SHIP)) {
       return mission.operators.some(({ id, ready }) => id === this.status.ownId && ready)
@@ -1081,8 +1108,11 @@ export class Game {
       const near = (label: string) => onDeck && distanceSquared(this.prediction.position, CARRIER_ROOMS.find((room) => room.label === label)!) < 5 ** 2;
       this.status.atLocker = near('AUSRÜSTUNG');
       this.status.atArmory = near('RÜSTUNG');
+      this.status.atArsenal = near('ARSENAL');
+      this.status.atResearch = near('FORSCHUNG');
       if ((this.status.station === 'console' && !this.status.atConsole) || (this.status.station === 'locker' && !this.status.atLocker) ||
-        (this.status.station === 'armory' && !this.status.atArmory)) {
+        (this.status.station === 'armory' && !this.status.atArmory) || (this.status.station === 'arsenal' && !this.status.atArsenal) ||
+        (this.status.station === 'research' && !this.status.atResearch)) {
         this.status.station = undefined;
       }
       this.status.interaction = this.interaction();

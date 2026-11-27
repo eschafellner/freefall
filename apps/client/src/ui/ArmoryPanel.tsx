@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BALANCE, MAX_ARMOR_RATING, SIMULATION_HZ, STANDARD_LOADOUT, TEAM_COLORS, UNLOCKS, armorDamageTaken, armorMobility,
+import { BALANCE, MAX_ARMOR_RATING, SIMULATION_HZ, STANDARD_LOADOUT, TEAM_COLORS, UNLOCKS, armorDamageTaken, armorMobility, researchBonus,
   formatResourceAmounts, hasResources, missingResources, unlockBlocker } from '@freefall/shared';
 import type { AccountProfile, AccountUnlock, ArmorWeightClass, BodyArmorDefinition, LoadoutSelection, OperatorLook } from '@freefall/shared';
 import { unlock, unlocks } from '../account/AccountClient.ts';
@@ -17,16 +17,22 @@ const percent = new Intl.NumberFormat('de-DE', { style: 'percent', maximumFracti
 const number = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
 
 const decimal = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const reference = armorMobility(BALANCE, 100);
 /** Green when better than the standard armour, amber when worse. */
 const compare = (value: number, standard: number, higherIsBetter = true) =>
   Math.abs(value - standard) < 1e-9 ? '' : (value > standard) === higherIsBetter ? 'better' : 'worse';
 
-/** Armour values of one body armour: protection, speed, stamina, dive and slide. */
-export function ArmorStats({ armor }: { armor: BodyArmorDefinition }) {
+/**
+ * Armour values of one body armour: protection, speed, stamina, dive and slide. `research`: the operator's completed
+ * research (more health, stamina and dive); colours compare with the standard armour under the same research.
+ */
+export function ArmorStats({ armor, research = [] }: { armor: BodyArmorDefinition; research?: readonly string[] }) {
+  const bonus = researchBonus(research);
+  const factors = { stamina: 1 + bonus.stamina, dive: 1 + bonus.dive };
+  const reference = armorMobility(BALANCE, 100, factors);
+  const baseHealth = BALANCE.operator.maxHealth + bonus.maxHealth;
   const taken = armorDamageTaken(BALANCE.armorEffects, armor.armorRating);
-  const health = BALANCE.operator.maxHealth / taken;
-  const mobility = armorMobility(BALANCE, armor.armorRating);
+  const health = baseHealth / taken;
+  const mobility = armorMobility(BALANCE, armor.armorRating, factors);
   const { stamina } = mobility;
   const sprintSeconds = stamina.max / stamina.sprintDrain / SIMULATION_HZ;
   const standardSprint = reference.stamina.max / reference.stamina.sprintDrain / SIMULATION_HZ;
@@ -36,7 +42,7 @@ export function ArmorStats({ armor }: { armor: BodyArmorDefinition }) {
     <div className="armor-rating"><dt>Rüstungspunkte</dt>
       <dd><i style={{ '--fill': `${armor.armorRating / MAX_ARMOR_RATING * 100}%` } as React.CSSProperties}/>{armor.armorRating}</dd></div>
     <div><dt>Erlittener Schaden</dt><dd className={compare(taken, 1, false)}>{percent.format(taken)}</dd></div>
-    <div><dt>Effektive Lebenspunkte</dt><dd className={compare(health, BALANCE.operator.maxHealth)}>{number.format(health)}</dd></div>
+    <div><dt>Effektive Lebenspunkte</dt><dd className={compare(health, baseHealth)}>{number.format(health)}</dd></div>
     <div><dt>Gehen · Sprint</dt><dd className={compare(mobility.sprintSpeed, reference.sprintSpeed)}>
       {decimal.format(mobility.walkSpeed)} · {decimal.format(mobility.sprintSpeed)} m/s</dd></div>
     <div><dt>Ausdauer · Dauersprint</dt><dd className={compare(sprintSeconds, standardSprint)}>
@@ -142,7 +148,7 @@ export function ArmoryPanel({ status, apply, close, fault, account }: {
       </div>
       <h3>{chosen.displayName}</h3>
       <p className="terminal-note">{chosen.description}</p>
-      <ArmorStats armor={chosen}/>
+      <ArmorStats armor={chosen} research={status.research}/>
       {account && <ResourceBar balance={account.profile.resources} ids={['credits']}/>}
       <p className="terminal-note">Rüstungspunkte senken jeden Treffer: Gegner, Explosionen und Eigenbeschuss. Schwerere Rüstung kostet Tempo und Ausdauer; der Heilstim füllt die Ausdauer auf.</p>
     </section>

@@ -21,7 +21,8 @@ import type {
 import type { BalanceRegistry } from './registry.ts';
 
 /** `ammunition`: the loaded ammunition type (`ammunition.json › ammunition[].modifiers`), applied before equipment. */
-export const MODIFIER_LAYERS = ['ammunition', 'equipment', 'difficulty', 'mission'] as const;
+/** `research`: completed research of the operator's account (`definitions/research.ts`), operator stats only. */
+export const MODIFIER_LAYERS = ['ammunition', 'equipment', 'difficulty', 'mission', 'research'] as const;
 export type ModifierLayer = (typeof MODIFIER_LAYERS)[number];
 export type ModifierOperation = 'add' | 'multiply' | 'divide';
 
@@ -413,17 +414,21 @@ export function armorEffect(effects: ArmorEffects, rating: number, key: Exclude<
 }
 
 /** Speeds, dive, slide and stamina for an armor rating. Stamina is in whole thousandths per 1/30 s step. */
-export function armorMobility(registry: BalanceRegistry, rating: number): EffectiveMobility {
+/**
+ * Mobility of an operator in armor with this rating. `factors` scale the stamina pool and the dive distance (research);
+ * the defaults keep the armor values exactly.
+ */
+export function armorMobility(registry: BalanceRegistry, rating: number, factors: { readonly stamina?: number; readonly dive?: number } = {}): EffectiveMobility {
   const effect = (key: Exclude<keyof ArmorEffects[number], 'rating'>) => armorEffect(registry.armorEffects, rating, key);
   const { movement, operator } = registry;
   const rules = movement.stamina;
-  const max = Math.round(effect('stamina') * 1000);
+  const max = Math.round(effect('stamina') * (factors.stamina ?? 1) * 1000);
   const recovery = rules.recoveryPerSecond * effect('recovery') * 1000 / SIMULATION_HZ;
   const dive = effect('dive');
   return {
     walkSpeed: operator.walkSpeed * effect('walk'),
     sprintSpeed: operator.sprintSpeed * effect('sprint'),
-    diveDistance: dive >= ARMOR_ACTION_CUTOFF ? movement.diveDistance * dive : 0,
+    diveDistance: dive >= ARMOR_ACTION_CUTOFF ? movement.diveDistance * dive * (factors.dive ?? 1) : 0,
     canSlide: effect('slide') >= ARMOR_ACTION_CUTOFF,
     getUpMultiplier: effect('getUp'),
     stamina: {
@@ -485,7 +490,7 @@ export function resolveLoadout(registry: BalanceRegistry, loadoutId = registry.o
 /** Effective loadout of a selection (Carrier › Ausrüstung). Backpack and body armor add their own modifiers. */
 export function resolveSelection(registry: BalanceRegistry, selection: LoadoutSelection,
   modifiers: readonly StatModifier[] = [], armorModifiers: readonly StatModifier[] = [],
-  ammo: Partial<Readonly<Record<WeaponSlot, string>>> = {}, id = 'custom'): EffectiveLoadout {
+  ammo: Partial<Readonly<Record<WeaponSlot, string>>> = {}, id = 'custom', research: readonly StatModifier[] = []): EffectiveLoadout {
   const preset = registry.loadout(registry.operator.loadoutId);
   const primary = registry.weapon(selection.primaryWeaponId);
   const secondary = registry.weapon(selection.secondaryWeaponId);
@@ -504,7 +509,15 @@ export function resolveSelection(registry: BalanceRegistry, selection: LoadoutSe
     armor.resolve(`operator.slide.${key}`, registry.movement.slide[key], { layers: EQUIPMENT, ...OPERATOR_SLIDE_LIMITS[key] });
   const armorRating = armor.resolve('operator.armorRating', bodyArmor.armorRating,
     { layers: EQUIPMENT, min: 0, max: MAX_ARMOR_RATING, round: 'round' });
-  const mobility = armorMobility(registry, armorRating);
+  // Research raises health, the stamina pool and the dive distance of the operator in any armor.
+  const body = new StatResolver(research);
+  const RESEARCH: StatRule['layers'] = ['research'];
+  const maxHealth = body.resolve('operator.maxHealth', registry.operator.maxHealth, { layers: RESEARCH, min: 1, max: 10_000, round: 'round' });
+  const mobility = armorMobility(registry, armorRating, {
+    stamina: body.resolve('operator.staminaFactor', 1, { layers: RESEARCH, min: .1, max: 10 }),
+    dive: body.resolve('operator.diveFactor', 1, { layers: RESEARCH, min: .1, max: 10 }),
+  });
+  body.assertAllUsed();
   // The armor's slide factor shortens the slide; the standard armor keeps the movement values exactly.
   const slideFactor = armorEffect(registry.armorEffects, armorRating, 'slide');
   const slide = {
@@ -515,7 +528,6 @@ export function resolveSelection(registry: BalanceRegistry, selection: LoadoutSe
   const grenade = registry.grenade(selection.grenadeId);
   const medical = registry.medical(selection.medicalId);
   const melee = registry.melee(selection.meleeId);
-  const maxHealth = registry.operator.maxHealth;
   const result: EffectiveLoadout = {
     id,
     configHash: registry.version.hash,
@@ -549,7 +561,7 @@ export function resolveSelection(registry: BalanceRegistry, selection: LoadoutSe
     respawnProtectionTicks: Math.ceil(registry.operator.respawnProtectionSeconds * SIMULATION_HZ),
     damagePolicy: registry.combat.damagePolicy,
     operatorHitbox: registry.combat.operatorHitbox,
-    trace: { ...resolver.trace, ...armor.trace },
+    trace: { ...resolver.trace, ...armor.trace, ...body.trace },
   };
   if (result.grenade.releaseTicks >= result.grenade.throwTicks) {
     throw new BalanceResolutionError(`${grenade.id}: releaseSeconds muss kleiner als throwSeconds sein`);

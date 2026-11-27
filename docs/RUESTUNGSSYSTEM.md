@@ -24,7 +24,7 @@ Stand 27. November 2026, Balance-Release 8.3B. Teil 1 beschreibt Rüstungspunkte
 
 Der Server prüft die Auswahl wie bei Waffen (bekannte ID, Freischaltung), speichert sie mit dem Loadout im Account und stellt sie beim nächsten Einsatz wieder her.
 
-**Preise.** FR-7 gehört zur Grundausstattung. SR-4 Späher kostet 6.000 SKR (`upgrade.sr4-spaeher`), BW-9 Bollwerk 4.000 SKR (`upgrade.bw9-bollwerk`), KR-12 Koloss 8.000 SKR (`upgrade.kr12-koloss`), alle ohne Levelgrenze. Gekauft wird im **Arsenal** (Startbildschirm) oder direkt in der **Rüstkammer**: Gesperrte Rüstungen zeigen dort ihren Preis, der Hauptknopf heißt dann „Freischalten · 6.000 SKR“ und bucht über denselben Account-Endpunkt wie das Arsenal ab. Danach lässt sich die Rüstung sofort anlegen. Ohne Account (Gastraum) ist jede Rüstung verfügbar.
+**Preise.** FR-7 gehört zur Grundausstattung. SR-4 Späher kostet 6.000 SKR (`upgrade.sr4-spaeher`), BW-9 Bollwerk 4.000 SKR (`upgrade.bw9-bollwerk`), KR-12 Koloss 8.000 SKR (`upgrade.kr12-koloss`), alle ohne Levelgrenze. Gekauft wird im **Arsenal** (Raum ARSENAL im Carrier) oder direkt in der **Rüstkammer**: Gesperrte Rüstungen zeigen dort ihren Preis, der Hauptknopf heißt dann „Freischalten · 6.000 SKR“ und bucht über denselben Account-Endpunkt wie das Arsenal ab. Danach lässt sich die Rüstung sofort anlegen. Ohne Account (Gastraum) ist jede Rüstung verfügbar.
 
 **Optik im Spiel.** Das Loadout bestimmt die Optik (`EffectiveLoadout.look` aus `armors[].visual` und `backpacks[].visual`). Die Spieler-Snapshots tragen `look` nur, wenn sie vom Standard abweichen; alle Clients ziehen dem Operator dann Rüstung und Helm an.
 

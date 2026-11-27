@@ -1,14 +1,15 @@
 import * as T from 'three';
 import { CARRIER_CABINS, CARRIER_DOORS, CARRIER_ROOMS } from '@freefall/shared';
 import type { CarrierDoor, MissionSnapshot, PositionXZ } from '@freefall/shared';
-import { stencil } from '../ShipParts.ts';
 import type { CarrierContext } from './CarrierContext.ts';
+import { DOOR_SIGN, mountedSign } from './CarrierSigns.ts';
 import { ShipKit } from './ShipKit.ts';
 
 interface Leaf { door: CarrierDoor; sign: number; open: number }
 
 const AIRLOCK = (door: CarrierDoor) => door.axis === 'z';
 const REACH = 4.4;
+
 
 /**
  * Door frames and sliding leaves for every doorway. Room doors open as an operator approaches; the airlock pair stays
@@ -40,8 +41,9 @@ export class CarrierDoors {
       kit.box(p.hazard, door.x, .01, door.z, .66, .02, door.width);
       const label = [...CARRIER_ROOMS, ...CARRIER_CABINS].find((room) => Math.sign(room.x) === side && room.z === door.z)?.label;
       if (label) {
+        // Same height for every door, on the mess face of the wall (x ±11.7).
         const sub = door.z === 0 ? 'DECK 03  /  ZUTRITT FREI' : 'DECK 03  /  STATION';
-        stencil(c.root, label, sub, [door.x - side * .44, door.height + .75, door.z], Math.min(3.2, door.width + .6), side * -Math.PI / 2);
+        mountedSign(c, label, sub, [door.x - side * .3, DOOR_SIGN.y, door.z], DOOR_SIGN.width, side * -Math.PI / 2);
       }
     }
     // Leaf template in local space: thickness along x, width along z (leading edge at +z), height along y.

@@ -60,8 +60,9 @@ export function CombatLoadout({ player, tick, dryFireTick, resupply = false, sta
     : gear?.action === 'resupply' ? 'Nachschub aufnehmen' : '';
   const applying = gear?.action === 'stim';
   const recent = gear?.stimResult && tick - gear.stimResultAt < NET.tickHz * 1.5;
-  const critical = player.hp > 0 && player.hp <= PLAYER.health * .35;
-  const health = Math.max(0, Math.min(1, player.hp / PLAYER.health));
+  const maxHp = player.maxHp ?? PLAYER.health;
+  const critical = player.hp > 0 && player.hp <= maxHp * .35;
+  const health = Math.max(0, Math.min(1, player.hp / maxHp));
 
   return <section className="loadout" aria-label="Ausrüstung">
     <div className={`vitals ${critical ? 'critical' : ''}`} aria-label="Vitalstatus">
@@ -69,7 +70,7 @@ export function CombatLoadout({ player, tick, dryFireTick, resupply = false, sta
         <span className="vital-label">{player.hp <= 0 ? 'Gefallen' : critical ? 'Kritisch' : 'Vital'}</span>
         <strong>{player.hp}<small> HP</small></strong>
       </div>
-      <div className="health-bar" role="meter" aria-label="Gesundheit" aria-valuemin={0} aria-valuemax={PLAYER.health} aria-valuenow={player.hp}>
+      <div className="health-bar" role="meter" aria-label="Gesundheit" aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={player.hp}>
         <i style={{ width: `${health * 100}%` }}/>
       </div>
       {staminaMax && player.hp > 0 && <StaminaBar player={player} max={staminaMax}/>}

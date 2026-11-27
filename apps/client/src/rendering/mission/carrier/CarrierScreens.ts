@@ -183,9 +183,9 @@ const DRAW: Record<ScreenKind, (g: CanvasRenderingContext2D, t: number, tint: st
     ['TORSO     KL 4  OK', 'SCHULTER  KL 3  OK', 'BEINE     KL 3  OK', 'HELM      KL 4  PRÜF', 'SERVOS    98%'].forEach((line, i) => g.fillText(line, 240, 80 + i * 34));
   },
   weapon(g, t, tint, red) {
-    frame(g, tint, 'WAFFENAUSGABE', red);
+    frame(g, tint, 'ARSENAL  /  WAFFENAUSGABE', red);
     g.font = '600 17px ' + FONT;
-    ['VX-13 KARABINER   12', 'MK-4 SCHROTFLINTE  6', 'FRAG-GRANATE      40', 'MUNITION 5.55   2400', 'MUNITION 12G     380'].forEach((line, i) => {
+    ['KESTREL AR-01     18', 'VX-13 CERBERUS     6', 'MP-99 / VIKTOR 55  8', 'KAIBAL 50          4', 'SPRENGGRANATE     40'].forEach((line, i) => {
       g.fillStyle = tint;
       g.fillText(line, 18, 76 + i * 36);
     });

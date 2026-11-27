@@ -62,6 +62,7 @@ export function playerSnapshot(arena: Battlefield, host: string): PlayersSnapsho
       // Armour and pack only travel when they differ from the standard issue the clients show without them.
       ...(!standardLook(p.loadout.look) && { look: p.loadout.look }),
       ...(stamina && { stamina }),
+      ...(p.loadout.maxHealth !== BASE_LOADOUT.maxHealth && { maxHp: p.loadout.maxHealth }),
       ...(p.y !== 0 && { y: p.y }),
       ...(sendPosture ? { posture: copyPosture(stance) } : stance.yaw !== yaw ? { bodyYaw: stance.yaw } : {}),
       ...(recent && { reload: { ...reload } }), equipment: { ...p.equipment, magazines: { ...p.equipment.magazines },

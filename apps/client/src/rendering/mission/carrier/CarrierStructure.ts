@@ -7,6 +7,7 @@ import type { Obstacle } from '@freefall/shared';
 import { stencil } from '../ShipParts.ts';
 import { CARRIER_SUN } from '../CarrierSpace.ts';
 import { dust, shaft } from './CarrierEffects.ts';
+import { DOOR_SIGN, MESS_DOORS } from './CarrierSigns.ts';
 import type { CarrierContext } from './CarrierContext.ts';
 import { shipSurfaces, surface } from './ShipTextures.ts';
 
@@ -103,14 +104,36 @@ export function buildMess(c: CarrierContext): void {
   for (const x of [-6.6, -3.3, 0, 3.3, 6.6]) kit.box(p.frameDark, x, 7.1, -16.7, Math.abs(x) > 6 ? .34 : .2, 3, .34);
   kit.box(c.lit, 0, 5.5, -16.4, 12.8, .03, .06);
 
-  // Wall dressing along both side walls: kick plate, two pipe runs, a cable tray and pilasters.
+  // Wall dressing along both side walls: kick plate, two pipe runs, a cable tray and pilasters. The pipes duck into
+  // the wall either side of every door sign (flange, elbow stub and a wall collar), so nothing crosses a sign.
   for (const side of [-1, 1]) {
     const face = side * 11.68;
     kit.box(p.frameDark, face, .16, 0, .08, .32, 34);
+    const half = DOOR_SIGN.width / 2 + DOOR_SIGN.margin;
+    const gaps = MESS_DOORS.filter((door) => Math.sign(door.x) === side).map((door) => [door.z - half, door.z + half] as const)
+      .sort((a, b) => a[0] - b[0]);
+    const runs: [number, number][] = [];
+    let start = -17;
+    for (const [from, to] of gaps) { runs.push([start, from]); start = to; }
+    runs.push([start, 17]);
     for (const [y, r, material] of [[3.92, .085, p.olive], [4.18, .06, p.steel]] as const) {
-      kit.cylinder(material, face - side * .14, y, 0, r, 34, 'z', 10);
+      const offset = face - side * .14;
+      for (const [from, to] of runs) {
+        kit.cylinder(material, offset, y, (from + to) / 2, r, to - from, 'z', 10);
+        for (const end of [from, to]) {
+          if (Math.abs(end) > 16.9) continue;
+          const inward = end === from ? 1 : -1;
+          kit.cylinder(p.frameDark, offset, y, end + inward * .06, r + .03, .06, 'z', 10);
+          kit.cylinder(material, (offset + face) / 2, y, end + inward * r, r, .14, 'x', 10);
+          kit.cylinder(p.frameDark, face - side * .01, y, end + inward * r, r + .045, .04, 'x', 12);
+        }
+      }
     }
-    for (let z = -16; z <= 16; z += 2) kit.box(p.frameDark, face - side * .1, 4.05, z, .16, .42, .06);
+    const clear = (z: number) => gaps.every(([from, to]) => z < from - .1 || z > to + .1);
+    for (let z = -16; z <= 16; z += 2) if (clear(z)) kit.box(p.frameDark, face - side * .1, 4.05, z, .16, .42, .06);
+    for (const [from, to] of runs) for (const end of [from + .45, to - .45]) {
+      if (Math.abs(end) < 16.5 && clear(end)) kit.box(p.frameDark, face - side * .1, 4.05, end, .16, .42, .06);
+    }
     for (const z of [-16.2, -12.6, -5.6, -2.3, 2.3, 5.6, 12.6, 16.2]) {
       kit.box(p.frame, face - side * .06, 1.9, z, .16, 3.8, .36);
     }
@@ -359,7 +382,13 @@ export function buildAirlock(c: CarrierContext): void {
   }
   kit.box(p.frameDark, 0, 4.42, -16.55, 7.5, .44, .9);
   kit.box(p.frameDark, 0, 4.42, -23.45, 7.5, .44, .9);
-  stencil(c.root, 'ALBATROSS 02', 'BOARDING  /  LUFTSCHLEUSE', [0, 4.98, -16.66], 3.2);
-  stencil(c.root, 'STARTPLATZ 02', 'HANGAR  /  DRUCKSCHLEUSE', [0, 4.98, -23.34], 3.2, Math.PI);
+  // Signs in a housing on top of each portal header (top 4.64 m), flush with its front and below the Leitstand sill
+  // (5.52 m), so the deep header cannot hide their lower edge from the deck.
+  for (const [z, facing, title, sub] of [[-16.55, 1, 'ALBATROSS 02', 'BOARDING  /  LUFTSCHLEUSE'],
+    [-23.45, -1, 'STARTPLATZ 02', 'HANGAR  /  DRUCKSCHLEUSE']] as const) {
+    kit.box(p.frameDark, 0, 5.07, z, 3.36, .86, .9);
+    kit.box(p.lamp(0xd8e2dc, .8), 0, 4.67, z + facing * .46, 3.0, .015, .02);
+    stencil(c.root, title, sub, [0, 5.07, z + facing * .455], 3.2, facing > 0 ? 0 : Math.PI);
+  }
 }
 
