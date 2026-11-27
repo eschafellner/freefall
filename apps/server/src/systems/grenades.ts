@@ -6,7 +6,7 @@ import type { UniformGrid } from '../ecs/UniformGrid.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
 import { damageEnemy, damagePlayer } from './combat.ts';
 import type { CombatContext } from './combat.ts';
-import { resolveDamage } from './damage.ts';
+import { protectionOf, resolveDamage } from './damage.ts';
 
 interface Projectile extends GrenadeState {
   owner: string;
@@ -147,7 +147,7 @@ export class Grenades {
             const base = blastDamage(g, player.x, player.y + height, player.z, world, g.definition);
             if (!base) continue;
             const self = player.id === g.owner;
-            const { amount } = resolveDamage(policy, { source: 'explosion', attacker: 'operator', target: 'operator', self, base });
+            const { amount } = resolveDamage(policy, { source: 'explosion', attacker: 'operator', target: 'operator', self, base, protection: protectionOf(player) });
             const dealt = damagePlayer(player, amount, tick, context.respawns ?? true, context);
             if (!dealt) continue;
             if (stats) {

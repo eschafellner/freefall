@@ -147,8 +147,13 @@ export const UNLOCKS: UnlockRegistry = createUnlockRegistry([
     acquisition: 'starter', level: 1, requires: [], equipmentId: standard.meleeId },
   { id: 'upgrade.standard-frame', kind: 'upgrade', displayName: 'Standard-Tragegestell', description: 'Rucksack der Grundausstattung.',
     acquisition: 'starter', level: 1, requires: [], equipmentId: standard.backpackId },
-  { id: 'upgrade.standard-carrier', kind: 'upgrade', displayName: 'Standard-Plattenträger', description: 'Rüstung der Grundausstattung.',
+  { id: 'upgrade.standard-carrier', kind: 'upgrade', displayName: 'FR-7 Feldpanzer', description: 'Mittlere Rüstung der Grundausstattung, 100 Rüstungspunkte.',
     acquisition: 'starter', level: 1, requires: [], equipmentId: standard.armorId },
+  // Rüstungen 8.3A: im Arsenal oder in der Rüstkammer gegen SKR (Preise vom 26.11.2026, ohne Levelgrenze).
+  { id: 'upgrade.sr4-spaeher', kind: 'upgrade', displayName: 'SR-4 Späher', description: 'Leichte Rüstung, 50 Rüstungspunkte, 125 % Schaden.',
+    acquisition: 'choice', level: 1, requires: [], equipmentId: 'armor.sr4_scout', cost: { credits: 6000 } },
+  { id: 'upgrade.bw9-bollwerk', kind: 'upgrade', displayName: 'BW-9 Bollwerk', description: 'Schwere Rüstung, 150 Rüstungspunkte, 75 % Schaden.',
+    acquisition: 'choice', level: 1, requires: [], equipmentId: 'armor.bw9_bulwark', cost: { credits: 4000 } },
 ]);
 
 export const STANDARD_LOADOUT: LoadoutSelection = standard;

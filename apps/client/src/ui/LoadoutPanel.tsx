@@ -4,6 +4,7 @@ import type { EffectiveWeapon, LoadoutSelection, WeaponSlot } from '@freefall/sh
 import type { GameStatus } from '../game/Game.ts';
 import { sameSelection } from '../game/Loadouts.ts';
 import { bindings } from '../input/Bindings.ts';
+import { ArmorStats, WEIGHT_CLASS_NAMES } from './ArmoryPanel.tsx';
 import { KitIcon } from './HudIcons.tsx';
 import { Terminal } from './Terminal.tsx';
 
@@ -39,6 +40,8 @@ function Picker({ label, value, choices, onChange }: { label: string; value: str
 }
 
 const weaponsIn = (slot: WeaponSlot): Choice[] => [...BALANCE.weapons.values()].filter((weapon) => weapon.slot === slot);
+const armors: Choice[] = [...BALANCE.bodyArmors.values()].sort((a, b) => a.armorRating - b.armorRating)
+  .map((armor) => ({ id: armor.id, displayName: `${armor.displayName} · ${WEIGHT_CLASS_NAMES[armor.weightClass]} · ${armor.armorRating}`, description: armor.description }));
 
 /** Carrier station "Ausrüstung": weapons, melee, tactical slot, backpack and body armor. The server validates. */
 export function LoadoutPanel({ status, apply, close, fault }: {
@@ -79,7 +82,16 @@ export function LoadoutPanel({ status, apply, close, fault }: {
         <Picker label="Taktisch" value={draft.grenadeId} choices={[...BALANCE.grenades.values()]} onChange={set('grenadeId')}/>
         <Picker label="Medizin" value={draft.medicalId} choices={[...BALANCE.medicalItems.values()]} onChange={set('medicalId')}/>
         <Picker label="Rucksack" value={draft.backpackId} choices={[...BALANCE.backpacks.values()]} onChange={set('backpackId')}/>
-        <Picker label="Rüstung" value={draft.armorId} choices={[...BALANCE.bodyArmors.values()]} onChange={set('armorId')}/>
+      </div>
+    </section>
+    <section className="loadout-kit loadout-armor">
+      <h3>Rüstung</h3>
+      <div className="loadout-armor-grid">
+        <div className="terminal-column">
+          <Picker label="Modell" value={draft.armorId} choices={armors} onChange={set('armorId')}/>
+          <p className="terminal-note">{BALANCE.bodyArmor(draft.armorId).description} Vorschau im Raum Rüstung.</p>
+        </div>
+        <ArmorStats armor={BALANCE.bodyArmor(draft.armorId)}/>
       </div>
     </section>
   </Terminal>;

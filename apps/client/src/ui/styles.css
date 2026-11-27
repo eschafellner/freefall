@@ -634,6 +634,28 @@ kbd { display: inline-block; padding: 2px 4px; color: #fff; font: 10px var(--mon
 .loadout-label .kit-icon { width: 34px; height: 14px; }
 .loadout-weapon .loadout-label .kit-icon { display: none; }
 .loadout-stats div { padding: 5px 0; }
+.loadout-armor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 12px 28px; }
+
+/* Rüstkammer */
+.armory-terminal { width: min(980px, calc(100vw - 48px)); }
+.armory-terminal .terminal-body { grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); }
+.armory-stage { position: sticky; top: 0; align-self: start; height: clamp(300px, calc(100dvh - 330px), 470px);
+  background: radial-gradient(ellipse at 50% 70%, #f2b46414, transparent 60%), #0000002a; border: 1px solid var(--hud-line); }
+.armor-preview { position: absolute; inset: 0; }
+.armor-preview canvas { display: block; width: 100%; height: 100%; }
+.armory-list [role=radiogroup] { display: grid; gap: 6px; }
+.armor-option { display: grid; gap: 3px; padding: 10px 12px; text-align: left; color: var(--hud-ink); background: #ffffff08;
+  border: 1px solid #ffffff1f; border-left: 3px solid transparent; }
+.armor-option:hover { border-color: #ffffff40; }
+.armor-option strong { font-size: 14px; }
+.armor-option span { font: 600 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--hud-dim); }
+.armor-option.chosen { border-left-color: var(--accent); background: #f2b46414; }
+.armor-option.worn span::after { content: ' · angelegt'; color: #9fe0bf; }
+.armor-option .armor-price { font: 600 10px var(--mono); letter-spacing: .08em; color: var(--accent); }
+.armor-rating dd { display: flex; align-items: center; gap: 10px; }
+.armor-rating i { width: 90px; height: 5px; background: linear-gradient(90deg, var(--accent) var(--fill), #ffffff1a var(--fill)); }
+.armor-stats .worse { color: #ffbe83; }
+.armor-stats .better { color: #9fe0bf; }
 
 /* Menü */
 .pause-terminal { width: min(820px, calc(100vw - 48px)); }

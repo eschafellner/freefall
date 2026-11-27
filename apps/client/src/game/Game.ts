@@ -103,8 +103,10 @@ export interface GameStatus {
   atConsole: boolean;
   /** At the Carrier station "Ausrüstung" (loadout menu). */
   atLocker: boolean;
+  /** Next to the armour station in the RÜSTUNG room (Rüstkammer). */
+  atArmory: boolean;
   /** Station opened with INTERACT; stays open until the pointer is captured again or the operator walks away. */
-  station?: 'console' | 'locker';
+  station?: 'console' | 'locker' | 'armory';
   /** Own effective loadout as accepted by the server. */
   loadout: EffectiveLoadout;
   /** Last refusal of a loadout change. */
@@ -150,7 +152,7 @@ const STEP = 1000 / NET.tickHz;
 
 export const INITIAL_STATUS: GameStatus = {
   roomId: '', ownId: '', ready: false, locked: false, host: false, players: [], roster: [],
-  missionRoom: false, atConsole: false, atLocker: false, loadout: BASE_LOADOUT, serverTick: 0, interaction: '', notice: '',
+  missionRoom: false, atConsole: false, atLocker: false, atArmory: false, loadout: BASE_LOADOUT, serverTick: 0, interaction: '', notice: '',
   fps: 0, frameMs: 0, cpuMs: 0, gpuMs: null, drawCalls: 0, triangles: 0, meshes: 0, instances: 0,
   geometries: 0, textures: 0, visibleEnemies: 0, activeEnemies: 0, ping: null,
   bytesPerSecond: 0, hit: false, eliminated: false, hurt: false, allyHit: false, friendlyNotice: '', respawn: 0,
@@ -787,9 +789,11 @@ export class Game {
         this.emit();
       } else {
         const room = CARRIER_ROOMS.find((entry) => distanceSquared(this.prediction.position, entry) < 5 ** 2);
-        if (room?.label === 'AUSRÜSTUNG') {
-          this.status.atLocker = true;
-          this.status.station = 'locker';
+        if (room?.label === 'AUSRÜSTUNG' || room?.label === 'RÜSTUNG') {
+          const armory = room.label === 'RÜSTUNG';
+          this.status.atLocker = !armory;
+          this.status.atArmory = armory;
+          this.status.station = armory ? 'armory' : 'locker';
           this.missionAudio.alert('confirm');
           if (this.input.locked) document.exitPointerLock();
           this.emit();
@@ -923,7 +927,7 @@ export class Game {
     if (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION') {
       if (distanceSquared(position, CARRIER_CONSOLE) <= CARRIER_CONSOLE.radius ** 2) return 'Missionskonsole öffnen';
       const room = CARRIER_ROOMS.find((entry) => distanceSquared(position, entry) < 5 ** 2);
-      return room?.label === 'AUSRÜSTUNG' ? 'Ausrüstung öffnen' : room ? 'Station prüfen' : '';
+      return room?.label === 'AUSRÜSTUNG' ? 'Ausrüstung öffnen' : room?.label === 'RÜSTUNG' ? 'Rüstkammer öffnen' : room ? 'Station prüfen' : '';
     }
     if (mission.state === 'BOARDING' && inAlbatross(position, CARRIER_SHIP)) {
       return mission.operators.some(({ id, ready }) => id === this.status.ownId && ready)
@@ -1070,10 +1074,12 @@ export class Game {
       this.status.serverTick = missionTick;
       this.status.atConsole = Boolean(mission && (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION') &&
         distanceSquared(this.prediction.position, CARRIER_CONSOLE) <= CARRIER_CONSOLE.radius ** 2);
-      const locker = CARRIER_ROOMS.find(({ label }) => label === 'AUSRÜSTUNG')!;
-      this.status.atLocker = Boolean(mission && (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION') &&
-        distanceSquared(this.prediction.position, locker) < 5 ** 2);
-      if ((this.status.station === 'console' && !this.status.atConsole) || (this.status.station === 'locker' && !this.status.atLocker)) {
+      const onDeck = Boolean(mission && (mission.state === 'CARRIER_HUB' || mission.state === 'MISSION_SELECTION'));
+      const near = (label: string) => onDeck && distanceSquared(this.prediction.position, CARRIER_ROOMS.find((room) => room.label === label)!) < 5 ** 2;
+      this.status.atLocker = near('AUSRÜSTUNG');
+      this.status.atArmory = near('RÜSTUNG');
+      if ((this.status.station === 'console' && !this.status.atConsole) || (this.status.station === 'locker' && !this.status.atLocker) ||
+        (this.status.station === 'armory' && !this.status.atArmory)) {
         this.status.station = undefined;
       }
       this.status.interaction = this.interaction();

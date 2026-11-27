@@ -9,7 +9,7 @@ import type { EnemyFlanking } from './EnemyFlanking.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
 import { damagePlayer } from '../systems/combat.ts';
 import type { CombatContext, MeleeObject, SecondaryTarget } from '../systems/combat.ts';
-import { resolveDamage } from '../systems/damage.ts';
+import { protectionOf, resolveDamage } from '../systems/damage.ts';
 import { currentOperator, validOperator } from '../systems/enemyTargeting.ts';
 import type { EnemyApproach } from './EnemyApproach.ts';
 import type { EnemyNavigation } from './EnemyNavigation.ts';
@@ -240,7 +240,8 @@ export class EnemyCombat {
         attack.resolved = true;
         const kind = attack.player ? 'operator' : 'id' in attack.target ? 'convict' : 'vehicle';
         const { amount } = resolveDamage(context?.policy ?? BASE_LOADOUT.damagePolicy,
-          { source: 'melee', attacker: 'enemy', target: kind, base: enemy.meleeDamage });
+          { source: 'melee', attacker: 'enemy', target: kind, base: enemy.meleeDamage,
+            ...(attack.player && 'loadout' in attack.target && { protection: protectionOf(attack.target) }) });
         const hp = attack.target.hp;
         if ('damage' in attack.target) attack.target.damage(amount, tick);
         else damagePlayer(attack.target, amount, tick, context?.respawns ?? true, context);
@@ -401,7 +402,7 @@ export class EnemyCombat {
     for (const player of players) {
       if (!player || trampled.has(player) || !validOperator(player) || tick < player.protectedUntil || !contact(player)) continue;
       trampled.add(player);
-      const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'enemy', target: 'operator', base });
+      const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'enemy', target: 'operator', base, protection: protectionOf(player) });
       const hp = player.hp;
       damagePlayer(player, amount, tick, context?.respawns ?? true, context);
       const dealt = Math.max(0, hp - player.hp);

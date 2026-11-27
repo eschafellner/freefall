@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
-  "release": "8.2C",
-  "description": "Munition: 7,77 × 50 mm 58 Schaden, Kaliber 13 12 × 18, Kaliber 21 10 × 16, 5,55 × 39 mm Durchschlag 2. 8.2B: Kaibal 50 (Kipplauf). 8.2A: MP-99, Viktor 55."
+  "schemaVersion": 6,
+  "release": "8.3A",
+  "description": "Rüstungen: FR-7 Feldpanzer 100, SR-4 Späher 50, BW-9 Bollwerk 150 Rüstungspunkte; Schadensaufnahme über armorEffects (50 → 125 %, 100 → 100 %, 150 → 75 %, 200 → 50 %). 8.2C: Munitionswerte."
 }

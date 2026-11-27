@@ -10,7 +10,7 @@ import type { StaggerComponent } from '../ecs/StaggerComponent.ts';
 import type { UniformGrid } from '../ecs/UniformGrid.ts';
 import { cancelEquipment, readyReload, reloading } from '../simulation/Player.ts';
 import type { SimPlayer } from '../simulation/Player.ts';
-import { resolveDamage } from './damage.ts';
+import { protectionOf, resolveDamage } from './damage.ts';
 import type { CombatStats, MovementStats } from './telemetry.ts';
 
 export function damageEnemy(h: HordeManager, slot: number, amount: number): boolean {
@@ -459,7 +459,8 @@ function tracePellet(h: HordeManager, player: SimPlayer, ray: AimRay, yaw: numbe
     if (stats) { countHit(); stats.damage[slot] += dealt; }
   } else if (allyOperator) {
     ally = allyOperator.id;
-    const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'operator', base: weapon.damage, falloffMultiplier: falloffAt(end) });
+    const { amount } = resolveDamage(policy, { source: 'bullet', attacker: 'operator', target: 'operator', base: weapon.damage, falloffMultiplier: falloffAt(end),
+      protection: protectionOf(allyOperator) });
     const dealt = damagePlayer(allyOperator, amount, tick, context.respawns ?? true, context);
     if (dealt) {
       impact = { kind: 'operator', life: allyOperator.life };
@@ -618,7 +619,7 @@ export function meleeStrike(h: HordeManager, player: SimPlayer, tick: number, wo
   if (operator) {
     const height = postureCollider(operator.posture, tick, balance).height;
     const contact = { x: operator.x, y: Math.max(operator.y + .1, Math.min(y, operator.y + height)), z: operator.z };
-    const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'operator', target: 'operator', base: melee.damage });
+    const { amount } = resolveDamage(policy, { source: 'melee', attacker: 'operator', target: 'operator', base: melee.damage, protection: protectionOf(operator) });
     const dealt = damagePlayer(operator, amount, tick, context.respawns ?? true, context);
     if (dealt) {
       if (stats) stats.friendlyFireDamage.melee += dealt;

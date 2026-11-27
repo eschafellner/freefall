@@ -243,6 +243,7 @@ function choicesFor(file, path) {
   }
   if ((file === 'weapons' || file === 'ammunition') && last === 'caliberId') return S.draft.ammunition.calibers.map((c) => [c.id, c.displayName]);
   if (file === 'enemies' && last === 'factionId') return S.draft.enemies.factions.map((f) => [f.id, f.displayName]);
+  if (file === 'equipment' && last === 'weightClass') return [['leicht', 'Leicht'], ['mittel', 'Mittel'], ['schwer', 'Schwer'], ['ueberschwer', 'Überschwer']];
   if (file === 'weapons' && last === 'defaultAmmoId') {
     const caliber = getAt(S.draft.weapons, path.slice(0, -1)).caliberId;
     return S.draft.ammunition.ammunition.filter((a) => a.caliberId === caliber).map((a) => [a.id, `${a.displayName} (${a.shortName})`]);
@@ -704,9 +705,23 @@ function renderSupply() {
     ]),
     h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, sampleHead), sampleBody)));
 
+  const armorRow = (armorId, pick, digits) => derived((a) => pick(a.supplies.armors?.find((row) => row.armorId === armorId)), digits, 'span');
+  const armors = card('Rüstungen',
+    form([
+      ...equipment.armors.flatMap((armor, i) => [
+        [`${armor.displayName}: Rüstungspunkte`, 'equipment', ['armors', i, 'armorRating'], 'Ganze Zahl 0 … 300; der erlittene Schaden folgt der Kurve unten'],
+        [`${armor.displayName}: Gewichtsklasse`, 'equipment', ['armors', i, 'weightClass'], 'leicht, mittel, schwer, ueberschwer'],
+        [`${armor.displayName}: erlittener Schaden %`, null, () => armorRow(armor.id, (row) => row && row.damageTaken * 100, 1)],
+        [`${armor.displayName}: effektive HP`, null, () => armorRow(armor.id, (row) => row?.effectiveHealth, 0)],
+      ]),
+      ...S.draft.equipment.armorEffects.map((point, i) => [`Kurve ${i + 1}: Rüstungspunkte / Schadensfaktor`, 'equipment',
+        [['armorEffects', i, 'rating'], ['armorEffects', i, 'damageTaken']], 'Stützpunkte aufsteigend; dazwischen linear, außerhalb gilt der nächste Punkt']),
+    ]));
   return [
     section('Versorgung', 'Was Munitionsboxen, Erste-Hilfe-Kästen, Granatenkisten und die Albatross geben. Alle Mengen werden im Spiel an der Tragekapazität gekappt.',
       h('div', { class: 'cards' }, pois, medical, albatross)),
+    section('Rüstungen', 'Rüstungspunkte senken jeden Treffer auf Operator (Gegner, Explosionen, Eigenbeschuss) nach der Kurve. Tempo und Ausdauer sind noch nicht angebunden.',
+      h('div', { class: 'cards' }, armors)),
     section('Munition aus Kisten', 'Mit Standardmagazin. Einzelpatronen-Waffen zählen Reserve und Nachschub in Patronen. Die Munitionsbox an PoI füllt nur die Primärwaffe.',
       h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, ammoHead), ammoBody))),
     section('Beute an Points of Interest', 'Proben je Schwierigkeitsstufe: „auf Karte“ liegt verteilt, das Limit kann der Trupp höchstens tragen und extrahieren.', samples),

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import * as T from 'three';
-import { newPosture } from '@freefall/shared';
+import { BALANCE, BASE_LOADOUT, newPosture } from '@freefall/shared';
 import type { EquipmentState, PostureState } from '@freefall/shared';
 import { PlayerVisualController } from '../src/rendering/characters/PlayerVisualController.ts';
 import { DEFAULT_LOOK, LOOK_PRESETS, WARDROBE, createOperatorWardrobe } from '../src/rendering/characters/operator/Catalog.ts';
@@ -196,4 +196,14 @@ test('skinned bodies follow a transport and hide outside the view', () => {
   assert.equal(body.visible, false, 'culled with its rig');
   batches.dispose();
   player.dispose();
+});
+
+test('every body armour and backpack of the balance data has its look in the wardrobe', () => {
+  for (const armor of BALANCE.bodyArmors.values()) {
+    assert.ok(wardrobe.has(armor.visual.armor, 'armor'), armor.id);
+    assert.ok(wardrobe.has(armor.visual.helmet, 'helmet'), armor.id);
+  }
+  for (const pack of BALANCE.backpacks.values()) assert.ok(wardrobe.has(pack.visual, 'pack'), pack.id);
+  // Snapshots omit the standard look, so the client default must be exactly the standard loadout's look.
+  assert.deepEqual({ ...BASE_LOADOUT.look }, { ...DEFAULT_LOOK });
 });

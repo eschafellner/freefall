@@ -8,7 +8,7 @@
  */
 import {
   ALBATROSS_VEHICLE_ID, BalanceValidationError, POI_COUNT, SIMULATION_HZ, armorMultiplier, createBalanceRegistry, falloffMultiplier,
-  magazineModifiers, reserveInRounds, resolveLoadout, resolveMissionBalance, resolveWeapon,
+  magazineModifiers, reserveInRounds, resolveLoadout, resolveMissionBalance, resolveSelection, resolveWeapon,
 } from '@freefall/shared';
 import type { BalanceRegistry, BalanceVersion, EffectiveWeapon, MagazineVariantType, MissionBalance } from '@freefall/shared';
 
@@ -114,6 +114,8 @@ export interface SupplySummary {
   };
   /** Supply items per map: [min, max] per PoI × PoI count. */
   readonly suppliesPerMap: readonly [number, number];
+  /** Body armours: effective rating, damage factor and the health the operator effectively has. */
+  readonly armors: readonly { readonly armorId: string; readonly rating: number; readonly damageTaken: number; readonly effectiveHealth: number }[];
 }
 
 export interface Analysis {
@@ -241,6 +243,10 @@ function supplies(registry: BalanceRegistry): SupplySummary {
     grenadeCrate: { grenades: loot.grant.grenades },
     albatross: { containers: containers.length, charges: containers.reduce((sum, c) => sum + c.charges, 0), perUse: resupply.perUse },
     suppliesPerMap: [loot.supplies[0]! * POI_COUNT, loot.supplies[1]! * POI_COUNT],
+    armors: [...registry.bodyArmors.values()].map((armor) => {
+      const { protection } = resolveSelection(registry, { ...loadout.selection, armorId: armor.id });
+      return { armorId: armor.id, rating: protection.armorRating, damageTaken: protection.damageTaken, effectiveHealth: loadout.maxHealth / protection.damageTaken };
+    }),
   };
 }
 

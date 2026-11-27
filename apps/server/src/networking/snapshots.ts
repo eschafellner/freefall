@@ -1,9 +1,13 @@
-import { ENEMY_BYTES, HORDE_ATTACK_BYTES, HORDE_COMBAT_HEADER, HORDE_HEADER, NET, hordeAttackFlag, PLAYER_MOTION, POSITION_SCALE,
+import { BASE_LOADOUT, ENEMY_BYTES, HORDE_ATTACK_BYTES, HORDE_COMBAT_HEADER, HORDE_HEADER, NET, hordeAttackFlag, PLAYER_MOTION, POSITION_SCALE,
   allowsPostureAction, copyPosture } from '@freefall/shared';
-import type { PlayersSnapshot } from '@freefall/shared';
+import type { EffectiveLoadout, PlayersSnapshot } from '@freefall/shared';
 import type { HordeManager } from '../ecs/HordeManager.ts';
 import type { EnemyCombat } from '../ecs/EnemyCombat.ts';
 import type { Battlefield } from '../simulation/Battlefield.ts';
+
+const STANDARD_LOOK = BASE_LOADOUT.look;
+const standardLook = (look: EffectiveLoadout['look']) =>
+  look.armor === STANDARD_LOOK.armor && look.helmet === STANDARD_LOOK.helmet && look.pack === STANDARD_LOOK.pack;
 
 export function encodeHorde(h: HordeManager, tick: number, positionScale: number = POSITION_SCALE, combat?: EnemyCombat): Uint8Array {
   const recordsEnd = HORDE_HEADER + h.count * ENEMY_BYTES;
@@ -53,6 +57,8 @@ export function playerSnapshot(arena: Battlefield, host: string): PlayersSnapsho
       (stance.standBlockedAt !== undefined && arena.tick - stance.standBlockedAt < NET.tickHz);
     players.push({ id, slot, x, z, yaw, hp, ack, life, respawnTick, kills, pitch, motion, ammo, reloadUntil,
       weapons: { primary: p.loadout.weapons.primary.id, secondary: p.loadout.weapons.secondary.id },
+      // Armour and pack only travel when they differ from the standard issue the clients show without them.
+      ...(!standardLook(p.loadout.look) && { look: p.loadout.look }),
       ...(p.y !== 0 && { y: p.y }),
       ...(sendPosture ? { posture: copyPosture(stance) } : stance.yaw !== yaw ? { bodyYaw: stance.yaw } : {}),
       ...(recent && { reload: { ...reload } }), equipment: { ...p.equipment, magazines: { ...p.equipment.magazines },

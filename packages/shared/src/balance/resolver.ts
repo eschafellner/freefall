@@ -10,10 +10,10 @@
  * only once per resolver. Both rules make double application of a difficulty multiplier an error, not a bug.
  */
 import { SIMULATION_HZ } from '../config/limits.ts';
-import { LOADOUT_SELECTION_KEYS, OPERATOR_SLIDE_LIMITS } from './definitions.ts';
+import { LOADOUT_SELECTION_KEYS, MAX_ARMOR_RATING, OPERATOR_SLIDE_LIMITS } from './definitions.ts';
 import { deepFreeze } from './schema.ts';
 import type {
-  AmmoDefinition, ArmorRules, BackpackDefinition, BodyArmorDefinition, CaliberDefinition, LoadoutSelection, CombatDefinition, ConvictKitDefinition, DamageType, EnemyArchetype, ConvictSquadDefinition, DamagePolicy, DifficultyDefinition, EnemyGameplay,
+  AmmoDefinition, ArmorEffects, ArmorRules, ArmorWeightClass, BackpackDefinition, BodyArmorDefinition, CaliberDefinition, LoadoutSelection, CombatDefinition, ConvictKitDefinition, DamageType, EnemyArchetype, ConvictSquadDefinition, DamagePolicy, DifficultyDefinition, EnemyGameplay,
   GrenadeDefinition, MagazineVariantType, MedicalDefinition, MeleeDefinition, NestDefinition, OperatorSlideDefinition, ResupplyRules, SupplyContainerDefinition,
   SwarmDefinition, WeaponDefinition, WeaponSlot,
 } from './definitions.ts';
@@ -232,6 +232,13 @@ export interface EffectiveLoadout {
   readonly melee: EffectiveMelee;
   readonly backpack: BackpackDefinition;
   readonly bodyArmor: BodyArmorDefinition;
+  /**
+   * Body armor protection: the armor rating after armor modifiers (`operator.armorRating`), the factor every hit on
+   * the operator is scaled by (`armorEffects` curve) and the weight class.
+   */
+  readonly protection: { readonly armorRating: number; readonly damageTaken: number; readonly weightClass: ArmorWeightClass };
+  /** Visible equipment as wardrobe ids (`PlayerState.look`). */
+  readonly look: { readonly armor: string; readonly helmet: string; readonly pack: string };
   /** Armor classes and residual damage of non-penetrating hits. */
   readonly armorRules: ArmorRules;
   readonly slide: OperatorSlideDefinition;
@@ -372,6 +379,19 @@ export function resolveWeapon(registry: BalanceRegistry, weaponId: string, ammoI
   return deepFreeze(result);
 }
 
+/**
+ * Damage factor of an armor rating: piecewise linear between the points of `equipment.json › armorEffects`, clamped
+ * to the end points. 50 → 1.25, 100 → 1, 150 → 0.75, 200 → 0.5 with the shipped curve.
+ */
+export function armorDamageTaken(effects: ArmorEffects, rating: number): number {
+  if (rating <= effects[0].rating) return effects[0].damageTaken;
+  for (let i = 1; i < effects.length; i++) {
+    const a = effects[i - 1], b = effects[i];
+    if (rating <= b.rating) return a.damageTaken + (b.damageTaken - a.damageTaken) * (rating - a.rating) / (b.rating - a.rating);
+  }
+  return effects[effects.length - 1].damageTaken;
+}
+
 /** The IDs of a preset loadout (`equipment.json › loadouts`). */
 export function presetSelection(registry: BalanceRegistry, loadoutId = registry.operator.loadoutId): LoadoutSelection {
   const { primaryWeaponId, secondaryWeaponId, meleeId, grenadeId, medicalId, backpackId, armorId } = registry.loadout(loadoutId);
@@ -439,6 +459,8 @@ export function resolveSelection(registry: BalanceRegistry, selection: LoadoutSe
     seconds: slideStat('seconds'), distance: slideStat('distance'), decay: slideStat('decay'),
     cooldownSeconds: slideStat('cooldownSeconds'), minSpeed: slideStat('minSpeed'),
   };
+  const armorRating = armor.resolve('operator.armorRating', bodyArmor.armorRating,
+    { layers: EQUIPMENT, min: 0, max: MAX_ARMOR_RATING, round: 'round' });
   armor.assertAllUsed();
   const grenade = registry.grenade(selection.grenadeId);
   const medical = registry.medical(selection.medicalId);
@@ -466,6 +488,8 @@ export function resolveSelection(registry: BalanceRegistry, selection: LoadoutSe
     },
     melee: effectiveMelee(resolver, melee),
     backpack, bodyArmor,
+    protection: { armorRating, damageTaken: armorDamageTaken(registry.armorEffects, armorRating), weightClass: bodyArmor.weightClass },
+    look: { armor: bodyArmor.visual.armor, helmet: bodyArmor.visual.helmet, pack: backpack.visual },
     armorRules: registry.armor,
     slide,
     switchTicks: Math.ceil((registry.loadouts.get(id) ?? preset).weaponSwitchSeconds * SIMULATION_HZ),

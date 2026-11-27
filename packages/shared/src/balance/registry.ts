@@ -9,7 +9,7 @@ import {
 } from './definitions.ts';
 import { ARMOR_CLASS_COUNT } from './definitions.ts';
 import type {
-  AmmoDefinition, ArmorRules, LootRules, BackpackDefinition, BalanceManifest, BodyArmorDefinition, BalanceSources, CaliberDefinition, CombatDefinition, ConvictKitDefinition, ConvictSquadDefinition, DifficultyDefinition, EnemyArchetype,
+  AmmoDefinition, ArmorEffects, ArmorRules, LootRules, BackpackDefinition, BalanceManifest, BodyArmorDefinition, BalanceSources, CaliberDefinition, CombatDefinition, ConvictKitDefinition, ConvictSquadDefinition, DifficultyDefinition, EnemyArchetype,
   FactionDefinition, GrenadeDefinition, LoadoutDefinition, MedicalDefinition, MeleeDefinition, MovementDefinition, NestDefinition, OperatorDefinition,
   ResupplyRules, SwarmDefinition, VehicleDefinition, WeaponDefinition,
 } from './definitions.ts';
@@ -41,6 +41,8 @@ export interface BalanceRegistry {
   readonly loadouts: ReadonlyMap<string, LoadoutDefinition>;
   readonly backpacks: ReadonlyMap<string, BackpackDefinition>;
   readonly bodyArmors: ReadonlyMap<string, BodyArmorDefinition>;
+  /** Damage taken by armor rating (`equipment.json › armorEffects`). */
+  readonly armorEffects: ArmorEffects;
   readonly resupply: ResupplyRules;
   /** Supply items, samples and Marks at Points of Interest (`loot.json`). */
   readonly loot: LootRules;
@@ -206,6 +208,16 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
       issues.add(`${path}.secondaryWeaponId`, `"${loadout.secondaryWeaponId}" ist keine Sekundärwaffe`);
     }
   });
+  const effects = data.equipment.armorEffects;
+  effects.forEach((point, i) => {
+    if (i && point.rating <= effects[i - 1].rating) issues.add(`equipment.json › armorEffects[${i}].rating`, 'Rüstungspunkte müssen aufsteigend sortiert sein');
+    if (i && point.damageTaken > effects[i - 1].damageTaken) issues.add(`equipment.json › armorEffects[${i}].damageTaken`, 'mehr Rüstung darf nicht mehr Schaden zulassen');
+  });
+  data.equipment.armors.forEach((armor, i) => {
+    if (armor.armorRating < effects[0].rating || armor.armorRating > effects[effects.length - 1].rating) {
+      issues.add(`equipment.json › armors[${i}].armorRating`, `liegt außerhalb der Kurve armorEffects (${effects[0].rating} … ${effects[effects.length - 1].rating})`);
+    }
+  });
   data.equipment.grenades.forEach((grenade, i) => {
     const path = `equipment.json › grenades[${i}]`;
     for (const structure of Object.keys(grenade.structureDamageMultipliers)) {
@@ -336,7 +348,7 @@ export function createBalanceRegistry(raw: unknown): BalanceRegistry {
     version: { schemaVersion: data.manifest.schemaVersion, release: data.manifest.release, hash },
     manifest: data.manifest,
     weapons, calibers, ammunition, armor: data.ammunition.armor, grenades, medicalItems: medical, meleeAttacks: melee, loadouts,
-    backpacks, bodyArmors, resupply: data.equipment.resupply, loot: data.loot, operator: data.operators.operator,
+    backpacks, bodyArmors, armorEffects: data.equipment.armorEffects, resupply: data.equipment.resupply, loot: data.loot, operator: data.operators.operator,
     factions, enemies, enemiesByWireType, nests, primaryNest: nests.get(PRIMARY_NEST_ID)!, vehicles,
     swarm: data.swarm,
     convicts: { squad: data.convicts.squad, kits },

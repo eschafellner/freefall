@@ -60,16 +60,65 @@
     {
       "id": "backpack.standard_frame",
       "displayName": "Standard-Tragegestell",
-      "description": "Leichtes Gestell für Magazintaschen und Heilstims. Keine Zusatzwirkung.",
+      "description": "Leichtes Gestell mit Funkgerät, Magazintaschen und Heilstims. Keine Zusatzwirkung.",
+      "visual": "funk",
       "modifiers": []
     }
   ],
   "armors": [
     {
       "id": "armor.standard_carrier",
-      "displayName": "Standard-Plattenträger",
-      "description": "Plattenträger der Operator. Grundwerte für Bewegung und Rutschen.",
+      "displayName": "FR-7 Feldpanzer",
+      "description": "Standardpanzerung der Operator: Plattenträger, Schulterschalen, Beinschutz und geschlossener Gefechtshelm.",
+      "weightClass": "mittel",
+      "armorRating": 100,
+      "visual": {
+        "armor": "fr7",
+        "helmet": "fr7-helm"
+      },
       "modifiers": []
+    },
+    {
+      "id": "armor.sr4_scout",
+      "displayName": "SR-4 Späher",
+      "description": "Leichte Aufklärungsausrüstung: weiches Brustgeschirr, Polster statt Platten, offener Helm mit Schutzbrille.",
+      "weightClass": "leicht",
+      "armorRating": 50,
+      "visual": {
+        "armor": "sr4",
+        "helmet": "sr4-haube"
+      },
+      "modifiers": []
+    },
+    {
+      "id": "armor.bw9_bulwark",
+      "displayName": "BW-9 Bollwerk",
+      "description": "Schwere Sturmpanzerung: Halsberge, Bauchschienen, Dreifach-Schulterschalen und Beinschienen.",
+      "weightClass": "schwer",
+      "armorRating": 150,
+      "visual": {
+        "armor": "bw9",
+        "helmet": "bw9-helm"
+      },
+      "modifiers": []
+    }
+  ],
+  "armorEffects": [
+    {
+      "rating": 50,
+      "damageTaken": 1.25
+    },
+    {
+      "rating": 100,
+      "damageTaken": 1
+    },
+    {
+      "rating": 150,
+      "damageTaken": 0.75
+    },
+    {
+      "rating": 200,
+      "damageTaken": 0.5
     }
   ],
   "loadouts": [

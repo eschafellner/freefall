@@ -62,7 +62,7 @@ Wie im Vorbild Helldivers bestimmt die Ausrüstung die Silhouette. Ein Look best
 
 ![Haltungen und Aktionen](character/operator-haltungen.jpg)
 
-**Netzvertrag.** `PlayerState.look?: OperatorLook` (`packages/shared/src/contracts/messages.ts`) trägt die drei IDs. Fehlt das Feld, trägt der Operator den Standard (`fr7`, `fr7-helm`, `funk`). Unbekannte IDs fallen slotweise auf den Standard zurück (`OperatorWardrobe.resolve`), ein älterer Client zeigt also bei neuen Teilen den Standard statt eines Fehlers. `PlayerView` setzt den Look jedes Bild aus dem Snapshot; ohne Änderung kostet das einen Vergleich. Der Server setzt das Feld noch nicht. `scripts/playtest-operator.mjs` zeigt am Carrier, dass ein eingespeister Look Ende-zu-Ende ankommt.
+**Netzvertrag.** `PlayerState.look?: OperatorLook` (`packages/shared/src/contracts/messages.ts`) trägt die drei IDs. Fehlt das Feld, trägt der Operator den Standard (`fr7`, `fr7-helm`, `funk`). Unbekannte IDs fallen slotweise auf den Standard zurück (`OperatorWardrobe.resolve`), ein älterer Client zeigt also bei neuen Teilen den Standard statt eines Fehlers. `PlayerView` setzt den Look jedes Bild aus dem Snapshot; ohne Änderung kostet das einen Vergleich. Seit 8.3A setzt der Server das Feld aus dem Loadout (`armors[].visual`, `backpacks[].visual`), sobald es vom Standard abweicht ([Rüstungssystem](RUESTUNGSSYSTEM.md)). `scripts/playtest-operator.mjs` zeigt am Carrier, dass ein Look Ende-zu-Ende ankommt.
 
 **Neues Teil anlegen.** Ein `WardrobeItem` hat `id`, `slot`, Anzeigename, optional Gewichtsklasse und Beschreibung sowie `build(kit)`. In `build` beschreibt `PieceKit` das Teil:
 
@@ -88,7 +88,7 @@ export const MEIN_HELM: WardrobeItem = {
 
 Bausteine wie `suit`, `belt`, `torsoBand`, `pouch`, `glove`, `boot`, `toeCap`, `hard` und `lit` liegen in `kit/Parts.ts`. Danach das Teil in `WARDROBE` (`Catalog.ts`) eintragen. `apps/client/test/operator-rig.test.ts` prüft für die Beispiel-Looks Budget, Hautgewichte und Wechsel.
 
-**Rüstungen später fertig implementieren.** Für spielwirksame Rüstungen fehlen nur noch Daten und Serverlogik, die Darstellung ist bereit:
+**Rüstungen spielwirksam machen.** Seit 8.3A sind die Schritte 1–3 für Rüstungspunkte umgesetzt ([Rüstungssystem](RUESTUNGSSYSTEM.md)); Tempo und Ausdauer sind als Konzept beschrieben. Ursprünglicher Plan:
 
 1. Rüstungs-, Helm- und Rucksack-IDs mit Werten (Rüstungsklasse, Tempo-Faktor, Ausdauer, Passivbonus) in den Balance-Daten anlegen, mit denselben IDs wie im Katalog.
 2. `LoadoutSelection` um `armorId`, `helmetId`, `packId` erweitern, im Account speichern und an der Ausrüstungsstation („Rüstung“-Raum des Carriers) wählbar machen.
@@ -132,4 +132,4 @@ Die Pose kostet im Mittel 0,034 ms pro Operator (`scripts/tactical-component-ben
 - Finger sind als geschlossene Faust modelliert. Die Unterarmdrehung sitzt im Handknochen und wird von Stulpe und Unterarmschutz verdeckt.
 - Die Füße stehen auf der Bodenebene der Figur. Auf geneigtem Gelände gibt es noch keine Fuß-IK pro Bein.
 - Spieler werfen weiter Kontaktschatten statt Schattenkarten-Schatten, weil die Sonnenschatten nur für statische Geometrie aktualisiert werden.
-- Der Server vergibt noch keine Looks; alle Operatoren tragen im Spiel den FR-7-Standard.
+- Helme sind an die Rüstung gebunden; eine getrennte Helmauswahl gibt es noch nicht.

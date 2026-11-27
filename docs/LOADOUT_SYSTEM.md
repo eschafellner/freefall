@@ -50,7 +50,7 @@ RELOAD_START (startSeconds) → SHELL_LOADING ──insertAt──▶ SHELL_INSE
 
 `LoadoutSelection` (`definitions.ts`): `primaryWeaponId`, `secondaryWeaponId`, `meleeId`, `grenadeId` (Taktische Ausrüstung), `medicalId`, `backpackId`, `armorId`.
 
-- **Daten:** Rucksäcke (`equipment.json › backpacks`) und Rüstungen (`armors`) haben `modifiers` auf der Ebene `equipment`. Rucksäcke dürfen Waffen- und Ausrüstungswerte ändern, mit `primary.<stat>`/`secondary.<stat>` für die Waffe im jeweiligen Slot, z. B. `primary.maxReserve`. Rüstungen dürfen nur Operatorwerte ändern (`operator.slide.*`; Bewegungsbalance über Rüstungen). Heute gibt es je eine Standardoption ohne Wirkung.
+- **Daten:** Rucksäcke (`equipment.json › backpacks`) und Rüstungen (`armors`) haben `modifiers` auf der Ebene `equipment`. Rucksäcke dürfen Waffen- und Ausrüstungswerte ändern, mit `primary.<stat>`/`secondary.<stat>` für die Waffe im jeweiligen Slot, z. B. `primary.maxReserve`. Rüstungen dürfen nur Operatorwerte ändern (`operator.slide.*`, `operator.armorRating`). Seit 8.3A haben Rüstungen Rüstungspunkte, Gewichtsklasse und Optik: SR-4 Späher (50), FR-7 Feldpanzer (100, Standard), BW-9 Bollwerk (150), siehe [Rüstungssystem](RUESTUNGSSYSTEM.md). Rucksäcke tragen ihre Optik (`visual`).
 - **Auflösung:** `resolveSelection(registry, selection)` liefert das effektive Loadout; `resolveLoadout(registry, presetId)` nutzt dieselbe Funktion für die Vorgaben aus `loadouts`. Die Registry löst beim Start jede Waffe, jeden Rucksack und jede Rüstung einmal im Standard-Loadout auf.
 - **Prüfung am Server** (`FreefallRoom`, Nachricht `loadout`):
   1. `validateLoadoutSelection` prüft Form, bekannte IDs und die Slots der Waffen.
@@ -58,7 +58,7 @@ RELOAD_START (startSeconds) → SHELL_LOADING ──insertAt──▶ SHELL_INSE
   3. `Battlefield.setLoadout` wechselt das Loadout. In Missionen geht das nur in `CARRIER_HUB` und `MISSION_SELECTION`. Der Operator wird vollständig neu ausgerüstet.
   4. Antwort an den Client: `{ selection }` oder `{ error }`.
 - **Netzwerk:** `PlayerState.weapons` trägt die Waffen-IDs jedes Operators (Modell, Ton, HUD der Mitspieler). `sync-state` schickt dem Client sein aktuelles Loadout.
-- **Client:** Die Station „AUSRÜSTUNG“ im Carrier öffnet mit `E` das Menü (`ui/LoadoutPanel.tsx`). Es hat Auswahlfelder für Primär- und Sekundärwaffe, Nahkampfwaffe, Taktische Ausrüstung, Medizin, Rucksack und Rüstung, dazu Werte je Waffe (Kaliber, Schaden, Durchschlag, Feuerrate, Magazin, Reserve, Nachladen, Reichweite). Das zuletzt angenommene Loadout liegt im `localStorage` und wird beim Betreten des nächsten Raums wiederhergestellt.
+- **Client:** Die Station „AUSRÜSTUNG“ im Carrier öffnet mit `E` das Menü (`ui/LoadoutPanel.tsx`). Es hat Auswahlfelder für Primär- und Sekundärwaffe, Nahkampfwaffe, Taktische Ausrüstung, Medizin, Rucksack und Rüstung, dazu Werte je Waffe (Kaliber, Schaden, Durchschlag, Feuerrate, Magazin, Reserve, Nachladen, Reichweite) und je Rüstung (Klasse, Rüstungspunkte, erlittener Schaden, effektive Lebenspunkte). Die Station „RÜSTUNG“ öffnet die Rüstkammer mit 3D-Vorschau (`ui/ArmoryPanel.tsx`). Das zuletzt angenommene Loadout liegt im `localStorage` und wird beim Betreten des nächsten Raums wiederhergestellt.
 
 ## Darstellung
 
@@ -74,6 +74,6 @@ RELOAD_START (startSeconds) → SHELL_LOADING ──insertAt──▶ SHELL_INSE
 ## Offen
 
 1. Eigene Tonaufnahmen und ein Nachlade-Clip für die Flinte; heute läuft die Gewehr-Nachladeanimation pro Patrone.
-2. Weitere Rucksäcke und Rüstungen mit Wirkung (Tragekapazität, Bewegung) und eine Panzerklasse für Operatoren.
+2. Weitere Rucksäcke mit Wirkung (Tragekapazität); Tempo und Ausdauer je Rüstung nach dem [Konzept](RUESTUNGSSYSTEM.md#2-konzept-laufgeschwindigkeit-und-ausdauer).
 3. Munitionssorten-Auswahl im Menü (Teilmantel, Flintenlaufgeschoss für Kaliber 13).
 4. Waffen und Teile über Levelstufen freischalten statt als Grundausstattung.

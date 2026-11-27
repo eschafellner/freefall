@@ -11,7 +11,7 @@ import type { Infer } from './schema.ts';
 const MOVEMENT_7_2B = 'waffenabhängige Laufgeschwindigkeit ist noch nicht in Server und Prediction verdrahtet';
 
 export const manifestSchema = obj({
-  schemaVersion: oneOf([5] as const),
+  schemaVersion: oneOf([6] as const),
   release: str(),
   description: str(),
 });
@@ -265,20 +265,47 @@ const equipmentModifierSchema = obj({
   value: num(),
 });
 
+/** Wardrobe id of a visible equipment piece (client catalog `characters/operator/Catalog.ts`). */
+const wardrobeId = () => str(/^[a-z0-9][a-z0-9-]*$/, 'Garderoben-ID erwartet (Kleinbuchstaben, Ziffern, Bindestrich)');
+
 export const backpackSchema = obj({
   id: id(),
   displayName: str(),
   description: str(),
+  /** Pack model the operator carries (wardrobe id). */
+  visual: wardrobeId(),
   modifiers: arr(equipmentModifierSchema),
 });
 
-/** Body armor. Its modifiers resolve separately and may only target operator stats (`operator.slide.*`). */
+/** Weight classes of body armor. Ratings between the classes are allowed; the class names the look and the role. */
+export const ARMOR_WEIGHT_CLASSES = ['leicht', 'mittel', 'schwer', 'ueberschwer'] as const;
+export type ArmorWeightClass = (typeof ARMOR_WEIGHT_CLASSES)[number];
+/** Highest armor rating the data may use (the protection curve must cover it). */
+export const MAX_ARMOR_RATING = 300;
+
+/**
+ * Body armor. `armorRating` (Rüstungspunkte) sets the damage the operator takes through `armorEffects`. Its modifiers
+ * resolve separately and may only target operator stats (`operator.slide.*`, `operator.armorRating`).
+ */
 export const bodyArmorSchema = obj({
   id: id(),
   displayName: str(),
   description: str(),
+  weightClass: oneOf(ARMOR_WEIGHT_CLASSES),
+  armorRating: count({ min: 0, max: MAX_ARMOR_RATING }),
+  /** Armour set and helmet the operator wears (wardrobe ids). */
+  visual: obj({ armor: wardrobeId(), helmet: wardrobeId() }),
   modifiers: arr(equipmentModifierSchema),
 });
+
+/**
+ * Effects of the armor rating, as points of a piecewise linear curve sorted by rating. Ratings between two points
+ * interpolate, ratings outside use the nearest point. `damageTaken` scales every hit the operator receives.
+ */
+export const armorEffectsSchema = arr(obj({
+  rating: count({ min: 0, max: MAX_ARMOR_RATING }),
+  damageTaken: positive({ max: 4 }),
+}), { min: 2 });
 
 export const loadoutSchema = obj({
   id: id(),
@@ -843,6 +870,7 @@ export const SOURCE_SCHEMAS = {
     melee: arr(meleeSchema, { min: 1 }),
     backpacks: arr(backpackSchema, { min: 1 }),
     armors: arr(bodyArmorSchema, { min: 1 }),
+    armorEffects: armorEffectsSchema,
     loadouts: arr(loadoutSchema, { min: 1 }),
     resupply: resupplySchema,
   }),
@@ -881,6 +909,7 @@ export type AudioEnvironmentId = keyof CombatDefinition['audio']['environments']
 export type LoadoutDefinition = Infer<typeof loadoutSchema>;
 export type BackpackDefinition = Infer<typeof backpackSchema>;
 export type BodyArmorDefinition = Infer<typeof bodyArmorSchema>;
+export type ArmorEffects = Infer<typeof armorEffectsSchema>;
 export type WeaponFeed = WeaponDefinition['feed'];
 /** Player-chosen loadout (Carrier › Ausrüstung). Every ID refers to the balance registry. */
 export interface LoadoutSelection {

@@ -13,6 +13,7 @@ import { TeamPanel } from './FieldHud.tsx';
 import { MissionHud, seconds } from './MissionHud.tsx';
 import { CarrierConsole } from './CarrierConsole.tsx';
 import { LoadoutPanel } from './LoadoutPanel.tsx';
+import { ArmoryPanel } from './ArmoryPanel.tsx';
 import { Terminal } from './Terminal.tsx';
 import type { GameMode, JoinMode } from '../networking/Match.ts';
 import type { AccountSession } from '@freefall/shared';
@@ -572,6 +573,9 @@ export function App() {
     {menu && station === 'console' && mission && <CarrierConsole mission={mission} status={status} close={relock} fault={fault}
       select={(selection) => game.current?.select(selection)} start={() => game.current?.startMission()}/>}
     {menu && station === 'locker' && <LoadoutPanel status={status} apply={(selection) => game.current?.setLoadout(selection)} close={relock} fault={fault}/>}
+    {menu && station === 'armory' && <ArmoryPanel status={status} apply={(selection) => game.current?.setLoadout(selection)} close={relock} fault={fault}
+      account={session && { token: session.token, profile: session.account,
+        onAccount: (account) => setSession((current) => current && { ...current, account }) }}/>}
     {menu && !station && <Terminal className="pause-terminal" fault={fault}
       kicker={inCarrier ? 'Skyfall Carrier · Deck 03' : status.missionRoom ? missionName : 'Boreal Relay · Testarena'}
       title={inCarrier ? 'Mannschaftsdeck' : status.missionRoom ? 'Einsatz' : 'Testarena'}

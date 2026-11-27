@@ -57,11 +57,12 @@ try {
   await page.goto('http://127.0.0.1:' + web.httpServer.address().port);
   await login(page, 'Testoperator');
 
-  // Arena in daylight: movement from the shoulder camera.
+  // Arena in daylight: movement from the shoulder camera (skip with ONLY_DECK=1).
+  let found;
+  if (!process.env.ONLY_DECK) {
   await page.getByRole('button', { name: 'Boreal Relay', exact: true }).click();
   await page.getByRole('button', { name: 'Raum erstellen', exact: true }).click();
   await page.locator('.in-game').waitFor();
-  let found;
   await until(async () => (found = (await matchMaker.query({ name: ARENA_ROOM }))[0]), 'Arena');
   const arena = matchMaker.getLocalRoomById(found.roomId).arena;
   arena.setHordeSize(0);
@@ -99,6 +100,7 @@ try {
   await shot('08-bauchlage');
   await page.keyboard.press('Space');
   await delay(1500);
+  }
 
   // Carrier deck: the three armour sets side by side (presentation field only, set on the server snapshot).
   await page.keyboard.press('Escape');
@@ -116,20 +118,42 @@ try {
   const mission = room.arena;
   await until(() => mission.players[0], 'Deckoperator');
   const operator = mission.players[0];
-  // The server does not assign looks yet: add the presentation field (`PlayerState.look`) to the outgoing snapshots.
-  let look;
-  const broadcast = room.broadcast.bind(room);
-  room.broadcast = (type, message, ...rest) => broadcast(type, type === 'players' && look
-    ? { ...message, players: message.players.map((player) => ({ ...player, look })) } : message, ...rest);
-  for (const [worn, name] of [[{ armor: 'sr4', helmet: 'sr4-haube', pack: 'funk' }, 'leicht'], [undefined, 'mittel'],
-    [{ armor: 'bw9', helmet: 'bw9-helm', pack: 'versorgung' }, 'schwer']]) {
-    look = worn;
-    Object.assign(operator, { x: 0, z: 9.5, yaw: Math.PI * .8, protectedUntil: Infinity, life: operator.life + 1 });
+  // Rüstkammer (RÜSTUNG room): pick each armour, put it on, and look at the operator on deck.
+  const station = async (x, z, yaw) => {
+    Object.assign(operator, { x, z, yaw, protectedUntil: Infinity, life: operator.life + 1 });
     clearMoves(operator);
-    await delay(1600);
-    await deck.screenshot({ path: join(output, `09-deck-${name}.png`) });
-    console.log('shot deck', name);
-  }
+    await delay(900);
+    await deck.mouse.click(640, 360);
+    await delay(300);
+    await deck.keyboard.press('KeyE');
+    await delay(1200);
+  };
+  await station(-22, -9, -Math.PI / 2);
+  await deck.screenshot({ path: join(output, '09-ruestkammer.png') });
+  // A new account holds 5,000 SKR: SR-4 (6,000) is out of reach, BW-9 (4,000) can be bought and put on.
+  await deck.getByRole('radio', { name: /SR-4 Späher/ }).click();
+  await delay(900);
+  await deck.screenshot({ path: join(output, '10-ruestkammer-leicht-gesperrt.png') });
+  if (!(await deck.getByRole('button', { name: /Es fehlen 1\.000 SKR/ }).isDisabled())) throw new Error('SR-4 sollte zu teuer sein');
+  await deck.getByRole('radio', { name: /BW-9 Bollwerk/ }).click();
+  await delay(900);
+  await deck.getByRole('button', { name: /Freischalten · 4\.000 SKR/ }).click();
+  await deck.getByRole('button', { name: 'Rüstung anlegen' }).waitFor();
+  await deck.screenshot({ path: join(output, '11-ruestkammer-schwer-gekauft.png') });
+  await deck.getByRole('button', { name: 'Rüstung anlegen' }).click();
+  await until(() => operator.loadout.selection.armorId === 'armor.bw9_bulwark', 'Rüstung am Server');
+  console.log('angelegt schwer', operator.loadout.protection);
+  await delay(600);
+  await deck.screenshot({ path: join(output, '12-ruestkammer-schwer-aktiv.png') });
+  await deck.keyboard.press('KeyE');
+  await delay(400);
+  Object.assign(operator, { x: 0, z: 9.5, yaw: Math.PI * .8, life: operator.life + 1 });
+  clearMoves(operator);
+  await delay(1600);
+  await deck.screenshot({ path: join(output, '13-deck-schwer.png') });
+  // Ausrüstung terminal with the armour section.
+  await station(-22, 9, -Math.PI / 2);
+  await deck.screenshot({ path: join(output, '14-ausruestung.png') });
   console.log('errors', JSON.stringify(errors.slice(0, 10)));
 } catch (error) {
   console.error('Abbruch:', error);

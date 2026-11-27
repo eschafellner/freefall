@@ -9,11 +9,13 @@
  *   5. Resistance of the target against the damage type (`enemies.json › resistances`).
  *   6. Relation multiplier from `combat.json › damagePolicy`: hostile 1, operator → operator, operator → convict or
  *      self damage. Applied exactly once here; callers never scale by the policy themselves.
- *   7. Rounding: operators, convicts and structures take whole hit points (at least 1 if the result is positive).
+ *   7. Body armor of an operator target: `protection` = `loadout.protection.damageTaken` from its armor rating
+ *      (SR-4 50 → 1.25, FR-7 100 → 1, BW-9 150 → 0.75). Every source: enemies, explosions and friendly fire.
+ *   8. Rounding: operators, convicts and structures take whole hit points (at least 1 if the result is positive).
  *      Enemies keep fractional damage (ECS health is a float).
- *   8. Target side: convict armor, respawn and landing protection are applied by the target afterwards.
+ *   9. Target side: convict armor, respawn and landing protection are applied by the target afterwards.
  *
- * Steps 2, 4 and 5 apply only when the caller passes them. Operators and convicts have no armor class yet.
+ * Steps 2, 4, 5 and 7 apply only when the caller passes them. Operators have body armor, but no armor class.
  */
 import { armorMultiplier } from '@freefall/shared';
 import type { DamagePolicy, DamageSource } from '@freefall/shared';
@@ -37,7 +39,13 @@ export interface DamageRequest {
   readonly armor?: { readonly armorClass: number; readonly penetration: number; readonly nonPenetratingFraction: number };
   /** Target resistance against the damage type. */
   readonly resistanceMultiplier?: number;
+  /** Operator target: damage factor of its body armor (`EffectiveLoadout.protection.damageTaken`). */
+  readonly protection?: number;
 }
+
+/** The `protection` an operator's body armor adds to a damage request. */
+export const protectionOf = (operator: { readonly loadout: { readonly protection: { readonly damageTaken: number } } }) =>
+  operator.loadout.protection.damageTaken;
 
 export interface ResolvedDamage {
   readonly amount: number;
@@ -76,6 +84,7 @@ export function resolveDamage(policy: DamagePolicy, request: DamageRequest): Res
   amount *= armorFactor;
   amount *= request.resistanceMultiplier ?? 1;
   amount *= multiplier;
+  if (request.target === 'operator') amount *= request.protection ?? 1;
   if (request.target !== 'enemy' && amount > 0) amount = Math.max(1, Math.round(amount));
   return { amount, relation, multiplier, penetrated: !armor || armorFactor === 1 };
 }

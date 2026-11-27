@@ -47,6 +47,8 @@ Der Kauf läuft in einer Transaktion: Besitz prüfen, Guthaben prüfen, Preis ab
 | MP-99 (Maschinenpistole, 10 mm) | 5 | 4.500 SKR |
 | Viktor 55 (Maschinenpistole, .55) | 7 | 6.000 SKR |
 | Kaibal 50 (Doppellauf, 7,77 × 50 mm) | 8 | 3.000 SKR |
+| SR-4 Späher (leichte Rüstung) | 1 | 6.000 SKR |
+| BW-9 Bollwerk (schwere Rüstung) | 1 | 4.000 SKR |
 
 Die übrige Grundausstattung bleibt kostenlos. Migration 5 hat die VX-13 allen Accounts entzogen, die sie als Grundausstattung besaßen. Wer sie im Loadout wählt, ohne sie zu besitzen, erhält „Nicht freigeschaltet: VX-13 Cerberus. Freischalten im Arsenal.“
 
